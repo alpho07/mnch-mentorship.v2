@@ -256,7 +256,13 @@ class ManageClassMentees extends Page implements HasTable
                             return;
                         }
 
-                        $record->markMentorApproved(auth()->id());
+                        try {
+                            $record->markMentorApproved(auth()->id());
+                        } catch (\DomainException $e) {
+                            Notification::make()->danger()->title('Not Ready for Approval')->body($e->getMessage())->send();
+
+                            return;
+                        }
 
                         app(EmoncNotificationService::class)->mentorApproved($record->fresh());
 
@@ -388,13 +394,20 @@ class ManageClassMentees extends Page implements HasTable
                         $skipped = 0;
 
                         foreach ($records as $record) {
-                            if ($record->mentor_approved_at || ! $this->isReadyForMentorApproval($record)) {
+                            if ($record->mentor_approved_at) {
                                 $skipped++;
 
                                 continue;
                             }
 
-                            $record->markMentorApproved(auth()->id());
+                            try {
+                                $record->markMentorApproved(auth()->id());
+                            } catch (\DomainException $e) {
+                                $skipped++;
+
+                                continue;
+                            }
+
                             $notificationService->mentorApproved($record->fresh());
                             $approved++;
                         }
@@ -1212,31 +1225,7 @@ class ManageClassMentees extends Page implements HasTable
 
     private function isReadyForMentorApproval(ClassParticipant $participant): bool
     {
-        $moduleIds = $this->class->classModules()->pluck('id');
-
-        if ($moduleIds->isEmpty()) {
-            return false;
-        }
-
-        $progressRecords = MenteeModuleProgress::where('class_participant_id', $participant->id)
-            ->whereIn('class_module_id', $moduleIds)
-            ->get();
-
-        if ($progressRecords->count() !== $moduleIds->count()) {
-            return false;
-        }
-
-        foreach ($progressRecords as $progress) {
-            if (! in_array($progress->status, ['completed', 'exempted'])) {
-                return false;
-            }
-
-            if (! $progress->isVideoPassed()) {
-                return false;
-            }
-        }
-
-        return true;
+        return $participant->hasCompletedAllModules();
     }
 
     private function downloadCertificateZip($participants): StreamedResponse

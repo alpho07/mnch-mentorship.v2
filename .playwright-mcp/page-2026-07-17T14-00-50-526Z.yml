@@ -1,0 +1,185 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "July 2026 EmONC Test Cohort" [ref=e4] [cursor=pointer]:
+        - /url: http://127.0.0.1:8100/my-class/240
+        - img [ref=e5]
+        - text: July 2026 EmONC Test Cohort
+      - generic [ref=e7]: "Track 1: Bimanual compression of the uterus"
+      - button [ref=e8] [cursor=pointer]:
+        - img [ref=e9]
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - complementary [ref=e13]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]: EE
+            - generic [ref=e19]:
+              - paragraph [ref=e20]: Mentee
+              - paragraph [ref=e21]: EmONC E2ETest
+          - generic [ref=e22]:
+            - generic [ref=e23]:
+              - generic [ref=e24]: Email
+              - generic [ref=e25]: emonc-e2e-test-mentee@example.com
+            - generic [ref=e26]:
+              - generic [ref=e27]: Phone
+              - generic [ref=e28]: "+254712345678"
+            - generic [ref=e29]:
+              - generic [ref=e30]: Status
+              - generic [ref=e32]: Enrolled
+            - generic [ref=e33]:
+              - generic [ref=e34]: Enrolled
+              - generic [ref=e35]: 17 Jul 2026
+        - generic [ref=e38]:
+          - paragraph [ref=e39]: Mentorship
+          - generic [ref=e40]:
+            - generic [ref=e41]:
+              - generic [ref=e42]: Class
+              - generic [ref=e43]: July 2026 EmONC Test Cohort
+            - generic [ref=e44]:
+              - generic [ref=e45]: Program
+              - generic [ref=e46]: Maternal Health (EmONC)
+            - generic [ref=e47]:
+              - generic [ref=e48]: Mentor
+              - generic [ref=e49]: Super Admin
+            - generic [ref=e50]:
+              - generic [ref=e51]: Site
+              - generic [ref=e52]: Budalangi Dispensary
+            - generic [ref=e53]:
+              - generic [ref=e54]: Module
+              - generic [ref=e56]: In progress
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - paragraph [ref=e60]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+            - 'heading "Track 1: Bimanual compression of the uterus" [level=1] [ref=e61]'
+            - paragraph [ref=e62]: July 2026 EmONC Test Cohort
+            - generic [ref=e63]:
+              - generic [ref=e64]: In Progress
+              - generic [ref=e66]: EmONC
+          - generic [ref=e67]:
+            - generic [ref=e71]: 17%
+            - generic [ref=e72]:
+              - generic [ref=e73]:
+                - img [ref=e75]
+                - generic [ref=e77]: Attended
+              - generic [ref=e79]:
+                - generic [ref=e80]: "2"
+                - generic [ref=e81]: Pre-test
+              - generic [ref=e83]:
+                - generic [ref=e84]: "3"
+                - generic [ref=e85]: Scenarios
+              - generic [ref=e87]:
+                - generic [ref=e88]: "4"
+                - generic [ref=e89]: Video
+              - generic [ref=e91]:
+                - generic [ref=e92]: "5"
+                - generic [ref=e93]: Post-test
+              - generic [ref=e95]:
+                - generic [ref=e96]: "6"
+                - generic [ref=e97]: Done
+        - generic [ref=e98]:
+          - generic [ref=e99]:
+            - img [ref=e101]
+            - generic [ref=e103]:
+              - paragraph [ref=e104]: Next Step
+              - paragraph [ref=e105]: Start the pre-test to unlock module content
+          - link "Go →" [ref=e106] [cursor=pointer]:
+            - /url: "#pre-test"
+        - generic [ref=e109]:
+          - generic [ref=e110]:
+            - img [ref=e112]
+            - heading "I. Introduction to the Module" [level=2] [ref=e114]
+          - generic [ref=e115]:
+            - heading "Bimanual Compression of the Uterus — Procedure" [level=3] [ref=e116]
+            - generic [ref=e117]:
+              - paragraph [ref=e118]: Bimanual compression of the uterus is an emergency measure used in refractory postpartum hemorrhage (PPH) when uterine atony persists despite uterine massage and first-line uterotonics (the MOTIVE/First Response Bundle). It works by physically compressing the uterus between two hands to control bleeding while other resuscitative and pharmacological measures continue.
+              - paragraph [ref=e119]: "STEP-BY-STEP PROCEDURE:"
+              - list [ref=e120]:
+                - listitem [ref=e121]: Shout for help and assemble the emergency team.
+                - listitem [ref=e122]: Briefly explain the procedure to the mother and obtain informed consent.
+                - listitem [ref=e123]: Perform hand hygiene and put on gynecological (elbow-length) gloves — double-glove.
+                - listitem [ref=e124]: Perform a vaginal examination.
+                - listitem [ref=e125]: Insert the whole hand into the vagina and, with the hand in the vagina, identify the anterior fornix.
+                - listitem [ref=e126]: Form a fist with the internal hand.
+                - listitem [ref=e127]: Place the fist into the anterior fornix, pressing it against the anterior wall of the uterus.
+                - listitem [ref=e128]: With the other hand on the suprapubic area, press deeply into the abdomen behind the uterus, applying pressure against the posterior wall of the uterus (suprapubic pressure) — the uterus is thereby compressed between the internal fist and the external hand.
+                - listitem [ref=e129]: Maintain firm compression for at least 5 minutes, until the bleeding is controlled and the uterus contracts, while continuing with other PPH interventions (uterotonics, IV fluids, blood products as indicated) — do not stop other resuscitative measures while performing this procedure.
+                - listitem [ref=e130]: "Reassess: if bleeding is controlled and the uterus is well contracted, gradually release compression while observing for re-bleeding. If bleeding is not controlled, continue compression and escalate (e.g. abdominal aortic compression, uterine balloon tamponade, or transfer for surgical management)."
+                - listitem [ref=e131]: Explain to the mother the results of the procedure and next steps, and document blood loss and findings.
+              - paragraph [ref=e132]: This is a bridging/temporizing skill — it buys time to organize definitive management (transport, theatre, blood products) and should never delay escalation if bleeding is not controlled.
+          - generic [ref=e133]:
+            - heading "Bimanual Compression of the Uterus — Practical Assessment Rubric — Case Scenario" [level=3] [ref=e134]
+            - generic [ref=e135]:
+              - paragraph [ref=e136]: "SCENARIO: You are managing PPH and you have used all the options available, but the uterus is still not contracted. You have decided to perform a bimanual uterine compression as a remedy."
+              - paragraph [ref=e137]: "TASK: Give a running commentary as you perform the procedure."
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - img [ref=e143]
+            - heading "II. Expected Learning Outcome" [level=2] [ref=e145]
+          - paragraph [ref=e147]: By the end of this track, the mentee should be able to independently recognize when bimanual uterine compression is indicated for refractory uterine atony, correctly position both hands (an internal fist in the anterior fornix against the anterior uterine wall, and an external hand compressing the posterior uterine wall suprapubically), sustain compression safely for at least 5 minutes while continuing other first-response PPH interventions, and communicate findings, results, and next steps clearly to the mother and the wider team.
+        - generic [ref=e150]:
+          - generic [ref=e151]:
+            - img [ref=e153]
+            - heading "III. Learning Objectives" [level=2] [ref=e155]
+          - list [ref=e156]:
+            - listitem [ref=e157]:
+              - img [ref=e158]
+              - generic [ref=e160]: Identify uterine atony refractory to massage and first-line uterotonics as the indication for bimanual compression.
+            - listitem [ref=e161]:
+              - img [ref=e162]
+              - generic [ref=e164]: "Demonstrate correct hand positioning: internal fist in the anterior fornix and external hand on the posterior uterine wall via the suprapubic area."
+            - listitem [ref=e165]:
+              - img [ref=e166]
+              - generic [ref=e168]: Maintain effective bimanual compression for a minimum of 5 minutes while continuing other PPH management steps.
+            - listitem [ref=e169]:
+              - img [ref=e170]
+              - generic [ref=e172]: Recognize signs that compression is effective (bleeding controlled, uterus contracting) versus signs requiring escalation.
+            - listitem [ref=e173]:
+              - img [ref=e174]
+              - generic [ref=e176]: Communicate the procedure, consent, findings, and next steps clearly to the mother and document blood loss.
+        - generic [ref=e179]:
+          - generic [ref=e180]:
+            - img [ref=e182]
+            - heading "IV. Module Workplan" [level=2] [ref=e184]
+          - generic [ref=e185]:
+            - generic [ref=e186]:
+              - generic [ref=e187]: Video & Mentor Demonstration
+              - generic [ref=e188]: 15 min
+            - generic [ref=e189]:
+              - generic [ref=e190]: Return Demonstration
+              - generic [ref=e191]: 10 min
+            - generic [ref=e192]:
+              - generic [ref=e193]: Assessment Checklist & Debrief
+              - generic [ref=e194]: 10 min
+        - button "Equipment & Materials Needed" [ref=e197] [cursor=pointer]:
+          - generic [ref=e198]:
+            - img [ref=e200]
+            - heading "Equipment & Materials Needed" [level=2] [ref=e202]
+          - img [ref=e203]
+        - generic [ref=e207]:
+          - generic [ref=e209]:
+            - img [ref=e211]
+            - heading "Pre-Test" [level=2] [ref=e213]
+          - paragraph [ref=e214]: Complete the pre-test to unlock module content, case scenarios, and the hands-on video section.
+          - button "Start Pre-Test" [ref=e216] [cursor=pointer]:
+            - img [ref=e217]
+            - text: Start Pre-Test
+        - generic [ref=e221]:
+          - img [ref=e223]
+          - generic [ref=e225]:
+            - paragraph [ref=e226]: Content locked
+            - paragraph [ref=e227]: Complete the pre-test above to unlock case scenarios, videos, and the hands-on video submission.
+      - complementary [ref=e229]:
+        - generic [ref=e232]:
+          - paragraph [ref=e233]: Activities
+          - generic [ref=e234]:
+            - generic [ref=e238]:
+              - paragraph [ref=e239]: CME
+              - paragraph [ref=e240]: Enrolled
+            - generic [ref=e244]:
+              - paragraph [ref=e245]: Hands-on Demo
+              - paragraph [ref=e246]: Enrolled
+            - generic [ref=e250]:
+              - paragraph [ref=e251]: Drill
+              - paragraph [ref=e252]: Enrolled

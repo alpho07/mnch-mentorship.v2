@@ -67,6 +67,12 @@
         .score-ring{position:relative;width:72px;height:72px;flex-shrink:0}
         .score-ring svg{transform:rotate(-90deg)}
         .score-ring .ring-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+        /* Quiz-taking lockdown — no copy/select/drag anywhere inside the live quiz modal */
+        .quiz-guard,.quiz-guard *{
+            -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
+            -webkit-touch-callout:none;-webkit-user-drag:none;
+        }
     </style>
 </head>
 <body class="min-h-full bg-slate-50 dark:bg-slate-950 font-sans antialiased text-slate-900 dark:text-slate-100">
@@ -409,7 +415,7 @@
                     @endif
                 @endif
 
-                {{-- ── Introduction ─────────────────────────────────────────── --}}
+                {{-- ── I. Introduction to the Module ────────────────────────────── --}}
                 @if($hasIntroContent)
                 <div class="section-card">
                     <div class="card-stripe" style="background:#10b981"></div>
@@ -418,7 +424,7 @@
                             <div style="width:34px;height:34px;border-radius:10px;background:#d1fae5;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                                 <svg style="width:16px;height:16px;color:#059669" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </div>
-                            <h2 class="text-base font-bold text-slate-900 dark:text-white">Introduction</h2>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">I. Introduction to the Module</h2>
                         </div>
                         @if($classModule->programModule?->description)
                             <div class="prose prose-sm dark:prose-invert max-w-none">{!! Str::markdown($classModule->programModule->description) !!}</div>
@@ -429,6 +435,93 @@
                                 <div class="prose prose-sm dark:prose-invert max-w-none">{!! Str::markdown($intro->content) !!}</div>
                             </div>
                         @endforeach
+                    </div>
+                </div>
+                @endif
+
+                {{-- ── II. Expected Learning Outcome ────────────────────────────── --}}
+                @if($expectedLearningOutcomes->isNotEmpty())
+                <div class="section-card">
+                    <div class="card-stripe" style="background:#0ea5e9"></div>
+                    <div class="p-5 sm:p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div style="width:34px;height:34px;border-radius:10px;background:#e0f2fe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <svg style="width:16px;height:16px;color:#0284c7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">II. Expected Learning Outcome</h2>
+                        </div>
+                        @foreach($expectedLearningOutcomes as $outcome)
+                            <div class="prose prose-sm dark:prose-invert max-w-none {{ !$loop->first ? 'mt-4 pt-4 border-t border-slate-100 dark:border-slate-800' : '' }}">{!! Str::markdown($outcome->content) !!}</div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                {{-- ── III. Learning Objectives ─────────────────────────────────── --}}
+                @if(!empty($objectives))
+                <div class="section-card">
+                    <div class="card-stripe" style="background:#6366f1"></div>
+                    <div class="p-5 sm:p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div style="width:34px;height:34px;border-radius:10px;background:#e0e7ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <svg style="width:16px;height:16px;color:#4f46e5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">III. Learning Objectives</h2>
+                        </div>
+                        <ul class="space-y-2">
+                            @foreach($objectives as $objective)
+                                <li class="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                                    <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L9.53 12.22a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
+                                    <span>{{ $objective }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+                @endif
+
+                {{-- ── IV. Module Workplan ──────────────────────────────────────── --}}
+                @if(!empty($workplan))
+                <div class="section-card">
+                    <div class="card-stripe" style="background:#f97316"></div>
+                    <div class="p-5 sm:p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div style="width:34px;height:34px;border-radius:10px;background:#ffedd5;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <svg style="width:16px;height:16px;color:#ea580c" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">IV. Module Workplan</h2>
+                        </div>
+                        <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                            @foreach($workplan as $item)
+                                <div class="flex items-center justify-between py-2 text-sm">
+                                    <span class="text-slate-700 dark:text-slate-300">{{ $item['label'] ?? '' }}</span>
+                                    <span class="font-semibold text-slate-500 dark:text-slate-400">{{ $item['duration'] ?? '' }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                {{-- ── Equipment & Materials Needed (collapsible) ───────────────── --}}
+                @if($moduleRubric && !empty($moduleRubric->equipment_supplies))
+                <div class="section-card" x-data="{ open: false }">
+                    <div class="card-stripe" style="background:#64748b"></div>
+                    <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-3 p-5 sm:p-6 text-left">
+                        <div class="flex items-center gap-3">
+                            <div style="width:34px;height:34px;border-radius:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                <svg style="width:16px;height:16px;color:#475569" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </div>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">Equipment &amp; Materials Needed</h2>
+                        </div>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform shrink-0" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="open" x-cloak class="px-5 sm:px-6 pb-5 sm:pb-6 -mt-2">
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($moduleRubric->equipment_supplies as $item)
+                                <span class="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300">{{ $item }}</span>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
                 @endif
@@ -448,12 +541,12 @@
                             @if($preTestStatus['completed'])
                                 <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:#dcfce7;color:#15803d">
                                     <svg style="width:11px;height:11px" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L9.53 12.22a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
-                                    Done — {{ $preTestStatus['attempt']?->score }}%
+                                    Done — {{ $preTestStatus['attempt']?->correct_answers }}/{{ $preTestStatus['attempt']?->total_questions }}
                                 </span>
                             @endif
                         </div>
                         @if($preTestStatus['completed'])
-                            @include('mentee.partials.quiz-review', ['status' => $preTestStatus])
+                            @include('mentee.partials.quiz-review', ['status' => $preTestStatus, 'revealAnswers' => $postTestStatus['completed'] ?? false])
                             <div class="mt-3">
                                 <form action="{{ route('mentee.class.quiz.start', [$class->id, $classModule->id, $preTestStatus['quiz']->id]) }}" method="POST">
                                     @csrf
@@ -497,8 +590,8 @@
 
                 @if($canAccessContent)
 
-                    {{-- ── Case Scenarios ───────────────────────────────────── --}}
-                    @if($caseScenarios->isNotEmpty())
+                    {{-- ── Case Scenario (+ progression) — unlocked after the pre-test ─── --}}
+                    @if($caseScenarios->isNotEmpty() || $caseScenarioProgressions->isNotEmpty())
                     <div class="section-card">
                         <div class="card-stripe" style="background:#0ea5e9"></div>
                         <div class="p-5 sm:p-6">
@@ -506,14 +599,53 @@
                                 <div style="width:34px;height:34px;border-radius:10px;background:#e0f2fe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                                     <svg style="width:16px;height:16px;color:#0284c7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                                 </div>
-                                <h2 class="text-base font-bold text-slate-900 dark:text-white">Case Scenarios</h2>
+                                <h2 class="text-base font-bold text-slate-900 dark:text-white">Case Scenario</h2>
                             </div>
-                            <div class="space-y-4">
-                                @foreach($caseScenarios as $scenario)
-                                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
-                                        <h3 class="font-semibold text-slate-900 dark:text-white text-sm mb-2">{{ $scenario->title }}</h3>
-                                        <div class="prose prose-sm dark:prose-invert max-w-none">{!! Str::markdown($scenario->content) !!}</div>
-                                    </div>
+                            @foreach($caseScenarios as $scenario)
+                                <div class="{{ $loop->first ? '' : 'mt-4 pt-4 border-t border-slate-100 dark:border-slate-800' }}">
+                                    <h3 class="font-semibold text-slate-900 dark:text-white mb-2 text-sm">{{ $scenario->title }}</h3>
+                                    <div class="prose prose-sm dark:prose-invert max-w-none">{!! Str::markdown($scenario->content) !!}</div>
+                                </div>
+                            @endforeach
+                            @foreach($caseScenarioProgressions as $progression)
+                                <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <h3 class="font-semibold text-slate-900 dark:text-white mb-2 text-sm">{{ $progression->title }}</h3>
+                                    <div class="prose prose-sm dark:prose-invert max-w-none">{!! Str::markdown($progression->content) !!}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- ── Sessions — other tracks in this PPH sequence, for navigation ── --}}
+                    @if($sessions->isNotEmpty())
+                    <div class="section-card">
+                        <div class="card-stripe" style="background:#0ea5e9"></div>
+                        <div class="p-5 sm:p-6">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div style="width:34px;height:34px;border-radius:10px;background:#e0f2fe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                    <svg style="width:16px;height:16px;color:#0284c7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                </div>
+                                <h2 class="text-base font-bold text-slate-900 dark:text-white">Sessions in this Sequence</h2>
+                            </div>
+                            <div class="space-y-2">
+                                @foreach($sessions as $session)
+                                    @php
+                                        $sStatus = $session['status'];
+                                        $sDone = in_array($sStatus, ['completed', 'exempted']);
+                                    @endphp
+                                    <a href="{{ $session['isCurrent'] ? '#' : $session['url'] }}"
+                                       class="flex items-center justify-between gap-3 p-3 rounded-xl border transition-colors {{ $session['isCurrent'] ? 'border-brand-300 bg-brand-50 dark:bg-brand-950/30 dark:border-brand-700 cursor-default' : 'border-slate-200 dark:border-slate-700 hover:border-brand-300' }}">
+                                        <span class="text-sm font-semibold {{ $session['isCurrent'] ? 'text-brand-700 dark:text-brand-300' : 'text-slate-700 dark:text-slate-300' }}">
+                                            {{ $session['label'] }}
+                                            @if($session['isCurrent'])
+                                                <span class="text-xs font-normal text-brand-500">(you are here)</span>
+                                            @endif
+                                        </span>
+                                        <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;background:{{ $sDone?'#dcfce7':($sStatus==='in_progress'?'#fef3c7':'#f1f5f9') }};color:{{ $sDone?'#166534':($sStatus==='in_progress'?'#92400e':'#64748b') }}">
+                                            {{ ucfirst(str_replace('_',' ',$sStatus)) }}
+                                        </span>
+                                    </a>
                                 @endforeach
                             </div>
                         </div>
@@ -746,12 +878,12 @@
                                 @if($postTestStatus['completed'])
                                     <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:#dcfce7;color:#15803d">
                                         <svg style="width:11px;height:11px" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L9.53 12.22a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
-                                        Done — {{ $postTestStatus['attempt']?->score }}%
+                                        Done — {{ $postTestStatus['attempt']?->correct_answers }}/{{ $postTestStatus['attempt']?->total_questions }}
                                     </span>
                                 @endif
                             </div>
                             @if($postTestStatus['completed'])
-                                @include('mentee.partials.quiz-review', ['status' => $postTestStatus])
+                                @include('mentee.partials.quiz-review', ['status' => $postTestStatus, 'revealAnswers' => true])
                             @endif
                             @if(!$hasSubmittedVideo || $progress->video_review_status !== 'passed')
                                 <div class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-4 py-4 flex items-start gap-3">
@@ -796,11 +928,15 @@
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Scores</p>
                     <div class="space-y-3">
                         @if($preTestStatus['exists'] && $preTestStatus['completed'])
-                            @php $preScore = $preTestStatus['attempt']->score; @endphp
+                            @php
+                                $preScore = $preTestStatus['attempt']->score;
+                                $preCorrect = $preTestStatus['attempt']->correct_answers;
+                                $preTotal = $preTestStatus['attempt']->total_questions;
+                            @endphp
                             <div>
                                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
                                     <span style="font-size:11px;font-weight:600;color:#64748b">Pre-test</span>
-                                    <span style="font-size:13px;font-weight:800;color:{{ $preScore>=80?'#16a34a':($preScore>=50?'#d97706':'#dc2626') }}">{{ $preScore }}%</span>
+                                    <span style="font-size:13px;font-weight:800;color:{{ $preScore>=80?'#16a34a':($preScore>=50?'#d97706':'#dc2626') }}">{{ $preCorrect }}/{{ $preTotal }}</span>
                                 </div>
                                 <div style="height:5px;border-radius:100px;background:#e2e8f0;overflow:hidden">
                                     <div style="width:{{ $preScore }}%;height:100%;background:{{ $preScore>=80?'#16a34a':($preScore>=50?'#f59e0b':'#ef4444') }};border-radius:100px"></div>
@@ -808,11 +944,15 @@
                             </div>
                         @endif
                         @if($postTestStatus['exists'] && $postTestStatus['completed'])
-                            @php $postScore = $postTestStatus['attempt']->score; @endphp
+                            @php
+                                $postScore = $postTestStatus['attempt']->score;
+                                $postCorrect = $postTestStatus['attempt']->correct_answers;
+                                $postTotal = $postTestStatus['attempt']->total_questions;
+                            @endphp
                             <div>
                                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
                                     <span style="font-size:11px;font-weight:600;color:#64748b">Post-test</span>
-                                    <span style="font-size:13px;font-weight:800;color:{{ $postScore>=80?'#16a34a':($postScore>=50?'#d97706':'#dc2626') }}">{{ $postScore }}%</span>
+                                    <span style="font-size:13px;font-weight:800;color:{{ $postScore>=80?'#16a34a':($postScore>=50?'#d97706':'#dc2626') }}">{{ $postCorrect }}/{{ $postTotal }}</span>
                                 </div>
                                 <div style="height:5px;border-radius:100px;background:#e2e8f0;overflow:hidden">
                                     <div style="width:{{ $postScore }}%;height:100%;background:{{ $postScore>=80?'#16a34a':($postScore>=50?'#f59e0b':'#ef4444') }};border-radius:100px"></div>
@@ -821,13 +961,11 @@
                         @endif
                         @if($preTestStatus['exists'] && $preTestStatus['completed'] && $postTestStatus['exists'] && $postTestStatus['completed'])
                             @php
-                                $diff = $postScore - $preScore;
-                                $avg = round(($preScore + $postScore) / 2, 1);
+                                $diffCount = $postCorrect - $preCorrect;
                             @endphp
-                            <div style="padding:10px 12px;border-radius:10px;background:{{ $diff>=0?'#f0fdf4':'#fff7ed' }};border:1px solid {{ $diff>=0?'#bbf7d0':'#fed7aa' }};margin-top:4px">
+                            <div style="padding:10px 12px;border-radius:10px;background:{{ $diffCount>=0?'#f0fdf4':'#fff7ed' }};border:1px solid {{ $diffCount>=0?'#bbf7d0':'#fed7aa' }};margin-top:4px">
                                 <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Improvement</div>
-                                <div style="font-size:20px;font-weight:800;color:{{ $diff>=0?'#16a34a':'#dc2626' }}">{{ $diff >= 0 ? '+' : '' }}{{ $diff }}%</div>
-                                <div style="font-size:11px;color:#64748b;margin-top:1px">Avg: {{ $avg }}%</div>
+                                <div style="font-size:20px;font-weight:800;color:{{ $diffCount>=0?'#16a34a':'#dc2626' }}">{{ $diffCount >= 0 ? '+' : '' }}{{ $diffCount }} correct</div>
                             </div>
                         @endif
                     </div>
@@ -901,7 +1039,9 @@
     @php $attempt = App\Models\QuizAttempt::with(['quiz.questions.options'])->find(session('quiz_attempt_id')); @endphp
     @if($attempt)
         <div x-data="{ open: true }" x-show="open"
-             class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
+             class="quiz-guard fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
+             @copy.prevent @cut.prevent @paste.prevent @contextmenu.prevent @selectstart.prevent @dragstart.prevent
+             @keydown="const k=$event.key.toLowerCase();const mod=$event.ctrlKey||$event.metaKey;if((mod&&['c','x','v','a','s','p','u'].includes(k))||k==='f12'||(mod&&$event.shiftKey&&['i','j','c'].includes(k))){$event.preventDefault()}"
              x-cloak>
             <div @click.away="open = false"
                  class="bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl border-t sm:border border-slate-200 dark:border-slate-800 shadow-2xl w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto">

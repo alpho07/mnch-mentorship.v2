@@ -17,6 +17,10 @@
             return childIds.length > 0 && childIds.every(id => this.isSelected(id));
         },
         toggleModule(moduleId, childIds) {
+            if (!this.selected) {
+                this.selected = [];
+            }
+
             const childIdStrings = childIds.map(id => String(id));
 
             if (childIdStrings.length === 0) {

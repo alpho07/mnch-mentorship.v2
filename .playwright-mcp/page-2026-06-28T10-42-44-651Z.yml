@@ -1,0 +1,1323 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - navigation [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - generic [ref=e10]: Global search
+            - generic [ref=e11]:
+              - img [ref=e13]
+              - searchbox "Global search" [ref=e16]
+          - button "User menu" [ref=e19] [cursor=pointer]:
+            - img "Avatar of Super Admin Admin" [ref=e20]
+      - main [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e24]:
+              - generic [ref=e25]:
+                - navigation [ref=e26]:
+                  - list [ref=e27]:
+                    - listitem [ref=e28]:
+                      - link "Rubrics" [ref=e29] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements
+                    - listitem [ref=e30]:
+                      - img [ref=e31]
+                      - generic [ref=e33]: Edit
+                - heading "Edit Rubric" [level=1] [ref=e34]
+              - button "Delete" [ref=e37] [cursor=pointer]:
+                - generic [ref=e38]: Delete
+            - generic [ref=e41]:
+              - generic [ref=e42]:
+                - generic [ref=e44]:
+                  - heading "Rubric Details" [level=3] [ref=e48]
+                  - generic [ref=e51]:
+                    - generic [ref=e54]:
+                      - generic [ref=e57]:
+                        - text: Program Module
+                        - superscript [ref=e58]: "*"
+                      - combobox [ref=e63]:
+                        - generic [ref=e66]:
+                          - text: "Module 4: Active Management of the Third Stage of Labor (AMSTL)"
+                          - 'button "Remove item: ''29''" [ref=e67] [cursor=pointer]': Remove item
+                    - generic [ref=e70]:
+                      - generic [ref=e73]:
+                        - text: Rubric Title
+                        - superscript [ref=e74]: "*"
+                      - textbox "Rubric Title*" [ref=e78]: AMTSL Practical Assessment Rubric
+                    - generic [ref=e81]:
+                      - generic [ref=e84]: Description
+                      - textbox "Description" [ref=e89]: Hands-on practical rubric for Active Management of the Third Stage of Labour (AMTSL). Each item is scored Yes (1) if performed to standard, No (0) if not.
+                    - generic [ref=e92]:
+                      - generic [ref=e95]:
+                        - generic [ref=e98]:
+                          - text: Total Marks
+                          - superscript [ref=e99]: "*"
+                        - spinbutton "Total Marks*" [ref=e103]: "21"
+                      - generic [ref=e106]:
+                        - generic [ref=e109]:
+                          - text: Pass Marks
+                          - superscript [ref=e110]: "*"
+                        - spinbutton "Pass Marks*" [ref=e114]: "17"
+                      - generic [ref=e117]:
+                        - generic [ref=e120]: Pass % (auto-display)
+                        - spinbutton "Pass % (auto-display)" [disabled] [ref=e124]: "80.95"
+                    - generic [ref=e129]:
+                      - switch "Active" [checked] [ref=e130] [cursor=pointer]
+                      - generic [ref=e131]: Active
+                    - generic [ref=e134]:
+                      - generic [ref=e137]: Order
+                      - spinbutton "Order" [ref=e141]: "1"
+                - generic [ref=e143]:
+                  - heading "Case Scenario" [level=3] [ref=e147]
+                  - generic [ref=e153]:
+                    - generic [ref=e156]: Case Scenario Text
+                    - generic [ref=e157]:
+                      - textbox "Case Scenario Text" [ref=e161]: "PATIENT: Natalie SCENARIO: Natalie was admitted to the labor ward in the second stage of labor and has had a normal vaginal birth. TASK: Manage the third stage of labor giving a running commentary."
+                      - generic [ref=e162]: The clinical scenario presented during the practical assessment.
+                - generic [ref=e164]:
+                  - heading "Equipment & Supplies" [level=3] [ref=e168]
+                  - generic [ref=e174]:
+                    - generic [ref=e177]: Equipment / Supplies Required
+                    - generic [ref=e181]:
+                      - combobox "Equipment / Supplies Required" [ref=e182]
+                      - generic [ref=e185]:
+                        - generic [ref=e186]:
+                          - generic [ref=e188]: Madam Zoe/Mama Natalie with placenta
+                          - button [ref=e189] [cursor=pointer]:
+                            - img [ref=e190]
+                        - generic [ref=e192]:
+                          - generic [ref=e194]: AMTSL Job aid
+                          - button [ref=e195] [cursor=pointer]:
+                            - img [ref=e196]
+                        - generic [ref=e198]:
+                          - generic [ref=e200]: Syringes 2cc and 5cc
+                          - button [ref=e201] [cursor=pointer]:
+                            - img [ref=e202]
+                        - generic [ref=e204]:
+                          - generic [ref=e206]: Needle Size G 21 or 23
+                          - button [ref=e207] [cursor=pointer]:
+                            - img [ref=e208]
+                        - generic [ref=e210]:
+                          - generic [ref=e212]: Large bore cannulas (G 16)
+                          - button [ref=e213] [cursor=pointer]:
+                            - img [ref=e214]
+                        - generic [ref=e216]:
+                          - generic [ref=e218]: Oxytocin ampoule 10 IU
+                          - button [ref=e219] [cursor=pointer]:
+                            - img [ref=e220]
+                        - generic [ref=e222]:
+                          - generic [ref=e224]: Foley's catheter
+                          - button [ref=e225] [cursor=pointer]:
+                            - img [ref=e226]
+                        - generic [ref=e228]:
+                          - generic [ref=e230]: Antiseptic lotion, e.g. 5% chlorhexidine
+                          - button [ref=e231] [cursor=pointer]:
+                            - img [ref=e232]
+                        - generic [ref=e234]:
+                          - generic [ref=e236]: Sterile gloves
+                          - button [ref=e237] [cursor=pointer]:
+                            - img [ref=e238]
+                        - generic [ref=e240]:
+                          - generic [ref=e242]: Examination gloves
+                          - button [ref=e243] [cursor=pointer]:
+                            - img [ref=e244]
+                        - generic [ref=e246]:
+                          - generic [ref=e248]: Blood collection drapes/calibrated blood collection device
+                          - button [ref=e249] [cursor=pointer]:
+                            - img [ref=e250]
+                - generic [ref=e253]:
+                  - heading "Debrief Questions" [level=3] [ref=e257]
+                  - generic [ref=e263]:
+                    - generic [ref=e266]: Debrief Questions (mentor reference)
+                    - generic [ref=e270]:
+                      - combobox "Debrief Questions (mentor reference)" [ref=e271]
+                      - generic [ref=e274]:
+                        - generic [ref=e275]:
+                          - generic [ref=e277]: How did the assessment feel?
+                          - button [ref=e278] [cursor=pointer]:
+                            - img [ref=e279]
+                        - generic [ref=e281]:
+                          - generic [ref=e283]: What are the steps of AMTSL?
+                          - button [ref=e284] [cursor=pointer]:
+                            - img [ref=e285]
+                        - generic [ref=e287]:
+                          - generic [ref=e289]: Which steps did you perform well?
+                          - button [ref=e290] [cursor=pointer]:
+                            - img [ref=e291]
+                        - generic [ref=e293]:
+                          - generic [ref=e295]: Which steps need to be improved?
+                          - button [ref=e296] [cursor=pointer]:
+                            - img [ref=e297]
+                - generic [ref=e300]:
+                  - generic [ref=e303]:
+                    - heading "Checklist Items" [level=3] [ref=e304]
+                    - paragraph [ref=e305]: Define the observable steps / criteria. Order them as they should appear on the assessment sheet.
+                  - generic [ref=e311]:
+                    - generic [ref=e314]: Items
+                    - generic [ref=e316]:
+                      - list [ref=e317]:
+                        - generic [ref=e318]:
+                          - listitem [ref=e319]:
+                            - generic [ref=e320]:
+                              - list [ref=e321]:
+                                - listitem [ref=e322]:
+                                  - button "Move" [ref=e323] [cursor=pointer]:
+                                    - generic [ref=e324]: Move
+                                    - img [ref=e325]
+                              - list [ref=e327]:
+                                - listitem [ref=e328]:
+                                  - button "Clone" [ref=e329] [cursor=pointer]:
+                                    - generic [ref=e330]: Clone
+                                    - img [ref=e331]
+                                - listitem [ref=e334]:
+                                  - button "Delete" [ref=e335] [cursor=pointer]:
+                                    - generic [ref=e336]: Delete
+                                    - img [ref=e337]
+                            - generic [ref=e340]:
+                              - generic [ref=e343]:
+                                - generic [ref=e346]:
+                                  - text: "#"
+                                  - superscript [ref=e347]: "*"
+                                - spinbutton "#*" [ref=e351]: "1"
+                              - generic [ref=e354]:
+                                - generic [ref=e357]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e358]: "*"
+                                - textbox "Step / Criterion*" [ref=e363]: Explains the procedure and blood collection drape to the mother and birth companion
+                              - generic [ref=e366]:
+                                - generic [ref=e369]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e374]
+                              - generic [ref=e379]:
+                                - switch "Active" [checked] [ref=e380] [cursor=pointer]
+                                - generic [ref=e381]: Active
+                          - listitem [ref=e382]:
+                            - generic [ref=e383]:
+                              - list [ref=e384]:
+                                - listitem [ref=e385]:
+                                  - button "Move" [ref=e386] [cursor=pointer]:
+                                    - generic [ref=e387]: Move
+                                    - img [ref=e388]
+                              - list [ref=e390]:
+                                - listitem [ref=e391]:
+                                  - button "Clone" [ref=e392] [cursor=pointer]:
+                                    - generic [ref=e393]: Clone
+                                    - img [ref=e394]
+                                - listitem [ref=e397]:
+                                  - button "Delete" [ref=e398] [cursor=pointer]:
+                                    - generic [ref=e399]: Delete
+                                    - img [ref=e400]
+                            - generic [ref=e403]:
+                              - generic [ref=e406]:
+                                - generic [ref=e409]:
+                                  - text: "#"
+                                  - superscript [ref=e410]: "*"
+                                - spinbutton "#*" [ref=e414]: "2"
+                              - generic [ref=e417]:
+                                - generic [ref=e420]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e421]: "*"
+                                - textbox "Step / Criterion*" [ref=e426]: Obtains informed consent
+                              - generic [ref=e429]:
+                                - generic [ref=e432]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e437]
+                              - generic [ref=e442]:
+                                - switch "Active" [checked] [ref=e443] [cursor=pointer]
+                                - generic [ref=e444]: Active
+                          - listitem [ref=e445]:
+                            - generic [ref=e446]:
+                              - list [ref=e447]:
+                                - listitem [ref=e448]:
+                                  - button "Move" [ref=e449] [cursor=pointer]:
+                                    - generic [ref=e450]: Move
+                                    - img [ref=e451]
+                              - list [ref=e453]:
+                                - listitem [ref=e454]:
+                                  - button "Clone" [ref=e455] [cursor=pointer]:
+                                    - generic [ref=e456]: Clone
+                                    - img [ref=e457]
+                                - listitem [ref=e460]:
+                                  - button "Delete" [ref=e461] [cursor=pointer]:
+                                    - generic [ref=e462]: Delete
+                                    - img [ref=e463]
+                            - generic [ref=e466]:
+                              - generic [ref=e469]:
+                                - generic [ref=e472]:
+                                  - text: "#"
+                                  - superscript [ref=e473]: "*"
+                                - spinbutton "#*" [ref=e477]: "3"
+                              - generic [ref=e480]:
+                                - generic [ref=e483]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e484]: "*"
+                                - textbox "Step / Criterion*" [ref=e489]: Checks for a second baby
+                              - generic [ref=e492]:
+                                - generic [ref=e495]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e500]
+                              - generic [ref=e505]:
+                                - switch "Active" [checked] [ref=e506] [cursor=pointer]
+                                - generic [ref=e507]: Active
+                          - listitem [ref=e508]:
+                            - generic [ref=e509]:
+                              - list [ref=e510]:
+                                - listitem [ref=e511]:
+                                  - button "Move" [ref=e512] [cursor=pointer]:
+                                    - generic [ref=e513]: Move
+                                    - img [ref=e514]
+                              - list [ref=e516]:
+                                - listitem [ref=e517]:
+                                  - button "Clone" [ref=e518] [cursor=pointer]:
+                                    - generic [ref=e519]: Clone
+                                    - img [ref=e520]
+                                - listitem [ref=e523]:
+                                  - button "Delete" [ref=e524] [cursor=pointer]:
+                                    - generic [ref=e525]: Delete
+                                    - img [ref=e526]
+                            - generic [ref=e529]:
+                              - generic [ref=e532]:
+                                - generic [ref=e535]:
+                                  - text: "#"
+                                  - superscript [ref=e536]: "*"
+                                - spinbutton "#*" [ref=e540]: "4"
+                              - generic [ref=e543]:
+                                - generic [ref=e546]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e547]: "*"
+                                - textbox "Step / Criterion*" [ref=e552]: Tells the woman what medication she is being given and why
+                              - generic [ref=e555]:
+                                - generic [ref=e558]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e563]
+                              - generic [ref=e568]:
+                                - switch "Active" [checked] [ref=e569] [cursor=pointer]
+                                - generic [ref=e570]: Active
+                          - listitem [ref=e571]:
+                            - generic [ref=e572]:
+                              - list [ref=e573]:
+                                - listitem [ref=e574]:
+                                  - button "Move" [ref=e575] [cursor=pointer]:
+                                    - generic [ref=e576]: Move
+                                    - img [ref=e577]
+                              - list [ref=e579]:
+                                - listitem [ref=e580]:
+                                  - button "Clone" [ref=e581] [cursor=pointer]:
+                                    - generic [ref=e582]: Clone
+                                    - img [ref=e583]
+                                - listitem [ref=e586]:
+                                  - button "Delete" [ref=e587] [cursor=pointer]:
+                                    - generic [ref=e588]: Delete
+                                    - img [ref=e589]
+                            - generic [ref=e592]:
+                              - generic [ref=e595]:
+                                - generic [ref=e598]:
+                                  - text: "#"
+                                  - superscript [ref=e599]: "*"
+                                - spinbutton "#*" [ref=e603]: "5"
+                              - generic [ref=e606]:
+                                - generic [ref=e609]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e610]: "*"
+                                - textbox "Step / Criterion*" [ref=e615]: Gives uterotonic within 1 minute of birth of the baby
+                              - generic [ref=e618]:
+                                - generic [ref=e621]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e626]
+                              - generic [ref=e631]:
+                                - switch "Active" [checked] [ref=e632] [cursor=pointer]
+                                - generic [ref=e633]: Active
+                          - listitem [ref=e634]:
+                            - generic [ref=e635]:
+                              - list [ref=e636]:
+                                - listitem [ref=e637]:
+                                  - button "Move" [ref=e638] [cursor=pointer]:
+                                    - generic [ref=e639]: Move
+                                    - img [ref=e640]
+                              - list [ref=e642]:
+                                - listitem [ref=e643]:
+                                  - button "Clone" [ref=e644] [cursor=pointer]:
+                                    - generic [ref=e645]: Clone
+                                    - img [ref=e646]
+                                - listitem [ref=e649]:
+                                  - button "Delete" [ref=e650] [cursor=pointer]:
+                                    - generic [ref=e651]: Delete
+                                    - img [ref=e652]
+                            - generic [ref=e655]:
+                              - generic [ref=e658]:
+                                - generic [ref=e661]:
+                                  - text: "#"
+                                  - superscript [ref=e662]: "*"
+                                - spinbutton "#*" [ref=e666]: "6"
+                              - generic [ref=e669]:
+                                - generic [ref=e672]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e673]: "*"
+                                - textbox "Step / Criterion*" [ref=e678]: Unfolds the blood collection drape or places the blood collection device
+                              - generic [ref=e681]:
+                                - generic [ref=e684]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e689]
+                              - generic [ref=e694]:
+                                - switch "Active" [checked] [ref=e695] [cursor=pointer]
+                                - generic [ref=e696]: Active
+                          - listitem [ref=e697]:
+                            - generic [ref=e698]:
+                              - list [ref=e699]:
+                                - listitem [ref=e700]:
+                                  - button "Move" [ref=e701] [cursor=pointer]:
+                                    - generic [ref=e702]: Move
+                                    - img [ref=e703]
+                              - list [ref=e705]:
+                                - listitem [ref=e706]:
+                                  - button "Clone" [ref=e707] [cursor=pointer]:
+                                    - generic [ref=e708]: Clone
+                                    - img [ref=e709]
+                                - listitem [ref=e712]:
+                                  - button "Delete" [ref=e713] [cursor=pointer]:
+                                    - generic [ref=e714]: Delete
+                                    - img [ref=e715]
+                            - generic [ref=e718]:
+                              - generic [ref=e721]:
+                                - generic [ref=e724]:
+                                  - text: "#"
+                                  - superscript [ref=e725]: "*"
+                                - spinbutton "#*" [ref=e729]: "7"
+                              - generic [ref=e732]:
+                                - generic [ref=e735]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e736]: "*"
+                                - textbox "Step / Criterion*" [ref=e741]: Performs delayed cord clamping 1–3 minutes after giving uterotonics
+                              - generic [ref=e744]:
+                                - generic [ref=e747]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e752]
+                              - generic [ref=e757]:
+                                - switch "Active" [checked] [ref=e758] [cursor=pointer]
+                                - generic [ref=e759]: Active
+                          - listitem [ref=e760]:
+                            - generic [ref=e761]:
+                              - list [ref=e762]:
+                                - listitem [ref=e763]:
+                                  - button "Move" [ref=e764] [cursor=pointer]:
+                                    - generic [ref=e765]: Move
+                                    - img [ref=e766]
+                              - list [ref=e768]:
+                                - listitem [ref=e769]:
+                                  - button "Clone" [ref=e770] [cursor=pointer]:
+                                    - generic [ref=e771]: Clone
+                                    - img [ref=e772]
+                                - listitem [ref=e775]:
+                                  - button "Delete" [ref=e776] [cursor=pointer]:
+                                    - generic [ref=e777]: Delete
+                                    - img [ref=e778]
+                            - generic [ref=e781]:
+                              - generic [ref=e784]:
+                                - generic [ref=e787]:
+                                  - text: "#"
+                                  - superscript [ref=e788]: "*"
+                                - spinbutton "#*" [ref=e792]: "8"
+                              - generic [ref=e795]:
+                                - generic [ref=e798]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e799]: "*"
+                                - textbox "Step / Criterion*" [ref=e804]: Changes gloves before cutting the cord
+                              - generic [ref=e807]:
+                                - generic [ref=e810]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e815]
+                              - generic [ref=e820]:
+                                - switch "Active" [checked] [ref=e821] [cursor=pointer]
+                                - generic [ref=e822]: Active
+                          - listitem [ref=e823]:
+                            - generic [ref=e824]:
+                              - list [ref=e825]:
+                                - listitem [ref=e826]:
+                                  - button "Move" [ref=e827] [cursor=pointer]:
+                                    - generic [ref=e828]: Move
+                                    - img [ref=e829]
+                              - list [ref=e831]:
+                                - listitem [ref=e832]:
+                                  - button "Clone" [ref=e833] [cursor=pointer]:
+                                    - generic [ref=e834]: Clone
+                                    - img [ref=e835]
+                                - listitem [ref=e838]:
+                                  - button "Delete" [ref=e839] [cursor=pointer]:
+                                    - generic [ref=e840]: Delete
+                                    - img [ref=e841]
+                            - generic [ref=e844]:
+                              - generic [ref=e847]:
+                                - generic [ref=e850]:
+                                  - text: "#"
+                                  - superscript [ref=e851]: "*"
+                                - spinbutton "#*" [ref=e855]: "9"
+                              - generic [ref=e858]:
+                                - generic [ref=e861]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e862]: "*"
+                                - textbox "Step / Criterion*" [ref=e867]: Delivers placenta by controlled cord traction (CCT) while applying counter traction only when the mother is having a contraction
+                              - generic [ref=e870]:
+                                - generic [ref=e873]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e878]
+                              - generic [ref=e883]:
+                                - switch "Active" [checked] [ref=e884] [cursor=pointer]
+                                - generic [ref=e885]: Active
+                          - listitem [ref=e886]:
+                            - generic [ref=e887]:
+                              - list [ref=e888]:
+                                - listitem [ref=e889]:
+                                  - button "Move" [ref=e890] [cursor=pointer]:
+                                    - generic [ref=e891]: Move
+                                    - img [ref=e892]
+                              - list [ref=e894]:
+                                - listitem [ref=e895]:
+                                  - button "Clone" [ref=e896] [cursor=pointer]:
+                                    - generic [ref=e897]: Clone
+                                    - img [ref=e898]
+                                - listitem [ref=e901]:
+                                  - button "Delete" [ref=e902] [cursor=pointer]:
+                                    - generic [ref=e903]: Delete
+                                    - img [ref=e904]
+                            - generic [ref=e907]:
+                              - generic [ref=e910]:
+                                - generic [ref=e913]:
+                                  - text: "#"
+                                  - superscript [ref=e914]: "*"
+                                - spinbutton "#*" [ref=e918]: "10"
+                              - generic [ref=e921]:
+                                - generic [ref=e924]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e925]: "*"
+                                - textbox "Step / Criterion*" [ref=e930]: Uses both hands to receive the placenta while gently rotating it as it is being delivered
+                              - generic [ref=e933]:
+                                - generic [ref=e936]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e941]
+                              - generic [ref=e946]:
+                                - switch "Active" [checked] [ref=e947] [cursor=pointer]
+                                - generic [ref=e948]: Active
+                          - listitem [ref=e949]:
+                            - generic [ref=e950]:
+                              - list [ref=e951]:
+                                - listitem [ref=e952]:
+                                  - button "Move" [ref=e953] [cursor=pointer]:
+                                    - generic [ref=e954]: Move
+                                    - img [ref=e955]
+                              - list [ref=e957]:
+                                - listitem [ref=e958]:
+                                  - button "Clone" [ref=e959] [cursor=pointer]:
+                                    - generic [ref=e960]: Clone
+                                    - img [ref=e961]
+                                - listitem [ref=e964]:
+                                  - button "Delete" [ref=e965] [cursor=pointer]:
+                                    - generic [ref=e966]: Delete
+                                    - img [ref=e967]
+                            - generic [ref=e970]:
+                              - generic [ref=e973]:
+                                - generic [ref=e976]:
+                                  - text: "#"
+                                  - superscript [ref=e977]: "*"
+                                - spinbutton "#*" [ref=e981]: "11"
+                              - generic [ref=e984]:
+                                - generic [ref=e987]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e988]: "*"
+                                - textbox "Step / Criterion*" [ref=e993]: Inspects the placenta for completeness
+                              - generic [ref=e996]:
+                                - generic [ref=e999]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e1004]
+                              - generic [ref=e1009]:
+                                - switch "Active" [checked] [ref=e1010] [cursor=pointer]
+                                - generic [ref=e1011]: Active
+                          - listitem [ref=e1012]:
+                            - generic [ref=e1013]:
+                              - list [ref=e1014]:
+                                - listitem [ref=e1015]:
+                                  - button "Move" [ref=e1016] [cursor=pointer]:
+                                    - generic [ref=e1017]: Move
+                                    - img [ref=e1018]
+                              - list [ref=e1020]:
+                                - listitem [ref=e1021]:
+                                  - button "Clone" [ref=e1022] [cursor=pointer]:
+                                    - generic [ref=e1023]: Clone
+                                    - img [ref=e1024]
+                                - listitem [ref=e1027]:
+                                  - button "Delete" [ref=e1028] [cursor=pointer]:
+                                    - generic [ref=e1029]: Delete
+                                    - img [ref=e1030]
+                            - generic [ref=e1033]:
+                              - generic [ref=e1036]:
+                                - generic [ref=e1039]:
+                                  - text: "#"
+                                  - superscript [ref=e1040]: "*"
+                                - spinbutton "#*" [ref=e1044]: "12"
+                              - generic [ref=e1047]:
+                                - generic [ref=e1050]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e1051]: "*"
+                                - textbox "Step / Criterion*" [ref=e1056]: Assesses fundal tone immediately following delivery of the placenta
+                              - generic [ref=e1059]:
+                                - generic [ref=e1062]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e1067]
+                              - generic [ref=e1072]:
+                                - switch "Active" [checked] [ref=e1073] [cursor=pointer]
+                                - generic [ref=e1074]: Active
+                          - listitem [ref=e1075]:
+                            - generic [ref=e1076]:
+                              - list [ref=e1077]:
+                                - listitem [ref=e1078]:
+                                  - button "Move" [ref=e1079] [cursor=pointer]:
+                                    - generic [ref=e1080]: Move
+                                    - img [ref=e1081]
+                              - list [ref=e1083]:
+                                - listitem [ref=e1084]:
+                                  - button "Clone" [ref=e1085] [cursor=pointer]:
+                                    - generic [ref=e1086]: Clone
+                                    - img [ref=e1087]
+                                - listitem [ref=e1090]:
+                                  - button "Delete" [ref=e1091] [cursor=pointer]:
+                                    - generic [ref=e1092]: Delete
+                                    - img [ref=e1093]
+                            - generic [ref=e1096]:
+                              - generic [ref=e1099]:
+                                - generic [ref=e1102]:
+                                  - text: "#"
+                                  - superscript [ref=e1103]: "*"
+                                - spinbutton "#*" [ref=e1107]: "13"
+                              - generic [ref=e1110]:
+                                - generic [ref=e1113]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e1114]: "*"
+                                - textbox "Step / Criterion*" [ref=e1119]: Examines the birth canal for tears or lacerations
+                              - generic [ref=e1122]:
+                                - generic [ref=e1125]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e1130]
+                              - generic [ref=e1135]:
+                                - switch "Active" [checked] [ref=e1136] [cursor=pointer]
+                                - generic [ref=e1137]: Active
+                          - listitem [ref=e1138]:
+                            - generic [ref=e1139]:
+                              - list [ref=e1140]:
+                                - listitem [ref=e1141]:
+                                  - button "Move" [ref=e1142] [cursor=pointer]:
+                                    - generic [ref=e1143]: Move
+                                    - img [ref=e1144]
+                              - list [ref=e1146]:
+                                - listitem [ref=e1147]:
+                                  - button "Clone" [ref=e1148] [cursor=pointer]:
+                                    - generic [ref=e1149]: Clone
+                                    - img [ref=e1150]
+                                - listitem [ref=e1153]:
+                                  - button "Delete" [ref=e1154] [cursor=pointer]:
+                                    - generic [ref=e1155]: Delete
+                                    - img [ref=e1156]
+                            - generic [ref=e1159]:
+                              - generic [ref=e1162]:
+                                - generic [ref=e1165]:
+                                  - text: "#"
+                                  - superscript [ref=e1166]: "*"
+                                - spinbutton "#*" [ref=e1170]: "14"
+                              - generic [ref=e1173]:
+                                - generic [ref=e1176]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e1177]: "*"
+                                - textbox "Step / Criterion*" [ref=e1182]: Assesses the amount of blood loss — checks the amount of blood collected in the drape or blood collection device AND vaginal blood flow
+                              - generic [ref=e1185]:
+                                - generic [ref=e1188]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e1193]
+                              - generic [ref=e1198]:
+                                - switch "Active" [checked] [ref=e1199] [cursor=pointer]
+                                - generic [ref=e1200]: Active
+                          - listitem [ref=e1201]:
+                            - generic [ref=e1202]:
+                              - list [ref=e1203]:
+                                - listitem [ref=e1204]:
+                                  - button "Move" [ref=e1205] [cursor=pointer]:
+                                    - generic [ref=e1206]: Move
+                                    - img [ref=e1207]
+                              - list [ref=e1209]:
+                                - listitem [ref=e1210]:
+                                  - button "Clone" [ref=e1211] [cursor=pointer]:
+                                    - generic [ref=e1212]: Clone
+                                    - img [ref=e1213]
+                                - listitem [ref=e1216]:
+                                  - button "Delete" [ref=e1217] [cursor=pointer]:
+                                    - generic [ref=e1218]: Delete
+                                    - img [ref=e1219]
+                            - generic [ref=e1222]:
+                              - generic [ref=e1225]:
+                                - generic [ref=e1228]:
+                                  - text: "#"
+                                  - superscript [ref=e1229]: "*"
+                                - spinbutton "#*" [ref=e1233]: "15"
+                              - generic [ref=e1236]:
+                                - generic [ref=e1239]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e1240]: "*"
+                                - textbox "Step / Criterion*" [ref=e1245]: Demonstrates and asks the woman/birth companion to assess the uterus every 15 minutes for 2 hours and massage if soft until tone is achieved and to report any excessive bleeding
+                              - generic [ref=e1248]:
+                                - generic [ref=e1251]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e1256]
+                              - generic [ref=e1261]:
+                                - switch "Active" [checked] [ref=e1262] [cursor=pointer]
+                                - generic [ref=e1263]: Active
+                          - listitem [ref=e1264]:
+                            - generic [ref=e1265]:
+                              - list [ref=e1266]:
+                                - listitem [ref=e1267]:
+                                  - button "Move" [ref=e1268] [cursor=pointer]:
+                                    - generic [ref=e1269]: Move
+                                    - img [ref=e1270]
+                              - list [ref=e1272]:
+                                - listitem [ref=e1273]:
+                                  - button "Clone" [ref=e1274] [cursor=pointer]:
+                                    - generic [ref=e1275]: Clone
+                                    - img [ref=e1276]
+                                - listitem [ref=e1279]:
+                                  - button "Delete" [ref=e1280] [cursor=pointer]:
+                                    - generic [ref=e1281]: Delete
+                                    - img [ref=e1282]
+                            - generic [ref=e1285]:
+                              - generic [ref=e1288]:
+                                - generic [ref=e1291]:
+                                  - text: "#"
+                                  - superscript [ref=e1292]: "*"
+                                - spinbutton "#*" [ref=e1296]: "16"
+                              - generic [ref=e1299]:
+                                - generic [ref=e1302]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e1303]: "*"
+                                - textbox "Step / Criterion*" [ref=e1308]: Monitors the mother by assessing blood volume in the drape, vaginal blood flow, uterine tone, pulse rate, and BP every 15 minutes for 2 hours after placenta delivery, then every 30 minutes for the next 4 hours; records on the blood loss monitoring chart for the first hour
+                              - generic [ref=e1311]:
+                                - generic [ref=e1314]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e1319]
+                              - generic [ref=e1324]:
+                                - switch "Active" [checked] [ref=e1325] [cursor=pointer]
+                                - generic [ref=e1326]: Active
+                          - listitem [ref=e1327]:
+                            - generic [ref=e1328]:
+                              - list [ref=e1329]:
+                                - listitem [ref=e1330]:
+                                  - button "Move" [ref=e1331] [cursor=pointer]:
+                                    - generic [ref=e1332]: Move
+                                    - img [ref=e1333]
+                              - list [ref=e1335]:
+                                - listitem [ref=e1336]:
+                                  - button "Clone" [ref=e1337] [cursor=pointer]:
+                                    - generic [ref=e1338]: Clone
+                                    - img [ref=e1339]
+                                - listitem [ref=e1342]:
+                                  - button "Delete" [ref=e1343] [cursor=pointer]:
+                                    - generic [ref=e1344]: Delete
+                                    - img [ref=e1345]
+                            - generic [ref=e1348]:
+                              - generic [ref=e1351]:
+                                - generic [ref=e1354]:
+                                  - text: "#"
+                                  - superscript [ref=e1355]: "*"
+                                - spinbutton "#*" [ref=e1359]: "17"
+                              - generic [ref=e1362]:
+                                - generic [ref=e1365]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e1366]: "*"
+                                - textbox "Step / Criterion*" [ref=e1371]: Checks the baby's colour, temperature, and breathing; initiates skin-to-skin contact
+                              - generic [ref=e1374]:
+                                - generic [ref=e1377]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e1382]
+                              - generic [ref=e1387]:
+                                - switch "Active" [checked] [ref=e1388] [cursor=pointer]
+                                - generic [ref=e1389]: Active
+                          - listitem [ref=e1390]:
+                            - generic [ref=e1391]:
+                              - list [ref=e1392]:
+                                - listitem [ref=e1393]:
+                                  - button "Move" [ref=e1394] [cursor=pointer]:
+                                    - generic [ref=e1395]: Move
+                                    - img [ref=e1396]
+                              - list [ref=e1398]:
+                                - listitem [ref=e1399]:
+                                  - button "Clone" [ref=e1400] [cursor=pointer]:
+                                    - generic [ref=e1401]: Clone
+                                    - img [ref=e1402]
+                                - listitem [ref=e1405]:
+                                  - button "Delete" [ref=e1406] [cursor=pointer]:
+                                    - generic [ref=e1407]: Delete
+                                    - img [ref=e1408]
+                            - generic [ref=e1411]:
+                              - generic [ref=e1414]:
+                                - generic [ref=e1417]:
+                                  - text: "#"
+                                  - superscript [ref=e1418]: "*"
+                                - spinbutton "#*" [ref=e1422]: "18"
+                              - generic [ref=e1425]:
+                                - generic [ref=e1428]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e1429]: "*"
+                                - textbox "Step / Criterion*" [ref=e1434]: Encourages breastfeeding within 1 hour of birth
+                              - generic [ref=e1437]:
+                                - generic [ref=e1440]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e1445]
+                              - generic [ref=e1450]:
+                                - switch "Active" [checked] [ref=e1451] [cursor=pointer]
+                                - generic [ref=e1452]: Active
+                          - listitem [ref=e1453]:
+                            - generic [ref=e1454]:
+                              - list [ref=e1455]:
+                                - listitem [ref=e1456]:
+                                  - button "Move" [ref=e1457] [cursor=pointer]:
+                                    - generic [ref=e1458]: Move
+                                    - img [ref=e1459]
+                              - list [ref=e1461]:
+                                - listitem [ref=e1462]:
+                                  - button "Clone" [ref=e1463] [cursor=pointer]:
+                                    - generic [ref=e1464]: Clone
+                                    - img [ref=e1465]
+                                - listitem [ref=e1468]:
+                                  - button "Delete" [ref=e1469] [cursor=pointer]:
+                                    - generic [ref=e1470]: Delete
+                                    - img [ref=e1471]
+                            - generic [ref=e1474]:
+                              - generic [ref=e1477]:
+                                - generic [ref=e1480]:
+                                  - text: "#"
+                                  - superscript [ref=e1481]: "*"
+                                - spinbutton "#*" [ref=e1485]: "19"
+                              - generic [ref=e1488]:
+                                - generic [ref=e1491]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e1492]: "*"
+                                - textbox "Step / Criterion*" [ref=e1497]: Explains to the mother to frequently empty the bladder
+                              - generic [ref=e1500]:
+                                - generic [ref=e1503]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e1508]
+                              - generic [ref=e1513]:
+                                - switch "Active" [checked] [ref=e1514] [cursor=pointer]
+                                - generic [ref=e1515]: Active
+                          - listitem [ref=e1516]:
+                            - generic [ref=e1517]:
+                              - list [ref=e1518]:
+                                - listitem [ref=e1519]:
+                                  - button "Move" [ref=e1520] [cursor=pointer]:
+                                    - generic [ref=e1521]: Move
+                                    - img [ref=e1522]
+                              - list [ref=e1524]:
+                                - listitem [ref=e1525]:
+                                  - button "Clone" [ref=e1526] [cursor=pointer]:
+                                    - generic [ref=e1527]: Clone
+                                    - img [ref=e1528]
+                                - listitem [ref=e1531]:
+                                  - button "Delete" [ref=e1532] [cursor=pointer]:
+                                    - generic [ref=e1533]: Delete
+                                    - img [ref=e1534]
+                            - generic [ref=e1537]:
+                              - generic [ref=e1540]:
+                                - generic [ref=e1543]:
+                                  - text: "#"
+                                  - superscript [ref=e1544]: "*"
+                                - spinbutton "#*" [ref=e1548]: "20"
+                              - generic [ref=e1551]:
+                                - generic [ref=e1554]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e1555]: "*"
+                                - textbox "Step / Criterion*" [ref=e1560]: Explains to the mother the results of the procedure
+                              - generic [ref=e1563]:
+                                - generic [ref=e1566]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e1571]
+                              - generic [ref=e1576]:
+                                - switch "Active" [checked] [ref=e1577] [cursor=pointer]
+                                - generic [ref=e1578]: Active
+                          - listitem [ref=e1579]:
+                            - generic [ref=e1580]:
+                              - list [ref=e1581]:
+                                - listitem [ref=e1582]:
+                                  - button "Move" [ref=e1583] [cursor=pointer]:
+                                    - generic [ref=e1584]: Move
+                                    - img [ref=e1585]
+                              - list [ref=e1587]:
+                                - listitem [ref=e1588]:
+                                  - button "Clone" [ref=e1589] [cursor=pointer]:
+                                    - generic [ref=e1590]: Clone
+                                    - img [ref=e1591]
+                                - listitem [ref=e1594]:
+                                  - button "Delete" [ref=e1595] [cursor=pointer]:
+                                    - generic [ref=e1596]: Delete
+                                    - img [ref=e1597]
+                            - generic [ref=e1600]:
+                              - generic [ref=e1603]:
+                                - generic [ref=e1606]:
+                                  - text: "#"
+                                  - superscript [ref=e1607]: "*"
+                                - spinbutton "#*" [ref=e1611]: "21"
+                              - generic [ref=e1614]:
+                                - generic [ref=e1617]:
+                                  - text: Step / Criterion
+                                  - superscript [ref=e1618]: "*"
+                                - textbox "Step / Criterion*" [ref=e1623]: Documents all the procedures
+                              - generic [ref=e1626]:
+                                - generic [ref=e1629]: Guidance Notes (mentor only)
+                                - textbox "Guidance Notes (mentor only)" [ref=e1634]
+                              - generic [ref=e1639]:
+                                - switch "Active" [checked] [ref=e1640] [cursor=pointer]
+                                - generic [ref=e1641]: Active
+                      - button "Add Item" [ref=e1643] [cursor=pointer]:
+                        - generic [ref=e1644]: Add Item
+              - generic [ref=e1646]:
+                - button "Save changes" [ref=e1647] [cursor=pointer]:
+                  - generic [ref=e1648]: Save changes
+                - button "Cancel" [ref=e1649] [cursor=pointer]:
+                  - generic [ref=e1650]: Cancel
+          - generic:
+            - dialog
+          - generic:
+            - dialog
+          - generic:
+            - dialog
+    - complementary [ref=e1651]:
+      - link "MNCH Mentorship Platform" [ref=e1655] [cursor=pointer]:
+        - /url: /admin
+        - generic [ref=e1656]: MNCH Mentorship Platform
+      - navigation [ref=e1657]:
+        - list [ref=e1658]:
+          - listitem [ref=e1659]:
+            - generic [ref=e1660] [cursor=pointer]:
+              - generic [ref=e1661]: Dashboards
+              - button "Dashboards" [expanded] [ref=e1662]:
+                - generic [ref=e1663]: Dashboards
+                - img [ref=e1664]
+            - list [ref=e1666]:
+              - listitem [ref=e1667]:
+                - link "Mentor Dashboard 127" [ref=e1668] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentor-dashboard
+                  - img [ref=e1669]
+                  - generic [ref=e1671]: Mentor Dashboard
+                  - generic [ref=e1675]: "127"
+              - listitem [ref=e1676]:
+                - link "Head DRMH" [ref=e1677] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/head-drmh-dashboard
+                  - img [ref=e1678]
+                  - generic [ref=e1680]: Head DRMH
+              - listitem [ref=e1681]:
+                - link "Mentee Dashboard 139" [ref=e1682] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-dashboard
+                  - img [ref=e1683]
+                  - generic [ref=e1685]: Mentee Dashboard
+                  - generic [ref=e1689]: "139"
+          - listitem [ref=e1690]:
+            - generic [ref=e1691] [cursor=pointer]:
+              - generic [ref=e1692]: Mentorships
+              - button "Mentorships" [expanded] [ref=e1693]:
+                - generic [ref=e1694]: Mentorships
+                - img [ref=e1695]
+            - list [ref=e1697]:
+              - listitem [ref=e1698]:
+                - link "Practical Assessments" [ref=e1699] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/rubric-assessments
+                  - img [ref=e1700]
+                  - generic [ref=e1702]: Practical Assessments
+          - listitem [ref=e1703]:
+            - generic [ref=e1704] [cursor=pointer]:
+              - generic [ref=e1705]: Facility Assessment
+              - button "Facility Assessment" [expanded] [ref=e1706]:
+                - generic [ref=e1707]: Facility Assessment
+                - img [ref=e1708]
+            - list [ref=e1710]:
+              - listitem [ref=e1711]:
+                - link "Assessments 2" [ref=e1712] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessments
+                  - img [ref=e1713]
+                  - generic [ref=e1715]: Assessments
+                  - generic [ref=e1719]: "2"
+          - listitem [ref=e1720]:
+            - generic [ref=e1721] [cursor=pointer]:
+              - generic [ref=e1722]: Training Management
+              - button "Training Management" [expanded] [ref=e1723]:
+                - generic [ref=e1724]: Training Management
+                - img [ref=e1725]
+            - list [ref=e1727]:
+              - listitem [ref=e1728]:
+                - link "Training Areas 2" [ref=e1729] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/approved-training-areas
+                  - img [ref=e1730]
+                  - generic [ref=e1732]: Training Areas
+                  - generic [ref=e1736]: "2"
+              - listitem [ref=e1737]:
+                - link "MOH Trainings 4" [ref=e1738] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/moh-trainings
+                  - img [ref=e1739]
+                  - generic [ref=e1741]: MOH Trainings
+                  - generic [ref=e1745]: "4"
+              - listitem [ref=e1746]:
+                - link "Mentorship 50" [ref=e1747] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentorship
+                  - img [ref=e1748]
+                  - generic [ref=e1750]: Mentorship
+                  - generic [ref=e1754]: "50"
+              - listitem [ref=e1755]:
+                - link "Export Center 4" [ref=e1756] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/training-exports
+                  - img [ref=e1757]
+                  - generic [ref=e1759]: Export Center
+                  - generic [ref=e1763]: "4"
+              - listitem [ref=e1764]:
+                - link "Participant/Mentee Profiles" [ref=e1765] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/participant-profiles
+                  - img [ref=e1766]
+                  - generic [ref=e1768]: Participant/Mentee Profiles
+              - listitem [ref=e1769]:
+                - link "Mentor Profiles" [ref=e1770] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-profiles
+                  - img [ref=e1771]
+                  - generic [ref=e1773]: Mentor Profiles
+          - listitem [ref=e1774]:
+            - generic [ref=e1775] [cursor=pointer]:
+              - generic [ref=e1776]: Indicator Catalog
+              - button "Indicator Catalog" [expanded] [ref=e1777]:
+                - generic [ref=e1778]: Indicator Catalog
+                - img [ref=e1779]
+            - list [ref=e1781]:
+              - listitem [ref=e1782]:
+                - link "Report Types" [ref=e1783] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicator-report-types
+                  - img [ref=e1784]
+                  - generic [ref=e1786]: Report Types
+              - listitem [ref=e1787]:
+                - link "Indicator Groups" [ref=e1788] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicator-groups
+                  - img [ref=e1789]
+                  - generic [ref=e1791]: Indicator Groups
+              - listitem [ref=e1792]:
+                - link "Indicators" [ref=e1793] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators
+                  - img [ref=e1794]
+                  - generic [ref=e1796]: Indicators
+              - listitem [ref=e1797]:
+                - link "Indicators Reference" [ref=e1798] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/reference
+                  - img [ref=e1799]
+                  - generic [ref=e1801]: Indicators Reference
+          - listitem [ref=e1802]:
+            - generic [ref=e1803] [cursor=pointer]:
+              - generic [ref=e1804]: Curriculum
+              - button "Curriculum" [expanded] [ref=e1805]:
+                - generic [ref=e1806]: Curriculum
+                - img [ref=e1807]
+            - list [ref=e1809]:
+              - listitem [ref=e1810]:
+                - link "Programs 3" [ref=e1811] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/programs
+                  - img [ref=e1812]
+                  - generic [ref=e1814]: Programs
+                  - generic [ref=e1818]: "3"
+              - listitem [ref=e1819]:
+                - link "Modules 24" [ref=e1820] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/modules
+                  - img [ref=e1821]
+                  - generic [ref=e1823]: Modules
+                  - generic [ref=e1827]: "24"
+              - listitem [ref=e1828]:
+                - link "Program Modules 46" [ref=e1829] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/program-modules
+                  - img [ref=e1830]
+                  - generic [ref=e1832]: Program Modules
+                  - generic [ref=e1836]: "46"
+              - listitem [ref=e1837]:
+                - link "Activities 3" [ref=e1838] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/activities
+                  - img [ref=e1839]
+                  - generic [ref=e1841]: Activities
+                  - generic [ref=e1845]: "3"
+              - listitem [ref=e1846]:
+                - link "Methodologies" [ref=e1847] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/methodologies
+                  - img [ref=e1848]
+                  - generic [ref=e1850]: Methodologies
+              - listitem [ref=e1851]:
+                - link "Rubric Definitions" [ref=e1852] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/rubric-managements
+                  - img [ref=e1853]
+                  - generic [ref=e1855]: Rubric Definitions
+          - listitem [ref=e1856]:
+            - generic [ref=e1857] [cursor=pointer]:
+              - generic [ref=e1858]: Report Management
+              - button "Report Management" [expanded] [ref=e1859]:
+                - generic [ref=e1860]: Report Management
+                - img [ref=e1861]
+            - list [ref=e1863]:
+              - listitem [ref=e1864]:
+                - link "Performance Tracker" [ref=e1865] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/monthly-reports
+                  - img [ref=e1866]
+                  - generic [ref=e1868]: Performance Tracker
+              - listitem [ref=e1869]:
+                - link "Report Templates" [ref=e1870] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/report-templates
+                  - img [ref=e1871]
+                  - generic [ref=e1873]: Report Templates
+              - listitem [ref=e1874]:
+                - link "Report Management" [ref=e1875] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/report-management
+                  - img [ref=e1876]
+                  - generic [ref=e1879]: Report Management
+          - listitem [ref=e1880]:
+            - generic [ref=e1881] [cursor=pointer]:
+              - generic [ref=e1882]: Settings
+              - button "Settings" [expanded] [ref=e1883]:
+                - generic [ref=e1884]: Settings
+                - img [ref=e1885]
+            - list [ref=e1887]:
+              - listitem [ref=e1888]:
+                - link "Grades" [ref=e1889] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/grades
+                  - img [ref=e1890]
+                  - generic [ref=e1892]: Grades
+              - listitem [ref=e1893]:
+                - link "Access Groups" [ref=e1894] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/access-groups
+                  - img [ref=e1895]
+                  - generic [ref=e1897]: Access Groups
+              - listitem [ref=e1898]:
+                - link "Mentee Statuses" [ref=e1899] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-statuses
+                  - img [ref=e1900]
+                  - generic [ref=e1902]: Mentee Statuses
+              - listitem [ref=e1903]:
+                - link "Partners 1" [ref=e1904] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/partners
+                  - img [ref=e1905]
+                  - generic [ref=e1907]: Partners
+                  - generic [ref=e1911]: "1"
+          - listitem [ref=e1912]:
+            - generic [ref=e1913] [cursor=pointer]:
+              - generic [ref=e1914]: Filament Shield
+              - button "Filament Shield" [expanded] [ref=e1915]:
+                - generic [ref=e1916]: Filament Shield
+                - img [ref=e1917]
+            - list [ref=e1919]:
+              - listitem [ref=e1920]:
+                - link "Roles 24" [ref=e1921] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/shield/roles
+                  - img [ref=e1922]
+                  - generic [ref=e1924]: Roles
+                  - generic [ref=e1928]: "24"
+          - listitem [ref=e1929]:
+            - generic [ref=e1930] [cursor=pointer]:
+              - generic [ref=e1931]: Assessment Management
+              - button "Assessment Management" [expanded] [ref=e1932]:
+                - generic [ref=e1933]: Assessment Management
+                - img [ref=e1934]
+            - list [ref=e1936]:
+              - listitem [ref=e1937]:
+                - link "Sections & Questions 8" [ref=e1938] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-sections
+                  - img [ref=e1939]
+                  - generic [ref=e1941]: Sections & Questions
+                  - generic [ref=e1945]: "8"
+              - listitem [ref=e1946]:
+                - link "All Questions" [ref=e1947] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-questions
+                  - img [ref=e1948]
+                  - generic [ref=e1950]: All Questions
+              - listitem [ref=e1951]:
+                - link "Departments 7" [ref=e1952] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-departments
+                  - img [ref=e1953]
+                  - generic [ref=e1955]: Departments
+                  - generic [ref=e1959]: "7"
+              - listitem [ref=e1960]:
+                - link "Commodities" [ref=e1961] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/commodities
+                  - img [ref=e1962]
+                  - generic [ref=e1964]: Commodities
+              - listitem [ref=e1965]:
+                - link "Commodity Categories 9" [ref=e1966] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/commodity-categories
+                  - img [ref=e1967]
+                  - generic [ref=e1970]: Commodity Categories
+                  - generic [ref=e1974]: "9"
+          - listitem [ref=e1975]:
+            - generic [ref=e1976] [cursor=pointer]:
+              - generic [ref=e1977]: Organizational Structure
+              - button "Organizational Structure" [expanded] [ref=e1978]:
+                - generic [ref=e1979]: Organizational Structure
+                - img [ref=e1980]
+            - list [ref=e1982]:
+              - listitem [ref=e1983]:
+                - link "Departments 348" [ref=e1984] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/departments
+                  - img [ref=e1985]
+                  - generic [ref=e1987]: Departments
+                  - generic [ref=e1991]: "348"
+              - listitem [ref=e1992]:
+                - link "Cadres 21" [ref=e1993] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/cadres
+                  - img [ref=e1994]
+                  - generic [ref=e1996]: Cadres
+                  - generic [ref=e2000]: "21"
+          - listitem [ref=e2001]:
+            - generic [ref=e2002] [cursor=pointer]:
+              - generic [ref=e2003]: Geographic Structure
+              - button "Geographic Structure" [expanded] [ref=e2004]:
+                - generic [ref=e2005]: Geographic Structure
+                - img [ref=e2006]
+            - list [ref=e2008]:
+              - listitem [ref=e2009]:
+                - link "Divisions 1" [ref=e2010] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/divisions
+                  - img [ref=e2011]
+                  - generic [ref=e2013]: Divisions
+                  - generic [ref=e2017]: "1"
+              - listitem [ref=e2018]:
+                - link "Counties 47" [ref=e2019] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/counties
+                  - img [ref=e2020]
+                  - generic [ref=e2022]: Counties
+                  - generic [ref=e2026]: "47"
+              - listitem [ref=e2027]:
+                - link "Subcounties 305" [ref=e2028] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/subcounties
+                  - img [ref=e2029]
+                  - generic [ref=e2031]: Subcounties
+                  - generic [ref=e2035]: "305"
+              - listitem [ref=e2036]:
+                - link "Facility Types 16" [ref=e2037] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-types
+                  - img [ref=e2038]
+                  - generic [ref=e2040]: Facility Types
+                  - generic [ref=e2044]: "16"
+          - listitem [ref=e2045]:
+            - generic [ref=e2046] [cursor=pointer]:
+              - generic [ref=e2047]: System Administration
+              - button "System Administration" [expanded] [ref=e2048]:
+                - generic [ref=e2049]: System Administration
+                - img [ref=e2050]
+            - list [ref=e2052]:
+              - listitem [ref=e2053]:
+                - link "Facilities 10,700" [ref=e2054] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facilities
+                  - img [ref=e2055]
+                  - generic [ref=e2057]: Facilities
+                  - generic [ref=e2061]: 10,700
+              - listitem [ref=e2062]:
+                - link "Facility Levels 5" [ref=e2063] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-levels
+                  - img [ref=e2064]
+                  - generic [ref=e2066]: Facility Levels
+                  - generic [ref=e2070]: "5"
+              - listitem [ref=e2071]:
+                - link "Facility Ownership 7" [ref=e2072] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-ownerships
+                  - img [ref=e2073]
+                  - generic [ref=e2075]: Facility Ownership
+                  - generic [ref=e2079]: "7"
+          - listitem [ref=e2080]:
+            - generic [ref=e2081] [cursor=pointer]:
+              - generic [ref=e2082]: Quiz Management
+              - button "Quiz Management" [expanded] [ref=e2083]:
+                - generic [ref=e2084]: Quiz Management
+                - img [ref=e2085]
+            - list [ref=e2087]:
+              - listitem [ref=e2088]:
+                - link "Program Module Quizzes 1" [ref=e2089] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/program-module-quizzes
+                  - img [ref=e2090]
+                  - generic [ref=e2092]: Program Module Quizzes
+                  - generic [ref=e2096]: "1"
+          - listitem [ref=e2097]:
+            - generic [ref=e2098] [cursor=pointer]:
+              - generic [ref=e2099]: Content Management
+              - button "Content Management" [expanded] [ref=e2100]:
+                - generic [ref=e2101]: Content Management
+                - img [ref=e2102]
+            - list [ref=e2104]:
+              - listitem [ref=e2105]:
+                - link "Resources" [ref=e2106] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resources
+                  - img [ref=e2107]
+                  - generic [ref=e2109]: Resources
+              - listitem [ref=e2110]:
+                - link "Resource Categories" [ref=e2111] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-categories
+                  - img [ref=e2112]
+                  - generic [ref=e2114]: Resource Categories
+              - listitem [ref=e2115]:
+                - link "Resource Types" [ref=e2116] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-types
+                  - img [ref=e2117]
+                  - generic [ref=e2119]: Resource Types
+              - listitem [ref=e2120]:
+                - link "Tags" [ref=e2121] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/tags
+                  - img [ref=e2122]
+                  - generic [ref=e2125]: Tags
+              - listitem [ref=e2126]:
+                - link "Resource Comments" [ref=e2127] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-comments
+                  - img [ref=e2128]
+                  - generic [ref=e2130]: Resource Comments
+          - listitem [ref=e2131]:
+            - generic [ref=e2132] [cursor=pointer]:
+              - generic [ref=e2133]: App Configuration
+              - button "App Configuration" [expanded] [ref=e2134]:
+                - generic [ref=e2135]: App Configuration
+                - img [ref=e2136]
+            - list [ref=e2138]:
+              - listitem [ref=e2139]:
+                - link "Scopes" [ref=e2140] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/scopes
+                  - img [ref=e2141]
+                  - generic [ref=e2143]: Scopes
+          - listitem [ref=e2144]:
+            - generic [ref=e2145] [cursor=pointer]:
+              - generic [ref=e2146]: Inventory Management
+              - button "Inventory Management" [expanded] [ref=e2147]:
+                - generic [ref=e2148]: Inventory Management
+                - img [ref=e2149]
+            - list [ref=e2151]:
+              - listitem [ref=e2152]:
+                - link "Suppliers" [ref=e2153] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/suppliers
+                  - img [ref=e2154]
+                  - generic [ref=e2156]: Suppliers
+              - listitem [ref=e2157]:
+                - link "Inventory Items" [ref=e2158] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/inventory-items
+                  - img [ref=e2159]
+                  - generic [ref=e2161]: Inventory Items
+              - listitem [ref=e2162]:
+                - link "Stock Levels" [ref=e2163] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/stock-levels
+                  - img [ref=e2164]
+                  - generic [ref=e2166]: Stock Levels
+              - listitem [ref=e2167]:
+                - link "Stock Requests" [ref=e2168] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/stock-requests
+                  - img [ref=e2169]
+                  - generic [ref=e2171]: Stock Requests
+          - listitem [ref=e2172]:
+            - generic [ref=e2173] [cursor=pointer]:
+              - generic [ref=e2174]: User Management
+              - button "User Management" [expanded] [ref=e2175]:
+                - generic [ref=e2176]: User Management
+                - img [ref=e2177]
+            - list [ref=e2179]:
+              - listitem [ref=e2180]:
+                - link "All Users 7395" [ref=e2181] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/users
+                  - img [ref=e2182]
+                  - generic [ref=e2184]: All Users
+                  - generic [ref=e2188]: "7395"
+          - listitem [ref=e2189]:
+            - generic [ref=e2190] [cursor=pointer]:
+              - generic [ref=e2191]: Indicator Reporting
+              - button "Indicator Reporting" [expanded] [ref=e2192]:
+                - generic [ref=e2193]: Indicator Reporting
+                - img [ref=e2194]
+            - list [ref=e2196]:
+              - listitem [ref=e2197]:
+                - link "Submit Report" [ref=e2198] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/reporting
+                  - img [ref=e2199]
+                  - generic [ref=e2201]: Submit Report
+              - listitem [ref=e2202]:
+                - link "Validation Queue" [ref=e2203] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/validation-queue
+                  - img [ref=e2204]
+                  - generic [ref=e2206]: Validation Queue
+              - listitem [ref=e2207]:
+                - link "Progress Dashboard" [ref=e2208] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/progress-dashboard
+                  - img [ref=e2209]
+                  - generic [ref=e2211]: Progress Dashboard
+  - generic:
+    - status

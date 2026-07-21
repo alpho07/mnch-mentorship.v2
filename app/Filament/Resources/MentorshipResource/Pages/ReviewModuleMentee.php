@@ -61,7 +61,7 @@ class ReviewModuleMentee extends Page implements HasForms
     {
         $this->training = $training->load(['facility', 'program', 'mentor']);
         $this->class = $class;
-        $this->module = $module->load(['programModule.activities', 'programModule.quizzes.questions.options']);
+        $this->module = $module->load(['programModule.activities', 'programModule.quizzes.questions.options', 'programModule.contents']);
         $this->participant = $participant->load(['user.facility.subcounty.county', 'user.cadre', 'user.department']);
 
         $this->progress = MenteeModuleProgress::with(['preTestAttempt.responses.option', 'postTestAttempt.responses.option'])
@@ -84,14 +84,17 @@ class ReviewModuleMentee extends Page implements HasForms
     protected function getViewData(): array
     {
         $programModuleId = $this->module->program_module_id;
+        $contents = $this->module->programModule?->contents ?? collect();
 
         return [
-            'canMentorApprove'         => $this->canMentorApprove(),
+            'canMentorApprove' => $this->canMentorApprove(),
             'isReadyForMentorApproval' => $this->isReadyForMentorApproval(),
-            'moduleRubric'             => $this->moduleRubric,
-            'latestRubricAssessment'   => $this->latestRubricAssessment,
-            'conductAssessmentUrl'     => $this->moduleRubric
-                ? RubricAssessmentResource::getUrl('create') . '?rubric_id=' . $this->moduleRubric->id . '&mentee_id=' . $this->participant->user_id
+            'moduleRubric' => $this->moduleRubric,
+            'latestRubricAssessment' => $this->latestRubricAssessment,
+            'mentorCourseIntro' => $contents->where('type', 'mentor_course_intro')->first(),
+            'mentorMaterials' => $contents->where('type', 'mentor_materials')->first(),
+            'conductAssessmentUrl' => $this->moduleRubric
+                ? RubricAssessmentResource::getUrl('create').'?rubric_id='.$this->moduleRubric->id.'&mentee_id='.$this->participant->user_id
                 : RubricAssessmentResource::getUrl('create'),
         ];
     }
@@ -166,7 +169,14 @@ class ReviewModuleMentee extends Page implements HasForms
             return;
         }
 
-        $this->participant->markMentorApproved(auth()->id());
+        try {
+            $this->participant->markMentorApproved(auth()->id());
+        } catch (\DomainException $e) {
+            Notification::make()->danger()->title('Not Ready for Approval')->body($e->getMessage())->send();
+
+            return;
+        }
+
         app(EmoncNotificationService::class)->mentorApproved($this->participant->fresh());
 
         $this->participant = $this->participant->fresh(['user.facility.subcounty.county', 'user.cadre', 'user.department']);
@@ -312,29 +322,7 @@ class ReviewModuleMentee extends Page implements HasForms
 
     public function isReadyForMentorApproval(): bool
     {
-        $moduleIds = $this->class->classModules()->pluck('id');
-        if ($moduleIds->isEmpty()) {
-            return false;
-        }
-
-        $progressRecords = MenteeModuleProgress::where('class_participant_id', $this->participant->id)
-            ->whereIn('class_module_id', $moduleIds)
-            ->get();
-
-        if ($progressRecords->count() !== $moduleIds->count()) {
-            return false;
-        }
-
-        foreach ($progressRecords as $progress) {
-            if (! in_array($progress->status, ['completed', 'exempted'])) {
-                return false;
-            }
-            if (! $progress->isVideoPassed()) {
-                return false;
-            }
-        }
-
-        return true;
+        return $this->participant->hasCompletedAllModules();
     }
 
     private function loadRubricData(): void

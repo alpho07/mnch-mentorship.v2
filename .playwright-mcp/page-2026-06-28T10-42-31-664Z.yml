@@ -1,0 +1,807 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - navigation [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - generic [ref=e10]: Global search
+            - generic [ref=e11]:
+              - img [ref=e13]
+              - searchbox "Global search" [ref=e16]
+          - button "User menu" [ref=e19] [cursor=pointer]:
+            - img "Avatar of Super Admin Admin" [ref=e20]
+      - main [ref=e21]:
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - navigation [ref=e26]:
+                - list [ref=e27]:
+                  - listitem [ref=e28]:
+                    - link "Rubrics" [ref=e29] [cursor=pointer]:
+                      - /url: http://localhost:8001/admin/rubric-managements
+                  - listitem [ref=e30]:
+                    - img [ref=e31]
+                    - generic [ref=e33]: List
+              - heading "Rubrics" [level=1] [ref=e34]
+            - link "New Rubric" [ref=e37] [cursor=pointer]:
+              - /url: http://localhost:8001/admin/rubric-managements/create
+              - generic [ref=e38]: New Rubric
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - generic [ref=e46]:
+                - generic [ref=e47]:
+                  - generic [ref=e48]: Search
+                  - generic [ref=e49]:
+                    - img [ref=e51]
+                    - searchbox "Search" [ref=e54]
+                - button "Filter 0" [ref=e57] [cursor=pointer]:
+                  - generic [ref=e58]: Filter
+                  - img [ref=e59]
+                  - generic [ref=e64]: "0"
+              - table [ref=e66]:
+                - rowgroup [ref=e67]:
+                  - row "Module / Track Rubric Title Items Pass Mark Active Action" [ref=e68]:
+                    - columnheader "Module / Track" [ref=e69]:
+                      - button "Module / Track" [ref=e70] [cursor=pointer]:
+                        - generic [ref=e71]: Module / Track
+                        - img [ref=e72]
+                    - columnheader "Rubric Title" [ref=e74]:
+                      - generic [ref=e76]: Rubric Title
+                    - columnheader "Items" [ref=e77]:
+                      - button "Items" [ref=e78] [cursor=pointer]:
+                        - generic [ref=e79]: Items
+                        - img [ref=e80]
+                    - columnheader "Pass Mark" [ref=e82]:
+                      - generic [ref=e84]: Pass Mark
+                    - columnheader "Active" [ref=e85]:
+                      - generic [ref=e87]: Active
+                    - columnheader "Action" [ref=e88]
+                - rowgroup [ref=e89]:
+                  - 'row "Module 4: Active Management of the Third Stage of Labor (AMSTL) AMTSL Practical Assessment Rubric 21 17 / 21 (80.95%) Edit" [ref=e90]':
+                    - 'cell "Module 4: Active Management of the Third Stage of Labor (AMSTL)" [ref=e91]':
+                      - 'link "Module 4: Active Management of the Third Stage of Labor (AMSTL)" [ref=e93] [cursor=pointer]':
+                        - /url: http://localhost:8001/admin/rubric-managements/1/edit
+                        - generic [ref=e98]: "Module 4: Active Management of the Third Stage of Labor (AMSTL)"
+                    - cell "AMTSL Practical Assessment Rubric" [ref=e99]:
+                      - link "AMTSL Practical Assessment Rubric" [ref=e101] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/1/edit
+                        - generic [ref=e106]: AMTSL Practical Assessment Rubric
+                    - cell "21" [ref=e107]:
+                      - link "21" [ref=e109] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/1/edit
+                        - generic [ref=e114]: "21"
+                    - cell "17 / 21 (80.95%)" [ref=e115]:
+                      - link "17 / 21 (80.95%)" [ref=e117] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/1/edit
+                        - generic [ref=e122]: 17 / 21 (80.95%)
+                    - cell [ref=e123]:
+                      - link [ref=e125] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/1/edit
+                        - img [ref=e127]
+                    - cell "Edit" [ref=e129]:
+                      - link "Edit" [ref=e132] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/1/edit
+                        - img [ref=e133]
+                        - generic [ref=e136]: Edit
+                  - 'row "Module 5: Management of Postpartum Hemorrhage (PPH) PPH First Response Bundle Practical Assessment Rub... 20 17 / 20 (85.00%) Edit" [ref=e137]':
+                    - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH)" [ref=e138]':
+                      - 'link "Module 5: Management of Postpartum Hemorrhage (PPH)" [ref=e140] [cursor=pointer]':
+                        - /url: http://localhost:8001/admin/rubric-managements/2/edit
+                        - generic [ref=e145]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                    - cell "PPH First Response Bundle Practical Assessment Rub..." [ref=e146]:
+                      - link "PPH First Response Bundle Practical Assessment Rub..." [ref=e148] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/2/edit
+                        - generic [ref=e153]: PPH First Response Bundle Practical Assessment Rub...
+                    - cell "20" [ref=e154]:
+                      - link "20" [ref=e156] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/2/edit
+                        - generic [ref=e161]: "20"
+                    - cell "17 / 20 (85.00%)" [ref=e162]:
+                      - link "17 / 20 (85.00%)" [ref=e164] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/2/edit
+                        - generic [ref=e169]: 17 / 20 (85.00%)
+                    - cell [ref=e170]:
+                      - link [ref=e172] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/2/edit
+                        - img [ref=e174]
+                    - cell "Edit" [ref=e176]:
+                      - link "Edit" [ref=e179] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/2/edit
+                        - img [ref=e180]
+                        - generic [ref=e183]: Edit
+                  - 'row "Track 1: Bimanual compression of the uterus Bimanual Compression of the Uterus — Practical Ass... 12 10 / 12 (83.33%) Edit" [ref=e184]':
+                    - 'cell "Track 1: Bimanual compression of the uterus" [ref=e185]':
+                      - 'link "Track 1: Bimanual compression of the uterus" [ref=e187] [cursor=pointer]':
+                        - /url: http://localhost:8001/admin/rubric-managements/3/edit
+                        - generic [ref=e192]: "Track 1: Bimanual compression of the uterus"
+                    - cell "Bimanual Compression of the Uterus — Practical Ass..." [ref=e193]:
+                      - link "Bimanual Compression of the Uterus — Practical Ass..." [ref=e195] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/3/edit
+                        - generic [ref=e200]: Bimanual Compression of the Uterus — Practical Ass...
+                    - cell "12" [ref=e201]:
+                      - link "12" [ref=e203] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/3/edit
+                        - generic [ref=e208]: "12"
+                    - cell "10 / 12 (83.33%)" [ref=e209]:
+                      - link "10 / 12 (83.33%)" [ref=e211] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/3/edit
+                        - generic [ref=e216]: 10 / 12 (83.33%)
+                    - cell [ref=e217]:
+                      - link [ref=e219] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/3/edit
+                        - img [ref=e221]
+                    - cell "Edit" [ref=e223]:
+                      - link "Edit" [ref=e226] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/3/edit
+                        - img [ref=e227]
+                        - generic [ref=e230]: Edit
+                  - 'row "Track 10: Placement of non-pneumatic anti-shock garment (NASG) Placement of the Non-Pneumatic Anti-Shock Garment... 20 17 / 20 (85.00%) Edit" [ref=e231]':
+                    - 'cell "Track 10: Placement of non-pneumatic anti-shock garment (NASG)" [ref=e232]':
+                      - 'link "Track 10: Placement of non-pneumatic anti-shock garment (NASG)" [ref=e234] [cursor=pointer]':
+                        - /url: http://localhost:8001/admin/rubric-managements/12/edit
+                        - generic [ref=e239]: "Track 10: Placement of non-pneumatic anti-shock garment (NASG)"
+                    - cell "Placement of the Non-Pneumatic Anti-Shock Garment..." [ref=e240]:
+                      - link "Placement of the Non-Pneumatic Anti-Shock Garment..." [ref=e242] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/12/edit
+                        - generic [ref=e247]: Placement of the Non-Pneumatic Anti-Shock Garment...
+                    - cell "20" [ref=e248]:
+                      - link "20" [ref=e250] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/12/edit
+                        - generic [ref=e255]: "20"
+                    - cell "17 / 20 (85.00%)" [ref=e256]:
+                      - link "17 / 20 (85.00%)" [ref=e258] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/12/edit
+                        - generic [ref=e263]: 17 / 20 (85.00%)
+                    - cell [ref=e264]:
+                      - link [ref=e266] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/12/edit
+                        - img [ref=e268]
+                    - cell "Edit" [ref=e270]:
+                      - link "Edit" [ref=e273] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/12/edit
+                        - img [ref=e274]
+                        - generic [ref=e277]: Edit
+                  - 'row "Track 2: Compression of abdominal aorta Compression of Abdominal Aorta — Practical Assessm... 13 10 / 13 (76.92%) Edit" [ref=e278]':
+                    - 'cell "Track 2: Compression of abdominal aorta" [ref=e279]':
+                      - 'link "Track 2: Compression of abdominal aorta" [ref=e281] [cursor=pointer]':
+                        - /url: http://localhost:8001/admin/rubric-managements/4/edit
+                        - generic [ref=e286]: "Track 2: Compression of abdominal aorta"
+                    - cell "Compression of Abdominal Aorta — Practical Assessm..." [ref=e287]:
+                      - link "Compression of Abdominal Aorta — Practical Assessm..." [ref=e289] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/4/edit
+                        - generic [ref=e294]: Compression of Abdominal Aorta — Practical Assessm...
+                    - cell "13" [ref=e295]:
+                      - link "13" [ref=e297] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/4/edit
+                        - generic [ref=e302]: "13"
+                    - cell "10 / 13 (76.92%)" [ref=e303]:
+                      - link "10 / 13 (76.92%)" [ref=e305] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/4/edit
+                        - generic [ref=e310]: 10 / 13 (76.92%)
+                    - cell [ref=e311]:
+                      - link [ref=e313] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/4/edit
+                        - img [ref=e315]
+                    - cell "Edit" [ref=e317]:
+                      - link "Edit" [ref=e320] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/4/edit
+                        - img [ref=e321]
+                        - generic [ref=e324]: Edit
+                  - 'row "Track 3: Removal of retained placenta Manual Removal of Retained Placenta — Practical As... 23 20 / 23 (86.96%) Edit" [ref=e325]':
+                    - 'cell "Track 3: Removal of retained placenta" [ref=e326]':
+                      - 'link "Track 3: Removal of retained placenta" [ref=e328] [cursor=pointer]':
+                        - /url: http://localhost:8001/admin/rubric-managements/5/edit
+                        - generic [ref=e333]: "Track 3: Removal of retained placenta"
+                    - cell "Manual Removal of Retained Placenta — Practical As..." [ref=e334]:
+                      - link "Manual Removal of Retained Placenta — Practical As..." [ref=e336] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/5/edit
+                        - generic [ref=e341]: Manual Removal of Retained Placenta — Practical As...
+                    - cell "23" [ref=e342]:
+                      - link "23" [ref=e344] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/5/edit
+                        - generic [ref=e349]: "23"
+                    - cell "20 / 23 (86.96%)" [ref=e350]:
+                      - link "20 / 23 (86.96%)" [ref=e352] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/5/edit
+                        - generic [ref=e357]: 20 / 23 (86.96%)
+                    - cell [ref=e358]:
+                      - link [ref=e360] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/5/edit
+                        - img [ref=e362]
+                    - cell "Edit" [ref=e364]:
+                      - link "Edit" [ref=e367] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/5/edit
+                        - img [ref=e368]
+                        - generic [ref=e371]: Edit
+                  - 'row "Track 4: Uterine inversion Manual Reduction of Inverted Uterus — Practical As... 25 22 / 25 (88.00%) Edit" [ref=e372]':
+                    - 'cell "Track 4: Uterine inversion" [ref=e373]':
+                      - 'link "Track 4: Uterine inversion" [ref=e375] [cursor=pointer]':
+                        - /url: http://localhost:8001/admin/rubric-managements/6/edit
+                        - generic [ref=e380]: "Track 4: Uterine inversion"
+                    - cell "Manual Reduction of Inverted Uterus — Practical As..." [ref=e381]:
+                      - link "Manual Reduction of Inverted Uterus — Practical As..." [ref=e383] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/6/edit
+                        - generic [ref=e388]: Manual Reduction of Inverted Uterus — Practical As...
+                    - cell "25" [ref=e389]:
+                      - link "25" [ref=e391] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/6/edit
+                        - generic [ref=e396]: "25"
+                    - cell "22 / 25 (88.00%)" [ref=e397]:
+                      - link "22 / 25 (88.00%)" [ref=e399] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/6/edit
+                        - generic [ref=e404]: 22 / 25 (88.00%)
+                    - cell [ref=e405]:
+                      - link [ref=e407] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/6/edit
+                        - img [ref=e409]
+                    - cell "Edit" [ref=e411]:
+                      - link "Edit" [ref=e414] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/6/edit
+                        - img [ref=e415]
+                        - generic [ref=e418]: Edit
+                  - 'row "Track 5: The placement of the intrauterine balloon tamponade (condom tamponade) Intrauterine Balloon Tamponade (Condom Method) — P... 23 19 / 23 (80.00%) Edit" [ref=e419]':
+                    - 'cell "Track 5: The placement of the intrauterine balloon tamponade (condom tamponade)" [ref=e420]':
+                      - 'link "Track 5: The placement of the intrauterine balloon tamponade (condom tamponade)" [ref=e422] [cursor=pointer]':
+                        - /url: http://localhost:8001/admin/rubric-managements/7/edit
+                        - generic [ref=e427]: "Track 5: The placement of the intrauterine balloon tamponade (condom tamponade)"
+                    - cell "Intrauterine Balloon Tamponade (Condom Method) — P..." [ref=e428]:
+                      - link "Intrauterine Balloon Tamponade (Condom Method) — P..." [ref=e430] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/7/edit
+                        - generic [ref=e435]: Intrauterine Balloon Tamponade (Condom Method) — P...
+                    - cell "23" [ref=e436]:
+                      - link "23" [ref=e438] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/7/edit
+                        - generic [ref=e443]: "23"
+                    - cell "19 / 23 (80.00%)" [ref=e444]:
+                      - link "19 / 23 (80.00%)" [ref=e446] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/7/edit
+                        - generic [ref=e451]: 19 / 23 (80.00%)
+                    - cell [ref=e452]:
+                      - link [ref=e454] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/7/edit
+                        - img [ref=e456]
+                    - cell "Edit" [ref=e458]:
+                      - link "Edit" [ref=e461] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/7/edit
+                        - img [ref=e462]
+                        - generic [ref=e465]: Edit
+                  - 'row "Track 6: The placement of the intrauterine balloon tamponade (free flow system) Intrauterine Balloon Tamponade (Free Flow System)... 34 30 / 34 (85.00%) Edit" [ref=e466]':
+                    - 'cell "Track 6: The placement of the intrauterine balloon tamponade (free flow system)" [ref=e467]':
+                      - 'link "Track 6: The placement of the intrauterine balloon tamponade (free flow system)" [ref=e469] [cursor=pointer]':
+                        - /url: http://localhost:8001/admin/rubric-managements/8/edit
+                        - generic [ref=e474]: "Track 6: The placement of the intrauterine balloon tamponade (free flow system)"
+                    - cell "Intrauterine Balloon Tamponade (Free Flow System)..." [ref=e475]:
+                      - link "Intrauterine Balloon Tamponade (Free Flow System)..." [ref=e477] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/8/edit
+                        - generic [ref=e482]: Intrauterine Balloon Tamponade (Free Flow System)...
+                    - cell "34" [ref=e483]:
+                      - link "34" [ref=e485] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/8/edit
+                        - generic [ref=e490]: "34"
+                    - cell "30 / 34 (85.00%)" [ref=e491]:
+                      - link "30 / 34 (85.00%)" [ref=e493] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/8/edit
+                        - generic [ref=e498]: 30 / 34 (85.00%)
+                    - cell [ref=e499]:
+                      - link [ref=e501] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/8/edit
+                        - img [ref=e503]
+                    - cell "Edit" [ref=e505]:
+                      - link "Edit" [ref=e508] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/8/edit
+                        - img [ref=e509]
+                        - generic [ref=e512]: Edit
+                  - 'row "Track 7: Repair of perineal tear Repair of Perineal Tear — Practical Assessment Rub... 20 17 / 20 (85.00%) Edit" [ref=e513]':
+                    - 'cell "Track 7: Repair of perineal tear" [ref=e514]':
+                      - 'link "Track 7: Repair of perineal tear" [ref=e516] [cursor=pointer]':
+                        - /url: http://localhost:8001/admin/rubric-managements/9/edit
+                        - generic [ref=e521]: "Track 7: Repair of perineal tear"
+                    - cell "Repair of Perineal Tear — Practical Assessment Rub..." [ref=e522]:
+                      - link "Repair of Perineal Tear — Practical Assessment Rub..." [ref=e524] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/9/edit
+                        - generic [ref=e529]: Repair of Perineal Tear — Practical Assessment Rub...
+                    - cell "20" [ref=e530]:
+                      - link "20" [ref=e532] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/9/edit
+                        - generic [ref=e537]: "20"
+                    - cell "17 / 20 (85.00%)" [ref=e538]:
+                      - link "17 / 20 (85.00%)" [ref=e540] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/9/edit
+                        - generic [ref=e545]: 17 / 20 (85.00%)
+                    - cell [ref=e546]:
+                      - link [ref=e548] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/9/edit
+                        - img [ref=e550]
+                    - cell "Edit" [ref=e552]:
+                      - link "Edit" [ref=e555] [cursor=pointer]:
+                        - /url: http://localhost:8001/admin/rubric-managements/9/edit
+                        - img [ref=e556]
+                        - generic [ref=e559]: Edit
+              - navigation "Pagination navigation" [ref=e560]:
+                - generic [ref=e561]: Showing 1 to 10 of 12 results
+                - generic [ref=e564]:
+                  - generic [ref=e566]: Per page
+                  - combobox "Per page" [ref=e568]:
+                    - option "5"
+                    - option "10" [selected]
+                    - option "25"
+                    - option "50"
+                    - option "All"
+                - list [ref=e569]:
+                  - listitem [ref=e570]:
+                    - button "Go to page 1" [ref=e571] [cursor=pointer]:
+                      - generic [ref=e572]: "1"
+                  - listitem [ref=e573]:
+                    - button "Go to page 2" [ref=e574] [cursor=pointer]:
+                      - generic [ref=e575]: "2"
+                  - listitem [ref=e576]:
+                    - button "Next" [ref=e577] [cursor=pointer]:
+                      - img [ref=e578]
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+    - complementary [ref=e580]:
+      - link "MNCH Mentorship Platform" [ref=e584] [cursor=pointer]:
+        - /url: /admin
+        - generic [ref=e585]: MNCH Mentorship Platform
+      - navigation [ref=e586]:
+        - list [ref=e587]:
+          - listitem [ref=e588]:
+            - generic [ref=e589] [cursor=pointer]:
+              - generic [ref=e590]: Dashboards
+              - button "Dashboards" [expanded] [ref=e591]:
+                - generic [ref=e592]: Dashboards
+                - img [ref=e593]
+            - list [ref=e595]:
+              - listitem [ref=e596]:
+                - link "Mentor Dashboard 127" [ref=e597] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentor-dashboard
+                  - img [ref=e598]
+                  - generic [ref=e600]: Mentor Dashboard
+                  - generic [ref=e604]: "127"
+              - listitem [ref=e605]:
+                - link "Head DRMH" [ref=e606] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/head-drmh-dashboard
+                  - img [ref=e607]
+                  - generic [ref=e609]: Head DRMH
+              - listitem [ref=e610]:
+                - link "Mentee Dashboard 139" [ref=e611] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-dashboard
+                  - img [ref=e612]
+                  - generic [ref=e614]: Mentee Dashboard
+                  - generic [ref=e618]: "139"
+          - listitem [ref=e619]:
+            - generic [ref=e620] [cursor=pointer]:
+              - generic [ref=e621]: Mentorships
+              - button "Mentorships" [expanded] [ref=e622]:
+                - generic [ref=e623]: Mentorships
+                - img [ref=e624]
+            - list [ref=e626]:
+              - listitem [ref=e627]:
+                - link "Practical Assessments" [ref=e628] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/rubric-assessments
+                  - img [ref=e629]
+                  - generic [ref=e631]: Practical Assessments
+          - listitem [ref=e632]:
+            - generic [ref=e633] [cursor=pointer]:
+              - generic [ref=e634]: Facility Assessment
+              - button "Facility Assessment" [expanded] [ref=e635]:
+                - generic [ref=e636]: Facility Assessment
+                - img [ref=e637]
+            - list [ref=e639]:
+              - listitem [ref=e640]:
+                - link "Assessments 2" [ref=e641] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessments
+                  - img [ref=e642]
+                  - generic [ref=e644]: Assessments
+                  - generic [ref=e648]: "2"
+          - listitem [ref=e649]:
+            - generic [ref=e650] [cursor=pointer]:
+              - generic [ref=e651]: Training Management
+              - button "Training Management" [expanded] [ref=e652]:
+                - generic [ref=e653]: Training Management
+                - img [ref=e654]
+            - list [ref=e656]:
+              - listitem [ref=e657]:
+                - link "Training Areas 2" [ref=e658] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/approved-training-areas
+                  - img [ref=e659]
+                  - generic [ref=e661]: Training Areas
+                  - generic [ref=e665]: "2"
+              - listitem [ref=e666]:
+                - link "MOH Trainings 4" [ref=e667] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/moh-trainings
+                  - img [ref=e668]
+                  - generic [ref=e670]: MOH Trainings
+                  - generic [ref=e674]: "4"
+              - listitem [ref=e675]:
+                - link "Mentorship 50" [ref=e676] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentorship
+                  - img [ref=e677]
+                  - generic [ref=e679]: Mentorship
+                  - generic [ref=e683]: "50"
+              - listitem [ref=e684]:
+                - link "Export Center 4" [ref=e685] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/training-exports
+                  - img [ref=e686]
+                  - generic [ref=e688]: Export Center
+                  - generic [ref=e692]: "4"
+              - listitem [ref=e693]:
+                - link "Participant/Mentee Profiles" [ref=e694] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/participant-profiles
+                  - img [ref=e695]
+                  - generic [ref=e697]: Participant/Mentee Profiles
+              - listitem [ref=e698]:
+                - link "Mentor Profiles" [ref=e699] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-profiles
+                  - img [ref=e700]
+                  - generic [ref=e702]: Mentor Profiles
+          - listitem [ref=e703]:
+            - generic [ref=e704] [cursor=pointer]:
+              - generic [ref=e705]: Indicator Catalog
+              - button "Indicator Catalog" [expanded] [ref=e706]:
+                - generic [ref=e707]: Indicator Catalog
+                - img [ref=e708]
+            - list [ref=e710]:
+              - listitem [ref=e711]:
+                - link "Report Types" [ref=e712] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicator-report-types
+                  - img [ref=e713]
+                  - generic [ref=e715]: Report Types
+              - listitem [ref=e716]:
+                - link "Indicator Groups" [ref=e717] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicator-groups
+                  - img [ref=e718]
+                  - generic [ref=e720]: Indicator Groups
+              - listitem [ref=e721]:
+                - link "Indicators" [ref=e722] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators
+                  - img [ref=e723]
+                  - generic [ref=e725]: Indicators
+              - listitem [ref=e726]:
+                - link "Indicators Reference" [ref=e727] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/reference
+                  - img [ref=e728]
+                  - generic [ref=e730]: Indicators Reference
+          - listitem [ref=e731]:
+            - generic [ref=e732] [cursor=pointer]:
+              - generic [ref=e733]: Curriculum
+              - button "Curriculum" [expanded] [ref=e734]:
+                - generic [ref=e735]: Curriculum
+                - img [ref=e736]
+            - list [ref=e738]:
+              - listitem [ref=e739]:
+                - link "Programs 3" [ref=e740] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/programs
+                  - img [ref=e741]
+                  - generic [ref=e743]: Programs
+                  - generic [ref=e747]: "3"
+              - listitem [ref=e748]:
+                - link "Modules 24" [ref=e749] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/modules
+                  - img [ref=e750]
+                  - generic [ref=e752]: Modules
+                  - generic [ref=e756]: "24"
+              - listitem [ref=e757]:
+                - link "Program Modules 46" [ref=e758] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/program-modules
+                  - img [ref=e759]
+                  - generic [ref=e761]: Program Modules
+                  - generic [ref=e765]: "46"
+              - listitem [ref=e766]:
+                - link "Activities 3" [ref=e767] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/activities
+                  - img [ref=e768]
+                  - generic [ref=e770]: Activities
+                  - generic [ref=e774]: "3"
+              - listitem [ref=e775]:
+                - link "Methodologies" [ref=e776] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/methodologies
+                  - img [ref=e777]
+                  - generic [ref=e779]: Methodologies
+              - listitem [ref=e780]:
+                - link "Rubric Definitions" [ref=e781] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/rubric-managements
+                  - img [ref=e782]
+                  - generic [ref=e784]: Rubric Definitions
+          - listitem [ref=e785]:
+            - generic [ref=e786] [cursor=pointer]:
+              - generic [ref=e787]: Report Management
+              - button "Report Management" [expanded] [ref=e788]:
+                - generic [ref=e789]: Report Management
+                - img [ref=e790]
+            - list [ref=e792]:
+              - listitem [ref=e793]:
+                - link "Performance Tracker" [ref=e794] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/monthly-reports
+                  - img [ref=e795]
+                  - generic [ref=e797]: Performance Tracker
+              - listitem [ref=e798]:
+                - link "Report Templates" [ref=e799] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/report-templates
+                  - img [ref=e800]
+                  - generic [ref=e802]: Report Templates
+              - listitem [ref=e803]:
+                - link "Report Management" [ref=e804] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/report-management
+                  - img [ref=e805]
+                  - generic [ref=e808]: Report Management
+          - listitem [ref=e809]:
+            - generic [ref=e810] [cursor=pointer]:
+              - generic [ref=e811]: Settings
+              - button "Settings" [expanded] [ref=e812]:
+                - generic [ref=e813]: Settings
+                - img [ref=e814]
+            - list [ref=e816]:
+              - listitem [ref=e817]:
+                - link "Grades" [ref=e818] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/grades
+                  - img [ref=e819]
+                  - generic [ref=e821]: Grades
+              - listitem [ref=e822]:
+                - link "Access Groups" [ref=e823] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/access-groups
+                  - img [ref=e824]
+                  - generic [ref=e826]: Access Groups
+              - listitem [ref=e827]:
+                - link "Mentee Statuses" [ref=e828] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-statuses
+                  - img [ref=e829]
+                  - generic [ref=e831]: Mentee Statuses
+              - listitem [ref=e832]:
+                - link "Partners 1" [ref=e833] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/partners
+                  - img [ref=e834]
+                  - generic [ref=e836]: Partners
+                  - generic [ref=e840]: "1"
+          - listitem [ref=e841]:
+            - generic [ref=e842] [cursor=pointer]:
+              - generic [ref=e843]: Filament Shield
+              - button "Filament Shield" [expanded] [ref=e844]:
+                - generic [ref=e845]: Filament Shield
+                - img [ref=e846]
+            - list [ref=e848]:
+              - listitem [ref=e849]:
+                - link "Roles 24" [ref=e850] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/shield/roles
+                  - img [ref=e851]
+                  - generic [ref=e853]: Roles
+                  - generic [ref=e857]: "24"
+          - listitem [ref=e858]:
+            - generic [ref=e859] [cursor=pointer]:
+              - generic [ref=e860]: Assessment Management
+              - button "Assessment Management" [expanded] [ref=e861]:
+                - generic [ref=e862]: Assessment Management
+                - img [ref=e863]
+            - list [ref=e865]:
+              - listitem [ref=e866]:
+                - link "Sections & Questions 8" [ref=e867] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-sections
+                  - img [ref=e868]
+                  - generic [ref=e870]: Sections & Questions
+                  - generic [ref=e874]: "8"
+              - listitem [ref=e875]:
+                - link "All Questions" [ref=e876] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-questions
+                  - img [ref=e877]
+                  - generic [ref=e879]: All Questions
+              - listitem [ref=e880]:
+                - link "Departments 7" [ref=e881] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-departments
+                  - img [ref=e882]
+                  - generic [ref=e884]: Departments
+                  - generic [ref=e888]: "7"
+              - listitem [ref=e889]:
+                - link "Commodities" [ref=e890] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/commodities
+                  - img [ref=e891]
+                  - generic [ref=e893]: Commodities
+              - listitem [ref=e894]:
+                - link "Commodity Categories 9" [ref=e895] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/commodity-categories
+                  - img [ref=e896]
+                  - generic [ref=e899]: Commodity Categories
+                  - generic [ref=e903]: "9"
+          - listitem [ref=e904]:
+            - generic [ref=e905] [cursor=pointer]:
+              - generic [ref=e906]: Organizational Structure
+              - button "Organizational Structure" [expanded] [ref=e907]:
+                - generic [ref=e908]: Organizational Structure
+                - img [ref=e909]
+            - list [ref=e911]:
+              - listitem [ref=e912]:
+                - link "Departments 348" [ref=e913] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/departments
+                  - img [ref=e914]
+                  - generic [ref=e916]: Departments
+                  - generic [ref=e920]: "348"
+              - listitem [ref=e921]:
+                - link "Cadres 21" [ref=e922] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/cadres
+                  - img [ref=e923]
+                  - generic [ref=e925]: Cadres
+                  - generic [ref=e929]: "21"
+          - listitem [ref=e930]:
+            - generic [ref=e931] [cursor=pointer]:
+              - generic [ref=e932]: Geographic Structure
+              - button "Geographic Structure" [expanded] [ref=e933]:
+                - generic [ref=e934]: Geographic Structure
+                - img [ref=e935]
+            - list [ref=e937]:
+              - listitem [ref=e938]:
+                - link "Divisions 1" [ref=e939] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/divisions
+                  - img [ref=e940]
+                  - generic [ref=e942]: Divisions
+                  - generic [ref=e946]: "1"
+              - listitem [ref=e947]:
+                - link "Counties 47" [ref=e948] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/counties
+                  - img [ref=e949]
+                  - generic [ref=e951]: Counties
+                  - generic [ref=e955]: "47"
+              - listitem [ref=e956]:
+                - link "Subcounties 305" [ref=e957] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/subcounties
+                  - img [ref=e958]
+                  - generic [ref=e960]: Subcounties
+                  - generic [ref=e964]: "305"
+              - listitem [ref=e965]:
+                - link "Facility Types 16" [ref=e966] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-types
+                  - img [ref=e967]
+                  - generic [ref=e969]: Facility Types
+                  - generic [ref=e973]: "16"
+          - listitem [ref=e974]:
+            - generic [ref=e975] [cursor=pointer]:
+              - generic [ref=e976]: System Administration
+              - button "System Administration" [expanded] [ref=e977]:
+                - generic [ref=e978]: System Administration
+                - img [ref=e979]
+            - list [ref=e981]:
+              - listitem [ref=e982]:
+                - link "Facilities 10,700" [ref=e983] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facilities
+                  - img [ref=e984]
+                  - generic [ref=e986]: Facilities
+                  - generic [ref=e990]: 10,700
+              - listitem [ref=e991]:
+                - link "Facility Levels 5" [ref=e992] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-levels
+                  - img [ref=e993]
+                  - generic [ref=e995]: Facility Levels
+                  - generic [ref=e999]: "5"
+              - listitem [ref=e1000]:
+                - link "Facility Ownership 7" [ref=e1001] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-ownerships
+                  - img [ref=e1002]
+                  - generic [ref=e1004]: Facility Ownership
+                  - generic [ref=e1008]: "7"
+          - listitem [ref=e1009]:
+            - generic [ref=e1010] [cursor=pointer]:
+              - generic [ref=e1011]: Quiz Management
+              - button "Quiz Management" [expanded] [ref=e1012]:
+                - generic [ref=e1013]: Quiz Management
+                - img [ref=e1014]
+            - list [ref=e1016]:
+              - listitem [ref=e1017]:
+                - link "Program Module Quizzes 1" [ref=e1018] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/program-module-quizzes
+                  - img [ref=e1019]
+                  - generic [ref=e1021]: Program Module Quizzes
+                  - generic [ref=e1025]: "1"
+          - listitem [ref=e1026]:
+            - generic [ref=e1027] [cursor=pointer]:
+              - generic [ref=e1028]: Content Management
+              - button "Content Management" [expanded] [ref=e1029]:
+                - generic [ref=e1030]: Content Management
+                - img [ref=e1031]
+            - list [ref=e1033]:
+              - listitem [ref=e1034]:
+                - link "Resources" [ref=e1035] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resources
+                  - img [ref=e1036]
+                  - generic [ref=e1038]: Resources
+              - listitem [ref=e1039]:
+                - link "Resource Categories" [ref=e1040] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-categories
+                  - img [ref=e1041]
+                  - generic [ref=e1043]: Resource Categories
+              - listitem [ref=e1044]:
+                - link "Resource Types" [ref=e1045] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-types
+                  - img [ref=e1046]
+                  - generic [ref=e1048]: Resource Types
+              - listitem [ref=e1049]:
+                - link "Tags" [ref=e1050] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/tags
+                  - img [ref=e1051]
+                  - generic [ref=e1054]: Tags
+              - listitem [ref=e1055]:
+                - link "Resource Comments" [ref=e1056] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-comments
+                  - img [ref=e1057]
+                  - generic [ref=e1059]: Resource Comments
+          - listitem [ref=e1060]:
+            - generic [ref=e1061] [cursor=pointer]:
+              - generic [ref=e1062]: App Configuration
+              - button "App Configuration" [expanded] [ref=e1063]:
+                - generic [ref=e1064]: App Configuration
+                - img [ref=e1065]
+            - list [ref=e1067]:
+              - listitem [ref=e1068]:
+                - link "Scopes" [ref=e1069] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/scopes
+                  - img [ref=e1070]
+                  - generic [ref=e1072]: Scopes
+          - listitem [ref=e1073]:
+            - generic [ref=e1074] [cursor=pointer]:
+              - generic [ref=e1075]: Inventory Management
+              - button "Inventory Management" [expanded] [ref=e1076]:
+                - generic [ref=e1077]: Inventory Management
+                - img [ref=e1078]
+            - list [ref=e1080]:
+              - listitem [ref=e1081]:
+                - link "Suppliers" [ref=e1082] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/suppliers
+                  - img [ref=e1083]
+                  - generic [ref=e1085]: Suppliers
+              - listitem [ref=e1086]:
+                - link "Inventory Items" [ref=e1087] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/inventory-items
+                  - img [ref=e1088]
+                  - generic [ref=e1090]: Inventory Items
+              - listitem [ref=e1091]:
+                - link "Stock Levels" [ref=e1092] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/stock-levels
+                  - img [ref=e1093]
+                  - generic [ref=e1095]: Stock Levels
+              - listitem [ref=e1096]:
+                - link "Stock Requests" [ref=e1097] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/stock-requests
+                  - img [ref=e1098]
+                  - generic [ref=e1100]: Stock Requests
+          - listitem [ref=e1101]:
+            - generic [ref=e1102] [cursor=pointer]:
+              - generic [ref=e1103]: User Management
+              - button "User Management" [expanded] [ref=e1104]:
+                - generic [ref=e1105]: User Management
+                - img [ref=e1106]
+            - list [ref=e1108]:
+              - listitem [ref=e1109]:
+                - link "All Users 7395" [ref=e1110] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/users
+                  - img [ref=e1111]
+                  - generic [ref=e1113]: All Users
+                  - generic [ref=e1117]: "7395"
+          - listitem [ref=e1118]:
+            - generic [ref=e1119] [cursor=pointer]:
+              - generic [ref=e1120]: Indicator Reporting
+              - button "Indicator Reporting" [expanded] [ref=e1121]:
+                - generic [ref=e1122]: Indicator Reporting
+                - img [ref=e1123]
+            - list [ref=e1125]:
+              - listitem [ref=e1126]:
+                - link "Submit Report" [ref=e1127] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/reporting
+                  - img [ref=e1128]
+                  - generic [ref=e1130]: Submit Report
+              - listitem [ref=e1131]:
+                - link "Validation Queue" [ref=e1132] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/validation-queue
+                  - img [ref=e1133]
+                  - generic [ref=e1135]: Validation Queue
+              - listitem [ref=e1136]:
+                - link "Progress Dashboard" [ref=e1137] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/progress-dashboard
+                  - img [ref=e1138]
+                  - generic [ref=e1140]: Progress Dashboard
+  - generic:
+    - status

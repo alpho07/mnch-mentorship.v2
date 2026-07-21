@@ -1,0 +1,133 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e7]
+      - generic [ref=e10]: Method Not Allowed
+    - button "Copy as Markdown" [ref=e11] [cursor=pointer]:
+      - img [ref=e12]
+      - generic [ref=e15]: Copy as Markdown
+  - generic [ref=e18]:
+    - generic [ref=e19]:
+      - heading "Symfony\\Component\\HttpKernel\\Exception\\MethodNotAllowedHttpException" [level=1] [ref=e20]
+      - generic [ref=e22]: vendor/laravel/framework/src/Illuminate/Routing/AbstractRouteCollection.php:130
+      - paragraph [ref=e23]: "The GET method is not supported for route admin/logout. Supported methods: POST."
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]: LARAVEL
+          - generic [ref=e28]: 12.52.0
+        - generic [ref=e29]:
+          - generic [ref=e30]: PHP
+          - generic [ref=e31]: 8.4.12
+      - generic [ref=e32]:
+        - img [ref=e33]
+        - text: UNHANDLED
+      - generic [ref=e36]: CODE 0
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - img [ref=e40]
+        - text: "405"
+      - generic [ref=e43]:
+        - img [ref=e44]
+        - text: GET
+      - generic [ref=e47]: http://127.0.0.1:8100/admin/logout
+      - button [ref=e48] [cursor=pointer]:
+        - img [ref=e49]
+  - generic [ref=e53]:
+    - generic [ref=e54]:
+      - generic [ref=e55]:
+        - img [ref=e57]
+        - heading "Exception trace" [level=3] [ref=e60]
+      - generic [ref=e61]:
+        - generic [ref=e63] [cursor=pointer]:
+          - img [ref=e64]
+          - generic [ref=e68]: 35 vendor frames
+          - button [ref=e69]:
+            - img [ref=e70]
+        - generic [ref=e74]:
+          - generic [ref=e75] [cursor=pointer]:
+            - generic [ref=e78]:
+              - code [ref=e82]:
+                - generic [ref=e83]: Illuminate\Foundation\Application->handleRequest(object(Illuminate\Http\Request))
+              - generic [ref=e85]: public/index.php:20
+            - button [ref=e87]:
+              - img [ref=e88]
+          - code [ref=e96]:
+            - generic [ref=e97]: "15"
+            - generic [ref=e98]: 16// Bootstrap Laravel and handle the request...
+            - generic [ref=e99]: 17/** @var Application $app */
+            - generic [ref=e100]: 18$app = require_once __DIR__.'/../bootstrap/app.php';
+            - generic [ref=e101]: "19"
+            - generic [ref=e102]: 20$app->handleRequest(Request::capture());
+            - generic [ref=e103]: "21"
+        - generic [ref=e105] [cursor=pointer]:
+          - img [ref=e106]
+          - generic [ref=e110]: 1 vendor frame
+          - button [ref=e111]:
+            - img [ref=e112]
+    - generic [ref=e116]:
+      - generic [ref=e118]:
+        - img [ref=e120]
+        - heading "Queries" [level=3] [ref=e122]
+      - generic [ref=e124]: // No queries executed
+  - generic [ref=e126]:
+    - generic [ref=e127]:
+      - heading "Headers" [level=2] [ref=e128]
+      - generic [ref=e129]:
+        - generic [ref=e130]:
+          - generic [ref=e131]: host
+          - generic [ref=e133]: 127.0.0.1:8100
+        - generic [ref=e134]:
+          - generic [ref=e135]: connection
+          - generic [ref=e137]: keep-alive
+        - generic [ref=e138]:
+          - generic [ref=e139]: sec-ch-ua
+          - generic [ref=e141]: "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"150\", \"Google Chrome\";v=\"150\""
+        - generic [ref=e142]:
+          - generic [ref=e143]: sec-ch-ua-mobile
+          - generic [ref=e145]: "?0"
+        - generic [ref=e146]:
+          - generic [ref=e147]: sec-ch-ua-platform
+          - generic [ref=e149]: "\"macOS\""
+        - generic [ref=e150]:
+          - generic [ref=e151]: upgrade-insecure-requests
+          - generic [ref=e153]: "1"
+        - generic [ref=e154]:
+          - generic [ref=e155]: user-agent
+          - generic [ref=e157]: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36
+        - generic [ref=e158]:
+          - generic [ref=e159]: accept
+          - generic [ref=e161]: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+        - generic [ref=e162]:
+          - generic [ref=e163]: sec-fetch-site
+          - generic [ref=e165]: cross-site
+        - generic [ref=e166]:
+          - generic [ref=e167]: sec-fetch-mode
+          - generic [ref=e169]: navigate
+        - generic [ref=e170]:
+          - generic [ref=e171]: sec-fetch-user
+          - generic [ref=e173]: "?1"
+        - generic [ref=e174]:
+          - generic [ref=e175]: sec-fetch-dest
+          - generic [ref=e177]: document
+        - generic [ref=e178]:
+          - generic [ref=e179]: accept-encoding
+          - generic [ref=e181]: gzip, deflate, br, zstd
+        - generic [ref=e182]:
+          - generic [ref=e183]: accept-language
+          - generic [ref=e185]: en-US,en;q=0.9,ru;q=0.8
+        - generic [ref=e186]:
+          - generic [ref=e187]: cookie
+          - generic [ref=e189]: XSRF-TOKEN=eyJpdiI6ImNhSTQrcm9DR1JpcDY3aUxDTnNUZkE9PSIsInZhbHVlIjoiZWRGQ1F6eklTZEtvQ3BZcU9yNVd5cXhjK3VZc0tBcjAxeTV2NnRyODdSZU4vQnQ1QjA0dDhrUjE5Q29oZkp6T3dtc2hDamY4eUE3TW1jZU1pSVZNN1ZhamxzSjVrcVY0T09ZYjBtNUk3UW1tc2VWajdub25WTlk2M2VnU25QTE8iLCJtYWMiOiIwNjJjOTgzOTMxMjk2NTA1YWUyZmJjZGZiYjhjM2EzNDIyMzYxMTZiYzQ1M2NkOTg5ZTA0MjhmOGI3MDQ1ZTc0IiwidGFnIjoiIn0%3D; mnch_mentorship_platform_session=eyJpdiI6Ikl2RFRaU0xzUlBEd1J2dWVRN3dTNnc9PSIsInZhbHVlIjoiMTRIbUtGZDE2Sk9FU010MmxKWjl1K21MWExqenhtMnNnTDZqNGVMYlROVjRFZWZwRGd1L3FnUzBnVDh1ZVltSUNMZ2hxM0ZGTHlsOEFCckJ2Ni8vckM0c1hHc3orN1RIUUhTUnZBYWQ4cUUwUTE1cXdGZlFFYWt3YTJ5TW9JSlAiLCJtYWMiOiJlMzQ5YTExY2E4YzU2Y2I4NTkxMjY4OTMxMWZlNjI4N2M3NWE3NWY2Mzc3Y2IyYTE0NGY5Zjg1YjdkNDczODYxIiwidGFnIjoiIn0%3D
+    - generic [ref=e190]:
+      - heading "Body" [level=2] [ref=e191]
+      - generic [ref=e192]: // No request body
+    - generic [ref=e193]:
+      - heading "Routing" [level=2] [ref=e194]
+      - generic [ref=e196]: // No routing context
+    - generic [ref=e197]:
+      - heading "Routing parameters" [level=2] [ref=e198]
+      - generic [ref=e199]: // No routing parameters
+  - generic [ref=e202]:
+    - img [ref=e204]
+    - img [ref=e3242]

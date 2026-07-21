@@ -1,0 +1,162 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "EmONC Cohort 1 — June 2026" [ref=e4] [cursor=pointer]:
+        - /url: http://localhost:8001/my-class/238
+        - img [ref=e5]
+        - text: EmONC Cohort 1 — June 2026
+      - generic [ref=e7]: "Module 4: Active Management of the Third Stage of Labor (AMSTL)"
+      - button [ref=e8] [cursor=pointer]:
+        - img [ref=e9]
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - complementary [ref=e13]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]: FM
+            - generic [ref=e19]:
+              - paragraph [ref=e20]: Mentee
+              - paragraph [ref=e21]: FRANCISCA MUMBI MUIA
+          - generic [ref=e22]:
+            - generic [ref=e23]:
+              - generic [ref=e24]: Email
+              - generic [ref=e25]: test-mentee@example.com
+            - generic [ref=e26]:
+              - generic [ref=e27]: Cadre
+              - generic [ref=e28]: National Officer
+            - generic [ref=e29]:
+              - generic [ref=e30]: Facility
+              - generic [ref=e31]: Kasikeu Dispensary
+            - generic [ref=e32]:
+              - generic [ref=e33]: Phone
+              - generic [ref=e34]: "0723066044"
+            - generic [ref=e35]:
+              - generic [ref=e36]: Status
+              - generic [ref=e38]: Enrolled
+            - generic [ref=e39]:
+              - generic [ref=e40]: Enrolled
+              - generic [ref=e41]: 28 Jun 2026
+        - generic [ref=e44]:
+          - paragraph [ref=e45]: Mentorship
+          - generic [ref=e46]:
+            - generic [ref=e47]:
+              - generic [ref=e48]: Class
+              - generic [ref=e49]: EmONC Cohort 1 — June 2026
+            - generic [ref=e50]:
+              - generic [ref=e51]: Program
+              - generic [ref=e52]: Maternal Health (EmONC)
+            - generic [ref=e53]:
+              - generic [ref=e54]: Mentor
+              - generic [ref=e55]: Super Admin
+            - generic [ref=e56]:
+              - generic [ref=e57]: Site
+              - generic [ref=e58]: Nairobi Hospital
+            - generic [ref=e59]:
+              - generic [ref=e60]: Dates
+              - generic [ref=e61]: 28 Jun 2026
+            - generic [ref=e62]:
+              - generic [ref=e63]: Module
+              - generic [ref=e65]: In progress
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - 'heading "Module 4: Active Management of the Third Stage of Labor (AMSTL)" [level=1] [ref=e69]'
+            - paragraph [ref=e70]: EmONC Cohort 1 — June 2026
+            - generic [ref=e71]:
+              - generic [ref=e72]: In Progress
+              - generic [ref=e74]: EmONC
+          - generic [ref=e75]:
+            - generic [ref=e79]: 50%
+            - generic [ref=e80]:
+              - generic [ref=e81]:
+                - img [ref=e83]
+                - generic [ref=e85]: Attended
+              - generic [ref=e87]:
+                - img [ref=e89]
+                - generic [ref=e91]: Scenarios
+              - generic [ref=e93]:
+                - generic [ref=e94]: "3"
+                - generic [ref=e95]: Video
+              - generic [ref=e97]:
+                - generic [ref=e98]: "4"
+                - generic [ref=e99]: Done
+        - generic [ref=e100]:
+          - generic [ref=e101]:
+            - img [ref=e103]
+            - generic [ref=e105]:
+              - paragraph [ref=e106]: Next Step
+              - paragraph [ref=e107]: Submit your hands-on video
+          - link "Go →" [ref=e108] [cursor=pointer]:
+            - /url: "#submit-video"
+        - generic [ref=e111]:
+          - generic [ref=e112]:
+            - img [ref=e114]
+            - heading "Case Scenarios" [level=2] [ref=e116]
+          - generic [ref=e118]:
+            - heading "AMTSL Practical Assessment Rubric — Case Scenario" [level=3] [ref=e119]
+            - generic [ref=e120]:
+              - paragraph [ref=e121]: "PATIENT: Natalie"
+              - paragraph [ref=e122]: "SCENARIO: Natalie was admitted to the labor ward in the second stage of labor and has had a normal vaginal birth."
+              - paragraph [ref=e123]: "TASK: Manage the third stage of labor giving a running commentary."
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - img [ref=e129]
+            - heading "Practical Assessment" [level=2] [ref=e131]
+          - generic [ref=e132]:
+            - img [ref=e134]
+            - paragraph [ref=e136]: Practical Assessment Pending
+            - paragraph [ref=e137]: Your mentor will conduct and record your practical assessment for this module.
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - img [ref=e143]
+            - heading "Reference Videos" [level=2] [ref=e145]
+          - generic [ref=e147]:
+            - heading "Active Management of Third Stage of Labour" [level=3] [ref=e148]
+            - iframe [ref=e150]:
+              - generic "YouTube Video Player" [ref=f1e3]:
+                - alert [ref=f1e4]:
+                  - generic [ref=f1e5]:
+                    - generic [ref=f1e6]:
+                      - img
+                    - generic [ref=f1e7]:
+                      - generic [ref=f1e9]:
+                        - text: This video is age-restricted and only available on YouTube.
+                        - link "Learn more" [ref=f1e10] [cursor=pointer]:
+                          - /url: //support.google.com/youtube/answer/2802167?hl=en
+                      - link "Watch on YouTube" [ref=f1e13] [cursor=pointer]:
+                        - /url: http://www.youtube.com/watch?v=_JgOjTdAW-M
+                  - link "Visit YouTube to search for more videos" [ref=f1e14] [cursor=pointer]:
+                    - /url: https://www.youtube.com
+                    - img
+        - generic [ref=e153]:
+          - generic [ref=e155]:
+            - img [ref=e157]
+            - heading "Submit Hands-on Video" [level=2] [ref=e159]
+          - paragraph [ref=e160]: "Record yourself performing the skill and upload or share a link:"
+          - generic [ref=e161]:
+            - generic [ref=e162]:
+              - generic [ref=e163] [cursor=pointer]:
+                - radio "Upload file" [ref=e164]
+                - text: Upload file
+              - generic [ref=e165] [cursor=pointer]:
+                - radio "Paste video link" [checked] [active] [ref=e166]
+                - text: Paste video link
+            - generic [ref=e201]:
+              - textbox "https://youtube.com/..." [ref=e202]
+              - paragraph [ref=e203]: YouTube, Vimeo, or direct video URL
+            - button "Submit Video" [ref=e173] [cursor=pointer]:
+              - img [ref=e174]
+              - text: Submit Video
+      - complementary [ref=e177]:
+        - generic [ref=e180]:
+          - paragraph [ref=e181]: Activities
+          - generic [ref=e182]:
+            - generic [ref=e186]:
+              - paragraph [ref=e187]: CME
+              - paragraph [ref=e188]: Enrolled
+            - generic [ref=e192]:
+              - paragraph [ref=e193]: Hands-on Demo
+              - paragraph [ref=e194]: Enrolled
+            - generic [ref=e198]:
+              - paragraph [ref=e199]: Drill
+              - paragraph [ref=e200]: Enrolled

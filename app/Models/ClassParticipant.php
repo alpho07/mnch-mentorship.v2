@@ -167,12 +167,58 @@ class ClassParticipant extends Model
         ]);
     }
 
+    /**
+     * @throws \DomainException if the mentee hasn't completed every module in the class,
+     *                          with a passed video review on each — enforced here so approval can't be granted
+     *                          via any code path that skips the UI-level pre-check.
+     */
     public function markMentorApproved(int $mentorUserId): bool
     {
+        if (! $this->hasCompletedAllModules()) {
+            throw new \DomainException('Cannot mentor-approve: not all modules are complete, or a hands-on video review is still pending/failed.');
+        }
+
         return $this->update([
             'mentor_approved_at' => now(),
             'mentor_approved_by' => $mentorUserId,
         ]);
+    }
+
+    /**
+     * Every module in the class has mentee progress that is completed/exempted, with a
+     * passed video review — the gate for mentor approval and, transitively, certification.
+     */
+    public function hasCompletedAllModules(): bool
+    {
+        $class = $this->relationLoaded('mentorshipClass') ? $this->mentorshipClass : $this->mentorshipClass()->first();
+
+        if (! $class) {
+            return false;
+        }
+
+        $moduleIds = $class->classModules()->pluck('id');
+
+        if ($moduleIds->isEmpty()) {
+            return false;
+        }
+
+        $progressRecords = $this->moduleProgress()->whereIn('class_module_id', $moduleIds)->get();
+
+        if ($progressRecords->count() !== $moduleIds->count()) {
+            return false;
+        }
+
+        foreach ($progressRecords as $progress) {
+            if (! in_array($progress->status, ['completed', 'exempted'])) {
+                return false;
+            }
+
+            if (! $progress->isVideoPassed()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function markHeadDrmhApproved(int $headDrmhUserId): bool

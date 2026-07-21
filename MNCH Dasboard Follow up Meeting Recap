@@ -1,0 +1,92 @@
+MNCH Dasboard Follow up Meeting
+Mon, Jun 29, 2026
+
+Summary:
+
+A product demo and design decision meeting on MNCH platform learning flow and certification.
+• System demo of modules, classes, mentorships, and mentor workflows
+• Pre/post tests use same quiz; answers hidden until post-test
+• Hands-on videos via drive links to avoid platform storage
+• Mentor-scored rubrics determine competency; example pass 17/21
+• Certificates issued after all 13 core modules complete
+
+
+Action Items:
+
+* Olivia Mukami will share the remaining case scenarios for most modules after the meeting.
+* Alphonce Ochieng' will continue building and attaching rubrics to the relevant modules so mentors can score hands-on videos and calculate pass/fail.
+* Alphonce Ochieng' will add the listed module conditions and record the module components into the platform so they can be implemented
+* Olivia Mukami will upload the manuals to the platform as downloadable resources for the modules
+* Mentor will assess mentee submissions using the hands-on rubric after the module post-test is completed
+* Alphonce Ochieng' will configure the platform to show only pre-test scores immediately and to hide correct answers until after the post-test
+* Alphonce Ochieng' will pass admin rights to the organizer so they can set remaining platform configurations
+* Alphonce Ochieng' will configure the platform so it does not count tracks as separate modules
+* Olivia Mukami will provide the format of all certificates to Alphonce so certificates and CPD points can be implemented in mentee profiles
+
+
+Key Discussion Points:
+
+Greetings and meeting setup
+The meeting opened with brief greetings and a short exchange about the meeting link timing and confirmation of participants joining the session. The host indicated readiness to present and share his screen.
+
+Overview of modules, tracks, and content mapping
+Alphonce demonstrated how he mapped tracks into the module structure for EMONK, explained module numbering and track labels, and showed attached activities and content locations including case studies and where content is edited for each module.
+
+Quizzes and question configuration
+Alphonce showed where quizzes are created for modules, explained that quizzes can apply to both pre- and post-tests, and previewed question editing including correct answers and multiple-choice options.
+
+Creating mentorships, classes, and enrolling mentees
+Alphonce created a mentorship and a class (example "June cohort"), explained that class-level dates are not used because dates live at the module level, demonstrated adding modules to a class, and showed that a class cannot start until mentees are enrolled.
+
+Mentee experience, attendance confirmation, and content flow
+Alphonce demonstrated the mentee view, the requirement for mentees to confirm attendance before accessing module content, the "continue" flow showing the introduction, case scenario, learning videos, assessment upload fields, and how uploaded links appear for review.
+
+Mentor dashboard, reviews, certificates, and rubrics work in progress
+Alphonce showed the mentor dashboard for reviewing pending videos, viewing uploaded hands-on videos, awarding pass/fail based on rubric scoring, and confirming certificate issuance after all items are complete; he also noted he is still developing the rubric module and attaching pass marks to specific modules (example pass 17/21).
+
+Opening question and context
+Olivia thanked the group and posed a functional question about module access flow and whether mentees can only see the pre-test on entry. Alphonce indicated this was a deliberate timing to add conditional logic now that content and assessments are in place.
+
+Inventory of module components
+Alphonce listed the module components—introduction, pre-test, post-test, case scenario, and hands-on uploads—and confirmed the default visibility of the introduction when present.
+
+Purpose and content of the introduction
+Olivia and Alphonce debated what to include in the introduction, concluding it should provide learning outcomes, objectives, and instructions for running the module and facility-level CME rather than full instructional content, to avoid invalidating the pre-test.
+
+Placement of learning materials and resources
+The team agreed that attached resources and videos are learning materials and should be available after the pre-test; resources can be attached per module and the introduction field may remain blank if not provided.
+
+Detailed ordered flow from pre-test to mentor assessment
+The group mapped the exact sequence: mentee sees pre-test on module invitation, completes it, then watches the learning video, reviews the case scenario, submits a demonstration video, performs an in-facility drill, completes the post-test, and then awaits mentor assessment via rubric.
+
+Clarifications and examples
+Olivia reiterated sample learning objectives for the module and Alphonce confirmed he will retain the introduction field even if blank; the segment concluded with an illustrative remark about the case scenario format.
+
+Scoring visibility and rubric handling
+Participants decided the platform should show pre-test scores but withhold the correct answers until after the post-test; they will remove "pass/fail" wording and rely on rubric-based hands-on evaluation for competency assessment. 404
+
+Admin handover and platform configuration
+Alphonce explained that admin settings are visible from the admin view and confirmed he will hand over admin control so the organizer can finish configuration tasks. He reassured that initial complexity diminishes with use.
+
+Module count and tracks behavior
+Olivia noted the platform shows 24 modules while they have 13, and Alphonce explained the discrepancy arises because the system treats multiple tracks as separate modules; he offered to change the setting so tracks are not counted as modules.
+
+Meaning and effect of "complete" on a module
+Olivia asked about the "accept" and "complete" flow; Alphonce demonstrated that "complete" is a manual mentor action to close a module, which can show 100% even if mentees haven't uploaded required items and will prevent mentees from continuing in that module.
+
+Per-student activity completion and handling absences
+The participants agreed that completion should be assessed per student by the mentor—CME, hands-on, and drill must be completed for a student to be marked finished—and discussed options for students who miss sessions, including enrollment in another class; mentors check activity boxes for each student and can then choose to close or leave a module open.
+
+Timing, end dates, and module closure behavior
+The group reviewed how the platform handles start and end dates and noted the system does not automatically close modules at the end date; mentors or admins must decide to close modules to accommodate students who missed activities due to illness or other reasons.
+
+Rubric, certification workflow, and DRMH approval
+Alphonce walked through the rubric-based mentor assessments and explained that once a mentor confirms a student completed pre- and post-tests, uploaded video evidence, and passed rubric scoring, the mentor submits the student for certificate approval; approvers with DRMH rights review and issue the certificate which then appears in the mentee profile.
+
+Certificates, CPD points, and certificate formatting
+The team confirmed certificates can include CPD points and that the intended final certificate should represent completion of all thirteen modules rather than individual modules; Alphonce requested the certificate format(s) to implement certificate display and CPD points in mentee profiles.
+
+
+Notepad:
+
+* No notes

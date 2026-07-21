@@ -1,0 +1,213 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - navigation [ref=e5]:
+        - button "User menu" [ref=e9] [cursor=pointer]:
+          - img "Avatar of EmONC E2ETest" [ref=e10]
+      - main [ref=e11]:
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - heading "Mentee Dashboard" [level=1] [ref=e16]
+            - generic [ref=e19]:
+              - generic [ref=e20]:
+                - generic [ref=e21]: EE
+                - generic [ref=e22]:
+                  - heading "EmONC E2ETest" [level=2] [ref=e23]
+                  - paragraph [ref=e24]: emonc-e2e-test-mentee@example.com · +254712345678
+                  - generic [ref=e25]:
+                    - generic [ref=e26]: 🗓 Since Jul 2026
+                    - generic [ref=e27]: ⚡ Inactive learner
+                    - generic [ref=e28]: 🔥 1-day streak
+                - generic [ref=e29]:
+                  - generic [ref=e30]: 8%
+                  - generic [ref=e31]: Attendance
+                  - generic [ref=e32]: Needs Improvement
+              - generic [ref=e33]:
+                - generic [ref=e34]:
+                  - generic [ref=e35]: 📚
+                  - generic [ref=e36]:
+                    - generic [ref=e37]: "1"
+                    - generic [ref=e38]: Classes Enrolled
+                - generic [ref=e39]:
+                  - generic [ref=e40]: ✅
+                  - generic [ref=e41]:
+                    - generic [ref=e42]: "0"
+                    - generic [ref=e43]: Classes Completed
+                - generic [ref=e44]:
+                  - generic [ref=e45]: 🔵
+                  - generic [ref=e46]:
+                    - generic [ref=e47]: "1"
+                    - generic [ref=e48]: Classes Active
+                - generic [ref=e49]:
+                  - generic [ref=e50]: 🧩
+                  - generic [ref=e51]:
+                    - generic [ref=e52]: "12"
+                    - generic [ref=e53]: Total Modules
+                - generic [ref=e54]:
+                  - generic [ref=e55]: 🏆
+                  - generic [ref=e56]:
+                    - generic [ref=e57]: "0"
+                    - generic [ref=e58]: Modules Completed
+                - generic [ref=e59]:
+                  - generic [ref=e60]: ⏳
+                  - generic [ref=e61]:
+                    - generic [ref=e62]: "1"
+                    - generic [ref=e63]: Modules In Progress
+                - generic [ref=e64]:
+                  - generic [ref=e65]: 📋
+                  - generic [ref=e66]:
+                    - generic [ref=e67]: "0"
+                    - generic [ref=e68]: Pending Attendance
+                - generic [ref=e69]:
+                  - generic [ref=e70]: ⭐
+                  - generic [ref=e71]:
+                    - generic [ref=e72]: "0"
+                    - generic [ref=e73]: Modules Exempted
+              - generic [ref=e74]:
+                - generic [ref=e75]:
+                  - generic [ref=e76]:
+                    - generic [ref=e77]:
+                      - generic [ref=e78]: 📚
+                      - text: My Classes
+                    - generic [ref=e79]: 1 enrollment
+                  - generic [ref=e80]:
+                    - generic [ref=e81] [cursor=pointer]:
+                      - generic [ref=e83]:
+                        - generic [ref=e84]: July 2026 EmONC Test Cohort
+                        - generic [ref=e85]:
+                          - generic [ref=e86]: Maternal Health (EmONC)
+                          - generic [ref=e87]: · 🏥 Budalangi Dispensary
+                          - generic [ref=e88]: · 👨‍⚕️ Super Admin
+                      - generic [ref=e89]:
+                        - generic [ref=e90]:
+                          - generic [ref=e91]: Active
+                          - generic [ref=e92]: ▲
+                        - generic [ref=e93]: Enrolled
+                        - generic [ref=e94]: 0/12 · 0%
+                    - generic [ref=e95]:
+                      - generic [ref=e96]:
+                        - generic [ref=e97]: 0/12 modules
+                        - generic [ref=e99]: 0%
+                      - generic [ref=e101]:
+                        - generic [ref=e102]:
+                          - generic [ref=e103]: Next Step
+                          - generic [ref=e104]: "Track 1: Bimanual compression of the uterus"
+                        - link "Continue →" [ref=e105] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/my-class/240/module/303
+                      - generic [ref=e106]:
+                        - generic [ref=e107]:
+                          - generic [ref=e108]: ⬜
+                          - generic [ref=e110]: "🔒 Module 2: Labour Care Guide (LCG)"
+                          - generic [ref=e111]: Not Started
+                        - generic [ref=e112]:
+                          - generic [ref=e113]: 🔵
+                          - generic [ref=e114]:
+                            - 'link "Track 1: Bimanual compression of the uterus" [ref=e115] [cursor=pointer]':
+                              - /url: http://127.0.0.1:8100/my-class/240/module/303
+                            - generic [ref=e116]: Started 17 Jul 2026
+                          - generic [ref=e117]: Confirmed
+                        - generic [ref=e118]:
+                          - generic [ref=e119]: ⬜
+                          - generic [ref=e121]: "🔒 Track 2: Compression of abdominal aorta"
+                          - generic [ref=e122]: Not Started
+                        - generic [ref=e123]:
+                          - generic [ref=e124]: ⬜
+                          - generic [ref=e126]: "🔒 Track 3: Removal of retained placenta"
+                          - generic [ref=e127]: Not Started
+                        - generic [ref=e128]:
+                          - generic [ref=e129]: ⬜
+                          - generic [ref=e131]: "🔒 Track 4: Uterine inversion"
+                          - generic [ref=e132]: Not Started
+                        - generic [ref=e133]:
+                          - generic [ref=e134]: ⬜
+                          - generic [ref=e136]: "🔒 Track 5: The placement of the intrauterine balloon tamponade (condom tamponade)"
+                          - generic [ref=e137]: Not Started
+                        - generic [ref=e138]:
+                          - generic [ref=e139]: ⬜
+                          - generic [ref=e141]: "🔒 Track 6: The placement of the intrauterine balloon tamponade (free flow system)"
+                          - generic [ref=e142]: Not Started
+                        - generic [ref=e143]:
+                          - generic [ref=e144]: ⬜
+                          - generic [ref=e146]: "🔒 Track 7: Repair of perineal tear"
+                          - generic [ref=e147]: Not Started
+                        - generic [ref=e148]:
+                          - generic [ref=e149]: ⬜
+                          - generic [ref=e151]: "🔒 Track 8: Repair of cervical tear"
+                          - generic [ref=e152]: Not Started
+                        - generic [ref=e153]:
+                          - generic [ref=e154]: ⬜
+                          - generic [ref=e156]: "🔒 Track 9: The placement of the B-Lynch suture"
+                          - generic [ref=e157]: Not Started
+                        - generic [ref=e158]:
+                          - generic [ref=e159]: ⬜
+                          - generic [ref=e161]: "🔒 Track 10: Placement of non-pneumatic anti-shock garment (NASG)"
+                          - generic [ref=e162]: Not Started
+                        - generic [ref=e163]:
+                          - generic [ref=e164]: ⬜
+                          - generic [ref=e166]: "🔒 Track 11: Post-partum hemorrhage simulation"
+                          - generic [ref=e167]: Not Started
+                      - link "View full class →" [ref=e169] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/my-class/240
+                - generic [ref=e170]:
+                  - generic [ref=e171]:
+                    - generic [ref=e172]: 📊 Overall Progress
+                    - generic [ref=e173]:
+                      - generic [ref=e174]:
+                        - generic [ref=e177]: 0%
+                        - generic [ref=e178]:
+                          - generic [ref=e179]:
+                            - text: Completed
+                            - generic [ref=e181]: "0"
+                          - generic [ref=e182]:
+                            - text: In Progress
+                            - generic [ref=e184]: "1"
+                          - generic [ref=e185]:
+                            - text: Not Started
+                            - generic [ref=e187]: "11"
+                      - generic [ref=e189]:
+                        - generic [ref=e190]: Attendance Rate
+                        - strong [ref=e191]: 8% — Needs Improvement
+                  - generic [ref=e194]:
+                    - generic [ref=e195]: 🕐 Recent Activity
+                    - generic [ref=e196]:
+                      - generic [ref=e197]:
+                        - generic [ref=e198]: ✅
+                        - generic [ref=e199]:
+                          - generic [ref=e200]:
+                            - text: Confirmed attendance for
+                            - strong [ref=e201]: "Track 1: Bimanual compression of the uterus"
+                          - generic [ref=e202]: 28 minutes ago
+                      - generic [ref=e203]:
+                        - generic [ref=e204]: 📚
+                        - generic [ref=e205]:
+                          - generic [ref=e206]:
+                            - text: Enrolled in
+                            - strong [ref=e207]: July 2026 EmONC Test Cohort
+                          - generic [ref=e208]: 56 minutes ago
+          - generic:
+            - dialog
+          - generic:
+            - dialog
+          - generic:
+            - dialog
+    - complementary [ref=e209]:
+      - link "MNCH Mentorship Platform" [ref=e213] [cursor=pointer]:
+        - /url: /admin/mentee-dashboard
+        - generic [ref=e214]: MNCH Mentorship Platform
+      - navigation [ref=e215]:
+        - list [ref=e216]:
+          - listitem [ref=e217]:
+            - generic [ref=e218] [cursor=pointer]:
+              - generic [ref=e219]: Dashboards
+              - button "Dashboards" [expanded] [ref=e220]:
+                - generic [ref=e221]: Dashboards
+                - img [ref=e222]
+            - list [ref=e224]:
+              - listitem [ref=e225]:
+                - link "Mentee Dashboard 1" [ref=e226] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentee-dashboard
+                  - img [ref=e227]
+                  - generic [ref=e229]: Mentee Dashboard
+                  - generic [ref=e233]: "1"
+  - generic:
+    - status

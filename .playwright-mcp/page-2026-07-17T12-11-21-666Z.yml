@@ -1,0 +1,713 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - navigation [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - generic [ref=e10]: Global search
+            - generic [ref=e11]:
+              - img [ref=e13]
+              - searchbox "Global search" [ref=e16]
+          - button "User menu" [ref=e19] [cursor=pointer]:
+            - img "Avatar of Super Admin Admin" [ref=e20]
+      - main [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e24]:
+              - generic [ref=e25]:
+                - navigation [ref=e26]:
+                  - list [ref=e27]:
+                    - listitem [ref=e28]:
+                      - link "Program Modules" [ref=e29] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules
+                    - listitem [ref=e30]:
+                      - img [ref=e31]
+                      - 'link "Module 2: Labour Care Guide (LCG)" [ref=e33] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/27
+                    - listitem [ref=e34]:
+                      - img [ref=e35]
+                      - generic [ref=e37]: Edit
+                - 'heading "Edit Module 2: Labour Care Guide (LCG)" [level=1] [ref=e38]'
+              - generic [ref=e40]:
+                - link "View" [ref=e41] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/program-modules/27
+                  - generic [ref=e42]: View
+                - button "Delete" [ref=e43] [cursor=pointer]:
+                  - generic [ref=e44]: Delete
+            - generic [ref=e46]:
+              - generic [ref=e47]:
+                - generic [ref=e48]:
+                  - generic [ref=e50]:
+                    - heading "Program Module Details" [level=3] [ref=e54]
+                    - generic [ref=e57]:
+                      - generic [ref=e60]:
+                        - generic [ref=e63]:
+                          - text: Program
+                          - superscript [ref=e64]: "*"
+                        - combobox [ref=e69]:
+                          - generic [ref=e72]:
+                            - text: Maternal Health (EmONC)
+                            - 'button "Remove item: ''6''" [ref=e73] [cursor=pointer]': Remove item
+                      - generic [ref=e76]:
+                        - generic [ref=e79]: Parent Module
+                        - generic [ref=e80]:
+                          - combobox [ref=e84]:
+                            - generic [ref=e87]: Top-level module
+                          - generic [ref=e88]: Leave empty for a module. Select a module to make this a track.
+                      - generic [ref=e91]:
+                        - generic [ref=e94]:
+                          - text: Name
+                          - superscript [ref=e95]: "*"
+                        - textbox "Name*" [ref=e99]: "Module 2: Labour Care Guide (LCG)"
+                      - generic [ref=e102]:
+                        - generic [ref=e105]: Description
+                        - textbox "Description" [ref=e110]
+                      - generic [ref=e113]:
+                        - generic [ref=e116]:
+                          - text: Order Sequence
+                          - superscript [ref=e117]: "*"
+                        - spinbutton "Order Sequence*" [ref=e121]: "2"
+                      - generic [ref=e124]:
+                        - generic [ref=e127]: Start Date
+                        - button [ref=e132] [cursor=pointer]:
+                          - textbox "Start Date" [ref=e133]:
+                            - /placeholder: ""
+                      - generic [ref=e136]:
+                        - generic [ref=e139]: End Date
+                        - button [ref=e144] [cursor=pointer]:
+                          - textbox "End Date" [ref=e145]:
+                            - /placeholder: ""
+                      - generic [ref=e150]:
+                        - switch "Active*" [checked] [ref=e151] [cursor=pointer]
+                        - generic [ref=e152]:
+                          - text: Active
+                          - superscript [ref=e153]: "*"
+                  - generic [ref=e155]:
+                    - heading "Activities" [level=3] [ref=e159]
+                    - generic [ref=e165]:
+                      - generic [ref=e168]: Attach Activities
+                      - generic [ref=e169]:
+                        - generic [ref=e171]:
+                          - generic [ref=e173]:
+                            - checkbox "CME" [checked] [ref=e174]
+                            - generic [ref=e176]: CME
+                          - generic [ref=e178]:
+                            - checkbox "Hands-on Demo" [checked] [ref=e179]
+                            - generic [ref=e181]: Hands-on Demo
+                          - generic [ref=e183]:
+                            - checkbox "Drill" [checked] [ref=e184]
+                            - generic [ref=e186]: Drill
+                        - generic [ref=e187]: Select the activities that apply to this module or track.
+                  - generic [ref=e189]:
+                    - generic [ref=e192]:
+                      - heading "Learning Objectives" [level=3] [ref=e193]
+                      - paragraph [ref=e194]: Shown to mentees as "III. Learning Objectives" on the module page.
+                    - generic [ref=e199]:
+                      - generic [ref=e200]: Objectives
+                      - generic [ref=e203]:
+                        - list [ref=e204]:
+                          - generic [ref=e205]:
+                            - listitem [ref=e206]:
+                              - generic [ref=e210]:
+                                - generic [ref=e211]: Objective
+                                - textbox "Objective" [ref=e216]: Initiate the LCG appropriately (active phase, ≥ 5 cm).
+                              - list [ref=e217]:
+                                - listitem [ref=e218]:
+                                  - button "Move" [ref=e219] [cursor=pointer]:
+                                    - generic [ref=e220]: Move
+                                    - img [ref=e221]
+                                - listitem [ref=e223]:
+                                  - button "Delete" [ref=e224] [cursor=pointer]:
+                                    - generic [ref=e225]: Delete
+                                    - img [ref=e226]
+                            - listitem [ref=e228]:
+                              - generic [ref=e232]:
+                                - generic [ref=e233]: Objective
+                                - textbox "Objective" [ref=e238]: Complete all sections accurately and monitor maternal and fetal wellbeing.
+                              - list [ref=e239]:
+                                - listitem [ref=e240]:
+                                  - button "Move" [ref=e241] [cursor=pointer]:
+                                    - generic [ref=e242]: Move
+                                    - img [ref=e243]
+                                - listitem [ref=e245]:
+                                  - button "Delete" [ref=e246] [cursor=pointer]:
+                                    - generic [ref=e247]: Delete
+                                    - img [ref=e248]
+                            - listitem [ref=e250]:
+                              - generic [ref=e254]:
+                                - generic [ref=e255]: Objective
+                                - textbox "Objective" [ref=e260]: Assess labour progress and recognize alert values.
+                              - list [ref=e261]:
+                                - listitem [ref=e262]:
+                                  - button "Move" [ref=e263] [cursor=pointer]:
+                                    - generic [ref=e264]: Move
+                                    - img [ref=e265]
+                                - listitem [ref=e267]:
+                                  - button "Delete" [ref=e268] [cursor=pointer]:
+                                    - generic [ref=e269]: Delete
+                                    - img [ref=e270]
+                            - listitem [ref=e272]:
+                              - generic [ref=e276]:
+                                - generic [ref=e277]: Objective
+                                - textbox "Objective" [ref=e282]: Develop an assessment and plan, and escalate care when indicated.
+                              - list [ref=e283]:
+                                - listitem [ref=e284]:
+                                  - button "Move" [ref=e285] [cursor=pointer]:
+                                    - generic [ref=e286]: Move
+                                    - img [ref=e287]
+                                - listitem [ref=e289]:
+                                  - button "Delete" [ref=e290] [cursor=pointer]:
+                                    - generic [ref=e291]: Delete
+                                    - img [ref=e292]
+                            - listitem [ref=e294]:
+                              - generic [ref=e298]:
+                                - generic [ref=e299]: Objective
+                                - textbox "Objective" [ref=e304]: Demonstrate respectful maternity care and shared decision-making.
+                              - list [ref=e305]:
+                                - listitem [ref=e306]:
+                                  - button "Move" [ref=e307] [cursor=pointer]:
+                                    - generic [ref=e308]: Move
+                                    - img [ref=e309]
+                                - listitem [ref=e311]:
+                                  - button "Delete" [ref=e312] [cursor=pointer]:
+                                    - generic [ref=e313]: Delete
+                                    - img [ref=e314]
+                        - button "Add Objective" [ref=e317] [cursor=pointer]:
+                          - generic [ref=e318]: Add Objective
+                  - generic [ref=e320]:
+                    - generic [ref=e323]:
+                      - heading "Module Workplan" [level=3] [ref=e324]
+                      - paragraph [ref=e325]: "Shown to mentees as \"IV. Module Workplan\" — e.g. Drill: 10–12 min, Debrief: 25–30 min."
+                    - generic [ref=e330]:
+                      - generic [ref=e331]: Workplan Items
+                      - generic [ref=e334]:
+                        - list [ref=e335]:
+                          - generic [ref=e336]:
+                            - listitem [ref=e337]:
+                              - generic [ref=e338]:
+                                - list [ref=e339]:
+                                  - listitem [ref=e340]:
+                                    - button "Move" [ref=e341] [cursor=pointer]:
+                                      - generic [ref=e342]: Move
+                                      - img [ref=e343]
+                                - list [ref=e345]:
+                                  - listitem [ref=e346]:
+                                    - button "Delete" [ref=e347] [cursor=pointer]:
+                                      - generic [ref=e348]: Delete
+                                      - img [ref=e349]
+                              - generic [ref=e352]:
+                                - generic [ref=e355]:
+                                  - generic [ref=e358]:
+                                    - text: Activity
+                                    - superscript [ref=e359]: "*"
+                                  - textbox "Activity*" [ref=e363]: Drill
+                                - generic [ref=e366]:
+                                  - generic [ref=e369]:
+                                    - text: Duration
+                                    - superscript [ref=e370]: "*"
+                                  - textbox "Duration*" [ref=e374]: 12-15 min
+                            - listitem [ref=e375]:
+                              - generic [ref=e376]:
+                                - list [ref=e377]:
+                                  - listitem [ref=e378]:
+                                    - button "Move" [ref=e379] [cursor=pointer]:
+                                      - generic [ref=e380]: Move
+                                      - img [ref=e381]
+                                - list [ref=e383]:
+                                  - listitem [ref=e384]:
+                                    - button "Delete" [ref=e385] [cursor=pointer]:
+                                      - generic [ref=e386]: Delete
+                                      - img [ref=e387]
+                              - generic [ref=e390]:
+                                - generic [ref=e393]:
+                                  - generic [ref=e396]:
+                                    - text: Activity
+                                    - superscript [ref=e397]: "*"
+                                  - textbox "Activity*" [ref=e401]: Debrief
+                                - generic [ref=e404]:
+                                  - generic [ref=e407]:
+                                    - text: Duration
+                                    - superscript [ref=e408]: "*"
+                                  - textbox "Duration*" [ref=e412]: 20-25 min
+                        - button "Add Workplan Item" [ref=e414] [cursor=pointer]:
+                          - generic [ref=e415]: Add Workplan Item
+                - generic [ref=e417]:
+                  - button "Save changes" [ref=e418] [cursor=pointer]:
+                    - generic [ref=e419]: Save changes
+                  - button "Cancel" [ref=e420] [cursor=pointer]:
+                    - generic [ref=e421]: Cancel
+              - generic [ref=e422]:
+                - tablist [ref=e423]:
+                  - tab "Children" [ref=e424] [cursor=pointer]:
+                    - generic [ref=e425]: Children
+                  - tab "Activities" [ref=e426] [cursor=pointer]:
+                    - generic [ref=e427]: Activities
+                  - tab "Contents" [ref=e428] [cursor=pointer]:
+                    - generic [ref=e429]: Contents
+                  - tab "Quizzes" [ref=e430] [cursor=pointer]:
+                    - generic [ref=e431]: Quizzes
+                - tabpanel [ref=e432]
+          - generic:
+            - dialog
+          - generic:
+            - dialog
+          - generic:
+            - dialog
+    - complementary [ref=e436]:
+      - link "MNCH Mentorship Platform" [ref=e440] [cursor=pointer]:
+        - /url: /admin
+        - generic [ref=e441]: MNCH Mentorship Platform
+      - navigation [ref=e442]:
+        - list [ref=e443]:
+          - listitem [ref=e444]:
+            - generic [ref=e445] [cursor=pointer]:
+              - generic [ref=e446]: Dashboards
+              - button "Dashboards" [expanded] [ref=e447]:
+                - generic [ref=e448]: Dashboards
+                - img [ref=e449]
+            - list [ref=e451]:
+              - listitem [ref=e452]:
+                - link "Mentor Dashboard 128" [ref=e453] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentor-dashboard
+                  - img [ref=e454]
+                  - generic [ref=e456]: Mentor Dashboard
+                  - generic [ref=e460]: "128"
+              - listitem [ref=e461]:
+                - link "Head DRMH" [ref=e462] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/head-drmh-dashboard
+                  - img [ref=e463]
+                  - generic [ref=e465]: Head DRMH
+              - listitem [ref=e466]:
+                - link "Mentee Dashboard 139" [ref=e467] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentee-dashboard
+                  - img [ref=e468]
+                  - generic [ref=e470]: Mentee Dashboard
+                  - generic [ref=e474]: "139"
+          - listitem [ref=e475]:
+            - generic [ref=e476] [cursor=pointer]:
+              - generic [ref=e477]: Mentorships
+              - button "Mentorships" [expanded] [ref=e478]:
+                - generic [ref=e479]: Mentorships
+                - img [ref=e480]
+            - list [ref=e482]:
+              - listitem [ref=e483]:
+                - link "Practical Assessments" [ref=e484] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/rubric-assessments
+                  - img [ref=e485]
+                  - generic [ref=e487]: Practical Assessments
+          - listitem [ref=e488]:
+            - generic [ref=e489] [cursor=pointer]:
+              - generic [ref=e490]: Facility Assessment
+              - button "Facility Assessment" [expanded] [ref=e491]:
+                - generic [ref=e492]: Facility Assessment
+                - img [ref=e493]
+            - list [ref=e495]:
+              - listitem [ref=e496]:
+                - link "Assessments 2" [ref=e497] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessments
+                  - img [ref=e498]
+                  - generic [ref=e500]: Assessments
+                  - generic [ref=e504]: "2"
+          - listitem [ref=e505]:
+            - generic [ref=e506] [cursor=pointer]:
+              - generic [ref=e507]: Training Management
+              - button "Training Management" [expanded] [ref=e508]:
+                - generic [ref=e509]: Training Management
+                - img [ref=e510]
+            - list [ref=e512]:
+              - listitem [ref=e513]:
+                - link "Training Areas 2" [ref=e514] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/approved-training-areas
+                  - img [ref=e515]
+                  - generic [ref=e517]: Training Areas
+                  - generic [ref=e521]: "2"
+              - listitem [ref=e522]:
+                - link "MOH Trainings 4" [ref=e523] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/moh-trainings
+                  - img [ref=e524]
+                  - generic [ref=e526]: MOH Trainings
+                  - generic [ref=e530]: "4"
+              - listitem [ref=e531]:
+                - link "Mentorship 51" [ref=e532] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentorship
+                  - img [ref=e533]
+                  - generic [ref=e535]: Mentorship
+                  - generic [ref=e539]: "51"
+              - listitem [ref=e540]:
+                - link "Export Center 4" [ref=e541] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/training-exports
+                  - img [ref=e542]
+                  - generic [ref=e544]: Export Center
+                  - generic [ref=e548]: "4"
+              - listitem [ref=e549]:
+                - link "Participant/Mentee Profiles" [ref=e550] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/participant-profiles
+                  - img [ref=e551]
+                  - generic [ref=e553]: Participant/Mentee Profiles
+              - listitem [ref=e554]:
+                - link "Mentor Profiles" [ref=e555] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentee-profiles
+                  - img [ref=e556]
+                  - generic [ref=e558]: Mentor Profiles
+          - listitem [ref=e559]:
+            - generic [ref=e560] [cursor=pointer]:
+              - generic [ref=e561]: Indicator Catalog
+              - button "Indicator Catalog" [expanded] [ref=e562]:
+                - generic [ref=e563]: Indicator Catalog
+                - img [ref=e564]
+            - list [ref=e566]:
+              - listitem [ref=e567]:
+                - link "Report Types" [ref=e568] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicator-report-types
+                  - img [ref=e569]
+                  - generic [ref=e571]: Report Types
+              - listitem [ref=e572]:
+                - link "Indicator Groups" [ref=e573] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicator-groups
+                  - img [ref=e574]
+                  - generic [ref=e576]: Indicator Groups
+              - listitem [ref=e577]:
+                - link "Indicators" [ref=e578] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators
+                  - img [ref=e579]
+                  - generic [ref=e581]: Indicators
+              - listitem [ref=e582]:
+                - link "Indicators Reference" [ref=e583] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/reference
+                  - img [ref=e584]
+                  - generic [ref=e586]: Indicators Reference
+          - listitem [ref=e587]:
+            - generic [ref=e588] [cursor=pointer]:
+              - generic [ref=e589]: Curriculum
+              - button "Curriculum" [expanded] [ref=e590]:
+                - generic [ref=e591]: Curriculum
+                - img [ref=e592]
+            - list [ref=e594]:
+              - listitem [ref=e595]:
+                - link "Programs 3" [ref=e596] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/programs
+                  - img [ref=e597]
+                  - generic [ref=e599]: Programs
+                  - generic [ref=e603]: "3"
+              - listitem [ref=e604]:
+                - link "Modules 24" [ref=e605] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/modules
+                  - img [ref=e606]
+                  - generic [ref=e608]: Modules
+                  - generic [ref=e612]: "24"
+              - listitem [ref=e613]:
+                - link "Program Modules 46" [ref=e614] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/program-modules
+                  - img [ref=e615]
+                  - generic [ref=e617]: Program Modules
+                  - generic [ref=e621]: "46"
+              - listitem [ref=e622]:
+                - link "Activities 3" [ref=e623] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/activities
+                  - img [ref=e624]
+                  - generic [ref=e626]: Activities
+                  - generic [ref=e630]: "3"
+              - listitem [ref=e631]:
+                - link "Methodologies" [ref=e632] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/methodologies
+                  - img [ref=e633]
+                  - generic [ref=e635]: Methodologies
+              - listitem [ref=e636]:
+                - link "Rubric Definitions" [ref=e637] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/rubric-managements
+                  - img [ref=e638]
+                  - generic [ref=e640]: Rubric Definitions
+          - listitem [ref=e641]:
+            - generic [ref=e642] [cursor=pointer]:
+              - generic [ref=e643]: Report Management
+              - button "Report Management" [expanded] [ref=e644]:
+                - generic [ref=e645]: Report Management
+                - img [ref=e646]
+            - list [ref=e648]:
+              - listitem [ref=e649]:
+                - link "Performance Tracker" [ref=e650] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/monthly-reports
+                  - img [ref=e651]
+                  - generic [ref=e653]: Performance Tracker
+              - listitem [ref=e654]:
+                - link "Report Templates" [ref=e655] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/report-templates
+                  - img [ref=e656]
+                  - generic [ref=e658]: Report Templates
+              - listitem [ref=e659]:
+                - link "Report Management" [ref=e660] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/report-management
+                  - img [ref=e661]
+                  - generic [ref=e664]: Report Management
+          - listitem [ref=e665]:
+            - generic [ref=e666] [cursor=pointer]:
+              - generic [ref=e667]: Settings
+              - button "Settings" [expanded] [ref=e668]:
+                - generic [ref=e669]: Settings
+                - img [ref=e670]
+            - list [ref=e672]:
+              - listitem [ref=e673]:
+                - link "Grades" [ref=e674] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/grades
+                  - img [ref=e675]
+                  - generic [ref=e677]: Grades
+              - listitem [ref=e678]:
+                - link "Access Groups" [ref=e679] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/access-groups
+                  - img [ref=e680]
+                  - generic [ref=e682]: Access Groups
+              - listitem [ref=e683]:
+                - link "Mentee Statuses" [ref=e684] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentee-statuses
+                  - img [ref=e685]
+                  - generic [ref=e687]: Mentee Statuses
+              - listitem [ref=e688]:
+                - link "Partners 1" [ref=e689] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/partners
+                  - img [ref=e690]
+                  - generic [ref=e692]: Partners
+                  - generic [ref=e696]: "1"
+          - listitem [ref=e697]:
+            - generic [ref=e698] [cursor=pointer]:
+              - generic [ref=e699]: Filament Shield
+              - button "Filament Shield" [expanded] [ref=e700]:
+                - generic [ref=e701]: Filament Shield
+                - img [ref=e702]
+            - list [ref=e704]:
+              - listitem [ref=e705]:
+                - link "Roles 24" [ref=e706] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/shield/roles
+                  - img [ref=e707]
+                  - generic [ref=e709]: Roles
+                  - generic [ref=e713]: "24"
+          - listitem [ref=e714]:
+            - generic [ref=e715] [cursor=pointer]:
+              - generic [ref=e716]: Assessment Management
+              - button "Assessment Management" [expanded] [ref=e717]:
+                - generic [ref=e718]: Assessment Management
+                - img [ref=e719]
+            - list [ref=e721]:
+              - listitem [ref=e722]:
+                - link "Sections & Questions 8" [ref=e723] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessment-sections
+                  - img [ref=e724]
+                  - generic [ref=e726]: Sections & Questions
+                  - generic [ref=e730]: "8"
+              - listitem [ref=e731]:
+                - link "All Questions" [ref=e732] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessment-questions
+                  - img [ref=e733]
+                  - generic [ref=e735]: All Questions
+              - listitem [ref=e736]:
+                - link "Departments 7" [ref=e737] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessment-departments
+                  - img [ref=e738]
+                  - generic [ref=e740]: Departments
+                  - generic [ref=e744]: "7"
+              - listitem [ref=e745]:
+                - link "Commodities" [ref=e746] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/commodities
+                  - img [ref=e747]
+                  - generic [ref=e749]: Commodities
+              - listitem [ref=e750]:
+                - link "Commodity Categories 9" [ref=e751] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/commodity-categories
+                  - img [ref=e752]
+                  - generic [ref=e755]: Commodity Categories
+                  - generic [ref=e759]: "9"
+          - listitem [ref=e760]:
+            - generic [ref=e761] [cursor=pointer]:
+              - generic [ref=e762]: Organizational Structure
+              - button "Organizational Structure" [expanded] [ref=e763]:
+                - generic [ref=e764]: Organizational Structure
+                - img [ref=e765]
+            - list [ref=e767]:
+              - listitem [ref=e768]:
+                - link "Departments 348" [ref=e769] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/departments
+                  - img [ref=e770]
+                  - generic [ref=e772]: Departments
+                  - generic [ref=e776]: "348"
+              - listitem [ref=e777]:
+                - link "Cadres 21" [ref=e778] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/cadres
+                  - img [ref=e779]
+                  - generic [ref=e781]: Cadres
+                  - generic [ref=e785]: "21"
+          - listitem [ref=e786]:
+            - generic [ref=e787] [cursor=pointer]:
+              - generic [ref=e788]: Geographic Structure
+              - button "Geographic Structure" [expanded] [ref=e789]:
+                - generic [ref=e790]: Geographic Structure
+                - img [ref=e791]
+            - list [ref=e793]:
+              - listitem [ref=e794]:
+                - link "Divisions 1" [ref=e795] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/divisions
+                  - img [ref=e796]
+                  - generic [ref=e798]: Divisions
+                  - generic [ref=e802]: "1"
+              - listitem [ref=e803]:
+                - link "Counties 47" [ref=e804] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/counties
+                  - img [ref=e805]
+                  - generic [ref=e807]: Counties
+                  - generic [ref=e811]: "47"
+              - listitem [ref=e812]:
+                - link "Subcounties 305" [ref=e813] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/subcounties
+                  - img [ref=e814]
+                  - generic [ref=e816]: Subcounties
+                  - generic [ref=e820]: "305"
+              - listitem [ref=e821]:
+                - link "Facility Types 16" [ref=e822] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facility-types
+                  - img [ref=e823]
+                  - generic [ref=e825]: Facility Types
+                  - generic [ref=e829]: "16"
+          - listitem [ref=e830]:
+            - generic [ref=e831] [cursor=pointer]:
+              - generic [ref=e832]: System Administration
+              - button "System Administration" [expanded] [ref=e833]:
+                - generic [ref=e834]: System Administration
+                - img [ref=e835]
+            - list [ref=e837]:
+              - listitem [ref=e838]:
+                - link "Facilities 10,700" [ref=e839] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facilities
+                  - img [ref=e840]
+                  - generic [ref=e842]: Facilities
+                  - generic [ref=e846]: 10,700
+              - listitem [ref=e847]:
+                - link "Facility Levels 5" [ref=e848] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facility-levels
+                  - img [ref=e849]
+                  - generic [ref=e851]: Facility Levels
+                  - generic [ref=e855]: "5"
+              - listitem [ref=e856]:
+                - link "Facility Ownership 7" [ref=e857] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facility-ownerships
+                  - img [ref=e858]
+                  - generic [ref=e860]: Facility Ownership
+                  - generic [ref=e864]: "7"
+          - listitem [ref=e865]:
+            - generic [ref=e866] [cursor=pointer]:
+              - generic [ref=e867]: Quiz Management
+              - button "Quiz Management" [expanded] [ref=e868]:
+                - generic [ref=e869]: Quiz Management
+                - img [ref=e870]
+            - list [ref=e872]:
+              - listitem [ref=e873]:
+                - link "Program Module Quizzes 24" [ref=e874] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/program-module-quizzes
+                  - img [ref=e875]
+                  - generic [ref=e877]: Program Module Quizzes
+                  - generic [ref=e881]: "24"
+          - listitem [ref=e882]:
+            - generic [ref=e883] [cursor=pointer]:
+              - generic [ref=e884]: Content Management
+              - button "Content Management" [expanded] [ref=e885]:
+                - generic [ref=e886]: Content Management
+                - img [ref=e887]
+            - list [ref=e889]:
+              - listitem [ref=e890]:
+                - link "Resources" [ref=e891] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resources
+                  - img [ref=e892]
+                  - generic [ref=e894]: Resources
+              - listitem [ref=e895]:
+                - link "Resource Categories" [ref=e896] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resource-categories
+                  - img [ref=e897]
+                  - generic [ref=e899]: Resource Categories
+              - listitem [ref=e900]:
+                - link "Resource Types" [ref=e901] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resource-types
+                  - img [ref=e902]
+                  - generic [ref=e904]: Resource Types
+              - listitem [ref=e905]:
+                - link "Tags" [ref=e906] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/tags
+                  - img [ref=e907]
+                  - generic [ref=e910]: Tags
+              - listitem [ref=e911]:
+                - link "Resource Comments" [ref=e912] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resource-comments
+                  - img [ref=e913]
+                  - generic [ref=e915]: Resource Comments
+          - listitem [ref=e916]:
+            - generic [ref=e917] [cursor=pointer]:
+              - generic [ref=e918]: App Configuration
+              - button "App Configuration" [expanded] [ref=e919]:
+                - generic [ref=e920]: App Configuration
+                - img [ref=e921]
+            - list [ref=e923]:
+              - listitem [ref=e924]:
+                - link "Scopes" [ref=e925] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/scopes
+                  - img [ref=e926]
+                  - generic [ref=e928]: Scopes
+          - listitem [ref=e929]:
+            - generic [ref=e930] [cursor=pointer]:
+              - generic [ref=e931]: Inventory Management
+              - button "Inventory Management" [expanded] [ref=e932]:
+                - generic [ref=e933]: Inventory Management
+                - img [ref=e934]
+            - list [ref=e936]:
+              - listitem [ref=e937]:
+                - link "Suppliers" [ref=e938] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/suppliers
+                  - img [ref=e939]
+                  - generic [ref=e941]: Suppliers
+              - listitem [ref=e942]:
+                - link "Inventory Items" [ref=e943] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/inventory-items
+                  - img [ref=e944]
+                  - generic [ref=e946]: Inventory Items
+              - listitem [ref=e947]:
+                - link "Stock Levels" [ref=e948] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/stock-levels
+                  - img [ref=e949]
+                  - generic [ref=e951]: Stock Levels
+              - listitem [ref=e952]:
+                - link "Stock Requests" [ref=e953] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/stock-requests
+                  - img [ref=e954]
+                  - generic [ref=e956]: Stock Requests
+          - listitem [ref=e957]:
+            - generic [ref=e958] [cursor=pointer]:
+              - generic [ref=e959]: User Management
+              - button "User Management" [expanded] [ref=e960]:
+                - generic [ref=e961]: User Management
+                - img [ref=e962]
+            - list [ref=e964]:
+              - listitem [ref=e965]:
+                - link "All Users 7395" [ref=e966] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/users
+                  - img [ref=e967]
+                  - generic [ref=e969]: All Users
+                  - generic [ref=e973]: "7395"
+          - listitem [ref=e974]:
+            - generic [ref=e975] [cursor=pointer]:
+              - generic [ref=e976]: Indicator Reporting
+              - button "Indicator Reporting" [expanded] [ref=e977]:
+                - generic [ref=e978]: Indicator Reporting
+                - img [ref=e979]
+            - list [ref=e981]:
+              - listitem [ref=e982]:
+                - link "Submit Report" [ref=e983] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/reporting
+                  - img [ref=e984]
+                  - generic [ref=e986]: Submit Report
+              - listitem [ref=e987]:
+                - link "Validation Queue" [ref=e988] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/validation-queue
+                  - img [ref=e989]
+                  - generic [ref=e991]: Validation Queue
+              - listitem [ref=e992]:
+                - link "Progress Dashboard" [ref=e993] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/progress-dashboard
+                  - img [ref=e994]
+                  - generic [ref=e996]: Progress Dashboard
+  - generic:
+    - status

@@ -1,0 +1,1041 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - navigation [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - generic [ref=e10]: Global search
+            - generic [ref=e11]:
+              - img [ref=e13]
+              - searchbox "Global search" [ref=e16]
+          - button "User menu" [ref=e19] [cursor=pointer]:
+            - img "Avatar of Super Admin Admin" [ref=e20]
+      - main [ref=e21]:
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - navigation [ref=e26]:
+                - list [ref=e27]:
+                  - listitem [ref=e28]:
+                    - link "Program Modules" [ref=e29] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8100/admin/program-modules
+                  - listitem [ref=e30]:
+                    - img [ref=e31]
+                    - generic [ref=e33]: List
+              - heading "Program Modules" [level=1] [ref=e34]
+            - link "New program module" [ref=e37] [cursor=pointer]:
+              - /url: http://127.0.0.1:8100/admin/program-modules/create
+              - generic [ref=e38]: New program module
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - generic [ref=e46]:
+                - generic [ref=e47]:
+                  - generic [ref=e48]: Search
+                  - generic [ref=e49]:
+                    - img [ref=e51]
+                    - searchbox "Search" [ref=e54]
+                - button "Filter 0" [ref=e57] [cursor=pointer]:
+                  - generic [ref=e58]: Filter
+                  - img [ref=e59]
+                  - generic [ref=e64]: "0"
+                - button "Toggle columns" [ref=e67] [cursor=pointer]:
+                  - generic [ref=e68]: Toggle columns
+                  - img [ref=e69]
+              - table [ref=e72]:
+                - rowgroup [ref=e73]:
+                  - row "Select/deselect all items for bulk actions. Program Parent Module Name Track Order Active Activities Actions" [ref=e74]:
+                    - columnheader "Select/deselect all items for bulk actions." [ref=e75]:
+                      - generic [ref=e77]:
+                        - checkbox "Select/deselect all items for bulk actions." [ref=e78]
+                        - generic [ref=e79]: Select/deselect all items for bulk actions.
+                    - columnheader "Program" [ref=e80]:
+                      - button "Program" [ref=e81] [cursor=pointer]:
+                        - generic [ref=e82]: Program
+                        - img [ref=e83]
+                    - columnheader "Parent Module" [ref=e85]:
+                      - button "Parent Module" [ref=e86] [cursor=pointer]:
+                        - generic [ref=e87]: Parent Module
+                        - img [ref=e88]
+                    - columnheader "Name" [ref=e90]:
+                      - button "Name" [ref=e91] [cursor=pointer]:
+                        - generic [ref=e92]: Name
+                        - img [ref=e93]
+                    - columnheader "Track" [ref=e95]:
+                      - generic [ref=e97]: Track
+                    - columnheader "Order" [ref=e98]:
+                      - button "Order" [ref=e99] [cursor=pointer]:
+                        - generic [ref=e100]: Order
+                        - img [ref=e101]
+                    - columnheader "Active" [ref=e103]:
+                      - generic [ref=e105]: Active
+                    - columnheader "Activities" [ref=e106]:
+                      - generic [ref=e108]: Activities
+                    - columnheader "Actions" [ref=e109]
+                - rowgroup [ref=e110]:
+                  - 'row "Select/deselect item 4 for bulk actions. Newborn Care Module (no parent) Module 1: Infection Prevention and Control (IPC) 1 View Edit Delete" [ref=e111]':
+                    - cell "Select/deselect item 4 for bulk actions." [ref=e112]:
+                      - generic [ref=e114]:
+                        - checkbox "Select/deselect item 4 for bulk actions." [ref=e115]
+                        - generic [ref=e116]: Select/deselect item 4 for bulk actions.
+                    - cell "Newborn Care" [ref=e117]:
+                      - link "Newborn Care" [ref=e119] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/4
+                        - generic [ref=e125]: Newborn Care
+                    - cell "Module (no parent)" [ref=e126]:
+                      - link "Module (no parent)" [ref=e128] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/4
+                        - generic [ref=e130]: Module (no parent)
+                    - 'cell "Module 1: Infection Prevention and Control (IPC)" [ref=e131]':
+                      - 'link "Module 1: Infection Prevention and Control (IPC)" [ref=e133] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/4
+                        - generic [ref=e138]: "Module 1: Infection Prevention and Control (IPC)"
+                    - cell [ref=e139]:
+                      - link [ref=e141] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/4
+                        - img [ref=e143]
+                    - cell "1" [ref=e145]:
+                      - link "1" [ref=e147] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/4
+                        - generic [ref=e152]: "1"
+                    - cell [ref=e153]:
+                      - link [ref=e155] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/4
+                        - img [ref=e157]
+                    - cell [ref=e159]:
+                      - link [ref=e161] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/4
+                    - cell "View Edit Delete" [ref=e163]:
+                      - generic [ref=e165]:
+                        - link "View" [ref=e166] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/4
+                          - img [ref=e167]
+                          - generic [ref=e170]: View
+                        - link "Edit" [ref=e171] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/4/edit
+                          - img [ref=e172]
+                          - generic [ref=e175]: Edit
+                        - button "Delete" [ref=e176] [cursor=pointer]:
+                          - img [ref=e177]
+                          - generic [ref=e179]: Delete
+                  - 'row "Select/deselect item 31 for bulk actions. Maternal Health (EmONC) Module 5: Management of Postpartum Hemorrhage (PPH) Track 1: Bimanual compression of the uterus 1 CME Hands-on Demo Drill View Edit Delete" [ref=e180]':
+                    - cell "Select/deselect item 31 for bulk actions." [ref=e181]:
+                      - generic [ref=e183]:
+                        - checkbox "Select/deselect item 31 for bulk actions." [ref=e184]
+                        - generic [ref=e185]: Select/deselect item 31 for bulk actions.
+                    - cell "Maternal Health (EmONC)" [ref=e186]:
+                      - link "Maternal Health (EmONC)" [ref=e188] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/31
+                        - generic [ref=e194]: Maternal Health (EmONC)
+                    - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH)" [ref=e195]':
+                      - 'link "Module 5: Management of Postpartum Hemorrhage (PPH)" [ref=e197] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/31
+                        - generic [ref=e202]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                    - 'cell "Track 1: Bimanual compression of the uterus" [ref=e203]':
+                      - 'link "Track 1: Bimanual compression of the uterus" [ref=e205] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/31
+                        - generic [ref=e210]: "Track 1: Bimanual compression of the uterus"
+                    - cell [ref=e211]:
+                      - link [ref=e213] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/31
+                        - img [ref=e215]
+                    - cell "1" [ref=e217]:
+                      - link "1" [ref=e219] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/31
+                        - generic [ref=e224]: "1"
+                    - cell [ref=e225]:
+                      - link [ref=e227] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/31
+                        - img [ref=e229]
+                    - cell "CME Hands-on Demo Drill" [ref=e231]:
+                      - link "CME Hands-on Demo Drill" [ref=e233] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/31
+                        - generic [ref=e235]:
+                          - generic [ref=e239]: CME
+                          - generic [ref=e243]: Hands-on Demo
+                          - generic [ref=e247]: Drill
+                    - cell "View Edit Delete" [ref=e248]:
+                      - generic [ref=e250]:
+                        - link "View" [ref=e251] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/31
+                          - img [ref=e252]
+                          - generic [ref=e255]: View
+                        - link "Edit" [ref=e256] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/31/edit
+                          - img [ref=e257]
+                          - generic [ref=e260]: Edit
+                        - button "Delete" [ref=e261] [cursor=pointer]:
+                          - img [ref=e262]
+                          - generic [ref=e264]: Delete
+                  - 'row "Select/deselect item 26 for bulk actions. Maternal Health (EmONC) Module (no parent) Module 1: Ante Partum Hemorrhage 1 CME Hands-on Demo Drill View Edit Delete" [ref=e265]':
+                    - cell "Select/deselect item 26 for bulk actions." [ref=e266]:
+                      - generic [ref=e268]:
+                        - checkbox "Select/deselect item 26 for bulk actions." [ref=e269]
+                        - generic [ref=e270]: Select/deselect item 26 for bulk actions.
+                    - cell "Maternal Health (EmONC)" [ref=e271]:
+                      - link "Maternal Health (EmONC)" [ref=e273] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/26
+                        - generic [ref=e279]: Maternal Health (EmONC)
+                    - cell "Module (no parent)" [ref=e280]:
+                      - link "Module (no parent)" [ref=e282] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/26
+                        - generic [ref=e284]: Module (no parent)
+                    - 'cell "Module 1: Ante Partum Hemorrhage" [ref=e285]':
+                      - 'link "Module 1: Ante Partum Hemorrhage" [ref=e287] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/26
+                        - generic [ref=e292]: "Module 1: Ante Partum Hemorrhage"
+                    - cell [ref=e293]:
+                      - link [ref=e295] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/26
+                        - img [ref=e297]
+                    - cell "1" [ref=e299]:
+                      - link "1" [ref=e301] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/26
+                        - generic [ref=e306]: "1"
+                    - cell [ref=e307]:
+                      - link [ref=e309] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/26
+                        - img [ref=e311]
+                    - cell "CME Hands-on Demo Drill" [ref=e313]:
+                      - link "CME Hands-on Demo Drill" [ref=e315] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/26
+                        - generic [ref=e317]:
+                          - generic [ref=e321]: CME
+                          - generic [ref=e325]: Hands-on Demo
+                          - generic [ref=e329]: Drill
+                    - cell "View Edit Delete" [ref=e330]:
+                      - generic [ref=e332]:
+                        - link "View" [ref=e333] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/26
+                          - img [ref=e334]
+                          - generic [ref=e337]: View
+                        - link "Edit" [ref=e338] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/26/edit
+                          - img [ref=e339]
+                          - generic [ref=e342]: Edit
+                        - button "Delete" [ref=e343] [cursor=pointer]:
+                          - img [ref=e344]
+                          - generic [ref=e346]: Delete
+                  - 'row "Select/deselect item 16 for bulk actions. Infant and Child Care Module (no parent) Module 1: Triage 1 View Edit Delete" [ref=e347]':
+                    - cell "Select/deselect item 16 for bulk actions." [ref=e348]:
+                      - generic [ref=e350]:
+                        - checkbox "Select/deselect item 16 for bulk actions." [ref=e351]
+                        - generic [ref=e352]: Select/deselect item 16 for bulk actions.
+                    - cell "Infant and Child Care" [ref=e353]:
+                      - link "Infant and Child Care" [ref=e355] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/16
+                        - generic [ref=e361]: Infant and Child Care
+                    - cell "Module (no parent)" [ref=e362]:
+                      - link "Module (no parent)" [ref=e364] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/16
+                        - generic [ref=e366]: Module (no parent)
+                    - 'cell "Module 1: Triage" [ref=e367]':
+                      - 'link "Module 1: Triage" [ref=e369] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/16
+                        - generic [ref=e374]: "Module 1: Triage"
+                    - cell [ref=e375]:
+                      - link [ref=e377] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/16
+                        - img [ref=e379]
+                    - cell "1" [ref=e381]:
+                      - link "1" [ref=e383] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/16
+                        - generic [ref=e388]: "1"
+                    - cell [ref=e389]:
+                      - link [ref=e391] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/16
+                        - img [ref=e393]
+                    - cell [ref=e395]:
+                      - link [ref=e397] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/16
+                    - cell "View Edit Delete" [ref=e399]:
+                      - generic [ref=e401]:
+                        - link "View" [ref=e402] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/16
+                          - img [ref=e403]
+                          - generic [ref=e406]: View
+                        - link "Edit" [ref=e407] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/16/edit
+                          - img [ref=e408]
+                          - generic [ref=e411]: Edit
+                        - button "Delete" [ref=e412] [cursor=pointer]:
+                          - img [ref=e413]
+                          - generic [ref=e415]: Delete
+                  - 'row "Select/deselect item 27 for bulk actions. Maternal Health (EmONC) Module (no parent) Module 2: Labour Care Guide (LCG) 2 CME Hands-on Demo Drill View Edit Delete" [ref=e416]':
+                    - cell "Select/deselect item 27 for bulk actions." [ref=e417]:
+                      - generic [ref=e419]:
+                        - checkbox "Select/deselect item 27 for bulk actions." [ref=e420]
+                        - generic [ref=e421]: Select/deselect item 27 for bulk actions.
+                    - cell "Maternal Health (EmONC)" [ref=e422]:
+                      - link "Maternal Health (EmONC)" [ref=e424] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/27
+                        - generic [ref=e430]: Maternal Health (EmONC)
+                    - cell "Module (no parent)" [ref=e431]:
+                      - link "Module (no parent)" [ref=e433] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/27
+                        - generic [ref=e435]: Module (no parent)
+                    - 'cell "Module 2: Labour Care Guide (LCG)" [ref=e436]':
+                      - 'link "Module 2: Labour Care Guide (LCG)" [ref=e438] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/27
+                        - generic [ref=e443]: "Module 2: Labour Care Guide (LCG)"
+                    - cell [ref=e444]:
+                      - link [ref=e446] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/27
+                        - img [ref=e448]
+                    - cell "2" [ref=e450]:
+                      - link "2" [ref=e452] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/27
+                        - generic [ref=e457]: "2"
+                    - cell [ref=e458]:
+                      - link [ref=e460] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/27
+                        - img [ref=e462]
+                    - cell "CME Hands-on Demo Drill" [ref=e464]:
+                      - link "CME Hands-on Demo Drill" [ref=e466] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/27
+                        - generic [ref=e468]:
+                          - generic [ref=e472]: CME
+                          - generic [ref=e476]: Hands-on Demo
+                          - generic [ref=e480]: Drill
+                    - cell "View Edit Delete" [ref=e481]:
+                      - generic [ref=e483]:
+                        - link "View" [ref=e484] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/27
+                          - img [ref=e485]
+                          - generic [ref=e488]: View
+                        - link "Edit" [ref=e489] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/27/edit
+                          - img [ref=e490]
+                          - generic [ref=e493]: Edit
+                        - button "Delete" [ref=e494] [cursor=pointer]:
+                          - img [ref=e495]
+                          - generic [ref=e497]: Delete
+                  - 'row "Select/deselect item 32 for bulk actions. Maternal Health (EmONC) Module 5: Management of Postpartum Hemorrhage (PPH) Track 2: Compression of abdominal aorta 2 CME Hands-on Demo Drill View Edit Delete" [ref=e498]':
+                    - cell "Select/deselect item 32 for bulk actions." [ref=e499]:
+                      - generic [ref=e501]:
+                        - checkbox "Select/deselect item 32 for bulk actions." [ref=e502]
+                        - generic [ref=e503]: Select/deselect item 32 for bulk actions.
+                    - cell "Maternal Health (EmONC)" [ref=e504]:
+                      - link "Maternal Health (EmONC)" [ref=e506] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/32
+                        - generic [ref=e512]: Maternal Health (EmONC)
+                    - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH)" [ref=e513]':
+                      - 'link "Module 5: Management of Postpartum Hemorrhage (PPH)" [ref=e515] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/32
+                        - generic [ref=e520]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                    - 'cell "Track 2: Compression of abdominal aorta" [ref=e521]':
+                      - 'link "Track 2: Compression of abdominal aorta" [ref=e523] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/32
+                        - generic [ref=e528]: "Track 2: Compression of abdominal aorta"
+                    - cell [ref=e529]:
+                      - link [ref=e531] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/32
+                        - img [ref=e533]
+                    - cell "2" [ref=e535]:
+                      - link "2" [ref=e537] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/32
+                        - generic [ref=e542]: "2"
+                    - cell [ref=e543]:
+                      - link [ref=e545] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/32
+                        - img [ref=e547]
+                    - cell "CME Hands-on Demo Drill" [ref=e549]:
+                      - link "CME Hands-on Demo Drill" [ref=e551] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/32
+                        - generic [ref=e553]:
+                          - generic [ref=e557]: CME
+                          - generic [ref=e561]: Hands-on Demo
+                          - generic [ref=e565]: Drill
+                    - cell "View Edit Delete" [ref=e566]:
+                      - generic [ref=e568]:
+                        - link "View" [ref=e569] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/32
+                          - img [ref=e570]
+                          - generic [ref=e573]: View
+                        - link "Edit" [ref=e574] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/32/edit
+                          - img [ref=e575]
+                          - generic [ref=e578]: Edit
+                        - button "Delete" [ref=e579] [cursor=pointer]:
+                          - img [ref=e580]
+                          - generic [ref=e582]: Delete
+                  - 'row "Select/deselect item 5 for bulk actions. Newborn Care Module (no parent) Module 2: Infant and Family Centred Developmental Care (IFCDC) 2 View Edit Delete" [ref=e583]':
+                    - cell "Select/deselect item 5 for bulk actions." [ref=e584]:
+                      - generic [ref=e586]:
+                        - checkbox "Select/deselect item 5 for bulk actions." [ref=e587]
+                        - generic [ref=e588]: Select/deselect item 5 for bulk actions.
+                    - cell "Newborn Care" [ref=e589]:
+                      - link "Newborn Care" [ref=e591] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/5
+                        - generic [ref=e597]: Newborn Care
+                    - cell "Module (no parent)" [ref=e598]:
+                      - link "Module (no parent)" [ref=e600] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/5
+                        - generic [ref=e602]: Module (no parent)
+                    - 'cell "Module 2: Infant and Family Centred Developmental Care (IFCDC)" [ref=e603]':
+                      - 'link "Module 2: Infant and Family Centred Developmental Care (IFCDC)" [ref=e605] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/5
+                        - generic [ref=e610]: "Module 2: Infant and Family Centred Developmental Care (IFCDC)"
+                    - cell [ref=e611]:
+                      - link [ref=e613] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/5
+                        - img [ref=e615]
+                    - cell "2" [ref=e617]:
+                      - link "2" [ref=e619] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/5
+                        - generic [ref=e624]: "2"
+                    - cell [ref=e625]:
+                      - link [ref=e627] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/5
+                        - img [ref=e629]
+                    - cell [ref=e631]:
+                      - link [ref=e633] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/5
+                    - cell "View Edit Delete" [ref=e635]:
+                      - generic [ref=e637]:
+                        - link "View" [ref=e638] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/5
+                          - img [ref=e639]
+                          - generic [ref=e642]: View
+                        - link "Edit" [ref=e643] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/5/edit
+                          - img [ref=e644]
+                          - generic [ref=e647]: Edit
+                        - button "Delete" [ref=e648] [cursor=pointer]:
+                          - img [ref=e649]
+                          - generic [ref=e651]: Delete
+                  - 'row "Select/deselect item 17 for bulk actions. Infant and Child Care Module (no parent) Module 2: Basic Life Support for Infant/Child 2 View Edit Delete" [ref=e652]':
+                    - cell "Select/deselect item 17 for bulk actions." [ref=e653]:
+                      - generic [ref=e655]:
+                        - checkbox "Select/deselect item 17 for bulk actions." [ref=e656]
+                        - generic [ref=e657]: Select/deselect item 17 for bulk actions.
+                    - cell "Infant and Child Care" [ref=e658]:
+                      - link "Infant and Child Care" [ref=e660] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/17
+                        - generic [ref=e666]: Infant and Child Care
+                    - cell "Module (no parent)" [ref=e667]:
+                      - link "Module (no parent)" [ref=e669] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/17
+                        - generic [ref=e671]: Module (no parent)
+                    - 'cell "Module 2: Basic Life Support for Infant/Child" [ref=e672]':
+                      - 'link "Module 2: Basic Life Support for Infant/Child" [ref=e674] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/17
+                        - generic [ref=e679]: "Module 2: Basic Life Support for Infant/Child"
+                    - cell [ref=e680]:
+                      - link [ref=e682] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/17
+                        - img [ref=e684]
+                    - cell "2" [ref=e686]:
+                      - link "2" [ref=e688] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/17
+                        - generic [ref=e693]: "2"
+                    - cell [ref=e694]:
+                      - link [ref=e696] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/17
+                        - img [ref=e698]
+                    - cell [ref=e700]:
+                      - link [ref=e702] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/17
+                    - cell "View Edit Delete" [ref=e704]:
+                      - generic [ref=e706]:
+                        - link "View" [ref=e707] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/17
+                          - img [ref=e708]
+                          - generic [ref=e711]: View
+                        - link "Edit" [ref=e712] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/17/edit
+                          - img [ref=e713]
+                          - generic [ref=e716]: Edit
+                        - button "Delete" [ref=e717] [cursor=pointer]:
+                          - img [ref=e718]
+                          - generic [ref=e720]: Delete
+                  - 'row "Select/deselect item 33 for bulk actions. Maternal Health (EmONC) Module 5: Management of Postpartum Hemorrhage (PPH) Track 3: Removal of retained placenta 3 CME Hands-on Demo Drill View Edit Delete" [ref=e721]':
+                    - cell "Select/deselect item 33 for bulk actions." [ref=e722]:
+                      - generic [ref=e724]:
+                        - checkbox "Select/deselect item 33 for bulk actions." [ref=e725]
+                        - generic [ref=e726]: Select/deselect item 33 for bulk actions.
+                    - cell "Maternal Health (EmONC)" [ref=e727]:
+                      - link "Maternal Health (EmONC)" [ref=e729] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/33
+                        - generic [ref=e735]: Maternal Health (EmONC)
+                    - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH)" [ref=e736]':
+                      - 'link "Module 5: Management of Postpartum Hemorrhage (PPH)" [ref=e738] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/33
+                        - generic [ref=e743]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                    - 'cell "Track 3: Removal of retained placenta" [ref=e744]':
+                      - 'link "Track 3: Removal of retained placenta" [ref=e746] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/33
+                        - generic [ref=e751]: "Track 3: Removal of retained placenta"
+                    - cell [ref=e752]:
+                      - link [ref=e754] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/33
+                        - img [ref=e756]
+                    - cell "3" [ref=e758]:
+                      - link "3" [ref=e760] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/33
+                        - generic [ref=e765]: "3"
+                    - cell [ref=e766]:
+                      - link [ref=e768] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/33
+                        - img [ref=e770]
+                    - cell "CME Hands-on Demo Drill" [ref=e772]:
+                      - link "CME Hands-on Demo Drill" [ref=e774] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/33
+                        - generic [ref=e776]:
+                          - generic [ref=e780]: CME
+                          - generic [ref=e784]: Hands-on Demo
+                          - generic [ref=e788]: Drill
+                    - cell "View Edit Delete" [ref=e789]:
+                      - generic [ref=e791]:
+                        - link "View" [ref=e792] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/33
+                          - img [ref=e793]
+                          - generic [ref=e796]: View
+                        - link "Edit" [ref=e797] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/33/edit
+                          - img [ref=e798]
+                          - generic [ref=e801]: Edit
+                        - button "Delete" [ref=e802] [cursor=pointer]:
+                          - img [ref=e803]
+                          - generic [ref=e805]: Delete
+                  - 'row "Select/deselect item 6 for bulk actions. Newborn Care Module (no parent) Module 3: Essential Newborn Care (ENC) 3 View Edit Delete" [ref=e806]':
+                    - cell "Select/deselect item 6 for bulk actions." [ref=e807]:
+                      - generic [ref=e809]:
+                        - checkbox "Select/deselect item 6 for bulk actions." [ref=e810]
+                        - generic [ref=e811]: Select/deselect item 6 for bulk actions.
+                    - cell "Newborn Care" [ref=e812]:
+                      - link "Newborn Care" [ref=e814] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/6
+                        - generic [ref=e820]: Newborn Care
+                    - cell "Module (no parent)" [ref=e821]:
+                      - link "Module (no parent)" [ref=e823] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/6
+                        - generic [ref=e825]: Module (no parent)
+                    - 'cell "Module 3: Essential Newborn Care (ENC)" [ref=e826]':
+                      - 'link "Module 3: Essential Newborn Care (ENC)" [ref=e828] [cursor=pointer]':
+                        - /url: http://127.0.0.1:8100/admin/program-modules/6
+                        - generic [ref=e833]: "Module 3: Essential Newborn Care (ENC)"
+                    - cell [ref=e834]:
+                      - link [ref=e836] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/6
+                        - img [ref=e838]
+                    - cell "3" [ref=e840]:
+                      - link "3" [ref=e842] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/6
+                        - generic [ref=e847]: "3"
+                    - cell [ref=e848]:
+                      - link [ref=e850] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/6
+                        - img [ref=e852]
+                    - cell [ref=e854]:
+                      - link [ref=e856] [cursor=pointer]:
+                        - /url: http://127.0.0.1:8100/admin/program-modules/6
+                    - cell "View Edit Delete" [ref=e858]:
+                      - generic [ref=e860]:
+                        - link "View" [ref=e861] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/6
+                          - img [ref=e862]
+                          - generic [ref=e865]: View
+                        - link "Edit" [ref=e866] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/program-modules/6/edit
+                          - img [ref=e867]
+                          - generic [ref=e870]: Edit
+                        - button "Delete" [ref=e871] [cursor=pointer]:
+                          - img [ref=e872]
+                          - generic [ref=e874]: Delete
+              - navigation "Pagination navigation" [ref=e875]:
+                - generic [ref=e876]: Showing 1 to 10 of 46 results
+                - generic [ref=e879]:
+                  - generic [ref=e881]: Per page
+                  - combobox "Per page" [ref=e883]:
+                    - option "5"
+                    - option "10" [selected]
+                    - option "25"
+                    - option "50"
+                    - option "All"
+                - list [ref=e884]:
+                  - listitem [ref=e885]:
+                    - button "Go to page 1" [ref=e886] [cursor=pointer]:
+                      - generic [ref=e887]: "1"
+                  - listitem [ref=e888]:
+                    - button "Go to page 2" [ref=e889] [cursor=pointer]:
+                      - generic [ref=e890]: "2"
+                  - listitem [ref=e891]:
+                    - button "Go to page 3" [ref=e892] [cursor=pointer]:
+                      - generic [ref=e893]: "3"
+                  - listitem [ref=e894]:
+                    - button "Go to page 4" [ref=e895] [cursor=pointer]:
+                      - generic [ref=e896]: "4"
+                  - listitem [ref=e897]:
+                    - button "Go to page 5" [ref=e898] [cursor=pointer]:
+                      - generic [ref=e899]: "5"
+                  - listitem [ref=e900]:
+                    - button "Next" [ref=e901] [cursor=pointer]:
+                      - img [ref=e902]
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+    - complementary [ref=e904]:
+      - link "MNCH Mentorship Platform" [ref=e908] [cursor=pointer]:
+        - /url: /admin
+        - generic [ref=e909]: MNCH Mentorship Platform
+      - navigation [ref=e910]:
+        - list [ref=e911]:
+          - listitem [ref=e912]:
+            - generic [ref=e913] [cursor=pointer]:
+              - generic [ref=e914]: Dashboards
+              - button "Dashboards" [expanded] [ref=e915]:
+                - generic [ref=e916]: Dashboards
+                - img [ref=e917]
+            - list [ref=e919]:
+              - listitem [ref=e920]:
+                - link "Mentor Dashboard 128" [ref=e921] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentor-dashboard
+                  - img [ref=e922]
+                  - generic [ref=e924]: Mentor Dashboard
+                  - generic [ref=e928]: "128"
+              - listitem [ref=e929]:
+                - link "Head DRMH" [ref=e930] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/head-drmh-dashboard
+                  - img [ref=e931]
+                  - generic [ref=e933]: Head DRMH
+              - listitem [ref=e934]:
+                - link "Mentee Dashboard 139" [ref=e935] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentee-dashboard
+                  - img [ref=e936]
+                  - generic [ref=e938]: Mentee Dashboard
+                  - generic [ref=e942]: "139"
+          - listitem [ref=e943]:
+            - generic [ref=e944] [cursor=pointer]:
+              - generic [ref=e945]: Mentorships
+              - button "Mentorships" [expanded] [ref=e946]:
+                - generic [ref=e947]: Mentorships
+                - img [ref=e948]
+            - list [ref=e950]:
+              - listitem [ref=e951]:
+                - link "Practical Assessments" [ref=e952] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/rubric-assessments
+                  - img [ref=e953]
+                  - generic [ref=e955]: Practical Assessments
+          - listitem [ref=e956]:
+            - generic [ref=e957] [cursor=pointer]:
+              - generic [ref=e958]: Facility Assessment
+              - button "Facility Assessment" [expanded] [ref=e959]:
+                - generic [ref=e960]: Facility Assessment
+                - img [ref=e961]
+            - list [ref=e963]:
+              - listitem [ref=e964]:
+                - link "Assessments 2" [ref=e965] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessments
+                  - img [ref=e966]
+                  - generic [ref=e968]: Assessments
+                  - generic [ref=e972]: "2"
+          - listitem [ref=e973]:
+            - generic [ref=e974] [cursor=pointer]:
+              - generic [ref=e975]: Training Management
+              - button "Training Management" [expanded] [ref=e976]:
+                - generic [ref=e977]: Training Management
+                - img [ref=e978]
+            - list [ref=e980]:
+              - listitem [ref=e981]:
+                - link "Training Areas 2" [ref=e982] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/approved-training-areas
+                  - img [ref=e983]
+                  - generic [ref=e985]: Training Areas
+                  - generic [ref=e989]: "2"
+              - listitem [ref=e990]:
+                - link "MOH Trainings 4" [ref=e991] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/moh-trainings
+                  - img [ref=e992]
+                  - generic [ref=e994]: MOH Trainings
+                  - generic [ref=e998]: "4"
+              - listitem [ref=e999]:
+                - link "Mentorship 51" [ref=e1000] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentorship
+                  - img [ref=e1001]
+                  - generic [ref=e1003]: Mentorship
+                  - generic [ref=e1007]: "51"
+              - listitem [ref=e1008]:
+                - link "Export Center 4" [ref=e1009] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/training-exports
+                  - img [ref=e1010]
+                  - generic [ref=e1012]: Export Center
+                  - generic [ref=e1016]: "4"
+              - listitem [ref=e1017]:
+                - link "Participant/Mentee Profiles" [ref=e1018] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/participant-profiles
+                  - img [ref=e1019]
+                  - generic [ref=e1021]: Participant/Mentee Profiles
+              - listitem [ref=e1022]:
+                - link "Mentor Profiles" [ref=e1023] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentee-profiles
+                  - img [ref=e1024]
+                  - generic [ref=e1026]: Mentor Profiles
+          - listitem [ref=e1027]:
+            - generic [ref=e1028] [cursor=pointer]:
+              - generic [ref=e1029]: Indicator Catalog
+              - button "Indicator Catalog" [expanded] [ref=e1030]:
+                - generic [ref=e1031]: Indicator Catalog
+                - img [ref=e1032]
+            - list [ref=e1034]:
+              - listitem [ref=e1035]:
+                - link "Report Types" [ref=e1036] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicator-report-types
+                  - img [ref=e1037]
+                  - generic [ref=e1039]: Report Types
+              - listitem [ref=e1040]:
+                - link "Indicator Groups" [ref=e1041] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicator-groups
+                  - img [ref=e1042]
+                  - generic [ref=e1044]: Indicator Groups
+              - listitem [ref=e1045]:
+                - link "Indicators" [ref=e1046] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators
+                  - img [ref=e1047]
+                  - generic [ref=e1049]: Indicators
+              - listitem [ref=e1050]:
+                - link "Indicators Reference" [ref=e1051] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/reference
+                  - img [ref=e1052]
+                  - generic [ref=e1054]: Indicators Reference
+          - listitem [ref=e1055]:
+            - generic [ref=e1056] [cursor=pointer]:
+              - generic [ref=e1057]: Curriculum
+              - button "Curriculum" [expanded] [ref=e1058]:
+                - generic [ref=e1059]: Curriculum
+                - img [ref=e1060]
+            - list [ref=e1062]:
+              - listitem [ref=e1063]:
+                - link "Programs 3" [ref=e1064] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/programs
+                  - img [ref=e1065]
+                  - generic [ref=e1067]: Programs
+                  - generic [ref=e1071]: "3"
+              - listitem [ref=e1072]:
+                - link "Modules 24" [ref=e1073] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/modules
+                  - img [ref=e1074]
+                  - generic [ref=e1076]: Modules
+                  - generic [ref=e1080]: "24"
+              - listitem [ref=e1081]:
+                - link "Program Modules 46" [ref=e1082] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/program-modules
+                  - img [ref=e1083]
+                  - generic [ref=e1085]: Program Modules
+                  - generic [ref=e1089]: "46"
+              - listitem [ref=e1090]:
+                - link "Activities 3" [ref=e1091] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/activities
+                  - img [ref=e1092]
+                  - generic [ref=e1094]: Activities
+                  - generic [ref=e1098]: "3"
+              - listitem [ref=e1099]:
+                - link "Methodologies" [ref=e1100] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/methodologies
+                  - img [ref=e1101]
+                  - generic [ref=e1103]: Methodologies
+              - listitem [ref=e1104]:
+                - link "Rubric Definitions" [ref=e1105] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/rubric-managements
+                  - img [ref=e1106]
+                  - generic [ref=e1108]: Rubric Definitions
+          - listitem [ref=e1109]:
+            - generic [ref=e1110] [cursor=pointer]:
+              - generic [ref=e1111]: Report Management
+              - button "Report Management" [expanded] [ref=e1112]:
+                - generic [ref=e1113]: Report Management
+                - img [ref=e1114]
+            - list [ref=e1116]:
+              - listitem [ref=e1117]:
+                - link "Performance Tracker" [ref=e1118] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/monthly-reports
+                  - img [ref=e1119]
+                  - generic [ref=e1121]: Performance Tracker
+              - listitem [ref=e1122]:
+                - link "Report Templates" [ref=e1123] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/report-templates
+                  - img [ref=e1124]
+                  - generic [ref=e1126]: Report Templates
+              - listitem [ref=e1127]:
+                - link "Report Management" [ref=e1128] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/report-management
+                  - img [ref=e1129]
+                  - generic [ref=e1132]: Report Management
+          - listitem [ref=e1133]:
+            - generic [ref=e1134] [cursor=pointer]:
+              - generic [ref=e1135]: Settings
+              - button "Settings" [expanded] [ref=e1136]:
+                - generic [ref=e1137]: Settings
+                - img [ref=e1138]
+            - list [ref=e1140]:
+              - listitem [ref=e1141]:
+                - link "Grades" [ref=e1142] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/grades
+                  - img [ref=e1143]
+                  - generic [ref=e1145]: Grades
+              - listitem [ref=e1146]:
+                - link "Access Groups" [ref=e1147] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/access-groups
+                  - img [ref=e1148]
+                  - generic [ref=e1150]: Access Groups
+              - listitem [ref=e1151]:
+                - link "Mentee Statuses" [ref=e1152] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentee-statuses
+                  - img [ref=e1153]
+                  - generic [ref=e1155]: Mentee Statuses
+              - listitem [ref=e1156]:
+                - link "Partners 1" [ref=e1157] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/partners
+                  - img [ref=e1158]
+                  - generic [ref=e1160]: Partners
+                  - generic [ref=e1164]: "1"
+          - listitem [ref=e1165]:
+            - generic [ref=e1166] [cursor=pointer]:
+              - generic [ref=e1167]: Filament Shield
+              - button "Filament Shield" [expanded] [ref=e1168]:
+                - generic [ref=e1169]: Filament Shield
+                - img [ref=e1170]
+            - list [ref=e1172]:
+              - listitem [ref=e1173]:
+                - link "Roles 24" [ref=e1174] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/shield/roles
+                  - img [ref=e1175]
+                  - generic [ref=e1177]: Roles
+                  - generic [ref=e1181]: "24"
+          - listitem [ref=e1182]:
+            - generic [ref=e1183] [cursor=pointer]:
+              - generic [ref=e1184]: Assessment Management
+              - button "Assessment Management" [expanded] [ref=e1185]:
+                - generic [ref=e1186]: Assessment Management
+                - img [ref=e1187]
+            - list [ref=e1189]:
+              - listitem [ref=e1190]:
+                - link "Sections & Questions 8" [ref=e1191] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessment-sections
+                  - img [ref=e1192]
+                  - generic [ref=e1194]: Sections & Questions
+                  - generic [ref=e1198]: "8"
+              - listitem [ref=e1199]:
+                - link "All Questions" [ref=e1200] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessment-questions
+                  - img [ref=e1201]
+                  - generic [ref=e1203]: All Questions
+              - listitem [ref=e1204]:
+                - link "Departments 7" [ref=e1205] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessment-departments
+                  - img [ref=e1206]
+                  - generic [ref=e1208]: Departments
+                  - generic [ref=e1212]: "7"
+              - listitem [ref=e1213]:
+                - link "Commodities" [ref=e1214] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/commodities
+                  - img [ref=e1215]
+                  - generic [ref=e1217]: Commodities
+              - listitem [ref=e1218]:
+                - link "Commodity Categories 9" [ref=e1219] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/commodity-categories
+                  - img [ref=e1220]
+                  - generic [ref=e1223]: Commodity Categories
+                  - generic [ref=e1227]: "9"
+          - listitem [ref=e1228]:
+            - generic [ref=e1229] [cursor=pointer]:
+              - generic [ref=e1230]: Organizational Structure
+              - button "Organizational Structure" [expanded] [ref=e1231]:
+                - generic [ref=e1232]: Organizational Structure
+                - img [ref=e1233]
+            - list [ref=e1235]:
+              - listitem [ref=e1236]:
+                - link "Departments 348" [ref=e1237] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/departments
+                  - img [ref=e1238]
+                  - generic [ref=e1240]: Departments
+                  - generic [ref=e1244]: "348"
+              - listitem [ref=e1245]:
+                - link "Cadres 21" [ref=e1246] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/cadres
+                  - img [ref=e1247]
+                  - generic [ref=e1249]: Cadres
+                  - generic [ref=e1253]: "21"
+          - listitem [ref=e1254]:
+            - generic [ref=e1255] [cursor=pointer]:
+              - generic [ref=e1256]: Geographic Structure
+              - button "Geographic Structure" [expanded] [ref=e1257]:
+                - generic [ref=e1258]: Geographic Structure
+                - img [ref=e1259]
+            - list [ref=e1261]:
+              - listitem [ref=e1262]:
+                - link "Divisions 1" [ref=e1263] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/divisions
+                  - img [ref=e1264]
+                  - generic [ref=e1266]: Divisions
+                  - generic [ref=e1270]: "1"
+              - listitem [ref=e1271]:
+                - link "Counties 47" [ref=e1272] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/counties
+                  - img [ref=e1273]
+                  - generic [ref=e1275]: Counties
+                  - generic [ref=e1279]: "47"
+              - listitem [ref=e1280]:
+                - link "Subcounties 305" [ref=e1281] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/subcounties
+                  - img [ref=e1282]
+                  - generic [ref=e1284]: Subcounties
+                  - generic [ref=e1288]: "305"
+              - listitem [ref=e1289]:
+                - link "Facility Types 16" [ref=e1290] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facility-types
+                  - img [ref=e1291]
+                  - generic [ref=e1293]: Facility Types
+                  - generic [ref=e1297]: "16"
+          - listitem [ref=e1298]:
+            - generic [ref=e1299] [cursor=pointer]:
+              - generic [ref=e1300]: System Administration
+              - button "System Administration" [expanded] [ref=e1301]:
+                - generic [ref=e1302]: System Administration
+                - img [ref=e1303]
+            - list [ref=e1305]:
+              - listitem [ref=e1306]:
+                - link "Facilities 10,700" [ref=e1307] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facilities
+                  - img [ref=e1308]
+                  - generic [ref=e1310]: Facilities
+                  - generic [ref=e1314]: 10,700
+              - listitem [ref=e1315]:
+                - link "Facility Levels 5" [ref=e1316] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facility-levels
+                  - img [ref=e1317]
+                  - generic [ref=e1319]: Facility Levels
+                  - generic [ref=e1323]: "5"
+              - listitem [ref=e1324]:
+                - link "Facility Ownership 7" [ref=e1325] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facility-ownerships
+                  - img [ref=e1326]
+                  - generic [ref=e1328]: Facility Ownership
+                  - generic [ref=e1332]: "7"
+          - listitem [ref=e1333]:
+            - generic [ref=e1334] [cursor=pointer]:
+              - generic [ref=e1335]: Quiz Management
+              - button "Quiz Management" [expanded] [ref=e1336]:
+                - generic [ref=e1337]: Quiz Management
+                - img [ref=e1338]
+            - list [ref=e1340]:
+              - listitem [ref=e1341]:
+                - link "Program Module Quizzes 24" [ref=e1342] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/program-module-quizzes
+                  - img [ref=e1343]
+                  - generic [ref=e1345]: Program Module Quizzes
+                  - generic [ref=e1349]: "24"
+          - listitem [ref=e1350]:
+            - generic [ref=e1351] [cursor=pointer]:
+              - generic [ref=e1352]: Content Management
+              - button "Content Management" [expanded] [ref=e1353]:
+                - generic [ref=e1354]: Content Management
+                - img [ref=e1355]
+            - list [ref=e1357]:
+              - listitem [ref=e1358]:
+                - link "Resources" [ref=e1359] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resources
+                  - img [ref=e1360]
+                  - generic [ref=e1362]: Resources
+              - listitem [ref=e1363]:
+                - link "Resource Categories" [ref=e1364] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resource-categories
+                  - img [ref=e1365]
+                  - generic [ref=e1367]: Resource Categories
+              - listitem [ref=e1368]:
+                - link "Resource Types" [ref=e1369] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resource-types
+                  - img [ref=e1370]
+                  - generic [ref=e1372]: Resource Types
+              - listitem [ref=e1373]:
+                - link "Tags" [ref=e1374] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/tags
+                  - img [ref=e1375]
+                  - generic [ref=e1378]: Tags
+              - listitem [ref=e1379]:
+                - link "Resource Comments" [ref=e1380] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resource-comments
+                  - img [ref=e1381]
+                  - generic [ref=e1383]: Resource Comments
+          - listitem [ref=e1384]:
+            - generic [ref=e1385] [cursor=pointer]:
+              - generic [ref=e1386]: App Configuration
+              - button "App Configuration" [expanded] [ref=e1387]:
+                - generic [ref=e1388]: App Configuration
+                - img [ref=e1389]
+            - list [ref=e1391]:
+              - listitem [ref=e1392]:
+                - link "Scopes" [ref=e1393] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/scopes
+                  - img [ref=e1394]
+                  - generic [ref=e1396]: Scopes
+          - listitem [ref=e1397]:
+            - generic [ref=e1398] [cursor=pointer]:
+              - generic [ref=e1399]: Inventory Management
+              - button "Inventory Management" [expanded] [ref=e1400]:
+                - generic [ref=e1401]: Inventory Management
+                - img [ref=e1402]
+            - list [ref=e1404]:
+              - listitem [ref=e1405]:
+                - link "Suppliers" [ref=e1406] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/suppliers
+                  - img [ref=e1407]
+                  - generic [ref=e1409]: Suppliers
+              - listitem [ref=e1410]:
+                - link "Inventory Items" [ref=e1411] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/inventory-items
+                  - img [ref=e1412]
+                  - generic [ref=e1414]: Inventory Items
+              - listitem [ref=e1415]:
+                - link "Stock Levels" [ref=e1416] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/stock-levels
+                  - img [ref=e1417]
+                  - generic [ref=e1419]: Stock Levels
+              - listitem [ref=e1420]:
+                - link "Stock Requests" [ref=e1421] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/stock-requests
+                  - img [ref=e1422]
+                  - generic [ref=e1424]: Stock Requests
+          - listitem [ref=e1425]:
+            - generic [ref=e1426] [cursor=pointer]:
+              - generic [ref=e1427]: User Management
+              - button "User Management" [expanded] [ref=e1428]:
+                - generic [ref=e1429]: User Management
+                - img [ref=e1430]
+            - list [ref=e1432]:
+              - listitem [ref=e1433]:
+                - link "All Users 7395" [ref=e1434] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/users
+                  - img [ref=e1435]
+                  - generic [ref=e1437]: All Users
+                  - generic [ref=e1441]: "7395"
+          - listitem [ref=e1442]:
+            - generic [ref=e1443] [cursor=pointer]:
+              - generic [ref=e1444]: Indicator Reporting
+              - button "Indicator Reporting" [expanded] [ref=e1445]:
+                - generic [ref=e1446]: Indicator Reporting
+                - img [ref=e1447]
+            - list [ref=e1449]:
+              - listitem [ref=e1450]:
+                - link "Submit Report" [ref=e1451] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/reporting
+                  - img [ref=e1452]
+                  - generic [ref=e1454]: Submit Report
+              - listitem [ref=e1455]:
+                - link "Validation Queue" [ref=e1456] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/validation-queue
+                  - img [ref=e1457]
+                  - generic [ref=e1459]: Validation Queue
+              - listitem [ref=e1460]:
+                - link "Progress Dashboard" [ref=e1461] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/progress-dashboard
+                  - img [ref=e1462]
+                  - generic [ref=e1464]: Progress Dashboard
+  - generic:
+    - status

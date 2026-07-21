@@ -13,16 +13,43 @@ class ContentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'contents';
 
+    private const RICH_TEXT_TYPES = [
+        'introduction',
+        'case_scenario',
+        'case_scenario_progression',
+        'expected_learning_outcome',
+        'mentor_materials',
+        'mentor_course_intro',
+    ];
+
+    private const VIDEO_CAPABLE_TYPES = ['video'];
+
+    private const TYPE_LABELS = [
+        'introduction' => 'Mentee: Introduction Notes',
+        'case_scenario' => 'Mentee: Case Scenario',
+        'case_scenario_progression' => 'Mentee: Case Scenario Progression',
+        'expected_learning_outcome' => 'Mentee: Expected Learning Outcome',
+        'video' => 'Mentee: Reference Video',
+        'mentor_materials' => 'Mentor: Materials Needed for the Course',
+        'mentor_course_intro' => 'Mentor: Course Introduction',
+    ];
+
+    private const TYPE_COLORS = [
+        'introduction' => 'info',
+        'case_scenario' => 'warning',
+        'case_scenario_progression' => 'warning',
+        'expected_learning_outcome' => 'success',
+        'video' => 'danger',
+        'mentor_materials' => 'gray',
+        'mentor_course_intro' => 'gray',
+    ];
+
     public function form(Form $form): Form
     {
         return $form->schema([
             Forms\Components\Select::make('type')
                 ->label('Content Type')
-                ->options([
-                    'introduction' => 'Introduction Notes',
-                    'video' => 'Video',
-                    'case_scenario' => 'Case Scenario',
-                ])
+                ->options(self::TYPE_LABELS)
                 ->required()
                 ->live()
                 ->native(false),
@@ -35,16 +62,17 @@ class ContentsRelationManager extends RelationManager
 
             Forms\Components\RichEditor::make('content')
                 ->label('Content')
-                ->required(fn (Forms\Get $get): bool => in_array($get('type'), ['introduction', 'case_scenario'], true))
-                ->visible(fn (Forms\Get $get): bool => in_array($get('type'), ['introduction', 'case_scenario'], true))
+                ->required(fn (Forms\Get $get): bool => in_array($get('type'), self::RICH_TEXT_TYPES, true))
+                ->visible(fn (Forms\Get $get): bool => in_array($get('type'), self::RICH_TEXT_TYPES, true))
                 ->columnSpanFull(),
 
             Forms\Components\TextInput::make('video_url')
                 ->label('Video URL')
+                ->helperText('For a track module, this video is also shown in the "Sessions" list on the parent module\'s page.')
                 ->url()
                 ->prefixIcon('heroicon-m-link')
                 ->live()
-                ->visible(fn (Forms\Get $get): bool => $get('type') === 'video')
+                ->visible(fn (Forms\Get $get): bool => in_array($get('type'), self::VIDEO_CAPABLE_TYPES, true))
                 ->columnSpanFull(),
 
             Forms\Components\FileUpload::make('video_path')
@@ -52,7 +80,7 @@ class ContentsRelationManager extends RelationManager
                 ->directory('program-module-videos')
                 ->acceptedFileTypes(['video/mp4', 'video/webm', 'video/ogg'])
                 ->maxSize(102400)
-                ->visible(fn (Forms\Get $get): bool => $get('type') === 'video')
+                ->visible(fn (Forms\Get $get): bool => in_array($get('type'), self::VIDEO_CAPABLE_TYPES, true))
                 ->columnSpanFull(),
 
             Forms\Components\Placeholder::make('video_preview')
@@ -90,7 +118,15 @@ class ContentsRelationManager extends RelationManager
                         $videoId
                     ));
                 })
-                ->visible(fn (Forms\Get $get): bool => $get('type') === 'video')
+                ->visible(fn (Forms\Get $get): bool => in_array($get('type'), self::VIDEO_CAPABLE_TYPES, true) && filled($get('video_url')))
+                ->columnSpanFull(),
+
+            Forms\Components\TextInput::make('manual_reference_url')
+                ->label('Manual Reference Link')
+                ->helperText('Shown when the content is truncated for length (over ~500 characters) so mentees can refer to the full manual.')
+                ->url()
+                ->prefixIcon('heroicon-m-book-open')
+                ->visible(fn (Forms\Get $get): bool => in_array($get('type'), self::RICH_TEXT_TYPES, true))
                 ->columnSpanFull(),
 
             Forms\Components\TextInput::make('order_sequence')
@@ -117,18 +153,8 @@ class ContentsRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('type')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'introduction' => 'Introduction',
-                        'video' => 'Video',
-                        'case_scenario' => 'Case Scenario',
-                        default => $state,
-                    })
-                    ->color(fn (string $state): string => match ($state) {
-                        'introduction' => 'info',
-                        'video' => 'danger',
-                        'case_scenario' => 'warning',
-                        default => 'gray',
-                    }),
+                    ->formatStateUsing(fn (string $state): string => self::TYPE_LABELS[$state] ?? $state)
+                    ->color(fn (string $state): string => self::TYPE_COLORS[$state] ?? 'gray'),
 
                 Tables\Columns\TextColumn::make('title')
                     ->searchable()
@@ -139,8 +165,7 @@ class ContentsRelationManager extends RelationManager
                     ->label('Preview')
                     ->limit(50)
                     ->html()
-                    ->wrap()
-                    ->visible(fn (): bool => true),
+                    ->wrap(),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Active')
@@ -149,11 +174,7 @@ class ContentsRelationManager extends RelationManager
             ->defaultSort('order_sequence', 'asc')
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
-                    ->options([
-                        'introduction' => 'Introduction',
-                        'video' => 'Video',
-                        'case_scenario' => 'Case Scenario',
-                    ])
+                    ->options(self::TYPE_LABELS)
                     ->native(false),
             ])
             ->headerActions([

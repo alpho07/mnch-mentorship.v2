@@ -13,6 +13,14 @@
 .ra-select,.ra-input{width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;color:#111827;background:#fff;outline:none;}
 .dark .ra-select,.dark .ra-input{background:#0f172a;border-color:#334155;color:#f1f5f9;}
 .ra-select:focus,.ra-input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+/* Filament's global form styles add their own chevron to <select> — override with a single
+   explicit one so it doesn't double up with the browser's native arrow. */
+select.ra-select{
+    appearance:none;-webkit-appearance:none;-moz-appearance:none;
+    padding-right:36px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.23 8.29a.75.75 0 01.02-1.08z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;background-size:16px;
+}
 .ra-btn{padding:10px 22px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;}
 .ra-btn-primary{background:#2563eb;color:#fff;}
 .ra-btn-primary:hover{background:#1d4ed8;}
@@ -116,8 +124,9 @@
     $score = $this->getScore();
     $total = $rubric->total_marks;
     $pct   = $total > 0 ? round(($score / $total) * 100, 1) : 0;
+    $started = $score > 0;
     $pass  = $score >= $rubric->pass_marks;
-    $fillColor = $pass ? '#16a34a' : ($pct >= 60 ? '#d97706' : '#dc2626');
+    $fillColor = ! $started ? '#94a3b8' : ($pass ? '#16a34a' : ($pct >= 60 ? '#d97706' : '#dc2626'));
 @endphp
 
 {{-- Header info --}}
@@ -153,9 +162,15 @@
             </div>
             <div>
                 <div style="font-size:18px;font-weight:700;color:{{ $fillColor }};">{{ $pct }}%</div>
-                <span class="ra-badge {{ $pass ? 'ra-badge-pass' : 'ra-badge-fail' }}">
-                    {{ $pass ? 'PASS' : 'FAIL' }}
-                </span>
+                @if($started)
+                    <span class="ra-badge {{ $pass ? 'ra-badge-pass' : 'ra-badge-fail' }}">
+                        {{ $pass ? 'PASS' : 'FAIL' }}
+                    </span>
+                @else
+                    <span class="ra-badge" style="background:#f1f5f9;color:#64748b;">
+                        NOT STARTED
+                    </span>
+                @endif
             </div>
         </div>
 
@@ -192,7 +207,7 @@
 {{-- Actions --}}
 <div style="display:flex;gap:12px;margin-bottom:20px;">
     <button class="ra-btn ra-btn-primary" wire:click="submitAssessment" wire:loading.attr="disabled">
-        <span wire:loading.remove>Save Assessment ({{ $pass ? 'PASS' : 'FAIL' }} · {{ $score }}/{{ $total }})</span>
+        <span wire:loading.remove>Save Assessment ({{ $started ? ($pass ? 'PASS' : 'FAIL') : 'NOT STARTED' }} · {{ $score }}/{{ $total }})</span>
         <span wire:loading>Saving…</span>
     </button>
     <button class="ra-btn ra-btn-ghost" wire:click="backToStep1">← Back</button>

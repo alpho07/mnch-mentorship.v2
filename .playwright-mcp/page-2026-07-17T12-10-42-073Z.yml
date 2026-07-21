@@ -1,0 +1,345 @@
+- generic [ref=e3]:
+  - navigation [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e9]:
+        - generic [ref=e10]: Global search
+        - generic [ref=e11]:
+          - img [ref=e13]
+          - searchbox "Search" [ref=e16]
+      - button "User menu" [ref=e19] [cursor=pointer]:
+        - img "Avatar of Super Admin Admin" [ref=e20]
+  - main [ref=e21]:
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - heading "Mentor Dashboard" [level=1] [ref=e26]
+        - generic [ref=e29]:
+          - generic [ref=e31]:
+            - generic [ref=e32]:
+              - paragraph [ref=e33]: Mentor Dashboard
+              - heading "Good afternoon, Super" [level=1] [ref=e34]
+              - generic [ref=e35]:
+                - generic [ref=e38]: Live · 17 Jul 2026, 12:10
+                - generic [ref=e39]: "|"
+                - generic [ref=e40]:
+                  - strong [ref=e41]: "51"
+                  - text: mentorship(s)
+                - generic [ref=e42]: "|"
+                - generic [ref=e43]:
+                  - strong [ref=e44]: "124"
+                  - text: mentee(s)
+                - generic [ref=e45]: "|"
+                - generic [ref=e46]: 26 action(s) pending
+            - generic [ref=e48]:
+              - paragraph [ref=e49]: 20.6%
+              - paragraph [ref=e50]: avg. completion
+          - generic [ref=e51]:
+            - generic [ref=e52]:
+              - img [ref=e54]
+              - paragraph [ref=e56]: "51"
+              - paragraph [ref=e57]: Mentorships
+              - paragraph [ref=e58]: 16 active classes
+            - generic [ref=e59]:
+              - img [ref=e61]
+              - paragraph [ref=e63]: "4"
+              - paragraph [ref=e64]: Completed Classes
+              - paragraph [ref=e65]: 70 modules total
+            - generic [ref=e66]:
+              - img [ref=e68]
+              - paragraph [ref=e70]: "124"
+              - paragraph [ref=e71]: Total Mentees
+              - paragraph [ref=e72]: 139 enrollments
+            - generic [ref=e73]:
+              - img [ref=e75]
+              - paragraph [ref=e77]: 20.6%
+              - paragraph [ref=e78]: Avg Completion
+              - paragraph [ref=e79]: 31.4% modules done
+            - generic [ref=e80]:
+              - img [ref=e82]
+              - paragraph [ref=e84]: 29.2%
+              - paragraph [ref=e85]: Attendance Rate
+              - paragraph [ref=e86]: across all classes
+            - generic [ref=e87]:
+              - img [ref=e89]
+              - paragraph [ref=e91]: "0"
+              - paragraph [ref=e92]: Recommendations
+              - paragraph [ref=e93]: 0% mentee coverage
+            - generic [ref=e94]:
+              - img [ref=e96]
+              - paragraph [ref=e98]: "1"
+              - paragraph [ref=e99]: Video Reviews
+              - paragraph [ref=e100]: pending review
+            - generic [ref=e101]:
+              - img [ref=e103]
+              - paragraph [ref=e105]: "25"
+              - paragraph [ref=e106]: Pending Approvals
+              - paragraph [ref=e107]: awaiting mentor sign-off
+          - generic [ref=e108]:
+            - generic [ref=e109]:
+              - generic [ref=e110]:
+                - img [ref=e112]
+                - generic [ref=e114]:
+                  - heading "Pending Video Reviews" [level=3] [ref=e115]
+                  - paragraph [ref=e116]: These mentees are waiting for their video evaluation
+              - generic [ref=e117]: "1"
+            - generic [ref=e119]:
+              - generic [ref=e120]:
+                - generic [ref=e121]: F
+                - generic [ref=e122]:
+                  - paragraph [ref=e123]: FRANCISCA MUMBI MUIA
+                  - paragraph [ref=e124]: "Module 2: Labour Care Guide (LCG) · Cohort 1 · Maternal Health (EmONC) - AIC Ebenezer - Jun 2026"
+              - link "Review" [ref=e125] [cursor=pointer]:
+                - /url: http://127.0.0.1:8100/admin/mentorship/242/classes/233/modules/270/mentees
+                - text: Review
+                - img [ref=e126]
+          - generic [ref=e128]:
+            - generic [ref=e130]:
+              - img [ref=e132]
+              - paragraph [ref=e134]:
+                - strong [ref=e135]: "92"
+                - text: mentee(s) have low module completion — consider scheduling a check-in.
+            - generic [ref=e137]:
+              - img [ref=e139]
+              - paragraph [ref=e141]:
+                - strong [ref=e142]: "21"
+                - text: class(es) have attendance below 60% — review and follow up.
+            - generic [ref=e144]:
+              - img [ref=e146]
+              - paragraph [ref=e148]:
+                - strong [ref=e149]: "29"
+                - text: module(s) haven't been started yet — consider activating them.
+            - generic [ref=e151]:
+              - img [ref=e153]
+              - paragraph [ref=e155]:
+                - text: Only
+                - strong [ref=e156]: 0%
+                - text: of mentees have written recommendations — boost this for better outcomes.
+          - generic [ref=e158]:
+            - generic [ref=e159]:
+              - generic [ref=e161]:
+                - img [ref=e163]
+                - generic [ref=e165]:
+                  - heading "Mentorship Programs" [level=3] [ref=e166]
+                  - paragraph [ref=e167]: 51 program(s) found
+              - generic [ref=e168]:
+                - generic [ref=e169]:
+                  - img
+                  - textbox "Search name or facility…" [ref=e170]
+                - combobox [ref=e171] [cursor=pointer]:
+                  - option "All statuses" [selected]
+                  - option "Active"
+                  - option "Completed"
+                  - option "Pending"
+                  - option "Draft"
+                - combobox [ref=e172] [cursor=pointer]:
+                  - option "All programs" [selected]
+                  - option "Infant and Child Care"
+                  - option "Maternal Health (EmONC)"
+                  - option "Newborn Care"
+                - generic [ref=e173]:
+                  - button "Name" [ref=e174] [cursor=pointer]
+                  - button "Progress" [ref=e175] [cursor=pointer]
+                  - button "Mentees" [ref=e176] [cursor=pointer]
+                  - button "Latest ↓" [ref=e177] [cursor=pointer]
+            - generic [ref=e179]:
+              - generic [ref=e180]:
+                - generic [ref=e181]:
+                  - generic [ref=e182]: Maternal Health (EmONC)
+                  - generic [ref=e183]: 1 active
+                  - generic [ref=e184]: Active
+                - paragraph [ref=e185]: Maternal Health (EmONC) - Kopsiro Model Health Centre - Jun 2026
+                - paragraph [ref=e186]: Kopsiro Model Health Centre · 1 class · 1 mentee
+                - generic [ref=e187]:
+                  - generic [ref=e190]: 50%
+                  - generic [ref=e191]: 2/4 modules
+                - generic [ref=e192]:
+                  - generic [ref=e193]: 67% not started
+                  - generic [ref=e195]: 0% in progress
+                  - generic [ref=e197]: 33% done
+              - link "View" [ref=e200] [cursor=pointer]:
+                - /url: http://127.0.0.1:8100/admin/mentorship/248/classes
+                - text: View
+                - img [ref=e201]
+            - generic [ref=e204]:
+              - generic [ref=e205]:
+                - generic [ref=e206]:
+                  - generic [ref=e207]: Maternal Health (EmONC)
+                  - generic [ref=e208]: 0 active
+                  - generic [ref=e209]: Active
+                - paragraph [ref=e210]: Maternal Health (EmONC) - Kabulwo Dispensary - Jun 2026
+                - paragraph [ref=e211]: Kabulwo Dispensary · 1 class · 3 mentees
+                - generic [ref=e212]:
+                  - generic [ref=e214]: 0%
+                  - generic [ref=e215]: 0/3 modules
+                - generic [ref=e216]:
+                  - generic [ref=e217]: 100% not started
+                  - generic [ref=e219]: 0% in progress
+                  - generic [ref=e221]: 0% done
+              - link "View" [ref=e224] [cursor=pointer]:
+                - /url: http://127.0.0.1:8100/admin/mentorship/246/classes
+                - text: View
+                - img [ref=e225]
+            - generic [ref=e228]:
+              - generic [ref=e229]:
+                - generic [ref=e230]:
+                  - generic [ref=e231]: Newborn Care
+                  - generic [ref=e232]: 1 active
+                  - generic [ref=e233]: Active
+                - paragraph [ref=e234]: Newborn Care - Busagwa Dispensary - Jun 2026
+                - paragraph [ref=e235]: Busagwa Dispensary · 1 class · 3 mentees
+                - generic [ref=e236]:
+                  - generic [ref=e238]: 0%
+                  - generic [ref=e239]: 0/3 modules
+                - generic [ref=e240]:
+                  - generic [ref=e241]: 100% not started
+                  - generic [ref=e243]: 0% in progress
+                  - generic [ref=e245]: 0% done
+              - link "View" [ref=e248] [cursor=pointer]:
+                - /url: http://127.0.0.1:8100/admin/mentorship/245/classes
+                - text: View
+                - img [ref=e249]
+            - generic [ref=e252]:
+              - generic [ref=e253]:
+                - generic [ref=e254]:
+                  - generic [ref=e255]: Infant and Child Care
+                  - generic [ref=e256]: 1 active
+                  - generic [ref=e257]: Active
+                - paragraph [ref=e258]: Infant and Child Care - Bomet Health Centre - Jun 2026
+                - paragraph [ref=e259]: Bomet Health Centre · 1 class · 1 mentee
+                - generic [ref=e260]:
+                  - generic [ref=e262]: 0%
+                  - generic [ref=e263]: 0/2 modules
+                - generic [ref=e264]:
+                  - generic [ref=e265]: 0% not started
+                  - generic [ref=e267]: 100% in progress
+                  - generic [ref=e269]: 0% done
+              - link "View" [ref=e272] [cursor=pointer]:
+                - /url: http://127.0.0.1:8100/admin/mentorship/244/classes
+                - text: View
+                - img [ref=e273]
+            - generic [ref=e276]:
+              - generic [ref=e277]:
+                - generic [ref=e278]:
+                  - generic [ref=e279]: Maternal Health (EmONC)
+                  - generic [ref=e280]: 1 active
+                  - generic [ref=e281]: Active
+                - paragraph [ref=e282]: Maternal Health (EmONC) - Barnet Memorial Clinic - Jun 2026
+                - paragraph [ref=e283]: Barnet Memorial Clinic · 1 class · 1 mentee
+                - generic [ref=e284]:
+                  - generic [ref=e287]: 100%
+                  - generic [ref=e288]: 1/1 modules
+                - generic [ref=e289]:
+                  - generic [ref=e290]: 0% not started
+                  - generic [ref=e292]: 0% in progress
+                  - generic [ref=e294]: 100% done
+              - link "View" [ref=e297] [cursor=pointer]:
+                - /url: http://127.0.0.1:8100/admin/mentorship/243/classes
+                - text: View
+                - img [ref=e298]
+            - generic [ref=e301]:
+              - generic [ref=e302]:
+                - generic [ref=e303]:
+                  - generic [ref=e304]: Maternal Health (EmONC)
+                  - generic [ref=e305]: 1 active
+                  - generic [ref=e306]: Active
+                - paragraph [ref=e307]: Maternal Health (EmONC) - AIC Ebenezer - Jun 2026
+                - paragraph [ref=e308]: AIC Ebenezer · 1 class · 3 mentees
+                - generic [ref=e309]:
+                  - generic [ref=e312]: 17%
+                  - generic [ref=e313]: 1/6 modules
+                - generic [ref=e314]:
+                  - generic [ref=e315]: 78% not started
+                  - generic [ref=e317]: 17% in progress
+                  - generic [ref=e319]: 6% done
+              - link "View" [ref=e322] [cursor=pointer]:
+                - /url: http://127.0.0.1:8100/admin/mentorship/242/classes
+                - text: View
+                - img [ref=e323]
+            - generic [ref=e326]:
+              - generic [ref=e327]:
+                - generic [ref=e328]:
+                  - generic [ref=e329]: Newborn Care
+                  - generic [ref=e330]: 0 active
+                  - generic [ref=e331]: Active
+                - paragraph [ref=e332]: Newborn Care - Murang'a District Hospital - Jun 2026
+                - paragraph [ref=e333]: Murang'a District Hospital · 1 class · 1 mentee
+                - generic [ref=e334]:
+                  - generic [ref=e336]: 0%
+                  - generic [ref=e337]: 0/1 modules
+                - generic [ref=e338]:
+                  - generic [ref=e339]: 100% not started
+                  - generic [ref=e341]: 0% in progress
+                  - generic [ref=e343]: 0% done
+              - link "View" [ref=e346] [cursor=pointer]:
+                - /url: http://127.0.0.1:8100/admin/mentorship/241/classes
+                - text: View
+                - img [ref=e347]
+            - generic [ref=e350]:
+              - generic [ref=e351]:
+                - generic [ref=e352]:
+                  - generic [ref=e353]: Newborn Care
+                  - generic [ref=e354]: 0 active
+                  - generic [ref=e355]: Active
+                - paragraph [ref=e356]: Newborn Care - Murang'a District Hospital - Jun 2026
+                - paragraph [ref=e357]: Murang'a District Hospital · 1 class · 1 mentee
+                - generic [ref=e358]:
+                  - generic [ref=e360]: 0%
+                  - generic [ref=e361]: 0/0 modules
+                - generic [ref=e362]:
+                  - generic [ref=e363]: 0% not started
+                  - generic [ref=e365]: 0% in progress
+                  - generic [ref=e367]: 0% done
+              - link "View" [ref=e370] [cursor=pointer]:
+                - /url: http://127.0.0.1:8100/admin/mentorship/240/classes
+                - text: View
+                - img [ref=e371]
+            - generic [ref=e374]:
+              - generic [ref=e375]:
+                - generic [ref=e376]:
+                  - generic [ref=e377]: Newborn Care
+                  - generic [ref=e378]: 0 active
+                  - generic [ref=e379]: Active
+                - paragraph [ref=e380]: Newborn Care - Murang'a District Hospital - Jun 2026
+                - paragraph [ref=e381]: Murang'a District Hospital · 1 class · 1 mentee
+                - generic [ref=e382]:
+                  - generic [ref=e384]: 0%
+                  - generic [ref=e385]: 0/1 modules
+                - generic [ref=e386]:
+                  - generic [ref=e387]: 100% not started
+                  - generic [ref=e389]: 0% in progress
+                  - generic [ref=e391]: 0% done
+              - link "View" [ref=e394] [cursor=pointer]:
+                - /url: http://127.0.0.1:8100/admin/mentorship/239/classes
+                - text: View
+                - img [ref=e395]
+            - generic [ref=e398]:
+              - generic [ref=e399]:
+                - generic [ref=e400]:
+                  - generic [ref=e401]: Newborn Care
+                  - generic [ref=e402]: 0 active
+                  - generic [ref=e403]: Active
+                - paragraph [ref=e404]: Newborn Care - Murang'a District Hospital - Jun 2026
+                - paragraph [ref=e405]: Murang'a District Hospital · 0 classes · 0 mentees
+                - generic [ref=e406]:
+                  - generic [ref=e408]: 0%
+                  - generic [ref=e409]: 0/0 modules
+                - generic [ref=e410]:
+                  - generic [ref=e411]: 0% not started
+                  - generic [ref=e413]: 0% in progress
+                  - generic [ref=e415]: 0% done
+              - link "View" [ref=e418] [cursor=pointer]:
+                - /url: http://127.0.0.1:8100/admin/mentorship/238/classes
+                - text: View
+                - img [ref=e419]
+            - generic [ref=e421]:
+              - paragraph [ref=e422]: Showing 1–10 of 51
+              - generic [ref=e423]:
+                - button "1" [ref=e424] [cursor=pointer]
+                - button "2" [ref=e425] [cursor=pointer]
+                - button "3" [ref=e426] [cursor=pointer]
+                - button "Next →" [ref=e427] [cursor=pointer]
+      - generic:
+        - dialog
+      - generic:
+        - dialog
+      - generic:
+        - dialog

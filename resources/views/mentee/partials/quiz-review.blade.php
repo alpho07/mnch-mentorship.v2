@@ -2,18 +2,21 @@
     $attempt = $status['attempt'];
     $quiz = $status['quiz'];
     $responses = $attempt->responses->keyBy('quiz_question_id');
+    $revealAnswers = $revealAnswers ?? true;
 @endphp
 
 <div x-data="{ open: false }">
-    <div class="rounded-xl border {{ $status['passed'] ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30' : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30' }} px-4 py-3 mb-4">
+    <div class="rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50 px-4 py-3 mb-4">
         <div class="flex items-center justify-between gap-3">
             <div>
-                <p class="text-sm font-semibold {{ $status['passed'] ? 'text-emerald-800 dark:text-emerald-200' : 'text-red-800 dark:text-red-200' }}">
-                    {{ $status['passed'] ? 'Passed' : 'Did not pass' }} — {{ $attempt->score }}%
+                <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    Score: {{ $attempt->correct_answers }}/{{ $attempt->total_questions }}
                 </p>
-                <p class="text-xs text-slate-500 mt-1">
-                    {{ $attempt->correct_answers }} of {{ $attempt->total_questions }} correct
-                </p>
+                @if(! $revealAnswers)
+                    <p class="text-xs text-slate-500 mt-1">
+                        Correct answers unlock after the post-test
+                    </p>
+                @endif
             </div>
             <button type="button"
                     @click="open = !open"
@@ -41,7 +44,7 @@
                 @foreach($question->options as $option)
                     @php
                         $isSelected = $selectedOption && $selectedOption->id === $option->id;
-                        $isCorrectOption = $correctOption && $correctOption->id === $option->id;
+                        $isCorrectOption = $revealAnswers && $correctOption && $correctOption->id === $option->id;
                     @endphp
                     <div class="flex items-start gap-2.5 p-2.5 rounded-lg text-sm
                         {{ $isSelected && $isCorrectOption ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200' :
@@ -64,7 +67,7 @@
                     </div>
                 @endforeach
             </div>
-            @if($question->explanation)
+            @if($revealAnswers && $question->explanation)
                 <div class="mt-3 text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
                     <strong>Explanation:</strong> {{ $question->explanation }}
                 </div>

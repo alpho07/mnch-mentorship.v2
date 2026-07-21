@@ -8,6 +8,7 @@ use App\Models\ClassModuleActivityParticipant;
 use App\Models\ClassParticipant;
 use App\Models\MenteeModuleProgress;
 use App\Models\MentorshipClass;
+use App\Models\ModuleRubric;
 use App\Models\ProgramModuleQuiz;
 use App\Models\QuizAttempt;
 use App\Models\RubricAssessment;
@@ -227,11 +228,54 @@ class MenteeClassProgressController extends Controller
         $introductions = $contents->where('type', 'introduction');
         $videos = $contents->where('type', 'video');
         $caseScenarios = $contents->where('type', 'case_scenario');
+        $caseScenarioProgressions = $contents->where('type', 'case_scenario_progression');
+        $expectedLearningOutcomes = $contents->where('type', 'expected_learning_outcome');
+
+        // "Sessions" list — a parent module with tracks (e.g. PPH) is never itself assignable
+        // to a class (EmoncModulePicker only lets mentors add individual tracks), so this list
+        // lives on each TRACK's own page instead: siblings under the same parent that are also
+        // in THIS class, so a mentee doing one PPH track can navigate to the other sessions.
+        $romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
+        $sessions = collect();
+        if ($classModule->programModule?->isTrack()) {
+            $siblingProgramModuleIds = $classModule->programModule->parent
+                ?->children()->orderBy('order_sequence')->pluck('id') ?? collect();
+
+            $siblingClassModules = ClassModule::where('mentorship_class_id', $class->id)
+                ->whereIn('program_module_id', $siblingProgramModuleIds)
+                ->with('programModule')
+                ->get()
+                ->sortBy(fn ($cm) => $siblingProgramModuleIds->search($cm->program_module_id))
+                ->values();
+
+            $siblingProgressByClassModuleId = MenteeModuleProgress::where('class_participant_id', $participant->id)
+                ->whereIn('class_module_id', $siblingClassModules->pluck('id'))
+                ->pluck('status', 'class_module_id');
+
+            $sessions = $siblingClassModules->map(function ($siblingCm, $i) use ($romanNumerals, $classModule, $siblingProgressByClassModuleId, $class) {
+                $track = $siblingCm->programModule;
+
+                return [
+                    'label' => 'Session '.($romanNumerals[$i] ?? ($i + 1)).': '.preg_replace('/^Track\s*\d+:\s*/i', '', $track->name),
+                    'isCurrent' => $siblingCm->id === $classModule->id,
+                    'status' => $siblingProgressByClassModuleId[$siblingCm->id] ?? 'not_started',
+                    'url' => route('mentee.class.module', [$class->id, $siblingCm->id]),
+                ];
+            });
+        }
+
+        $objectives = $classModule->programModule?->objectives ?? [];
+        $workplan = $classModule->programModule?->content ?? [];
+
+        $moduleRubric = ModuleRubric::where('program_module_id', $classModule->program_module_id)
+            ->where('is_active', true)
+            ->orderBy('order_sequence')
+            ->first();
 
         // Determine if the module has any usable content at all
         $hasIntroContent = (bool) $classModule->programModule?->description || $introductions->isNotEmpty();
-        $hasActivities   = ! empty($enrolledActivityIds);
-        $hasAnyContent   = $hasIntroContent
+        $hasActivities = ! empty($enrolledActivityIds);
+        $hasAnyContent = $hasIntroContent
             || $preTestStatus['exists']
             || $postTestStatus['exists']
             || $caseScenarios->isNotEmpty()
@@ -274,6 +318,12 @@ class MenteeClassProgressController extends Controller
             'introductions',
             'videos',
             'caseScenarios',
+            'caseScenarioProgressions',
+            'expectedLearningOutcomes',
+            'sessions',
+            'objectives',
+            'workplan',
+            'moduleRubric',
             'hasIntroContent',
             'hasActivities',
             'hasAnyContent',

@@ -17,6 +17,7 @@ class ProgramModuleContent extends Model
         'content',
         'video_url',
         'video_path',
+        'manual_reference_url',
         'order_sequence',
         'is_active',
     ];
@@ -44,6 +45,44 @@ class ProgramModuleContent extends Model
     public function isCaseScenario(): bool
     {
         return $this->type === 'case_scenario';
+    }
+
+    public function isCaseScenarioProgression(): bool
+    {
+        return $this->type === 'case_scenario_progression';
+    }
+
+    public function isExpectedLearningOutcome(): bool
+    {
+        return $this->type === 'expected_learning_outcome';
+    }
+
+    public function isMentorMaterials(): bool
+    {
+        return $this->type === 'mentor_materials';
+    }
+
+    public function isMentorCourseIntro(): bool
+    {
+        return $this->type === 'mentor_course_intro';
+    }
+
+    /**
+     * Mentor-facing content types are prefixed `mentor_`; everything else is mentee-facing.
+     */
+    public function audience(): string
+    {
+        return str_starts_with($this->type, 'mentor_') ? 'mentor' : 'mentee';
+    }
+
+    public function exceedsInlineLength(): bool
+    {
+        return strlen(strip_tags((string) $this->content)) > 500;
+    }
+
+    public function excerpt(int $length = 500): string
+    {
+        return str(strip_tags((string) $this->content))->limit($length);
     }
 
     public function youtubeEmbedUrl(): ?string

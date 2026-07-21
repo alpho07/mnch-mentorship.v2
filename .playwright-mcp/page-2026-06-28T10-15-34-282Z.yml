@@ -1,0 +1,532 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - navigation [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - generic [ref=e10]: Global search
+            - generic [ref=e11]:
+              - img [ref=e13]
+              - searchbox "Global search" [ref=e16]
+          - button "User menu" [ref=e19] [cursor=pointer]:
+            - img "Avatar of Super Admin Admin" [ref=e20]
+      - main [ref=e21]:
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - navigation [ref=e26]:
+                - list [ref=e27]:
+                  - listitem [ref=e28]:
+                    - link "Mentorship" [ref=e29] [cursor=pointer]:
+                      - /url: http://localhost:8001/admin/mentorship
+                  - listitem [ref=e30]:
+                    - img [ref=e31]
+                    - generic [ref=e33]: Mentees — EmONC Cohort 1 — June 2026
+              - heading "Mentees — EmONC Cohort 1 — June 2026" [level=1] [ref=e34]
+              - paragraph [ref=e35]: 0 enrolled · Maternal Health (EmONC) - Nairobi Hospital - Jun 2026
+            - generic [ref=e37]:
+              - link "Back to Classes" [ref=e38] [cursor=pointer]:
+                - /url: http://localhost:8001/admin/mentorship/247/classes
+                - img [ref=e39]
+                - generic [ref=e41]: Back to Classes
+              - generic [ref=e42]:
+                - button "Register Mentee" [active] [ref=e44] [cursor=pointer]:
+                  - img [ref=e45]
+                  - generic [ref=e47]: Register Mentee
+                - generic [ref=e647]:
+                  - button "Add from List" [ref=e648] [cursor=pointer]:
+                    - img [ref=e649]
+                    - generic [ref=e651]: Add from List
+                  - button "Add Mentee" [ref=e652] [cursor=pointer]:
+                    - img [ref=e653]
+                    - generic [ref=e655]: Add Mentee
+              - button "Start Class" [ref=e48] [cursor=pointer]:
+                - img [ref=e49]
+                - generic [ref=e51]: Start Class
+              - link "Class Report" [ref=e52] [cursor=pointer]:
+                - /url: http://localhost:8001/admin/reports/class/238/html
+                - img [ref=e53]
+                - generic [ref=e55]: Class Report
+          - generic [ref=e58]:
+            - generic [ref=e59]:
+              - generic [ref=e62]:
+                - generic [ref=e63]:
+                  - generic [ref=e64]: Search
+                  - generic [ref=e65]:
+                    - img [ref=e67]
+                    - searchbox "Search" [ref=e70]
+                - button "Toggle columns" [ref=e73] [cursor=pointer]:
+                  - generic [ref=e74]: Toggle columns
+                  - img [ref=e75]
+              - generic [ref=e79]:
+                - img [ref=e81]
+                - heading "No Mentees Enrolled" [level=4] [ref=e83]
+                - paragraph [ref=e84]: Use "Add from List" to enroll existing users, or "Add Mentee" to create and enroll a new one.
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+            - generic:
+              - dialog
+    - complementary [ref=e85]:
+      - link "MNCH Mentorship Platform" [ref=e89] [cursor=pointer]:
+        - /url: /admin
+        - generic [ref=e90]: MNCH Mentorship Platform
+      - navigation [ref=e91]:
+        - list [ref=e92]:
+          - listitem [ref=e93]:
+            - generic [ref=e94] [cursor=pointer]:
+              - generic [ref=e95]: Dashboards
+              - button "Dashboards" [expanded] [ref=e96]:
+                - generic [ref=e97]: Dashboards
+                - img [ref=e98]
+            - list [ref=e100]:
+              - listitem [ref=e101]:
+                - link "Mentor Dashboard 127" [ref=e102] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentor-dashboard
+                  - img [ref=e103]
+                  - generic [ref=e105]: Mentor Dashboard
+                  - generic [ref=e109]: "127"
+              - listitem [ref=e110]:
+                - link "Head DRMH" [ref=e111] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/head-drmh-dashboard
+                  - img [ref=e112]
+                  - generic [ref=e114]: Head DRMH
+              - listitem [ref=e115]:
+                - link "Mentee Dashboard 139" [ref=e116] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-dashboard
+                  - img [ref=e117]
+                  - generic [ref=e119]: Mentee Dashboard
+                  - generic [ref=e123]: "139"
+          - listitem [ref=e124]:
+            - generic [ref=e125] [cursor=pointer]:
+              - generic [ref=e126]: Mentorships
+              - button "Mentorships" [expanded] [ref=e127]:
+                - generic [ref=e128]: Mentorships
+                - img [ref=e129]
+            - list [ref=e131]:
+              - listitem [ref=e132]:
+                - link "Practical Assessments" [ref=e133] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/rubric-assessments
+                  - img [ref=e134]
+                  - generic [ref=e136]: Practical Assessments
+          - listitem [ref=e137]:
+            - generic [ref=e138] [cursor=pointer]:
+              - generic [ref=e139]: Facility Assessment
+              - button "Facility Assessment" [expanded] [ref=e140]:
+                - generic [ref=e141]: Facility Assessment
+                - img [ref=e142]
+            - list [ref=e144]:
+              - listitem [ref=e145]:
+                - link "Assessments 2" [ref=e146] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessments
+                  - img [ref=e147]
+                  - generic [ref=e149]: Assessments
+                  - generic [ref=e153]: "2"
+          - listitem [ref=e154]:
+            - generic [ref=e155] [cursor=pointer]:
+              - generic [ref=e156]: Training Management
+              - button "Training Management" [expanded] [ref=e157]:
+                - generic [ref=e158]: Training Management
+                - img [ref=e159]
+            - list [ref=e161]:
+              - listitem [ref=e162]:
+                - link "Training Areas 2" [ref=e163] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/approved-training-areas
+                  - img [ref=e164]
+                  - generic [ref=e166]: Training Areas
+                  - generic [ref=e170]: "2"
+              - listitem [ref=e171]:
+                - link "MOH Trainings 4" [ref=e172] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/moh-trainings
+                  - img [ref=e173]
+                  - generic [ref=e175]: MOH Trainings
+                  - generic [ref=e179]: "4"
+              - listitem [ref=e180]:
+                - link "Mentorship 50" [ref=e181] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentorship
+                  - img [ref=e182]
+                  - generic [ref=e184]: Mentorship
+                  - generic [ref=e188]: "50"
+              - listitem [ref=e189]:
+                - link "Export Center 4" [ref=e190] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/training-exports
+                  - img [ref=e191]
+                  - generic [ref=e193]: Export Center
+                  - generic [ref=e197]: "4"
+              - listitem [ref=e198]:
+                - link "Participant/Mentee Profiles" [ref=e199] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/participant-profiles
+                  - img [ref=e200]
+                  - generic [ref=e202]: Participant/Mentee Profiles
+              - listitem [ref=e203]:
+                - link "Mentor Profiles" [ref=e204] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-profiles
+                  - img [ref=e205]
+                  - generic [ref=e207]: Mentor Profiles
+          - listitem [ref=e208]:
+            - generic [ref=e209] [cursor=pointer]:
+              - generic [ref=e210]: Indicator Catalog
+              - button "Indicator Catalog" [expanded] [ref=e211]:
+                - generic [ref=e212]: Indicator Catalog
+                - img [ref=e213]
+            - list [ref=e215]:
+              - listitem [ref=e216]:
+                - link "Report Types" [ref=e217] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicator-report-types
+                  - img [ref=e218]
+                  - generic [ref=e220]: Report Types
+              - listitem [ref=e221]:
+                - link "Indicator Groups" [ref=e222] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicator-groups
+                  - img [ref=e223]
+                  - generic [ref=e225]: Indicator Groups
+              - listitem [ref=e226]:
+                - link "Indicators" [ref=e227] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators
+                  - img [ref=e228]
+                  - generic [ref=e230]: Indicators
+              - listitem [ref=e231]:
+                - link "Indicators Reference" [ref=e232] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/reference
+                  - img [ref=e233]
+                  - generic [ref=e235]: Indicators Reference
+          - listitem [ref=e236]:
+            - generic [ref=e237] [cursor=pointer]:
+              - generic [ref=e238]: Curriculum
+              - button "Curriculum" [expanded] [ref=e239]:
+                - generic [ref=e240]: Curriculum
+                - img [ref=e241]
+            - list [ref=e243]:
+              - listitem [ref=e244]:
+                - link "Programs 3" [ref=e245] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/programs
+                  - img [ref=e246]
+                  - generic [ref=e248]: Programs
+                  - generic [ref=e252]: "3"
+              - listitem [ref=e253]:
+                - link "Modules 24" [ref=e254] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/modules
+                  - img [ref=e255]
+                  - generic [ref=e257]: Modules
+                  - generic [ref=e261]: "24"
+              - listitem [ref=e262]:
+                - link "Program Modules 46" [ref=e263] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/program-modules
+                  - img [ref=e264]
+                  - generic [ref=e266]: Program Modules
+                  - generic [ref=e270]: "46"
+              - listitem [ref=e271]:
+                - link "Activities 3" [ref=e272] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/activities
+                  - img [ref=e273]
+                  - generic [ref=e275]: Activities
+                  - generic [ref=e279]: "3"
+              - listitem [ref=e280]:
+                - link "Methodologies" [ref=e281] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/methodologies
+                  - img [ref=e282]
+                  - generic [ref=e284]: Methodologies
+              - listitem [ref=e285]:
+                - link "Rubric Definitions" [ref=e286] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/rubric-managements
+                  - img [ref=e287]
+                  - generic [ref=e289]: Rubric Definitions
+          - listitem [ref=e290]:
+            - generic [ref=e291] [cursor=pointer]:
+              - generic [ref=e292]: Report Management
+              - button "Report Management" [expanded] [ref=e293]:
+                - generic [ref=e294]: Report Management
+                - img [ref=e295]
+            - list [ref=e297]:
+              - listitem [ref=e298]:
+                - link "Performance Tracker" [ref=e299] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/monthly-reports
+                  - img [ref=e300]
+                  - generic [ref=e302]: Performance Tracker
+              - listitem [ref=e303]:
+                - link "Report Templates" [ref=e304] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/report-templates
+                  - img [ref=e305]
+                  - generic [ref=e307]: Report Templates
+              - listitem [ref=e308]:
+                - link "Report Management" [ref=e309] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/report-management
+                  - img [ref=e310]
+                  - generic [ref=e313]: Report Management
+          - listitem [ref=e314]:
+            - generic [ref=e315] [cursor=pointer]:
+              - generic [ref=e316]: Settings
+              - button "Settings" [expanded] [ref=e317]:
+                - generic [ref=e318]: Settings
+                - img [ref=e319]
+            - list [ref=e321]:
+              - listitem [ref=e322]:
+                - link "Grades" [ref=e323] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/grades
+                  - img [ref=e324]
+                  - generic [ref=e326]: Grades
+              - listitem [ref=e327]:
+                - link "Access Groups" [ref=e328] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/access-groups
+                  - img [ref=e329]
+                  - generic [ref=e331]: Access Groups
+              - listitem [ref=e332]:
+                - link "Mentee Statuses" [ref=e333] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-statuses
+                  - img [ref=e334]
+                  - generic [ref=e336]: Mentee Statuses
+              - listitem [ref=e337]:
+                - link "Partners 1" [ref=e338] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/partners
+                  - img [ref=e339]
+                  - generic [ref=e341]: Partners
+                  - generic [ref=e345]: "1"
+          - listitem [ref=e346]:
+            - generic [ref=e347] [cursor=pointer]:
+              - generic [ref=e348]: Filament Shield
+              - button "Filament Shield" [expanded] [ref=e349]:
+                - generic [ref=e350]: Filament Shield
+                - img [ref=e351]
+            - list [ref=e353]:
+              - listitem [ref=e354]:
+                - link "Roles 24" [ref=e355] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/shield/roles
+                  - img [ref=e356]
+                  - generic [ref=e358]: Roles
+                  - generic [ref=e362]: "24"
+          - listitem [ref=e363]:
+            - generic [ref=e364] [cursor=pointer]:
+              - generic [ref=e365]: Assessment Management
+              - button "Assessment Management" [expanded] [ref=e366]:
+                - generic [ref=e367]: Assessment Management
+                - img [ref=e368]
+            - list [ref=e370]:
+              - listitem [ref=e371]:
+                - link "Sections & Questions 8" [ref=e372] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-sections
+                  - img [ref=e373]
+                  - generic [ref=e375]: Sections & Questions
+                  - generic [ref=e379]: "8"
+              - listitem [ref=e380]:
+                - link "All Questions" [ref=e381] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-questions
+                  - img [ref=e382]
+                  - generic [ref=e384]: All Questions
+              - listitem [ref=e385]:
+                - link "Departments 7" [ref=e386] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-departments
+                  - img [ref=e387]
+                  - generic [ref=e389]: Departments
+                  - generic [ref=e393]: "7"
+              - listitem [ref=e394]:
+                - link "Commodities" [ref=e395] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/commodities
+                  - img [ref=e396]
+                  - generic [ref=e398]: Commodities
+              - listitem [ref=e399]:
+                - link "Commodity Categories 9" [ref=e400] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/commodity-categories
+                  - img [ref=e401]
+                  - generic [ref=e404]: Commodity Categories
+                  - generic [ref=e408]: "9"
+          - listitem [ref=e409]:
+            - generic [ref=e410] [cursor=pointer]:
+              - generic [ref=e411]: Organizational Structure
+              - button "Organizational Structure" [expanded] [ref=e412]:
+                - generic [ref=e413]: Organizational Structure
+                - img [ref=e414]
+            - list [ref=e416]:
+              - listitem [ref=e417]:
+                - link "Departments 348" [ref=e418] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/departments
+                  - img [ref=e419]
+                  - generic [ref=e421]: Departments
+                  - generic [ref=e425]: "348"
+              - listitem [ref=e426]:
+                - link "Cadres 21" [ref=e427] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/cadres
+                  - img [ref=e428]
+                  - generic [ref=e430]: Cadres
+                  - generic [ref=e434]: "21"
+          - listitem [ref=e435]:
+            - generic [ref=e436] [cursor=pointer]:
+              - generic [ref=e437]: Geographic Structure
+              - button "Geographic Structure" [expanded] [ref=e438]:
+                - generic [ref=e439]: Geographic Structure
+                - img [ref=e440]
+            - list [ref=e442]:
+              - listitem [ref=e443]:
+                - link "Divisions 1" [ref=e444] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/divisions
+                  - img [ref=e445]
+                  - generic [ref=e447]: Divisions
+                  - generic [ref=e451]: "1"
+              - listitem [ref=e452]:
+                - link "Counties 47" [ref=e453] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/counties
+                  - img [ref=e454]
+                  - generic [ref=e456]: Counties
+                  - generic [ref=e460]: "47"
+              - listitem [ref=e461]:
+                - link "Subcounties 305" [ref=e462] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/subcounties
+                  - img [ref=e463]
+                  - generic [ref=e465]: Subcounties
+                  - generic [ref=e469]: "305"
+              - listitem [ref=e470]:
+                - link "Facility Types 16" [ref=e471] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-types
+                  - img [ref=e472]
+                  - generic [ref=e474]: Facility Types
+                  - generic [ref=e478]: "16"
+          - listitem [ref=e479]:
+            - generic [ref=e480] [cursor=pointer]:
+              - generic [ref=e481]: System Administration
+              - button "System Administration" [expanded] [ref=e482]:
+                - generic [ref=e483]: System Administration
+                - img [ref=e484]
+            - list [ref=e486]:
+              - listitem [ref=e487]:
+                - link "Facilities 10,700" [ref=e488] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facilities
+                  - img [ref=e489]
+                  - generic [ref=e491]: Facilities
+                  - generic [ref=e495]: 10,700
+              - listitem [ref=e496]:
+                - link "Facility Levels 5" [ref=e497] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-levels
+                  - img [ref=e498]
+                  - generic [ref=e500]: Facility Levels
+                  - generic [ref=e504]: "5"
+              - listitem [ref=e505]:
+                - link "Facility Ownership 7" [ref=e506] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-ownerships
+                  - img [ref=e507]
+                  - generic [ref=e509]: Facility Ownership
+                  - generic [ref=e513]: "7"
+          - listitem [ref=e514]:
+            - generic [ref=e515] [cursor=pointer]:
+              - generic [ref=e516]: Quiz Management
+              - button "Quiz Management" [expanded] [ref=e517]:
+                - generic [ref=e518]: Quiz Management
+                - img [ref=e519]
+            - list [ref=e521]:
+              - listitem [ref=e522]:
+                - link "Program Module Quizzes 1" [ref=e523] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/program-module-quizzes
+                  - img [ref=e524]
+                  - generic [ref=e526]: Program Module Quizzes
+                  - generic [ref=e530]: "1"
+          - listitem [ref=e531]:
+            - generic [ref=e532] [cursor=pointer]:
+              - generic [ref=e533]: Content Management
+              - button "Content Management" [expanded] [ref=e534]:
+                - generic [ref=e535]: Content Management
+                - img [ref=e536]
+            - list [ref=e538]:
+              - listitem [ref=e539]:
+                - link "Resources" [ref=e540] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resources
+                  - img [ref=e541]
+                  - generic [ref=e543]: Resources
+              - listitem [ref=e544]:
+                - link "Resource Categories" [ref=e545] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-categories
+                  - img [ref=e546]
+                  - generic [ref=e548]: Resource Categories
+              - listitem [ref=e549]:
+                - link "Resource Types" [ref=e550] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-types
+                  - img [ref=e551]
+                  - generic [ref=e553]: Resource Types
+              - listitem [ref=e554]:
+                - link "Tags" [ref=e555] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/tags
+                  - img [ref=e556]
+                  - generic [ref=e559]: Tags
+              - listitem [ref=e560]:
+                - link "Resource Comments" [ref=e561] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-comments
+                  - img [ref=e562]
+                  - generic [ref=e564]: Resource Comments
+          - listitem [ref=e565]:
+            - generic [ref=e566] [cursor=pointer]:
+              - generic [ref=e567]: App Configuration
+              - button "App Configuration" [expanded] [ref=e568]:
+                - generic [ref=e569]: App Configuration
+                - img [ref=e570]
+            - list [ref=e572]:
+              - listitem [ref=e573]:
+                - link "Scopes" [ref=e574] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/scopes
+                  - img [ref=e575]
+                  - generic [ref=e577]: Scopes
+          - listitem [ref=e578]:
+            - generic [ref=e579] [cursor=pointer]:
+              - generic [ref=e580]: Inventory Management
+              - button "Inventory Management" [expanded] [ref=e581]:
+                - generic [ref=e582]: Inventory Management
+                - img [ref=e583]
+            - list [ref=e585]:
+              - listitem [ref=e586]:
+                - link "Suppliers" [ref=e587] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/suppliers
+                  - img [ref=e588]
+                  - generic [ref=e590]: Suppliers
+              - listitem [ref=e591]:
+                - link "Inventory Items" [ref=e592] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/inventory-items
+                  - img [ref=e593]
+                  - generic [ref=e595]: Inventory Items
+              - listitem [ref=e596]:
+                - link "Stock Levels" [ref=e597] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/stock-levels
+                  - img [ref=e598]
+                  - generic [ref=e600]: Stock Levels
+              - listitem [ref=e601]:
+                - link "Stock Requests" [ref=e602] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/stock-requests
+                  - img [ref=e603]
+                  - generic [ref=e605]: Stock Requests
+          - listitem [ref=e606]:
+            - generic [ref=e607] [cursor=pointer]:
+              - generic [ref=e608]: User Management
+              - button "User Management" [expanded] [ref=e609]:
+                - generic [ref=e610]: User Management
+                - img [ref=e611]
+            - list [ref=e613]:
+              - listitem [ref=e614]:
+                - link "All Users 7395" [ref=e615] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/users
+                  - img [ref=e616]
+                  - generic [ref=e618]: All Users
+                  - generic [ref=e622]: "7395"
+          - listitem [ref=e623]:
+            - generic [ref=e624] [cursor=pointer]:
+              - generic [ref=e625]: Indicator Reporting
+              - button "Indicator Reporting" [expanded] [ref=e626]:
+                - generic [ref=e627]: Indicator Reporting
+                - img [ref=e628]
+            - list [ref=e630]:
+              - listitem [ref=e631]:
+                - link "Submit Report" [ref=e632] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/reporting
+                  - img [ref=e633]
+                  - generic [ref=e635]: Submit Report
+              - listitem [ref=e636]:
+                - link "Validation Queue" [ref=e637] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/validation-queue
+                  - img [ref=e638]
+                  - generic [ref=e640]: Validation Queue
+              - listitem [ref=e641]:
+                - link "Progress Dashboard" [ref=e642] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/progress-dashboard
+                  - img [ref=e643]
+                  - generic [ref=e645]: Progress Dashboard
+  - generic:
+    - status

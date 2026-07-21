@@ -1,0 +1,1018 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - navigation [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - generic [ref=e10]: Global search
+            - generic [ref=e11]:
+              - img [ref=e13]
+              - searchbox "Global search" [ref=e16]
+          - button "User menu" [ref=e19] [cursor=pointer]:
+            - img "Avatar of Super Admin Admin" [ref=e20]
+      - main [ref=e21]:
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - navigation [ref=e26]:
+                - list [ref=e27]:
+                  - listitem [ref=e28]:
+                    - link "Mentorship" [ref=e29] [cursor=pointer]:
+                      - /url: http://127.0.0.1:8100/admin/mentorship
+                  - listitem [ref=e30]:
+                    - img [ref=e31]
+                    - generic [ref=e33]: List
+              - heading "Mentorships" [level=1] [ref=e34]
+              - paragraph [ref=e35]: Facility-based mentorships • 51 total • 50 active • 147 mentees
+            - link "New Mentorship" [ref=e38] [cursor=pointer]:
+              - /url: http://127.0.0.1:8100/admin/mentorship/create
+              - img [ref=e39]
+              - generic [ref=e41]: New Mentorship
+          - generic [ref=e51]:
+            - tablist [ref=e52]:
+              - tab "Live Mentorships 51" [ref=e53] [cursor=pointer]:
+                - img [ref=e54]
+                - generic [ref=e56]: Live Mentorships
+                - generic [ref=e59]: "51"
+              - tab "Pilot Runs 77" [ref=e60] [cursor=pointer]:
+                - img [ref=e61]
+                - generic [ref=e63]: Pilot Runs
+                - generic [ref=e66]: "77"
+              - tab "Trash 53" [ref=e67] [cursor=pointer]:
+                - img [ref=e68]
+                - generic [ref=e70]: Trash
+                - generic [ref=e73]: "53"
+              - tab "Home" [ref=e74] [cursor=pointer]:
+                - img [ref=e75]
+                - generic [ref=e77]: Home
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - generic [ref=e82]:
+                  - generic [ref=e83]:
+                    - generic [ref=e84]: Search
+                    - generic [ref=e85]:
+                      - img [ref=e87]
+                      - searchbox "Search" [ref=e90]
+                  - button "Filter 0" [ref=e93] [cursor=pointer]:
+                    - generic [ref=e94]: Filter
+                    - img [ref=e95]
+                    - generic [ref=e100]: "0"
+                  - button "Toggle columns" [ref=e103] [cursor=pointer]:
+                    - generic [ref=e104]: Toggle columns
+                    - img [ref=e105]
+                - table [ref=e108]:
+                  - rowgroup [ref=e109]:
+                    - row "Code Program Facility Lead Mentor Period Active Classes Mentees Status Actions" [ref=e110]:
+                      - columnheader [ref=e111]
+                      - columnheader "Code" [ref=e112]:
+                        - button "Code" [ref=e113] [cursor=pointer]:
+                          - generic [ref=e114]: Code
+                          - img [ref=e115]
+                      - columnheader "Program" [ref=e117]:
+                        - button "Program" [ref=e118] [cursor=pointer]:
+                          - generic [ref=e119]: Program
+                          - img [ref=e120]
+                      - columnheader "Facility" [ref=e122]:
+                        - generic [ref=e124]: Facility
+                      - columnheader "Lead Mentor" [ref=e125]:
+                        - generic [ref=e127]: Lead Mentor
+                      - columnheader "Period" [ref=e128]:
+                        - button "Period" [ref=e129] [cursor=pointer]:
+                          - generic [ref=e130]: Period
+                          - img [ref=e131]
+                      - columnheader "Active Classes" [ref=e133]:
+                        - generic [ref=e135]: Active Classes
+                      - columnheader "Mentees" [ref=e136]:
+                        - generic [ref=e138]: Mentees
+                      - columnheader "Status" [ref=e139]:
+                        - generic [ref=e141]: Status
+                      - columnheader "Actions" [ref=e142]
+                  - rowgroup [ref=e143]:
+                    - row "MT-YLXJ6I Maternal Health (EmONC) 15956 — Kopsiro Model Health Centre Bungoma Super Admin Admin Post Natal Ward Nurses 1 1 active" [ref=e144]:
+                      - cell [ref=e145]:
+                        - link [ref=e147] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/248
+                          - img [ref=e149]
+                      - cell "MT-YLXJ6I" [ref=e151]:
+                        - generic [ref=e158] [cursor=pointer]: MT-YLXJ6I
+                      - cell "Maternal Health (EmONC)" [ref=e159]:
+                        - link "Maternal Health (EmONC)" [ref=e161] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/248
+                          - generic [ref=e167]: Maternal Health (EmONC)
+                      - cell "15956 — Kopsiro Model Health Centre Bungoma" [ref=e168]:
+                        - link "15956 — Kopsiro Model Health Centre Bungoma" [ref=e170] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/248
+                          - generic [ref=e171]:
+                            - generic [ref=e176]: 15956 — Kopsiro Model Health Centre
+                            - paragraph [ref=e177]: Bungoma
+                      - cell "Super Admin Admin Post Natal Ward Nurses" [ref=e178]:
+                        - link "Super Admin Admin Post Natal Ward Nurses" [ref=e180] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/248
+                          - generic [ref=e181]:
+                            - generic [ref=e185]: Super Admin Admin
+                            - paragraph [ref=e186]: Post Natal Ward Nurses
+                      - cell [ref=e187]:
+                        - link [ref=e189] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/248
+                      - cell "1" [ref=e191]:
+                        - link "1" [ref=e193] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/248
+                          - generic [ref=e199]: "1"
+                      - cell "1" [ref=e200]:
+                        - link "1" [ref=e202] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/248
+                          - generic [ref=e208]: "1"
+                      - cell "active" [ref=e209]:
+                        - link "active" [ref=e211] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/248
+                          - generic [ref=e217]: active
+                      - cell [ref=e218]:
+                        - button [ref=e223] [cursor=pointer]:
+                          - img [ref=e224]
+                    - row "MT-TQDDGZ Maternal Health (EmONC) 14631 — Kabulwo Dispensary Elgeyo Marakwet Super Admin Admin Post Natal Ward Nurses 1 3 active" [ref=e226]:
+                      - cell [ref=e227]:
+                        - link [ref=e229] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/246
+                          - img [ref=e231]
+                      - cell "MT-TQDDGZ" [ref=e233]:
+                        - generic [ref=e240] [cursor=pointer]: MT-TQDDGZ
+                      - cell "Maternal Health (EmONC)" [ref=e241]:
+                        - link "Maternal Health (EmONC)" [ref=e243] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/246
+                          - generic [ref=e249]: Maternal Health (EmONC)
+                      - cell "14631 — Kabulwo Dispensary Elgeyo Marakwet" [ref=e250]:
+                        - link "14631 — Kabulwo Dispensary Elgeyo Marakwet" [ref=e252] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/246
+                          - generic [ref=e253]:
+                            - generic [ref=e258]: 14631 — Kabulwo Dispensary
+                            - paragraph [ref=e259]: Elgeyo Marakwet
+                      - cell "Super Admin Admin Post Natal Ward Nurses" [ref=e260]:
+                        - link "Super Admin Admin Post Natal Ward Nurses" [ref=e262] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/246
+                          - generic [ref=e263]:
+                            - generic [ref=e267]: Super Admin Admin
+                            - paragraph [ref=e268]: Post Natal Ward Nurses
+                      - cell [ref=e269]:
+                        - link [ref=e271] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/246
+                      - cell "1" [ref=e273]:
+                        - link "1" [ref=e275] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/246
+                          - generic [ref=e281]: "1"
+                      - cell "3" [ref=e282]:
+                        - link "3" [ref=e284] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/246
+                          - generic [ref=e290]: "3"
+                      - cell "active" [ref=e291]:
+                        - link "active" [ref=e293] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/246
+                          - generic [ref=e299]: active
+                      - cell [ref=e300]:
+                        - button [ref=e305] [cursor=pointer]:
+                          - img [ref=e306]
+                    - row "MT-FB7USH Newborn Care 21037 — Busagwa Dispensary Busia Super Admin Admin Post Natal Ward Nurses Jun 23, 2026 to Jun 27, 2026 1 3 active" [ref=e308]:
+                      - cell [ref=e309]:
+                        - link [ref=e311] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/245
+                          - img [ref=e313]
+                      - cell "MT-FB7USH" [ref=e315]:
+                        - generic [ref=e322] [cursor=pointer]: MT-FB7USH
+                      - cell "Newborn Care" [ref=e323]:
+                        - link "Newborn Care" [ref=e325] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/245
+                          - generic [ref=e331]: Newborn Care
+                      - cell "21037 — Busagwa Dispensary Busia" [ref=e332]:
+                        - link "21037 — Busagwa Dispensary Busia" [ref=e334] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/245
+                          - generic [ref=e335]:
+                            - generic [ref=e340]: 21037 — Busagwa Dispensary
+                            - paragraph [ref=e341]: Busia
+                      - cell "Super Admin Admin Post Natal Ward Nurses" [ref=e342]:
+                        - link "Super Admin Admin Post Natal Ward Nurses" [ref=e344] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/245
+                          - generic [ref=e345]:
+                            - generic [ref=e349]: Super Admin Admin
+                            - paragraph [ref=e350]: Post Natal Ward Nurses
+                      - cell "Jun 23, 2026 to Jun 27, 2026" [ref=e351]:
+                        - link "Jun 23, 2026 to Jun 27, 2026" [ref=e353] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/245
+                          - generic [ref=e354]:
+                            - generic [ref=e358]: Jun 23, 2026
+                            - paragraph [ref=e359]: to Jun 27, 2026
+                      - cell "1" [ref=e360]:
+                        - link "1" [ref=e362] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/245
+                          - generic [ref=e368]: "1"
+                      - cell "3" [ref=e369]:
+                        - link "3" [ref=e371] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/245
+                          - generic [ref=e377]: "3"
+                      - cell "active" [ref=e378]:
+                        - link "active" [ref=e380] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/245
+                          - generic [ref=e386]: active
+                      - cell [ref=e387]:
+                        - button [ref=e392] [cursor=pointer]:
+                          - img [ref=e393]
+                    - row "MT-WQPELT Infant and Child Care 14261 — Bomet Health Centre Bomet Super Admin Admin Post Natal Ward Nurses Jun 23, 2026 to Jun 27, 2026 1 1 active" [ref=e395]:
+                      - cell [ref=e396]:
+                        - link [ref=e398] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/244
+                          - img [ref=e400]
+                      - cell "MT-WQPELT" [ref=e402]:
+                        - generic [ref=e409] [cursor=pointer]: MT-WQPELT
+                      - cell "Infant and Child Care" [ref=e410]:
+                        - link "Infant and Child Care" [ref=e412] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/244
+                          - generic [ref=e418]: Infant and Child Care
+                      - cell "14261 — Bomet Health Centre Bomet" [ref=e419]:
+                        - link "14261 — Bomet Health Centre Bomet" [ref=e421] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/244
+                          - generic [ref=e422]:
+                            - generic [ref=e427]: 14261 — Bomet Health Centre
+                            - paragraph [ref=e428]: Bomet
+                      - cell "Super Admin Admin Post Natal Ward Nurses" [ref=e429]:
+                        - link "Super Admin Admin Post Natal Ward Nurses" [ref=e431] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/244
+                          - generic [ref=e432]:
+                            - generic [ref=e436]: Super Admin Admin
+                            - paragraph [ref=e437]: Post Natal Ward Nurses
+                      - cell "Jun 23, 2026 to Jun 27, 2026" [ref=e438]:
+                        - link "Jun 23, 2026 to Jun 27, 2026" [ref=e440] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/244
+                          - generic [ref=e441]:
+                            - generic [ref=e445]: Jun 23, 2026
+                            - paragraph [ref=e446]: to Jun 27, 2026
+                      - cell "1" [ref=e447]:
+                        - link "1" [ref=e449] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/244
+                          - generic [ref=e455]: "1"
+                      - cell "1" [ref=e456]:
+                        - link "1" [ref=e458] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/244
+                          - generic [ref=e464]: "1"
+                      - cell "active" [ref=e465]:
+                        - link "active" [ref=e467] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/244
+                          - generic [ref=e473]: active
+                      - cell [ref=e474]:
+                        - button [ref=e479] [cursor=pointer]:
+                          - img [ref=e480]
+                    - row "MT-U2XSXH Maternal Health (EmONC) 17352 — Barnet Memorial Clinic Baringo GRACE MWENDE MUNYAO National Officer 1 1 active" [ref=e482]:
+                      - cell [ref=e483]:
+                        - link [ref=e485] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/243
+                          - img [ref=e487]
+                      - cell "MT-U2XSXH" [ref=e489]:
+                        - generic [ref=e496] [cursor=pointer]: MT-U2XSXH
+                      - cell "Maternal Health (EmONC)" [ref=e497]:
+                        - link "Maternal Health (EmONC)" [ref=e499] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/243
+                          - generic [ref=e505]: Maternal Health (EmONC)
+                      - cell "17352 — Barnet Memorial Clinic Baringo" [ref=e506]:
+                        - link "17352 — Barnet Memorial Clinic Baringo" [ref=e508] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/243
+                          - generic [ref=e509]:
+                            - generic [ref=e514]: 17352 — Barnet Memorial Clinic
+                            - paragraph [ref=e515]: Baringo
+                      - cell "GRACE MWENDE MUNYAO National Officer" [ref=e516]:
+                        - link "GRACE MWENDE MUNYAO National Officer" [ref=e518] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/243
+                          - generic [ref=e519]:
+                            - generic [ref=e523]: GRACE MWENDE MUNYAO
+                            - paragraph [ref=e524]: National Officer
+                      - cell [ref=e525]:
+                        - link [ref=e527] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/243
+                      - cell "1" [ref=e529]:
+                        - link "1" [ref=e531] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/243
+                          - generic [ref=e537]: "1"
+                      - cell "1" [ref=e538]:
+                        - link "1" [ref=e540] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/243
+                          - generic [ref=e546]: "1"
+                      - cell "active" [ref=e547]:
+                        - link "active" [ref=e549] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/243
+                          - generic [ref=e555]: active
+                      - cell [ref=e556]:
+                        - button [ref=e561] [cursor=pointer]:
+                          - img [ref=e562]
+                    - row "MT-ZQA7MF Maternal Health (EmONC) 17582 — AIC Ebenezer Baringo Super Admin Admin Post Natal Ward Nurses 1 3 active" [ref=e564]:
+                      - cell [ref=e565]:
+                        - link [ref=e567] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/242
+                          - img [ref=e569]
+                      - cell "MT-ZQA7MF" [ref=e571]:
+                        - generic [ref=e578] [cursor=pointer]: MT-ZQA7MF
+                      - cell "Maternal Health (EmONC)" [ref=e579]:
+                        - link "Maternal Health (EmONC)" [ref=e581] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/242
+                          - generic [ref=e587]: Maternal Health (EmONC)
+                      - cell "17582 — AIC Ebenezer Baringo" [ref=e588]:
+                        - link "17582 — AIC Ebenezer Baringo" [ref=e590] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/242
+                          - generic [ref=e591]:
+                            - generic [ref=e596]: 17582 — AIC Ebenezer
+                            - paragraph [ref=e597]: Baringo
+                      - cell "Super Admin Admin Post Natal Ward Nurses" [ref=e598]:
+                        - link "Super Admin Admin Post Natal Ward Nurses" [ref=e600] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/242
+                          - generic [ref=e601]:
+                            - generic [ref=e605]: Super Admin Admin
+                            - paragraph [ref=e606]: Post Natal Ward Nurses
+                      - cell [ref=e607]:
+                        - link [ref=e609] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/242
+                      - cell "1" [ref=e611]:
+                        - link "1" [ref=e613] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/242
+                          - generic [ref=e619]: "1"
+                      - cell "3" [ref=e620]:
+                        - link "3" [ref=e622] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/242
+                          - generic [ref=e628]: "3"
+                      - cell "active" [ref=e629]:
+                        - link "active" [ref=e631] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/242
+                          - generic [ref=e637]: active
+                      - cell [ref=e638]:
+                        - button [ref=e643] [cursor=pointer]:
+                          - img [ref=e644]
+                    - row "MT-YTHL4F Newborn Care 10777 — Murang'a District Hospital Murang'a Judy Wanjiru Mwaura Paediatric Nurses Jun 22, 2026 to Jun 26, 2026 1 1 active" [ref=e646]:
+                      - cell [ref=e647]:
+                        - link [ref=e649] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/241
+                          - img [ref=e651]
+                      - cell "MT-YTHL4F" [ref=e653]:
+                        - generic [ref=e660] [cursor=pointer]: MT-YTHL4F
+                      - cell "Newborn Care" [ref=e661]:
+                        - link "Newborn Care" [ref=e663] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/241
+                          - generic [ref=e669]: Newborn Care
+                      - cell "10777 — Murang'a District Hospital Murang'a" [ref=e670]:
+                        - link "10777 — Murang'a District Hospital Murang'a" [ref=e672] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/241
+                          - generic [ref=e673]:
+                            - generic [ref=e678]: 10777 — Murang'a District Hospital
+                            - paragraph [ref=e679]: Murang'a
+                      - cell "Judy Wanjiru Mwaura Paediatric Nurses" [ref=e680]:
+                        - link "Judy Wanjiru Mwaura Paediatric Nurses" [ref=e682] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/241
+                          - generic [ref=e683]:
+                            - generic [ref=e687]: Judy Wanjiru Mwaura
+                            - paragraph [ref=e688]: Paediatric Nurses
+                      - cell "Jun 22, 2026 to Jun 26, 2026" [ref=e689]:
+                        - link "Jun 22, 2026 to Jun 26, 2026" [ref=e691] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/241
+                          - generic [ref=e692]:
+                            - generic [ref=e696]: Jun 22, 2026
+                            - paragraph [ref=e697]: to Jun 26, 2026
+                      - cell "1" [ref=e698]:
+                        - link "1" [ref=e700] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/241
+                          - generic [ref=e706]: "1"
+                      - cell "1" [ref=e707]:
+                        - link "1" [ref=e709] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/241
+                          - generic [ref=e715]: "1"
+                      - cell "active" [ref=e716]:
+                        - link "active" [ref=e718] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/241
+                          - generic [ref=e724]: active
+                      - cell [ref=e725]:
+                        - button [ref=e730] [cursor=pointer]:
+                          - img [ref=e731]
+                    - row "MT-DR91C8 Newborn Care 10777 — Murang'a District Hospital Murang'a Stella Kangethe Paediatrician Jun 22, 2026 to Jun 26, 2026 1 1 active" [ref=e733]:
+                      - cell [ref=e734]:
+                        - link [ref=e736] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/240
+                          - img [ref=e738]
+                      - cell "MT-DR91C8" [ref=e740]:
+                        - generic [ref=e747] [cursor=pointer]: MT-DR91C8
+                      - cell "Newborn Care" [ref=e748]:
+                        - link "Newborn Care" [ref=e750] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/240
+                          - generic [ref=e756]: Newborn Care
+                      - cell "10777 — Murang'a District Hospital Murang'a" [ref=e757]:
+                        - link "10777 — Murang'a District Hospital Murang'a" [ref=e759] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/240
+                          - generic [ref=e760]:
+                            - generic [ref=e765]: 10777 — Murang'a District Hospital
+                            - paragraph [ref=e766]: Murang'a
+                      - cell "Stella Kangethe Paediatrician" [ref=e767]:
+                        - link "Stella Kangethe Paediatrician" [ref=e769] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/240
+                          - generic [ref=e770]:
+                            - generic [ref=e774]: Stella Kangethe
+                            - paragraph [ref=e775]: Paediatrician
+                      - cell "Jun 22, 2026 to Jun 26, 2026" [ref=e776]:
+                        - link "Jun 22, 2026 to Jun 26, 2026" [ref=e778] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/240
+                          - generic [ref=e779]:
+                            - generic [ref=e783]: Jun 22, 2026
+                            - paragraph [ref=e784]: to Jun 26, 2026
+                      - cell "1" [ref=e785]:
+                        - link "1" [ref=e787] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/240
+                          - generic [ref=e793]: "1"
+                      - cell "1" [ref=e794]:
+                        - link "1" [ref=e796] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/240
+                          - generic [ref=e802]: "1"
+                      - cell "active" [ref=e803]:
+                        - link "active" [ref=e805] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/240
+                          - generic [ref=e811]: active
+                      - cell [ref=e812]:
+                        - button [ref=e817] [cursor=pointer]:
+                          - img [ref=e818]
+                    - row "MT-WTXHWQ Newborn Care 10777 — Murang'a District Hospital Murang'a Grace Wanjiru Wachira Clinical Officer Paediatric Jun 22, 2026 to Jun 26, 2026 1 1 active" [ref=e820]:
+                      - cell [ref=e821]:
+                        - link [ref=e823] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/239
+                          - img [ref=e825]
+                      - cell "MT-WTXHWQ" [ref=e827]:
+                        - generic [ref=e834] [cursor=pointer]: MT-WTXHWQ
+                      - cell "Newborn Care" [ref=e835]:
+                        - link "Newborn Care" [ref=e837] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/239
+                          - generic [ref=e843]: Newborn Care
+                      - cell "10777 — Murang'a District Hospital Murang'a" [ref=e844]:
+                        - link "10777 — Murang'a District Hospital Murang'a" [ref=e846] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/239
+                          - generic [ref=e847]:
+                            - generic [ref=e852]: 10777 — Murang'a District Hospital
+                            - paragraph [ref=e853]: Murang'a
+                      - cell "Grace Wanjiru Wachira Clinical Officer Paediatric" [ref=e854]:
+                        - link "Grace Wanjiru Wachira Clinical Officer Paediatric" [ref=e856] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/239
+                          - generic [ref=e857]:
+                            - generic [ref=e861]: Grace Wanjiru Wachira
+                            - paragraph [ref=e862]: Clinical Officer Paediatric
+                      - cell "Jun 22, 2026 to Jun 26, 2026" [ref=e863]:
+                        - link "Jun 22, 2026 to Jun 26, 2026" [ref=e865] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/239
+                          - generic [ref=e866]:
+                            - generic [ref=e870]: Jun 22, 2026
+                            - paragraph [ref=e871]: to Jun 26, 2026
+                      - cell "1" [ref=e872]:
+                        - link "1" [ref=e874] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/239
+                          - generic [ref=e880]: "1"
+                      - cell "1" [ref=e881]:
+                        - link "1" [ref=e883] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/239
+                          - generic [ref=e889]: "1"
+                      - cell "active" [ref=e890]:
+                        - link "active" [ref=e892] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/239
+                          - generic [ref=e898]: active
+                      - cell [ref=e899]:
+                        - button [ref=e904] [cursor=pointer]:
+                          - img [ref=e905]
+                    - row "MT-CMRTJ9 Newborn Care 10777 — Murang'a District Hospital Murang'a Stella Kangethe Paediatrician Jun 22, 2026 to Jun 26, 2026 0 0 active" [ref=e907]:
+                      - cell [ref=e908]:
+                        - link [ref=e910] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/238
+                          - img [ref=e912]
+                      - cell "MT-CMRTJ9" [ref=e914]:
+                        - generic [ref=e921] [cursor=pointer]: MT-CMRTJ9
+                      - cell "Newborn Care" [ref=e922]:
+                        - link "Newborn Care" [ref=e924] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/238
+                          - generic [ref=e930]: Newborn Care
+                      - cell "10777 — Murang'a District Hospital Murang'a" [ref=e931]:
+                        - link "10777 — Murang'a District Hospital Murang'a" [ref=e933] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/238
+                          - generic [ref=e934]:
+                            - generic [ref=e939]: 10777 — Murang'a District Hospital
+                            - paragraph [ref=e940]: Murang'a
+                      - cell "Stella Kangethe Paediatrician" [ref=e941]:
+                        - link "Stella Kangethe Paediatrician" [ref=e943] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/238
+                          - generic [ref=e944]:
+                            - generic [ref=e948]: Stella Kangethe
+                            - paragraph [ref=e949]: Paediatrician
+                      - cell "Jun 22, 2026 to Jun 26, 2026" [ref=e950]:
+                        - link "Jun 22, 2026 to Jun 26, 2026" [ref=e952] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/238
+                          - generic [ref=e953]:
+                            - generic [ref=e957]: Jun 22, 2026
+                            - paragraph [ref=e958]: to Jun 26, 2026
+                      - cell "0" [ref=e959]:
+                        - link "0" [ref=e961] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/238
+                          - generic [ref=e967]: "0"
+                      - cell "0" [ref=e968]:
+                        - link "0" [ref=e970] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/238
+                          - generic [ref=e976]: "0"
+                      - cell "active" [ref=e977]:
+                        - link "active" [ref=e979] [cursor=pointer]:
+                          - /url: http://127.0.0.1:8100/admin/mentorship/238
+                          - generic [ref=e985]: active
+                      - cell [ref=e986]:
+                        - button [ref=e991] [cursor=pointer]:
+                          - img [ref=e992]
+                - navigation "Pagination navigation" [ref=e994]:
+                  - generic [ref=e995]: Showing 1 to 10 of 51 results
+                  - generic [ref=e998]:
+                    - generic [ref=e1000]: Per page
+                    - combobox "Per page" [ref=e1002]:
+                      - option "5"
+                      - option "10" [selected]
+                      - option "25"
+                      - option "50"
+                      - option "All"
+                  - list [ref=e1003]:
+                    - listitem [ref=e1004]:
+                      - button "Go to page 1" [ref=e1005] [cursor=pointer]:
+                        - generic [ref=e1006]: "1"
+                    - listitem [ref=e1007]:
+                      - button "Go to page 2" [ref=e1008] [cursor=pointer]:
+                        - generic [ref=e1009]: "2"
+                    - listitem [ref=e1010]:
+                      - button "Go to page 3" [ref=e1011] [cursor=pointer]:
+                        - generic [ref=e1012]: "3"
+                    - listitem [ref=e1013]:
+                      - button "Go to page 4" [ref=e1014] [cursor=pointer]:
+                        - generic [ref=e1015]: "4"
+                    - listitem [ref=e1016]:
+                      - button "Go to page 5" [ref=e1017] [cursor=pointer]:
+                        - generic [ref=e1018]: "5"
+                    - listitem [ref=e1019]:
+                      - button "Go to page 6" [ref=e1020] [cursor=pointer]:
+                        - generic [ref=e1021]: "6"
+                    - listitem [ref=e1022]:
+                      - button "Next" [ref=e1023] [cursor=pointer]:
+                        - img [ref=e1024]
+              - generic:
+                - dialog
+              - generic:
+                - dialog
+              - generic:
+                - dialog
+              - generic:
+                - dialog
+              - generic:
+                - dialog
+    - complementary [ref=e1026]:
+      - link "MNCH Mentorship Platform" [ref=e1030] [cursor=pointer]:
+        - /url: /admin
+        - generic [ref=e1031]: MNCH Mentorship Platform
+      - navigation [ref=e1032]:
+        - list [ref=e1033]:
+          - listitem [ref=e1034]:
+            - generic [ref=e1035] [cursor=pointer]:
+              - generic [ref=e1036]: Dashboards
+              - button "Dashboards" [expanded] [ref=e1037]:
+                - generic [ref=e1038]: Dashboards
+                - img [ref=e1039]
+            - list [ref=e1041]:
+              - listitem [ref=e1042]:
+                - link "Mentor Dashboard 128" [ref=e1043] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentor-dashboard
+                  - img [ref=e1044]
+                  - generic [ref=e1046]: Mentor Dashboard
+                  - generic [ref=e1050]: "128"
+              - listitem [ref=e1051]:
+                - link "Head DRMH" [ref=e1052] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/head-drmh-dashboard
+                  - img [ref=e1053]
+                  - generic [ref=e1055]: Head DRMH
+              - listitem [ref=e1056]:
+                - link "Mentee Dashboard 139" [ref=e1057] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentee-dashboard
+                  - img [ref=e1058]
+                  - generic [ref=e1060]: Mentee Dashboard
+                  - generic [ref=e1064]: "139"
+          - listitem [ref=e1065]:
+            - generic [ref=e1066] [cursor=pointer]:
+              - generic [ref=e1067]: Mentorships
+              - button "Mentorships" [expanded] [ref=e1068]:
+                - generic [ref=e1069]: Mentorships
+                - img [ref=e1070]
+            - list [ref=e1072]:
+              - listitem [ref=e1073]:
+                - link "Practical Assessments" [ref=e1074] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/rubric-assessments
+                  - img [ref=e1075]
+                  - generic [ref=e1077]: Practical Assessments
+          - listitem [ref=e1078]:
+            - generic [ref=e1079] [cursor=pointer]:
+              - generic [ref=e1080]: Facility Assessment
+              - button "Facility Assessment" [expanded] [ref=e1081]:
+                - generic [ref=e1082]: Facility Assessment
+                - img [ref=e1083]
+            - list [ref=e1085]:
+              - listitem [ref=e1086]:
+                - link "Assessments 2" [ref=e1087] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessments
+                  - img [ref=e1088]
+                  - generic [ref=e1090]: Assessments
+                  - generic [ref=e1094]: "2"
+          - listitem [ref=e1095]:
+            - generic [ref=e1096] [cursor=pointer]:
+              - generic [ref=e1097]: Training Management
+              - button "Training Management" [expanded] [ref=e1098]:
+                - generic [ref=e1099]: Training Management
+                - img [ref=e1100]
+            - list [ref=e1102]:
+              - listitem [ref=e1103]:
+                - link "Training Areas 2" [ref=e1104] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/approved-training-areas
+                  - img [ref=e1105]
+                  - generic [ref=e1107]: Training Areas
+                  - generic [ref=e1111]: "2"
+              - listitem [ref=e1112]:
+                - link "MOH Trainings 4" [ref=e1113] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/moh-trainings
+                  - img [ref=e1114]
+                  - generic [ref=e1116]: MOH Trainings
+                  - generic [ref=e1120]: "4"
+              - listitem [ref=e1121]:
+                - link "Mentorship 51" [ref=e1122] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentorship
+                  - img [ref=e1123]
+                  - generic [ref=e1125]: Mentorship
+                  - generic [ref=e1129]: "51"
+              - listitem [ref=e1130]:
+                - link "Export Center 4" [ref=e1131] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/training-exports
+                  - img [ref=e1132]
+                  - generic [ref=e1134]: Export Center
+                  - generic [ref=e1138]: "4"
+              - listitem [ref=e1139]:
+                - link "Participant/Mentee Profiles" [ref=e1140] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/participant-profiles
+                  - img [ref=e1141]
+                  - generic [ref=e1143]: Participant/Mentee Profiles
+              - listitem [ref=e1144]:
+                - link "Mentor Profiles" [ref=e1145] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentee-profiles
+                  - img [ref=e1146]
+                  - generic [ref=e1148]: Mentor Profiles
+          - listitem [ref=e1149]:
+            - generic [ref=e1150] [cursor=pointer]:
+              - generic [ref=e1151]: Indicator Catalog
+              - button "Indicator Catalog" [expanded] [ref=e1152]:
+                - generic [ref=e1153]: Indicator Catalog
+                - img [ref=e1154]
+            - list [ref=e1156]:
+              - listitem [ref=e1157]:
+                - link "Report Types" [ref=e1158] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicator-report-types
+                  - img [ref=e1159]
+                  - generic [ref=e1161]: Report Types
+              - listitem [ref=e1162]:
+                - link "Indicator Groups" [ref=e1163] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicator-groups
+                  - img [ref=e1164]
+                  - generic [ref=e1166]: Indicator Groups
+              - listitem [ref=e1167]:
+                - link "Indicators" [ref=e1168] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators
+                  - img [ref=e1169]
+                  - generic [ref=e1171]: Indicators
+              - listitem [ref=e1172]:
+                - link "Indicators Reference" [ref=e1173] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/reference
+                  - img [ref=e1174]
+                  - generic [ref=e1176]: Indicators Reference
+          - listitem [ref=e1177]:
+            - generic [ref=e1178] [cursor=pointer]:
+              - generic [ref=e1179]: Curriculum
+              - button "Curriculum" [expanded] [ref=e1180]:
+                - generic [ref=e1181]: Curriculum
+                - img [ref=e1182]
+            - list [ref=e1184]:
+              - listitem [ref=e1185]:
+                - link "Programs 3" [ref=e1186] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/programs
+                  - img [ref=e1187]
+                  - generic [ref=e1189]: Programs
+                  - generic [ref=e1193]: "3"
+              - listitem [ref=e1194]:
+                - link "Modules 24" [ref=e1195] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/modules
+                  - img [ref=e1196]
+                  - generic [ref=e1198]: Modules
+                  - generic [ref=e1202]: "24"
+              - listitem [ref=e1203]:
+                - link "Program Modules 46" [ref=e1204] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/program-modules
+                  - img [ref=e1205]
+                  - generic [ref=e1207]: Program Modules
+                  - generic [ref=e1211]: "46"
+              - listitem [ref=e1212]:
+                - link "Activities 3" [ref=e1213] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/activities
+                  - img [ref=e1214]
+                  - generic [ref=e1216]: Activities
+                  - generic [ref=e1220]: "3"
+              - listitem [ref=e1221]:
+                - link "Methodologies" [ref=e1222] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/methodologies
+                  - img [ref=e1223]
+                  - generic [ref=e1225]: Methodologies
+              - listitem [ref=e1226]:
+                - link "Rubric Definitions" [ref=e1227] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/rubric-managements
+                  - img [ref=e1228]
+                  - generic [ref=e1230]: Rubric Definitions
+          - listitem [ref=e1231]:
+            - generic [ref=e1232] [cursor=pointer]:
+              - generic [ref=e1233]: Report Management
+              - button "Report Management" [expanded] [ref=e1234]:
+                - generic [ref=e1235]: Report Management
+                - img [ref=e1236]
+            - list [ref=e1238]:
+              - listitem [ref=e1239]:
+                - link "Performance Tracker" [ref=e1240] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/monthly-reports
+                  - img [ref=e1241]
+                  - generic [ref=e1243]: Performance Tracker
+              - listitem [ref=e1244]:
+                - link "Report Templates" [ref=e1245] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/report-templates
+                  - img [ref=e1246]
+                  - generic [ref=e1248]: Report Templates
+              - listitem [ref=e1249]:
+                - link "Report Management" [ref=e1250] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/report-management
+                  - img [ref=e1251]
+                  - generic [ref=e1254]: Report Management
+          - listitem [ref=e1255]:
+            - generic [ref=e1256] [cursor=pointer]:
+              - generic [ref=e1257]: Settings
+              - button "Settings" [expanded] [ref=e1258]:
+                - generic [ref=e1259]: Settings
+                - img [ref=e1260]
+            - list [ref=e1262]:
+              - listitem [ref=e1263]:
+                - link "Grades" [ref=e1264] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/grades
+                  - img [ref=e1265]
+                  - generic [ref=e1267]: Grades
+              - listitem [ref=e1268]:
+                - link "Access Groups" [ref=e1269] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/access-groups
+                  - img [ref=e1270]
+                  - generic [ref=e1272]: Access Groups
+              - listitem [ref=e1273]:
+                - link "Mentee Statuses" [ref=e1274] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/mentee-statuses
+                  - img [ref=e1275]
+                  - generic [ref=e1277]: Mentee Statuses
+              - listitem [ref=e1278]:
+                - link "Partners 1" [ref=e1279] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/partners
+                  - img [ref=e1280]
+                  - generic [ref=e1282]: Partners
+                  - generic [ref=e1286]: "1"
+          - listitem [ref=e1287]:
+            - generic [ref=e1288] [cursor=pointer]:
+              - generic [ref=e1289]: Filament Shield
+              - button "Filament Shield" [expanded] [ref=e1290]:
+                - generic [ref=e1291]: Filament Shield
+                - img [ref=e1292]
+            - list [ref=e1294]:
+              - listitem [ref=e1295]:
+                - link "Roles 24" [ref=e1296] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/shield/roles
+                  - img [ref=e1297]
+                  - generic [ref=e1299]: Roles
+                  - generic [ref=e1303]: "24"
+          - listitem [ref=e1304]:
+            - generic [ref=e1305] [cursor=pointer]:
+              - generic [ref=e1306]: Assessment Management
+              - button "Assessment Management" [expanded] [ref=e1307]:
+                - generic [ref=e1308]: Assessment Management
+                - img [ref=e1309]
+            - list [ref=e1311]:
+              - listitem [ref=e1312]:
+                - link "Sections & Questions 8" [ref=e1313] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessment-sections
+                  - img [ref=e1314]
+                  - generic [ref=e1316]: Sections & Questions
+                  - generic [ref=e1320]: "8"
+              - listitem [ref=e1321]:
+                - link "All Questions" [ref=e1322] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessment-questions
+                  - img [ref=e1323]
+                  - generic [ref=e1325]: All Questions
+              - listitem [ref=e1326]:
+                - link "Departments 7" [ref=e1327] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/assessment-departments
+                  - img [ref=e1328]
+                  - generic [ref=e1330]: Departments
+                  - generic [ref=e1334]: "7"
+              - listitem [ref=e1335]:
+                - link "Commodities" [ref=e1336] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/commodities
+                  - img [ref=e1337]
+                  - generic [ref=e1339]: Commodities
+              - listitem [ref=e1340]:
+                - link "Commodity Categories 9" [ref=e1341] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/commodity-categories
+                  - img [ref=e1342]
+                  - generic [ref=e1345]: Commodity Categories
+                  - generic [ref=e1349]: "9"
+          - listitem [ref=e1350]:
+            - generic [ref=e1351] [cursor=pointer]:
+              - generic [ref=e1352]: Organizational Structure
+              - button "Organizational Structure" [expanded] [ref=e1353]:
+                - generic [ref=e1354]: Organizational Structure
+                - img [ref=e1355]
+            - list [ref=e1357]:
+              - listitem [ref=e1358]:
+                - link "Departments 348" [ref=e1359] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/departments
+                  - img [ref=e1360]
+                  - generic [ref=e1362]: Departments
+                  - generic [ref=e1366]: "348"
+              - listitem [ref=e1367]:
+                - link "Cadres 21" [ref=e1368] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/cadres
+                  - img [ref=e1369]
+                  - generic [ref=e1371]: Cadres
+                  - generic [ref=e1375]: "21"
+          - listitem [ref=e1376]:
+            - generic [ref=e1377] [cursor=pointer]:
+              - generic [ref=e1378]: Geographic Structure
+              - button "Geographic Structure" [expanded] [ref=e1379]:
+                - generic [ref=e1380]: Geographic Structure
+                - img [ref=e1381]
+            - list [ref=e1383]:
+              - listitem [ref=e1384]:
+                - link "Divisions 1" [ref=e1385] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/divisions
+                  - img [ref=e1386]
+                  - generic [ref=e1388]: Divisions
+                  - generic [ref=e1392]: "1"
+              - listitem [ref=e1393]:
+                - link "Counties 47" [ref=e1394] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/counties
+                  - img [ref=e1395]
+                  - generic [ref=e1397]: Counties
+                  - generic [ref=e1401]: "47"
+              - listitem [ref=e1402]:
+                - link "Subcounties 305" [ref=e1403] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/subcounties
+                  - img [ref=e1404]
+                  - generic [ref=e1406]: Subcounties
+                  - generic [ref=e1410]: "305"
+              - listitem [ref=e1411]:
+                - link "Facility Types 16" [ref=e1412] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facility-types
+                  - img [ref=e1413]
+                  - generic [ref=e1415]: Facility Types
+                  - generic [ref=e1419]: "16"
+          - listitem [ref=e1420]:
+            - generic [ref=e1421] [cursor=pointer]:
+              - generic [ref=e1422]: System Administration
+              - button "System Administration" [expanded] [ref=e1423]:
+                - generic [ref=e1424]: System Administration
+                - img [ref=e1425]
+            - list [ref=e1427]:
+              - listitem [ref=e1428]:
+                - link "Facilities 10,700" [ref=e1429] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facilities
+                  - img [ref=e1430]
+                  - generic [ref=e1432]: Facilities
+                  - generic [ref=e1436]: 10,700
+              - listitem [ref=e1437]:
+                - link "Facility Levels 5" [ref=e1438] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facility-levels
+                  - img [ref=e1439]
+                  - generic [ref=e1441]: Facility Levels
+                  - generic [ref=e1445]: "5"
+              - listitem [ref=e1446]:
+                - link "Facility Ownership 7" [ref=e1447] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/facility-ownerships
+                  - img [ref=e1448]
+                  - generic [ref=e1450]: Facility Ownership
+                  - generic [ref=e1454]: "7"
+          - listitem [ref=e1455]:
+            - generic [ref=e1456] [cursor=pointer]:
+              - generic [ref=e1457]: Quiz Management
+              - button "Quiz Management" [expanded] [ref=e1458]:
+                - generic [ref=e1459]: Quiz Management
+                - img [ref=e1460]
+            - list [ref=e1462]:
+              - listitem [ref=e1463]:
+                - link "Program Module Quizzes 24" [ref=e1464] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/program-module-quizzes
+                  - img [ref=e1465]
+                  - generic [ref=e1467]: Program Module Quizzes
+                  - generic [ref=e1471]: "24"
+          - listitem [ref=e1472]:
+            - generic [ref=e1473] [cursor=pointer]:
+              - generic [ref=e1474]: Content Management
+              - button "Content Management" [expanded] [ref=e1475]:
+                - generic [ref=e1476]: Content Management
+                - img [ref=e1477]
+            - list [ref=e1479]:
+              - listitem [ref=e1480]:
+                - link "Resources" [ref=e1481] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resources
+                  - img [ref=e1482]
+                  - generic [ref=e1484]: Resources
+              - listitem [ref=e1485]:
+                - link "Resource Categories" [ref=e1486] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resource-categories
+                  - img [ref=e1487]
+                  - generic [ref=e1489]: Resource Categories
+              - listitem [ref=e1490]:
+                - link "Resource Types" [ref=e1491] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resource-types
+                  - img [ref=e1492]
+                  - generic [ref=e1494]: Resource Types
+              - listitem [ref=e1495]:
+                - link "Tags" [ref=e1496] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/tags
+                  - img [ref=e1497]
+                  - generic [ref=e1500]: Tags
+              - listitem [ref=e1501]:
+                - link "Resource Comments" [ref=e1502] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/resource-comments
+                  - img [ref=e1503]
+                  - generic [ref=e1505]: Resource Comments
+          - listitem [ref=e1506]:
+            - generic [ref=e1507] [cursor=pointer]:
+              - generic [ref=e1508]: App Configuration
+              - button "App Configuration" [expanded] [ref=e1509]:
+                - generic [ref=e1510]: App Configuration
+                - img [ref=e1511]
+            - list [ref=e1513]:
+              - listitem [ref=e1514]:
+                - link "Scopes" [ref=e1515] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/scopes
+                  - img [ref=e1516]
+                  - generic [ref=e1518]: Scopes
+          - listitem [ref=e1519]:
+            - generic [ref=e1520] [cursor=pointer]:
+              - generic [ref=e1521]: Inventory Management
+              - button "Inventory Management" [expanded] [ref=e1522]:
+                - generic [ref=e1523]: Inventory Management
+                - img [ref=e1524]
+            - list [ref=e1526]:
+              - listitem [ref=e1527]:
+                - link "Suppliers" [ref=e1528] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/suppliers
+                  - img [ref=e1529]
+                  - generic [ref=e1531]: Suppliers
+              - listitem [ref=e1532]:
+                - link "Inventory Items" [ref=e1533] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/inventory-items
+                  - img [ref=e1534]
+                  - generic [ref=e1536]: Inventory Items
+              - listitem [ref=e1537]:
+                - link "Stock Levels" [ref=e1538] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/stock-levels
+                  - img [ref=e1539]
+                  - generic [ref=e1541]: Stock Levels
+              - listitem [ref=e1542]:
+                - link "Stock Requests" [ref=e1543] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/stock-requests
+                  - img [ref=e1544]
+                  - generic [ref=e1546]: Stock Requests
+          - listitem [ref=e1547]:
+            - generic [ref=e1548] [cursor=pointer]:
+              - generic [ref=e1549]: User Management
+              - button "User Management" [expanded] [ref=e1550]:
+                - generic [ref=e1551]: User Management
+                - img [ref=e1552]
+            - list [ref=e1554]:
+              - listitem [ref=e1555]:
+                - link "All Users 7395" [ref=e1556] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/users
+                  - img [ref=e1557]
+                  - generic [ref=e1559]: All Users
+                  - generic [ref=e1563]: "7395"
+          - listitem [ref=e1564]:
+            - generic [ref=e1565] [cursor=pointer]:
+              - generic [ref=e1566]: Indicator Reporting
+              - button "Indicator Reporting" [expanded] [ref=e1567]:
+                - generic [ref=e1568]: Indicator Reporting
+                - img [ref=e1569]
+            - list [ref=e1571]:
+              - listitem [ref=e1572]:
+                - link "Submit Report" [ref=e1573] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/reporting
+                  - img [ref=e1574]
+                  - generic [ref=e1576]: Submit Report
+              - listitem [ref=e1577]:
+                - link "Validation Queue" [ref=e1578] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/validation-queue
+                  - img [ref=e1579]
+                  - generic [ref=e1581]: Validation Queue
+              - listitem [ref=e1582]:
+                - link "Progress Dashboard" [ref=e1583] [cursor=pointer]:
+                  - /url: http://127.0.0.1:8100/admin/indicators/progress-dashboard
+                  - img [ref=e1584]
+                  - generic [ref=e1586]: Progress Dashboard
+  - generic:
+    - status

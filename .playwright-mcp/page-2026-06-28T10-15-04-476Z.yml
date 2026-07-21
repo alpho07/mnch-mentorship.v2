@@ -1,0 +1,1073 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - navigation [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - generic [ref=e10]: Global search
+            - generic [ref=e11]:
+              - img [ref=e13]
+              - searchbox "Global search" [ref=e16]
+          - button "User menu" [ref=e19] [cursor=pointer]:
+            - img "Avatar of Super Admin Admin" [ref=e20]
+      - main [ref=e21]:
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - navigation [ref=e26]:
+                - list [ref=e27]:
+                  - listitem [ref=e28]:
+                    - link "Mentorship" [ref=e29] [cursor=pointer]:
+                      - /url: http://localhost:8001/admin/mentorship
+                  - listitem [ref=e30]:
+                    - img [ref=e31]
+                    - generic [ref=e33]: Class > Modules — EmONC Cohort 1 — June 2026
+              - heading "Class > Modules — EmONC Cohort 1 — June 2026" [level=1] [ref=e34]
+              - paragraph [ref=e35]: 12 class module(s) assigned · 0 track/module(s) available to add
+            - generic [ref=e37]:
+              - link "Back to Classes" [ref=e38] [cursor=pointer]:
+                - /url: http://localhost:8001/admin/mentorship/247/classes
+                - img [ref=e39]
+                - generic [ref=e41]: Back to Classes
+              - button "Add Modules" [ref=e42] [cursor=pointer]:
+                - img [ref=e43]
+                - generic [ref=e45]: Add Modules
+              - link "Add Mentees" [ref=e46] [cursor=pointer]:
+                - /url: http://localhost:8001/admin/mentorship/247/classes/238/mentees
+                - img [ref=e47]
+                - generic [ref=e49]: Add Mentees
+              - link "Class Report" [ref=e50] [cursor=pointer]:
+                - /url: http://localhost:8001/admin/reports/class/238/html
+                - img [ref=e51]
+                - generic [ref=e53]: Class Report
+          - generic [ref=e55]:
+            - generic [ref=e60]:
+              - generic [ref=e61]:
+                - img [ref=e62]
+                - generic [ref=e64]:
+                  - heading "Prepare this mentorship before starting classes" [level=3] [ref=e65]
+                  - paragraph [ref=e66]: Identify facility gaps first, review the mentorship manuals, then create the class, assign modules, and confirm the mentee roster. Each mentee should have a name, email, phone, cadre, and department before invitations or attendance links are sent.
+              - generic [ref=e67]:
+                - link "Infant and Child Mentorship Manual Plan what to mentor and how to deliver it." [ref=e68] [cursor=pointer]:
+                  - /url: http://localhost:8001/resources/infant-child-mentorship-manual
+                  - generic [ref=e69]: Infant and Child Mentorship Manual
+                  - generic [ref=e70]: Plan what to mentor and how to deliver it.
+                - link "Newborn Mentorship Mentor's Manual Review newborn care mentorship content." [ref=e71] [cursor=pointer]:
+                  - /url: https://mnchkenyamentorship.org/resources/newborn-mentorship-mentors-manual
+                  - generic [ref=e72]: Newborn Mentorship Mentor's Manual
+                  - generic [ref=e73]: Review newborn care mentorship content.
+                - link "All Mentorship Manuals Search the resource library for manuals." [ref=e74] [cursor=pointer]:
+                  - /url: http://localhost:8001/resources/search?q=mentorship%20manual
+                  - generic [ref=e75]: All Mentorship Manuals
+                  - generic [ref=e76]: Search the resource library for manuals.
+                - link "MNCH Guidelines Review protocols before session delivery." [ref=e77] [cursor=pointer]:
+                  - /url: http://localhost:8001/resources/search?q=MNCH%20guidelines
+                  - generic [ref=e78]: MNCH Guidelines
+                  - generic [ref=e79]: Review protocols before session delivery.
+            - generic [ref=e80]:
+              - generic [ref=e81]:
+                - generic [ref=e83]:
+                  - button "Reorder records" [ref=e86] [cursor=pointer]:
+                    - generic [ref=e87]: Reorder records
+                    - img [ref=e88]
+                  - generic [ref=e91]:
+                    - generic [ref=e92]: Search
+                    - generic [ref=e93]:
+                      - img [ref=e95]
+                      - searchbox "Search" [ref=e98]
+                - table [ref=e809]:
+                  - rowgroup [ref=e810]:
+                    - row "# Status Module / Track Activities Start End Attendance Started Completed Actions" [ref=e811]:
+                      - columnheader "#" [ref=e812]:
+                        - button "#" [ref=e813] [cursor=pointer]:
+                          - generic [ref=e814]: "#"
+                          - img [ref=e815]
+                      - columnheader "Status" [ref=e817]:
+                        - generic [ref=e819]: Status
+                      - columnheader "Module / Track" [ref=e820]:
+                        - generic [ref=e822]: Module / Track
+                      - columnheader "Activities" [ref=e823]:
+                        - generic [ref=e825]: Activities
+                      - columnheader "Start" [ref=e826]:
+                        - generic [ref=e828]: Start
+                      - columnheader "End" [ref=e829]:
+                        - generic [ref=e831]: End
+                      - columnheader "Attendance" [ref=e832]:
+                        - generic [ref=e834]: Attendance
+                      - columnheader "Started" [ref=e835]:
+                        - generic [ref=e837]: Started
+                      - columnheader "Completed" [ref=e838]:
+                        - generic [ref=e840]: Completed
+                      - columnheader "Actions" [ref=e841]
+                  - rowgroup [ref=e842]:
+                    - 'row "1 Not Started Module 4: Active Management of the Third Stage of Labor (AMSTL) 3 — — — — — Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e843]':
+                      - cell "1" [ref=e844]:
+                        - generic [ref=e851]: "1"
+                      - cell "Not Started" [ref=e852]:
+                        - generic [ref=e858]:
+                          - img [ref=e859]
+                          - generic [ref=e862]: Not Started
+                      - 'cell "Module 4: Active Management of the Third Stage of Labor (AMSTL)" [ref=e863]':
+                        - generic [ref=e870]: "Module 4: Active Management of the Third Stage of Labor (AMSTL)"
+                      - cell "3" [ref=e871]:
+                        - generic [ref=e878]: "3"
+                      - cell "—" [ref=e879]:
+                        - generic [ref=e883]: —
+                      - cell "—" [ref=e884]:
+                        - generic [ref=e888]: —
+                      - cell "—" [ref=e889]:
+                        - generic [ref=e896]: —
+                      - cell "—" [ref=e897]:
+                        - generic [ref=e901]: —
+                      - cell "—" [ref=e902]:
+                        - generic [ref=e906]: —
+                      - cell "Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e907]:
+                        - generic [ref=e909]:
+                          - button "Start" [ref=e910] [cursor=pointer]:
+                            - img [ref=e911]
+                            - generic [ref=e913]: Start
+                          - link "Mentees" [ref=e914] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/284/mentees
+                            - generic [ref=e915]: Mentees
+                            - img [ref=e916]
+                          - button "Activities" [ref=e918] [cursor=pointer]:
+                            - generic [ref=e919]: Activities
+                            - img [ref=e920]
+                          - button "Complete Activities" [ref=e922] [cursor=pointer]:
+                            - generic [ref=e923]: Complete Activities
+                            - img [ref=e924]
+                          - link "Resources" [ref=e926] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/284/resources
+                            - generic [ref=e927]: Resources
+                            - img [ref=e928]
+                          - button "Edit" [ref=e930] [cursor=pointer]:
+                            - generic [ref=e931]: Edit
+                            - img [ref=e932]
+                          - button "Remove" [ref=e934] [cursor=pointer]:
+                            - generic [ref=e935]: Remove
+                            - img [ref=e936]
+                    - 'row "2 Not Started Module 5: Management of Postpartum Hemorrhage (PPH) Track 1: Bimanual compression of the uterus 3 — — — — — Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e938]':
+                      - cell "2" [ref=e939]:
+                        - generic [ref=e946]: "2"
+                      - cell "Not Started" [ref=e947]:
+                        - generic [ref=e953]:
+                          - img [ref=e954]
+                          - generic [ref=e957]: Not Started
+                      - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH) Track 1: Bimanual compression of the uterus" [ref=e958]':
+                        - generic [ref=e965]:
+                          - text: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                          - text: "Track 1: Bimanual compression of the uterus"
+                      - cell "3" [ref=e966]:
+                        - generic [ref=e973]: "3"
+                      - cell "—" [ref=e974]:
+                        - generic [ref=e978]: —
+                      - cell "—" [ref=e979]:
+                        - generic [ref=e983]: —
+                      - cell "—" [ref=e984]:
+                        - generic [ref=e991]: —
+                      - cell "—" [ref=e992]:
+                        - generic [ref=e996]: —
+                      - cell "—" [ref=e997]:
+                        - generic [ref=e1001]: —
+                      - cell "Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1002]:
+                        - generic [ref=e1004]:
+                          - button "Start" [ref=e1005] [cursor=pointer]:
+                            - img [ref=e1006]
+                            - generic [ref=e1008]: Start
+                          - link "Mentees" [ref=e1009] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/285/mentees
+                            - generic [ref=e1010]: Mentees
+                            - img [ref=e1011]
+                          - button "Activities" [ref=e1013] [cursor=pointer]:
+                            - generic [ref=e1014]: Activities
+                            - img [ref=e1015]
+                          - button "Complete Activities" [ref=e1017] [cursor=pointer]:
+                            - generic [ref=e1018]: Complete Activities
+                            - img [ref=e1019]
+                          - link "Resources" [ref=e1021] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/285/resources
+                            - generic [ref=e1022]: Resources
+                            - img [ref=e1023]
+                          - button "Edit" [ref=e1025] [cursor=pointer]:
+                            - generic [ref=e1026]: Edit
+                            - img [ref=e1027]
+                          - button "Remove" [ref=e1029] [cursor=pointer]:
+                            - generic [ref=e1030]: Remove
+                            - img [ref=e1031]
+                    - 'row "3 Not Started Module 5: Management of Postpartum Hemorrhage (PPH) Track 2: Compression of abdominal aorta 3 — — — — — Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1033]':
+                      - cell "3" [ref=e1034]:
+                        - generic [ref=e1041]: "3"
+                      - cell "Not Started" [ref=e1042]:
+                        - generic [ref=e1048]:
+                          - img [ref=e1049]
+                          - generic [ref=e1052]: Not Started
+                      - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH) Track 2: Compression of abdominal aorta" [ref=e1053]':
+                        - generic [ref=e1060]:
+                          - text: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                          - text: "Track 2: Compression of abdominal aorta"
+                      - cell "3" [ref=e1061]:
+                        - generic [ref=e1068]: "3"
+                      - cell "—" [ref=e1069]:
+                        - generic [ref=e1073]: —
+                      - cell "—" [ref=e1074]:
+                        - generic [ref=e1078]: —
+                      - cell "—" [ref=e1079]:
+                        - generic [ref=e1086]: —
+                      - cell "—" [ref=e1087]:
+                        - generic [ref=e1091]: —
+                      - cell "—" [ref=e1092]:
+                        - generic [ref=e1096]: —
+                      - cell "Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1097]:
+                        - generic [ref=e1099]:
+                          - button "Start" [ref=e1100] [cursor=pointer]:
+                            - img [ref=e1101]
+                            - generic [ref=e1103]: Start
+                          - link "Mentees" [ref=e1104] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/286/mentees
+                            - generic [ref=e1105]: Mentees
+                            - img [ref=e1106]
+                          - button "Activities" [ref=e1108] [cursor=pointer]:
+                            - generic [ref=e1109]: Activities
+                            - img [ref=e1110]
+                          - button "Complete Activities" [ref=e1112] [cursor=pointer]:
+                            - generic [ref=e1113]: Complete Activities
+                            - img [ref=e1114]
+                          - link "Resources" [ref=e1116] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/286/resources
+                            - generic [ref=e1117]: Resources
+                            - img [ref=e1118]
+                          - button "Edit" [ref=e1120] [cursor=pointer]:
+                            - generic [ref=e1121]: Edit
+                            - img [ref=e1122]
+                          - button "Remove" [ref=e1124] [cursor=pointer]:
+                            - generic [ref=e1125]: Remove
+                            - img [ref=e1126]
+                    - 'row "4 Not Started Module 5: Management of Postpartum Hemorrhage (PPH) Track 3: Removal of retained placenta 3 — — — — — Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1128]':
+                      - cell "4" [ref=e1129]:
+                        - generic [ref=e1136]: "4"
+                      - cell "Not Started" [ref=e1137]:
+                        - generic [ref=e1143]:
+                          - img [ref=e1144]
+                          - generic [ref=e1147]: Not Started
+                      - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH) Track 3: Removal of retained placenta" [ref=e1148]':
+                        - generic [ref=e1155]:
+                          - text: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                          - text: "Track 3: Removal of retained placenta"
+                      - cell "3" [ref=e1156]:
+                        - generic [ref=e1163]: "3"
+                      - cell "—" [ref=e1164]:
+                        - generic [ref=e1168]: —
+                      - cell "—" [ref=e1169]:
+                        - generic [ref=e1173]: —
+                      - cell "—" [ref=e1174]:
+                        - generic [ref=e1181]: —
+                      - cell "—" [ref=e1182]:
+                        - generic [ref=e1186]: —
+                      - cell "—" [ref=e1187]:
+                        - generic [ref=e1191]: —
+                      - cell "Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1192]:
+                        - generic [ref=e1194]:
+                          - button "Start" [ref=e1195] [cursor=pointer]:
+                            - img [ref=e1196]
+                            - generic [ref=e1198]: Start
+                          - link "Mentees" [ref=e1199] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/287/mentees
+                            - generic [ref=e1200]: Mentees
+                            - img [ref=e1201]
+                          - button "Activities" [ref=e1203] [cursor=pointer]:
+                            - generic [ref=e1204]: Activities
+                            - img [ref=e1205]
+                          - button "Complete Activities" [ref=e1207] [cursor=pointer]:
+                            - generic [ref=e1208]: Complete Activities
+                            - img [ref=e1209]
+                          - link "Resources" [ref=e1211] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/287/resources
+                            - generic [ref=e1212]: Resources
+                            - img [ref=e1213]
+                          - button "Edit" [ref=e1215] [cursor=pointer]:
+                            - generic [ref=e1216]: Edit
+                            - img [ref=e1217]
+                          - button "Remove" [ref=e1219] [cursor=pointer]:
+                            - generic [ref=e1220]: Remove
+                            - img [ref=e1221]
+                    - 'row "5 Not Started Module 5: Management of Postpartum Hemorrhage (PPH) Track 4: Uterine inversion 3 — — — — — Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1223]':
+                      - cell "5" [ref=e1224]:
+                        - generic [ref=e1231]: "5"
+                      - cell "Not Started" [ref=e1232]:
+                        - generic [ref=e1238]:
+                          - img [ref=e1239]
+                          - generic [ref=e1242]: Not Started
+                      - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH) Track 4: Uterine inversion" [ref=e1243]':
+                        - generic [ref=e1250]:
+                          - text: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                          - text: "Track 4: Uterine inversion"
+                      - cell "3" [ref=e1251]:
+                        - generic [ref=e1258]: "3"
+                      - cell "—" [ref=e1259]:
+                        - generic [ref=e1263]: —
+                      - cell "—" [ref=e1264]:
+                        - generic [ref=e1268]: —
+                      - cell "—" [ref=e1269]:
+                        - generic [ref=e1276]: —
+                      - cell "—" [ref=e1277]:
+                        - generic [ref=e1281]: —
+                      - cell "—" [ref=e1282]:
+                        - generic [ref=e1286]: —
+                      - cell "Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1287]:
+                        - generic [ref=e1289]:
+                          - button "Start" [ref=e1290] [cursor=pointer]:
+                            - img [ref=e1291]
+                            - generic [ref=e1293]: Start
+                          - link "Mentees" [ref=e1294] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/288/mentees
+                            - generic [ref=e1295]: Mentees
+                            - img [ref=e1296]
+                          - button "Activities" [ref=e1298] [cursor=pointer]:
+                            - generic [ref=e1299]: Activities
+                            - img [ref=e1300]
+                          - button "Complete Activities" [ref=e1302] [cursor=pointer]:
+                            - generic [ref=e1303]: Complete Activities
+                            - img [ref=e1304]
+                          - link "Resources" [ref=e1306] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/288/resources
+                            - generic [ref=e1307]: Resources
+                            - img [ref=e1308]
+                          - button "Edit" [ref=e1310] [cursor=pointer]:
+                            - generic [ref=e1311]: Edit
+                            - img [ref=e1312]
+                          - button "Remove" [ref=e1314] [cursor=pointer]:
+                            - generic [ref=e1315]: Remove
+                            - img [ref=e1316]
+                    - 'row "6 Not Started Module 5: Management of Postpartum Hemorrhage (PPH) Track 5: The placement of the intrauterine balloon tamponade (condom tamponade) 3 — — — — — Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1318]':
+                      - cell "6" [ref=e1319]:
+                        - generic [ref=e1326]: "6"
+                      - cell "Not Started" [ref=e1327]:
+                        - generic [ref=e1333]:
+                          - img [ref=e1334]
+                          - generic [ref=e1337]: Not Started
+                      - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH) Track 5: The placement of the intrauterine balloon tamponade (condom tamponade)" [ref=e1338]':
+                        - generic [ref=e1345]:
+                          - text: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                          - text: "Track 5: The placement of the intrauterine balloon tamponade (condom tamponade)"
+                      - cell "3" [ref=e1346]:
+                        - generic [ref=e1353]: "3"
+                      - cell "—" [ref=e1354]:
+                        - generic [ref=e1358]: —
+                      - cell "—" [ref=e1359]:
+                        - generic [ref=e1363]: —
+                      - cell "—" [ref=e1364]:
+                        - generic [ref=e1371]: —
+                      - cell "—" [ref=e1372]:
+                        - generic [ref=e1376]: —
+                      - cell "—" [ref=e1377]:
+                        - generic [ref=e1381]: —
+                      - cell "Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1382]:
+                        - generic [ref=e1384]:
+                          - button "Start" [ref=e1385] [cursor=pointer]:
+                            - img [ref=e1386]
+                            - generic [ref=e1388]: Start
+                          - link "Mentees" [ref=e1389] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/289/mentees
+                            - generic [ref=e1390]: Mentees
+                            - img [ref=e1391]
+                          - button "Activities" [ref=e1393] [cursor=pointer]:
+                            - generic [ref=e1394]: Activities
+                            - img [ref=e1395]
+                          - button "Complete Activities" [ref=e1397] [cursor=pointer]:
+                            - generic [ref=e1398]: Complete Activities
+                            - img [ref=e1399]
+                          - link "Resources" [ref=e1401] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/289/resources
+                            - generic [ref=e1402]: Resources
+                            - img [ref=e1403]
+                          - button "Edit" [ref=e1405] [cursor=pointer]:
+                            - generic [ref=e1406]: Edit
+                            - img [ref=e1407]
+                          - button "Remove" [ref=e1409] [cursor=pointer]:
+                            - generic [ref=e1410]: Remove
+                            - img [ref=e1411]
+                    - 'row "7 Not Started Module 5: Management of Postpartum Hemorrhage (PPH) Track 6: The placement of the intrauterine balloon tamponade (free flow system) 3 — — — — — Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1413]':
+                      - cell "7" [ref=e1414]:
+                        - generic [ref=e1421]: "7"
+                      - cell "Not Started" [ref=e1422]:
+                        - generic [ref=e1428]:
+                          - img [ref=e1429]
+                          - generic [ref=e1432]: Not Started
+                      - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH) Track 6: The placement of the intrauterine balloon tamponade (free flow system)" [ref=e1433]':
+                        - generic [ref=e1440]:
+                          - text: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                          - text: "Track 6: The placement of the intrauterine balloon tamponade (free flow system)"
+                      - cell "3" [ref=e1441]:
+                        - generic [ref=e1448]: "3"
+                      - cell "—" [ref=e1449]:
+                        - generic [ref=e1453]: —
+                      - cell "—" [ref=e1454]:
+                        - generic [ref=e1458]: —
+                      - cell "—" [ref=e1459]:
+                        - generic [ref=e1466]: —
+                      - cell "—" [ref=e1467]:
+                        - generic [ref=e1471]: —
+                      - cell "—" [ref=e1472]:
+                        - generic [ref=e1476]: —
+                      - cell "Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1477]:
+                        - generic [ref=e1479]:
+                          - button "Start" [ref=e1480] [cursor=pointer]:
+                            - img [ref=e1481]
+                            - generic [ref=e1483]: Start
+                          - link "Mentees" [ref=e1484] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/290/mentees
+                            - generic [ref=e1485]: Mentees
+                            - img [ref=e1486]
+                          - button "Activities" [ref=e1488] [cursor=pointer]:
+                            - generic [ref=e1489]: Activities
+                            - img [ref=e1490]
+                          - button "Complete Activities" [ref=e1492] [cursor=pointer]:
+                            - generic [ref=e1493]: Complete Activities
+                            - img [ref=e1494]
+                          - link "Resources" [ref=e1496] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/290/resources
+                            - generic [ref=e1497]: Resources
+                            - img [ref=e1498]
+                          - button "Edit" [ref=e1500] [cursor=pointer]:
+                            - generic [ref=e1501]: Edit
+                            - img [ref=e1502]
+                          - button "Remove" [ref=e1504] [cursor=pointer]:
+                            - generic [ref=e1505]: Remove
+                            - img [ref=e1506]
+                    - 'row "8 Not Started Module 5: Management of Postpartum Hemorrhage (PPH) Track 7: Repair of perineal tear 3 — — — — — Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1508]':
+                      - cell "8" [ref=e1509]:
+                        - generic [ref=e1516]: "8"
+                      - cell "Not Started" [ref=e1517]:
+                        - generic [ref=e1523]:
+                          - img [ref=e1524]
+                          - generic [ref=e1527]: Not Started
+                      - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH) Track 7: Repair of perineal tear" [ref=e1528]':
+                        - generic [ref=e1535]:
+                          - text: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                          - text: "Track 7: Repair of perineal tear"
+                      - cell "3" [ref=e1536]:
+                        - generic [ref=e1543]: "3"
+                      - cell "—" [ref=e1544]:
+                        - generic [ref=e1548]: —
+                      - cell "—" [ref=e1549]:
+                        - generic [ref=e1553]: —
+                      - cell "—" [ref=e1554]:
+                        - generic [ref=e1561]: —
+                      - cell "—" [ref=e1562]:
+                        - generic [ref=e1566]: —
+                      - cell "—" [ref=e1567]:
+                        - generic [ref=e1571]: —
+                      - cell "Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1572]:
+                        - generic [ref=e1574]:
+                          - button "Start" [ref=e1575] [cursor=pointer]:
+                            - img [ref=e1576]
+                            - generic [ref=e1578]: Start
+                          - link "Mentees" [ref=e1579] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/291/mentees
+                            - generic [ref=e1580]: Mentees
+                            - img [ref=e1581]
+                          - button "Activities" [ref=e1583] [cursor=pointer]:
+                            - generic [ref=e1584]: Activities
+                            - img [ref=e1585]
+                          - button "Complete Activities" [ref=e1587] [cursor=pointer]:
+                            - generic [ref=e1588]: Complete Activities
+                            - img [ref=e1589]
+                          - link "Resources" [ref=e1591] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/291/resources
+                            - generic [ref=e1592]: Resources
+                            - img [ref=e1593]
+                          - button "Edit" [ref=e1595] [cursor=pointer]:
+                            - generic [ref=e1596]: Edit
+                            - img [ref=e1597]
+                          - button "Remove" [ref=e1599] [cursor=pointer]:
+                            - generic [ref=e1600]: Remove
+                            - img [ref=e1601]
+                    - 'row "9 Not Started Module 5: Management of Postpartum Hemorrhage (PPH) Track 8: Repair of cervical tear 3 — — — — — Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1603]':
+                      - cell "9" [ref=e1604]:
+                        - generic [ref=e1611]: "9"
+                      - cell "Not Started" [ref=e1612]:
+                        - generic [ref=e1618]:
+                          - img [ref=e1619]
+                          - generic [ref=e1622]: Not Started
+                      - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH) Track 8: Repair of cervical tear" [ref=e1623]':
+                        - generic [ref=e1630]:
+                          - text: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                          - text: "Track 8: Repair of cervical tear"
+                      - cell "3" [ref=e1631]:
+                        - generic [ref=e1638]: "3"
+                      - cell "—" [ref=e1639]:
+                        - generic [ref=e1643]: —
+                      - cell "—" [ref=e1644]:
+                        - generic [ref=e1648]: —
+                      - cell "—" [ref=e1649]:
+                        - generic [ref=e1656]: —
+                      - cell "—" [ref=e1657]:
+                        - generic [ref=e1661]: —
+                      - cell "—" [ref=e1662]:
+                        - generic [ref=e1666]: —
+                      - cell "Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1667]:
+                        - generic [ref=e1669]:
+                          - button "Start" [ref=e1670] [cursor=pointer]:
+                            - img [ref=e1671]
+                            - generic [ref=e1673]: Start
+                          - link "Mentees" [ref=e1674] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/292/mentees
+                            - generic [ref=e1675]: Mentees
+                            - img [ref=e1676]
+                          - button "Activities" [ref=e1678] [cursor=pointer]:
+                            - generic [ref=e1679]: Activities
+                            - img [ref=e1680]
+                          - button "Complete Activities" [ref=e1682] [cursor=pointer]:
+                            - generic [ref=e1683]: Complete Activities
+                            - img [ref=e1684]
+                          - link "Resources" [ref=e1686] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/292/resources
+                            - generic [ref=e1687]: Resources
+                            - img [ref=e1688]
+                          - button "Edit" [ref=e1690] [cursor=pointer]:
+                            - generic [ref=e1691]: Edit
+                            - img [ref=e1692]
+                          - button "Remove" [ref=e1694] [cursor=pointer]:
+                            - generic [ref=e1695]: Remove
+                            - img [ref=e1696]
+                    - 'row "10 Not Started Module 5: Management of Postpartum Hemorrhage (PPH) Track 9: The placement of the B-Lynch suture 3 — — — — — Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1698]':
+                      - cell "10" [ref=e1699]:
+                        - generic [ref=e1706]: "10"
+                      - cell "Not Started" [ref=e1707]:
+                        - generic [ref=e1713]:
+                          - img [ref=e1714]
+                          - generic [ref=e1717]: Not Started
+                      - 'cell "Module 5: Management of Postpartum Hemorrhage (PPH) Track 9: The placement of the B-Lynch suture" [ref=e1718]':
+                        - generic [ref=e1725]:
+                          - text: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+                          - text: "Track 9: The placement of the B-Lynch suture"
+                      - cell "3" [ref=e1726]:
+                        - generic [ref=e1733]: "3"
+                      - cell "—" [ref=e1734]:
+                        - generic [ref=e1738]: —
+                      - cell "—" [ref=e1739]:
+                        - generic [ref=e1743]: —
+                      - cell "—" [ref=e1744]:
+                        - generic [ref=e1751]: —
+                      - cell "—" [ref=e1752]:
+                        - generic [ref=e1756]: —
+                      - cell "—" [ref=e1757]:
+                        - generic [ref=e1761]: —
+                      - cell "Start Mentees Activities Complete Activities Resources Edit Remove" [ref=e1762]:
+                        - generic [ref=e1764]:
+                          - button "Start" [ref=e1765] [cursor=pointer]:
+                            - img [ref=e1766]
+                            - generic [ref=e1768]: Start
+                          - link "Mentees" [ref=e1769] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/293/mentees
+                            - generic [ref=e1770]: Mentees
+                            - img [ref=e1771]
+                          - button "Activities" [ref=e1773] [cursor=pointer]:
+                            - generic [ref=e1774]: Activities
+                            - img [ref=e1775]
+                          - button "Complete Activities" [ref=e1777] [cursor=pointer]:
+                            - generic [ref=e1778]: Complete Activities
+                            - img [ref=e1779]
+                          - link "Resources" [ref=e1781] [cursor=pointer]:
+                            - /url: http://localhost:8001/admin/mentorship/247/classes/238/modules/293/resources
+                            - generic [ref=e1782]: Resources
+                            - img [ref=e1783]
+                          - button "Edit" [ref=e1785] [cursor=pointer]:
+                            - generic [ref=e1786]: Edit
+                            - img [ref=e1787]
+                          - button "Remove" [ref=e1789] [cursor=pointer]:
+                            - generic [ref=e1790]: Remove
+                            - img [ref=e1791]
+                - navigation "Pagination navigation" [ref=e1793]:
+                  - generic [ref=e1794]: Showing 1 to 10 of 12 results
+                  - generic [ref=e1797]:
+                    - generic [ref=e1799]: Per page
+                    - combobox "Per page" [ref=e1801]:
+                      - option "5"
+                      - option "10" [selected]
+                      - option "25"
+                      - option "50"
+                      - option "All"
+                  - list [ref=e1802]:
+                    - listitem [ref=e1803]:
+                      - button "Go to page 1" [ref=e1804] [cursor=pointer]:
+                        - generic [ref=e1805]: "1"
+                    - listitem [ref=e1806]:
+                      - button "Go to page 2" [ref=e1807] [cursor=pointer]:
+                        - generic [ref=e1808]: "2"
+                    - listitem [ref=e1809]:
+                      - button "Next" [ref=e1810] [cursor=pointer]:
+                        - img [ref=e1811]
+              - generic:
+                - dialog
+              - generic:
+                - dialog
+              - generic:
+                - dialog
+              - generic:
+                - dialog
+              - generic:
+                - dialog
+    - complementary [ref=e107]:
+      - link "MNCH Mentorship Platform" [ref=e111] [cursor=pointer]:
+        - /url: /admin
+        - generic [ref=e112]: MNCH Mentorship Platform
+      - navigation [ref=e113]:
+        - list [ref=e114]:
+          - listitem [ref=e115]:
+            - generic [ref=e116] [cursor=pointer]:
+              - generic [ref=e117]: Dashboards
+              - button "Dashboards" [expanded] [ref=e118]:
+                - generic [ref=e119]: Dashboards
+                - img [ref=e120]
+            - list [ref=e122]:
+              - listitem [ref=e123]:
+                - link "Mentor Dashboard 127" [ref=e124] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentor-dashboard
+                  - img [ref=e125]
+                  - generic [ref=e127]: Mentor Dashboard
+                  - generic [ref=e131]: "127"
+              - listitem [ref=e132]:
+                - link "Head DRMH" [ref=e133] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/head-drmh-dashboard
+                  - img [ref=e134]
+                  - generic [ref=e136]: Head DRMH
+              - listitem [ref=e137]:
+                - link "Mentee Dashboard 139" [ref=e138] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-dashboard
+                  - img [ref=e139]
+                  - generic [ref=e141]: Mentee Dashboard
+                  - generic [ref=e145]: "139"
+          - listitem [ref=e146]:
+            - generic [ref=e147] [cursor=pointer]:
+              - generic [ref=e148]: Mentorships
+              - button "Mentorships" [expanded] [ref=e149]:
+                - generic [ref=e150]: Mentorships
+                - img [ref=e151]
+            - list [ref=e153]:
+              - listitem [ref=e154]:
+                - link "Practical Assessments" [ref=e155] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/rubric-assessments
+                  - img [ref=e156]
+                  - generic [ref=e158]: Practical Assessments
+          - listitem [ref=e159]:
+            - generic [ref=e160] [cursor=pointer]:
+              - generic [ref=e161]: Facility Assessment
+              - button "Facility Assessment" [expanded] [ref=e162]:
+                - generic [ref=e163]: Facility Assessment
+                - img [ref=e164]
+            - list [ref=e166]:
+              - listitem [ref=e167]:
+                - link "Assessments 2" [ref=e168] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessments
+                  - img [ref=e169]
+                  - generic [ref=e171]: Assessments
+                  - generic [ref=e175]: "2"
+          - listitem [ref=e176]:
+            - generic [ref=e177] [cursor=pointer]:
+              - generic [ref=e178]: Training Management
+              - button "Training Management" [expanded] [ref=e179]:
+                - generic [ref=e180]: Training Management
+                - img [ref=e181]
+            - list [ref=e183]:
+              - listitem [ref=e184]:
+                - link "Training Areas 2" [ref=e185] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/approved-training-areas
+                  - img [ref=e186]
+                  - generic [ref=e188]: Training Areas
+                  - generic [ref=e192]: "2"
+              - listitem [ref=e193]:
+                - link "MOH Trainings 4" [ref=e194] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/moh-trainings
+                  - img [ref=e195]
+                  - generic [ref=e197]: MOH Trainings
+                  - generic [ref=e201]: "4"
+              - listitem [ref=e202]:
+                - link "Mentorship 50" [ref=e203] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentorship
+                  - img [ref=e204]
+                  - generic [ref=e206]: Mentorship
+                  - generic [ref=e210]: "50"
+              - listitem [ref=e211]:
+                - link "Export Center 4" [ref=e212] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/training-exports
+                  - img [ref=e213]
+                  - generic [ref=e215]: Export Center
+                  - generic [ref=e219]: "4"
+              - listitem [ref=e220]:
+                - link "Participant/Mentee Profiles" [ref=e221] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/participant-profiles
+                  - img [ref=e222]
+                  - generic [ref=e224]: Participant/Mentee Profiles
+              - listitem [ref=e225]:
+                - link "Mentor Profiles" [ref=e226] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-profiles
+                  - img [ref=e227]
+                  - generic [ref=e229]: Mentor Profiles
+          - listitem [ref=e230]:
+            - generic [ref=e231] [cursor=pointer]:
+              - generic [ref=e232]: Indicator Catalog
+              - button "Indicator Catalog" [expanded] [ref=e233]:
+                - generic [ref=e234]: Indicator Catalog
+                - img [ref=e235]
+            - list [ref=e237]:
+              - listitem [ref=e238]:
+                - link "Report Types" [ref=e239] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicator-report-types
+                  - img [ref=e240]
+                  - generic [ref=e242]: Report Types
+              - listitem [ref=e243]:
+                - link "Indicator Groups" [ref=e244] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicator-groups
+                  - img [ref=e245]
+                  - generic [ref=e247]: Indicator Groups
+              - listitem [ref=e248]:
+                - link "Indicators" [ref=e249] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators
+                  - img [ref=e250]
+                  - generic [ref=e252]: Indicators
+              - listitem [ref=e253]:
+                - link "Indicators Reference" [ref=e254] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/reference
+                  - img [ref=e255]
+                  - generic [ref=e257]: Indicators Reference
+          - listitem [ref=e258]:
+            - generic [ref=e259] [cursor=pointer]:
+              - generic [ref=e260]: Curriculum
+              - button "Curriculum" [expanded] [ref=e261]:
+                - generic [ref=e262]: Curriculum
+                - img [ref=e263]
+            - list [ref=e265]:
+              - listitem [ref=e266]:
+                - link "Programs 3" [ref=e267] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/programs
+                  - img [ref=e268]
+                  - generic [ref=e270]: Programs
+                  - generic [ref=e274]: "3"
+              - listitem [ref=e275]:
+                - link "Modules 24" [ref=e276] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/modules
+                  - img [ref=e277]
+                  - generic [ref=e279]: Modules
+                  - generic [ref=e283]: "24"
+              - listitem [ref=e284]:
+                - link "Program Modules 46" [ref=e285] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/program-modules
+                  - img [ref=e286]
+                  - generic [ref=e288]: Program Modules
+                  - generic [ref=e292]: "46"
+              - listitem [ref=e293]:
+                - link "Activities 3" [ref=e294] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/activities
+                  - img [ref=e295]
+                  - generic [ref=e297]: Activities
+                  - generic [ref=e301]: "3"
+              - listitem [ref=e302]:
+                - link "Methodologies" [ref=e303] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/methodologies
+                  - img [ref=e304]
+                  - generic [ref=e306]: Methodologies
+              - listitem [ref=e307]:
+                - link "Rubric Definitions" [ref=e308] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/rubric-managements
+                  - img [ref=e309]
+                  - generic [ref=e311]: Rubric Definitions
+          - listitem [ref=e312]:
+            - generic [ref=e313] [cursor=pointer]:
+              - generic [ref=e314]: Report Management
+              - button "Report Management" [expanded] [ref=e315]:
+                - generic [ref=e316]: Report Management
+                - img [ref=e317]
+            - list [ref=e319]:
+              - listitem [ref=e320]:
+                - link "Performance Tracker" [ref=e321] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/monthly-reports
+                  - img [ref=e322]
+                  - generic [ref=e324]: Performance Tracker
+              - listitem [ref=e325]:
+                - link "Report Templates" [ref=e326] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/report-templates
+                  - img [ref=e327]
+                  - generic [ref=e329]: Report Templates
+              - listitem [ref=e330]:
+                - link "Report Management" [ref=e331] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/report-management
+                  - img [ref=e332]
+                  - generic [ref=e335]: Report Management
+          - listitem [ref=e336]:
+            - generic [ref=e337] [cursor=pointer]:
+              - generic [ref=e338]: Settings
+              - button "Settings" [expanded] [ref=e339]:
+                - generic [ref=e340]: Settings
+                - img [ref=e341]
+            - list [ref=e343]:
+              - listitem [ref=e344]:
+                - link "Grades" [ref=e345] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/grades
+                  - img [ref=e346]
+                  - generic [ref=e348]: Grades
+              - listitem [ref=e349]:
+                - link "Access Groups" [ref=e350] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/access-groups
+                  - img [ref=e351]
+                  - generic [ref=e353]: Access Groups
+              - listitem [ref=e354]:
+                - link "Mentee Statuses" [ref=e355] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/mentee-statuses
+                  - img [ref=e356]
+                  - generic [ref=e358]: Mentee Statuses
+              - listitem [ref=e359]:
+                - link "Partners 1" [ref=e360] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/partners
+                  - img [ref=e361]
+                  - generic [ref=e363]: Partners
+                  - generic [ref=e367]: "1"
+          - listitem [ref=e368]:
+            - generic [ref=e369] [cursor=pointer]:
+              - generic [ref=e370]: Filament Shield
+              - button "Filament Shield" [expanded] [ref=e371]:
+                - generic [ref=e372]: Filament Shield
+                - img [ref=e373]
+            - list [ref=e375]:
+              - listitem [ref=e376]:
+                - link "Roles 24" [ref=e377] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/shield/roles
+                  - img [ref=e378]
+                  - generic [ref=e380]: Roles
+                  - generic [ref=e384]: "24"
+          - listitem [ref=e385]:
+            - generic [ref=e386] [cursor=pointer]:
+              - generic [ref=e387]: Assessment Management
+              - button "Assessment Management" [expanded] [ref=e388]:
+                - generic [ref=e389]: Assessment Management
+                - img [ref=e390]
+            - list [ref=e392]:
+              - listitem [ref=e393]:
+                - link "Sections & Questions 8" [ref=e394] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-sections
+                  - img [ref=e395]
+                  - generic [ref=e397]: Sections & Questions
+                  - generic [ref=e401]: "8"
+              - listitem [ref=e402]:
+                - link "All Questions" [ref=e403] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-questions
+                  - img [ref=e404]
+                  - generic [ref=e406]: All Questions
+              - listitem [ref=e407]:
+                - link "Departments 7" [ref=e408] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/assessment-departments
+                  - img [ref=e409]
+                  - generic [ref=e411]: Departments
+                  - generic [ref=e415]: "7"
+              - listitem [ref=e416]:
+                - link "Commodities" [ref=e417] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/commodities
+                  - img [ref=e418]
+                  - generic [ref=e420]: Commodities
+              - listitem [ref=e421]:
+                - link "Commodity Categories 9" [ref=e422] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/commodity-categories
+                  - img [ref=e423]
+                  - generic [ref=e426]: Commodity Categories
+                  - generic [ref=e430]: "9"
+          - listitem [ref=e431]:
+            - generic [ref=e432] [cursor=pointer]:
+              - generic [ref=e433]: Organizational Structure
+              - button "Organizational Structure" [expanded] [ref=e434]:
+                - generic [ref=e435]: Organizational Structure
+                - img [ref=e436]
+            - list [ref=e438]:
+              - listitem [ref=e439]:
+                - link "Departments 348" [ref=e440] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/departments
+                  - img [ref=e441]
+                  - generic [ref=e443]: Departments
+                  - generic [ref=e447]: "348"
+              - listitem [ref=e448]:
+                - link "Cadres 21" [ref=e449] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/cadres
+                  - img [ref=e450]
+                  - generic [ref=e452]: Cadres
+                  - generic [ref=e456]: "21"
+          - listitem [ref=e457]:
+            - generic [ref=e458] [cursor=pointer]:
+              - generic [ref=e459]: Geographic Structure
+              - button "Geographic Structure" [expanded] [ref=e460]:
+                - generic [ref=e461]: Geographic Structure
+                - img [ref=e462]
+            - list [ref=e464]:
+              - listitem [ref=e465]:
+                - link "Divisions 1" [ref=e466] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/divisions
+                  - img [ref=e467]
+                  - generic [ref=e469]: Divisions
+                  - generic [ref=e473]: "1"
+              - listitem [ref=e474]:
+                - link "Counties 47" [ref=e475] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/counties
+                  - img [ref=e476]
+                  - generic [ref=e478]: Counties
+                  - generic [ref=e482]: "47"
+              - listitem [ref=e483]:
+                - link "Subcounties 305" [ref=e484] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/subcounties
+                  - img [ref=e485]
+                  - generic [ref=e487]: Subcounties
+                  - generic [ref=e491]: "305"
+              - listitem [ref=e492]:
+                - link "Facility Types 16" [ref=e493] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-types
+                  - img [ref=e494]
+                  - generic [ref=e496]: Facility Types
+                  - generic [ref=e500]: "16"
+          - listitem [ref=e501]:
+            - generic [ref=e502] [cursor=pointer]:
+              - generic [ref=e503]: System Administration
+              - button "System Administration" [expanded] [ref=e504]:
+                - generic [ref=e505]: System Administration
+                - img [ref=e506]
+            - list [ref=e508]:
+              - listitem [ref=e509]:
+                - link "Facilities 10,700" [ref=e510] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facilities
+                  - img [ref=e511]
+                  - generic [ref=e513]: Facilities
+                  - generic [ref=e517]: 10,700
+              - listitem [ref=e518]:
+                - link "Facility Levels 5" [ref=e519] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-levels
+                  - img [ref=e520]
+                  - generic [ref=e522]: Facility Levels
+                  - generic [ref=e526]: "5"
+              - listitem [ref=e527]:
+                - link "Facility Ownership 7" [ref=e528] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/facility-ownerships
+                  - img [ref=e529]
+                  - generic [ref=e531]: Facility Ownership
+                  - generic [ref=e535]: "7"
+          - listitem [ref=e536]:
+            - generic [ref=e537] [cursor=pointer]:
+              - generic [ref=e538]: Quiz Management
+              - button "Quiz Management" [expanded] [ref=e539]:
+                - generic [ref=e540]: Quiz Management
+                - img [ref=e541]
+            - list [ref=e543]:
+              - listitem [ref=e544]:
+                - link "Program Module Quizzes 1" [ref=e545] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/program-module-quizzes
+                  - img [ref=e546]
+                  - generic [ref=e548]: Program Module Quizzes
+                  - generic [ref=e552]: "1"
+          - listitem [ref=e553]:
+            - generic [ref=e554] [cursor=pointer]:
+              - generic [ref=e555]: Content Management
+              - button "Content Management" [expanded] [ref=e556]:
+                - generic [ref=e557]: Content Management
+                - img [ref=e558]
+            - list [ref=e560]:
+              - listitem [ref=e561]:
+                - link "Resources" [ref=e562] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resources
+                  - img [ref=e563]
+                  - generic [ref=e565]: Resources
+              - listitem [ref=e566]:
+                - link "Resource Categories" [ref=e567] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-categories
+                  - img [ref=e568]
+                  - generic [ref=e570]: Resource Categories
+              - listitem [ref=e571]:
+                - link "Resource Types" [ref=e572] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-types
+                  - img [ref=e573]
+                  - generic [ref=e575]: Resource Types
+              - listitem [ref=e576]:
+                - link "Tags" [ref=e577] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/tags
+                  - img [ref=e578]
+                  - generic [ref=e581]: Tags
+              - listitem [ref=e582]:
+                - link "Resource Comments" [ref=e583] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/resource-comments
+                  - img [ref=e584]
+                  - generic [ref=e586]: Resource Comments
+          - listitem [ref=e587]:
+            - generic [ref=e588] [cursor=pointer]:
+              - generic [ref=e589]: App Configuration
+              - button "App Configuration" [expanded] [ref=e590]:
+                - generic [ref=e591]: App Configuration
+                - img [ref=e592]
+            - list [ref=e594]:
+              - listitem [ref=e595]:
+                - link "Scopes" [ref=e596] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/scopes
+                  - img [ref=e597]
+                  - generic [ref=e599]: Scopes
+          - listitem [ref=e600]:
+            - generic [ref=e601] [cursor=pointer]:
+              - generic [ref=e602]: Inventory Management
+              - button "Inventory Management" [expanded] [ref=e603]:
+                - generic [ref=e604]: Inventory Management
+                - img [ref=e605]
+            - list [ref=e607]:
+              - listitem [ref=e608]:
+                - link "Suppliers" [ref=e609] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/suppliers
+                  - img [ref=e610]
+                  - generic [ref=e612]: Suppliers
+              - listitem [ref=e613]:
+                - link "Inventory Items" [ref=e614] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/inventory-items
+                  - img [ref=e615]
+                  - generic [ref=e617]: Inventory Items
+              - listitem [ref=e618]:
+                - link "Stock Levels" [ref=e619] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/stock-levels
+                  - img [ref=e620]
+                  - generic [ref=e622]: Stock Levels
+              - listitem [ref=e623]:
+                - link "Stock Requests" [ref=e624] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/stock-requests
+                  - img [ref=e625]
+                  - generic [ref=e627]: Stock Requests
+          - listitem [ref=e628]:
+            - generic [ref=e629] [cursor=pointer]:
+              - generic [ref=e630]: User Management
+              - button "User Management" [expanded] [ref=e631]:
+                - generic [ref=e632]: User Management
+                - img [ref=e633]
+            - list [ref=e635]:
+              - listitem [ref=e636]:
+                - link "All Users 7395" [ref=e637] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/users
+                  - img [ref=e638]
+                  - generic [ref=e640]: All Users
+                  - generic [ref=e644]: "7395"
+          - listitem [ref=e645]:
+            - generic [ref=e646] [cursor=pointer]:
+              - generic [ref=e647]: Indicator Reporting
+              - button "Indicator Reporting" [expanded] [ref=e648]:
+                - generic [ref=e649]: Indicator Reporting
+                - img [ref=e650]
+            - list [ref=e652]:
+              - listitem [ref=e653]:
+                - link "Submit Report" [ref=e654] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/reporting
+                  - img [ref=e655]
+                  - generic [ref=e657]: Submit Report
+              - listitem [ref=e658]:
+                - link "Validation Queue" [ref=e659] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/validation-queue
+                  - img [ref=e660]
+                  - generic [ref=e662]: Validation Queue
+              - listitem [ref=e663]:
+                - link "Progress Dashboard" [ref=e664] [cursor=pointer]:
+                  - /url: http://localhost:8001/admin/indicators/progress-dashboard
+                  - img [ref=e665]
+                  - generic [ref=e667]: Progress Dashboard
+  - generic:
+    - status:
+      - generic [ref=e1814]:
+        - img [ref=e1815]
+        - heading "12 class module(s) added" [level=3] [ref=e1818]
+        - button [ref=e1819] [cursor=pointer]:
+          - img [ref=e1820]

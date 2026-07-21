@@ -1,0 +1,151 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - link "Dashboard" [ref=e5] [cursor=pointer]:
+        - /url: http://127.0.0.1:8100/admin/mentee-dashboard
+        - img [ref=e6]
+        - text: Dashboard
+      - generic [ref=e8]: My Class Progress
+  - main [ref=e9]:
+    - generic [ref=e10]:
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - img [ref=e14]
+          - generic [ref=e17]:
+            - generic [ref=e18]: 0%
+            - generic [ref=e19]: complete
+        - generic [ref=e20]:
+          - paragraph [ref=e21]: Maternal Health (EmONC) - Budalangi Dispensary - Jul 2026
+          - heading "July 2026 EmONC Test Cohort" [level=1] [ref=e22]
+          - paragraph [ref=e23]:
+            - img [ref=e24]
+            - text: Budalangi Dispensary
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - paragraph [ref=e28]: "12"
+          - paragraph [ref=e29]: Modules
+        - generic [ref=e30]:
+          - paragraph [ref=e31]: "0"
+          - paragraph [ref=e32]: In Progress
+        - generic [ref=e33]:
+          - paragraph [ref=e34]: "0"
+          - paragraph [ref=e35]: Completed
+        - generic [ref=e36]:
+          - paragraph [ref=e37]: "0"
+          - paragraph [ref=e38]: Exempted
+    - generic [ref=e39]:
+      - heading "Modules" [level=2] [ref=e41]
+      - generic [ref=e42]:
+        - generic [ref=e47]:
+          - generic [ref=e49]:
+            - img [ref=e50]
+            - text: "Module 2: Labour Care Guide (LCG)"
+          - generic [ref=e52]:
+            - img [ref=e53]
+            - text: Not Started
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - generic [ref=e60]:
+              - generic [ref=e61]:
+                - img [ref=e62]
+                - text: "Track 1: Bimanual compression of the uterus"
+              - paragraph [ref=e64]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+            - generic [ref=e65]: Action Required
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - img [ref=e70]
+              - paragraph [ref=e72]: This module is in progress — confirm your attendance now.
+            - link "Confirm Attendance" [ref=e73] [cursor=pointer]:
+              - /url: http://127.0.0.1:8100/attend/RbSlBcGxT0YOclbJURMGvGp9y4WUTCLd
+              - img [ref=e74]
+              - text: Confirm Attendance
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - img [ref=e83]
+              - text: "Track 2: Compression of abdominal aorta"
+            - paragraph [ref=e85]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+          - generic [ref=e86]:
+            - img [ref=e87]
+            - text: Not Started
+        - generic [ref=e93]:
+          - generic [ref=e94]:
+            - generic [ref=e95]:
+              - img [ref=e96]
+              - text: "Track 3: Removal of retained placenta"
+            - paragraph [ref=e98]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+          - generic [ref=e99]:
+            - img [ref=e100]
+            - text: Not Started
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - generic [ref=e108]:
+              - img [ref=e109]
+              - text: "Track 4: Uterine inversion"
+            - paragraph [ref=e111]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+          - generic [ref=e112]:
+            - img [ref=e113]
+            - text: Not Started
+        - generic [ref=e119]:
+          - generic [ref=e120]:
+            - generic [ref=e121]:
+              - img [ref=e122]
+              - text: "Track 5: The placement of the intrauterine balloon tamponade (condom tamponade)"
+            - paragraph [ref=e124]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+          - generic [ref=e125]:
+            - img [ref=e126]
+            - text: Not Started
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - generic [ref=e134]:
+              - img [ref=e135]
+              - text: "Track 6: The placement of the intrauterine balloon tamponade (free flow system)"
+            - paragraph [ref=e137]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+          - generic [ref=e138]:
+            - img [ref=e139]
+            - text: Not Started
+        - generic [ref=e145]:
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - img [ref=e148]
+              - text: "Track 7: Repair of perineal tear"
+            - paragraph [ref=e150]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+          - generic [ref=e151]:
+            - img [ref=e152]
+            - text: Not Started
+        - generic [ref=e158]:
+          - generic [ref=e159]:
+            - generic [ref=e160]:
+              - img [ref=e161]
+              - text: "Track 8: Repair of cervical tear"
+            - paragraph [ref=e163]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+          - generic [ref=e164]:
+            - img [ref=e165]
+            - text: Not Started
+        - generic [ref=e171]:
+          - generic [ref=e172]:
+            - generic [ref=e173]:
+              - img [ref=e174]
+              - text: "Track 9: The placement of the B-Lynch suture"
+            - paragraph [ref=e176]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+          - generic [ref=e177]:
+            - img [ref=e178]
+            - text: Not Started
+        - generic [ref=e184]:
+          - generic [ref=e185]:
+            - generic [ref=e186]:
+              - img [ref=e187]
+              - text: "Track 10: Placement of non-pneumatic anti-shock garment (NASG)"
+            - paragraph [ref=e189]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+          - generic [ref=e190]:
+            - img [ref=e191]
+            - text: Not Started
+        - generic [ref=e197]:
+          - generic [ref=e198]:
+            - generic [ref=e199]:
+              - img [ref=e200]
+              - text: "Track 11: Post-partum hemorrhage simulation"
+            - paragraph [ref=e202]: "Module 5: Management of Postpartum Hemorrhage (PPH)"
+          - generic [ref=e203]:
+            - img [ref=e204]
+            - text: Not Started

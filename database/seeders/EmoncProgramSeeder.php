@@ -22,16 +22,16 @@ class EmoncProgramSeeder extends Seeder
 
             $modules = [
                 ['name' => 'Ante Partum Hemorrhage', 'has_tracks' => false],
-                ['name' => 'Partograph Use and Interpretation', 'has_tracks' => false],
-                ['name' => 'Obstructed Labour', 'has_tracks' => false],
+                ['name' => 'Labour Care Guide (LCG)', 'has_tracks' => false],
+                ['name' => 'Prolonged & Obstructed Labour', 'has_tracks' => false],
                 ['name' => 'Active Management of the Third Stage of Labor (AMSTL)', 'has_tracks' => false],
                 ['name' => 'Management of Postpartum Hemorrhage (PPH)', 'has_tracks' => true],
                 ['name' => 'Management of Cord Prolapse', 'has_tracks' => false],
                 ['name' => 'Vaginal Breech Delivery', 'has_tracks' => false],
                 ['name' => 'Shoulder Dystocia Delivery', 'has_tracks' => false],
                 ['name' => 'Vaginal Vacuum Assisted Delivery', 'has_tracks' => false],
-                ['name' => 'Maternal Resuscitation', 'has_tracks' => false],
                 ['name' => 'Management of Maternal Shock', 'has_tracks' => false],
+                ['name' => 'Maternal Resuscitation', 'has_tracks' => false],
                 ['name' => 'Management of Pre-Eclampsia/Eclampsia', 'has_tracks' => false],
                 ['name' => 'Immediate Neonatal Resuscitation', 'has_tracks' => false],
             ];

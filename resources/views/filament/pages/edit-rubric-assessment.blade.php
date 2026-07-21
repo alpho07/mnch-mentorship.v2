@@ -67,8 +67,9 @@
         $score = $this->getScore();
         $total = $rubric->total_marks;
         $pct   = $total > 0 ? round(($score / $total) * 100, 1) : 0;
+        $started = $score > 0;
         $pass  = $score >= $rubric->pass_marks;
-        $fillColor = $pass ? '#16a34a' : ($pct >= 60 ? '#d97706' : '#dc2626');
+        $fillColor = ! $started ? '#94a3b8' : ($pass ? '#16a34a' : ($pct >= 60 ? '#d97706' : '#dc2626'));
     @endphp
 
     {{-- Notes & date --}}
@@ -121,9 +122,15 @@
                 </div>
                 <div>
                     <div style="font-size:18px;font-weight:700;color:{{ $fillColor }};">{{ $pct }}%</div>
-                    <span class="era-badge {{ $pass ? 'era-badge-pass' : 'era-badge-fail' }}">
-                        {{ $pass ? 'PASS' : 'FAIL' }}
-                    </span>
+                    @if($started)
+                        <span class="era-badge {{ $pass ? 'era-badge-pass' : 'era-badge-fail' }}">
+                            {{ $pass ? 'PASS' : 'FAIL' }}
+                        </span>
+                    @else
+                        <span class="era-badge" style="background:#f1f5f9;color:#64748b;">
+                            NOT STARTED
+                        </span>
+                    @endif
                 </div>
             </div>
 
@@ -159,7 +166,7 @@
     {{-- Actions --}}
     <div style="display:flex;gap:12px;margin-bottom:20px;">
         <button class="era-btn era-btn-primary" wire:click="saveAssessment" wire:loading.attr="disabled">
-            <span wire:loading.remove>Update Assessment ({{ $pass ? 'PASS' : 'FAIL' }} · {{ $score }}/{{ $total }})</span>
+            <span wire:loading.remove>Update Assessment ({{ $started ? ($pass ? 'PASS' : 'FAIL') : 'NOT STARTED' }} · {{ $score }}/{{ $total }})</span>
             <span wire:loading>Saving…</span>
         </button>
         <a href="{{ \App\Filament\Resources\RubricAssessmentResource::getUrl('view', ['record' => $record->id]) }}"

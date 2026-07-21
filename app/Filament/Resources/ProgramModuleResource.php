@@ -29,7 +29,8 @@ class ProgramModuleResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check() && auth()->user()->can('view_any_program::module');}
+        return auth()->check() && auth()->user()->can('view_any_program::module');
+    }
 
     public static function form(Form $form): Form
     {
@@ -99,6 +100,44 @@ class ProgramModuleResource extends Resource
                         ->options(Activity::where('is_active', true)->pluck('name', 'id'))
                         ->columns(3)
                         ->helperText('Select the activities that apply to this module or track.'),
+                ]),
+
+            Forms\Components\Section::make('Learning Objectives')
+                ->description('Shown to mentees as "III. Learning Objectives" on the module page.')
+                ->schema([
+                    Forms\Components\Repeater::make('objectives')
+                        ->label('Objectives')
+                        ->hiddenLabel()
+                        ->simple(
+                            Forms\Components\TextInput::make('objective')
+                                ->required()
+                                ->maxLength(500)
+                        )
+                        ->addActionLabel('Add Objective')
+                        ->reorderable()
+                        ->defaultItems(0),
+                ]),
+
+            Forms\Components\Section::make('Module Workplan')
+                ->description('Shown to mentees as "IV. Module Workplan" — e.g. Drill: 10–12 min, Debrief: 25–30 min.')
+                ->schema([
+                    Forms\Components\Repeater::make('content')
+                        ->label('Workplan Items')
+                        ->hiddenLabel()
+                        ->schema([
+                            Forms\Components\TextInput::make('label')
+                                ->label('Activity')
+                                ->required()
+                                ->maxLength(255),
+                            Forms\Components\TextInput::make('duration')
+                                ->label('Duration')
+                                ->required()
+                                ->maxLength(100),
+                        ])
+                        ->columns(2)
+                        ->addActionLabel('Add Workplan Item')
+                        ->reorderable()
+                        ->defaultItems(0),
                 ]),
         ]);
     }

@@ -1,0 +1,23 @@
+- generic [ref=e5]:
+  - img [ref=e7]
+  - heading "Attendance Confirmed!" [level=2] [ref=e9]
+  - paragraph [ref=e10]: Your attendance has been successfully recorded.
+  - generic [ref=e11]:
+    - heading "Details" [level=3] [ref=e12]
+    - paragraph [ref=e13]:
+      - strong [ref=e14]: "Module:"
+      - text: "Module 4: Active Management of the Third Stage of Labor (AMSTL)"
+    - paragraph [ref=e15]:
+      - strong [ref=e16]: "Class:"
+      - text: EmONC Cohort 1 — June 2026
+    - paragraph [ref=e17]:
+      - strong [ref=e18]: "Name:"
+      - text: FRANCISCA MUMBI MUIA
+    - paragraph [ref=e19]:
+      - strong [ref=e20]: "Time:"
+      - text: Jun 28, 2026 - 10:23 AM
+  - generic [ref=e21]:
+    - heading "Your Progress" [level=3] [ref=e22]
+    - paragraph [ref=e23]: "Status: In_progress"
+  - link "Go to Dashboard" [ref=e24] [cursor=pointer]:
+    - /url: http://localhost:8001/admin/mentee-dashboard
