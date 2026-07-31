@@ -287,6 +287,50 @@ class GuidedMentorshipSetupTest extends TestCase
         $this->assertSame('Renamed Cohort', $second->fresh()->name);
     }
 
+    public function test_mount_resumes_run_type_and_location_from_url_before_training_exists(): void
+    {
+        $this->actingAsCoordinator();
+        $facility = \App\Models\Facility::factory()->create();
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->urlIsPilot = 1;
+        $component->instance()->urlCountyId = $facility->subcounty->county_id;
+        $component->instance()->urlFacilityId = $facility->id;
+        $component->instance()->mount();
+
+        $component->assertFormSet([
+            'is_pilot' => 1,
+            'county_id' => $facility->subcounty->county_id,
+            'facility_id' => $facility->id,
+        ]);
+    }
+
+    public function test_mount_prefers_training_record_over_url_mirrors_once_training_exists(): void
+    {
+        $this->actingAsCoordinator();
+        $otherFacility = \App\Models\Facility::factory()->create();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'is_pilot' => 0,
+            'facility_id' => $otherFacility->id,
+            'county_id' => $otherFacility->subcounty->county_id,
+        ]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        // Stale URL mirrors from an earlier, since-abandoned run type/location
+        // pick — the persisted Training record must win once it exists.
+        $component->instance()->urlIsPilot = 1;
+        $component->instance()->urlCountyId = 999999;
+        $component->instance()->urlFacilityId = 999999;
+        $component->instance()->trainingId = $training->id;
+        $component->instance()->mount();
+
+        $component->assertFormSet([
+            'is_pilot' => 0,
+            'county_id' => $otherFacility->subcounty->county_id,
+            'facility_id' => $otherFacility->id,
+        ]);
+    }
+
     public function test_enroll_mentees_does_not_duplicate_already_enrolled_user(): void
     {
         $this->actingAsCoordinator();

@@ -49,6 +49,19 @@ class GuidedMentorshipSetup extends Page implements HasForms
     #[Url(as: 'class')]
     public ?int $classId = null;
 
+    // Mirrors of the Run Type / Location step fields, kept in sync via
+    // afterStateUpdated() below. These steps run before createTraining()
+    // ever fires, so nothing is in the DB yet to resume from on refresh —
+    // stash the raw values in the URL instead, same idea as training/class.
+    #[Url(as: 'pilot')]
+    public ?int $urlIsPilot = null;
+
+    #[Url(as: 'county')]
+    public ?int $urlCountyId = null;
+
+    #[Url(as: 'facility')]
+    public ?int $urlFacilityId = null;
+
     public ?Training $training = null;
 
     public ?MentorshipClass $class = null;
@@ -65,6 +78,19 @@ class GuidedMentorshipSetup extends Page implements HasForms
             'module_ids' => [],
             'selected_users' => [],
         ];
+
+        // Resuming on Run Type/Location before a Training record exists:
+        // re-seed from the URL mirrors. Overwritten below if a Training was
+        // already created (that's the authoritative source once it exists).
+        if ($this->urlIsPilot !== null) {
+            $fill['is_pilot'] = $this->urlIsPilot;
+        }
+        if ($this->urlCountyId) {
+            $fill['county_id'] = $this->urlCountyId;
+        }
+        if ($this->urlFacilityId) {
+            $fill['facility_id'] = $this->urlFacilityId;
+        }
 
         // Resuming after a page refresh: the Training/Class records already
         // exist in the DB, but the Wizard's own form state (used for its
@@ -130,7 +156,9 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 ])
                                 ->default(0)
                                 ->required()
-                                ->inline(false),
+                                ->inline(false)
+                                ->live()
+                                ->afterStateUpdated(fn ($state) => $this->urlIsPilot = $state === null ? null : (int) $state),
                         ]),
                     Forms\Components\Wizard\Step::make('Location')
                         ->description('Where is this mentorship being conducted?')
@@ -144,7 +172,11 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 ->preload()
                                 ->required()
                                 ->live()
-                                ->afterStateUpdated(fn (Set $set) => $set('facility_id', null))
+                                ->afterStateUpdated(function (Set $set, $state) {
+                                    $set('facility_id', null);
+                                    $this->urlCountyId = $state === null ? null : (int) $state;
+                                    $this->urlFacilityId = null;
+                                })
                                 ->prefixIcon('heroicon-o-map')
                                 ->helperText('Select the county first'),
                             Forms\Components\Select::make('facility_id')
@@ -162,6 +194,8 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 ->searchable()
                                 ->required()
                                 ->disabled(fn (Get $get) => ! $get('county_id'))
+                                ->live()
+                                ->afterStateUpdated(fn ($state) => $this->urlFacilityId = $state === null ? null : (int) $state)
                                 ->prefixIcon('heroicon-o-building-office-2')
                                 ->helperText('Facilities load after selecting a county'),
                         ]),
@@ -278,7 +312,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
                             $intro = Forms\Components\Placeholder::make('modules_intro')
                                 ->label('')
                                 ->content(new \Illuminate\Support\HtmlString(
-                                    "<p class=\"text-sm text-gray-600 dark:text-gray-400\">".
+                                    '<p class="text-sm text-gray-600 dark:text-gray-400">'.
                                     "<span class=\"font-semibold text-gray-950 dark:text-white\">Program: {$programName}</span><br>".
                                     'Pick as many or as few modules as you like — one, several, or all of them. '.
                                     "You'll be able to add more later from the class's Modules page.".
