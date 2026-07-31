@@ -26,3 +26,4 @@ Thumbs.db
 /storage/app/private/resources/
 /public/m-assessment-app.v1/nbproject/private/
 /public/m-assessment-app/nbproject/private/
+.playwright-mcp/
