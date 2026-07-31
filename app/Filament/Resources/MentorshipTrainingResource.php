@@ -276,16 +276,18 @@ class MentorshipTrainingResource extends Resource
                             ->visible(fn (Get $get) => ! static::isEmonc($get('program_id')))
                             ->native(false)
                             ->minDate(fn (Get $get) => $get('start_date') ?? now())
-                            ->after('start_date')
+                            ->afterOrEqual('start_date')
                             ->displayFormat('M j, Y')
                             ->prefixIcon('heroicon-o-stop'),
                         TextInput::make('max_participants')
                             ->label('Number of Mentees')
                             ->numeric()
-                            ->default(20)
+                            ->default(10)
+                            ->minValue(2)
+                            ->maxValue(10)
                             ->suffix('mentees')
                             ->prefixIcon('heroicon-o-users')
-                            ->helperText('Recommended minimum: 2. No maximum limit is enforced.'),
+                            ->helperText('Must be between 2 and 10 mentees.'),
                     ]),
                 ]),
         ]);

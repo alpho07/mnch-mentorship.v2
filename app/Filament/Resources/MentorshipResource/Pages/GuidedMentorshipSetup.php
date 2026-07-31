@@ -226,15 +226,18 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     ->visible(fn (Get $get) => ! $this->isEmoncProgram($get('program_id')))
                                     ->native(false)
                                     ->minDate(fn (Get $get) => $get('start_date') ?? now())
-                                    ->after('start_date')
+                                    ->afterOrEqual('start_date')
                                     ->displayFormat('M j, Y')
                                     ->prefixIcon('heroicon-o-stop'),
                                 Forms\Components\TextInput::make('max_participants')
                                     ->label('Number of Mentees')
                                     ->numeric()
-                                    ->default(20)
+                                    ->default(10)
+                                    ->minValue(2)
+                                    ->maxValue(10)
                                     ->suffix('mentees')
-                                    ->prefixIcon('heroicon-o-users'),
+                                    ->prefixIcon('heroicon-o-users')
+                                    ->helperText('Must be between 2 and 10 mentees.'),
                             ]),
                         ])
                         ->afterValidation(function (Get $get) {
@@ -256,6 +259,14 @@ class GuidedMentorshipSetup extends Page implements HasForms
                         ->description("Let's create your first class or cohort.")
                         ->icon('heroicon-o-user-group')
                         ->schema([
+                            Forms\Components\Placeholder::make('first_class_program_intro')
+                                ->label('')
+                                ->content(fn () => new \Illuminate\Support\HtmlString(
+                                    '<p class="text-sm text-gray-600 dark:text-gray-400">'.
+                                    '<span class="font-semibold text-gray-950 dark:text-white">Program: '.
+                                    ($this->training?->program?->name ?? 'this program').
+                                    '</span></p>'
+                                )),
                             Forms\Components\TextInput::make('class_name')
                                 ->label('Class/Cohort Name')
                                 ->required()
@@ -268,7 +279,10 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     ->visible(fn () => ! $this->isEmoncProgram($this->training?->program_id))
                                     ->native(false)
                                     ->minDate(fn () => $this->training?->start_date)
-                                    ->maxDate(fn () => $this->training?->end_date),
+                                    ->maxDate(fn () => $this->training?->end_date)
+                                    ->helperText(fn () => $this->training?->start_date && $this->training?->end_date
+                                        ? 'Must be within the mentorship dates: '.$this->training->start_date->format('M j, Y').' – '.$this->training->end_date->format('M j, Y')
+                                        : null),
                                 Forms\Components\DatePicker::make('class_end_date')
                                     ->label('End Date')
                                     ->required(fn () => ! $this->isEmoncProgram($this->training?->program_id))
