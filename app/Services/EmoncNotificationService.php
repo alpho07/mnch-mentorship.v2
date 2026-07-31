@@ -182,6 +182,48 @@ class EmoncNotificationService
         );
     }
 
+    public function mentorRecommendationWritten(MenteeModuleProgress $progress): void
+    {
+        $user = $progress->classParticipant?->user;
+        if (! $user) {
+            return;
+        }
+
+        $classModule = $progress->classModule;
+        $moduleName = $classModule?->programModule?->name ?? 'a module';
+        $classId = $classModule?->mentorship_class_id;
+
+        $this->notify(
+            $user,
+            'Mentor Feedback Received',
+            "New Feedback — {$moduleName}",
+            "Your mentor has written feedback on your progress in {$moduleName}. Review it on your dashboard.",
+            $classId ? route('mentee.class.progress', $classId) : null,
+            'View Feedback'
+        );
+    }
+
+    public function moduleCompleted(MenteeModuleProgress $progress): void
+    {
+        $user = $progress->classParticipant?->user;
+        if (! $user) {
+            return;
+        }
+
+        $classModule = $progress->classModule;
+        $moduleName = $classModule?->programModule?->name ?? 'a module';
+        $classId = $classModule?->mentorship_class_id;
+
+        $this->notify(
+            $user,
+            'Module Completed',
+            "Module Completed — {$moduleName}",
+            "You've completed {$moduleName}. Great work!",
+            $classId ? route('mentee.class.progress', $classId) : null,
+            'View My Progress'
+        );
+    }
+
     private function notify(User $user, string $databaseTitle, string $emailSubject, string $emailMessage, ?string $actionUrl, ?string $actionText): void
     {
         // In-app notification
