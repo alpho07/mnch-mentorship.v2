@@ -387,9 +387,30 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     ->helperText('Already-added modules are pre-checked — uncheck one to remove it.');
                             }
 
+                            $isEmonc = $this->isEmoncProgram($this->training?->program_id);
+
                             return [
                                 $intro,
                                 $picker,
+                                // EmONC has no training/class-level date range
+                                // (hidden earlier in the wizard — see design
+                                // spec), so this is the only place to say when
+                                // a newly-picked module/track actually runs.
+                                Forms\Components\Grid::make(2)
+                                    ->visible($isEmonc)
+                                    ->schema([
+                                        Forms\Components\DatePicker::make('module_start_date')
+                                            ->label('Start Date')
+                                            ->native(false)
+                                            ->minDate(today())
+                                            ->displayFormat('M j, Y'),
+                                        Forms\Components\DatePicker::make('module_end_date')
+                                            ->label('End Date')
+                                            ->native(false)
+                                            ->minDate(fn (Get $get) => $get('module_start_date') ?? today())
+                                            ->afterOrEqual('module_start_date')
+                                            ->displayFormat('M j, Y'),
+                                    ]),
                                 Forms\Components\Toggle::make('auto_create_sessions')
                                     ->label('Auto-populate sessions from program template')
                                     ->default(true)
@@ -402,6 +423,8 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 $this->assignModules([
                                     'module_ids' => $get('module_ids') ?? [],
                                     'auto_create_sessions' => $get('auto_create_sessions') ?? true,
+                                    'module_start_date' => $get('module_start_date'),
+                                    'module_end_date' => $get('module_end_date'),
                                 ]);
                             } catch (\Throwable $e) {
                                 $this->stepFailed($e);
@@ -637,7 +660,27 @@ class GuidedMentorshipSetup extends Page implements HasForms
 
         if (! empty($toAdd)) {
             $service = app(ModuleUsageService::class);
-            $created = $service->assignModulesToClass($this->training, $this->class, $toAdd);
+            $createdModuleIds = [];
+
+            $created = $service->assignModulesToClass(
+                $this->training,
+                $this->class,
+                $toAdd,
+                null,
+                function (ClassModule $classModule) use (&$createdModuleIds) {
+                    $createdModuleIds[] = $classModule->id;
+                }
+            );
+
+            // EmONC-only: the Modules step's optional start/end date fields,
+            // applied to whatever got newly assigned in this pass (mirrors
+            // ManageClassModules's "Add Modules" batch-date behavior).
+            if ($created > 0 && (! empty($data['module_start_date']) || ! empty($data['module_end_date']))) {
+                ClassModule::whereIn('id', $createdModuleIds)->update([
+                    'start_date' => $data['module_start_date'] ?? null,
+                    'end_date' => $data['module_end_date'] ?? null,
+                ]);
+            }
 
             if (($data['auto_create_sessions'] ?? true) && $created > 0) {
                 $this->class->load('classModules');

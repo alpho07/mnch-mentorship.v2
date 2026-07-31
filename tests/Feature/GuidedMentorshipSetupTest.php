@@ -120,6 +120,48 @@ class GuidedMentorshipSetupTest extends TestCase
         ]);
     }
 
+    public function test_assign_modules_applies_optional_dates_to_newly_created_modules_only(): void
+    {
+        $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care']);
+        $training = \App\Models\Training::factory()->facilityMentorship()->create(['program_id' => $program->id]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $existingModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+        \App\Models\ClassModule::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $existingModule->id,
+            'start_date' => null,
+            'end_date' => null,
+        ]);
+        $newModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $component->instance()->assignModules([
+            'module_ids' => [$existingModule->id, $newModule->id],
+            'auto_create_sessions' => false,
+            'module_start_date' => '2027-02-01',
+            'module_end_date' => '2027-02-14',
+        ]);
+
+        $this->assertDatabaseHas('class_modules', [
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $newModule->id,
+            'start_date' => '2027-02-01',
+            'end_date' => '2027-02-14',
+        ]);
+        // Already-assigned module wasn't touched — dates only apply to
+        // what's newly added in this pass, not re-stamped on old ones.
+        $this->assertDatabaseHas('class_modules', [
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $existingModule->id,
+            'start_date' => null,
+            'end_date' => null,
+        ]);
+    }
+
     public function test_assign_modules_clears_module_ids_from_the_draft_and_locked_options_reflect_it(): void
     {
         $this->actingAsCoordinator();
