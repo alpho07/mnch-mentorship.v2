@@ -4,6 +4,7 @@ namespace App\Filament\Resources\MentorshipResource\Pages;
 
 use App\Filament\Forms\Components\ActivityCompletionMatrix;
 use App\Filament\Forms\Components\ActivityEnrollmentMatrix;
+use App\Filament\Forms\Components\CardCheckboxList;
 use App\Filament\Forms\Components\EmoncModulePicker;
 use App\Filament\Resources\MentorshipTrainingResource;
 use App\Models\ClassModule;
@@ -120,7 +121,7 @@ class ManageClassModules extends Page implements HasTable
                 ->form(fn () => array_merge(
                     $this->isEmonc()
                         ? $this->emoncModulePickerSchema()
-                        : $this->standardModulePickerSchema($availableModules),
+                        : $this->standardModulePickerSchema(),
                     [
                         Forms\Components\Grid::make(2)->schema([
                             Forms\Components\DatePicker::make('module_start_date')
@@ -135,7 +136,9 @@ class ManageClassModules extends Page implements HasTable
                         ]),
                         Forms\Components\Toggle::make('auto_create_sessions')
                             ->label('Auto-populate sessions from program template')
-                            ->default(true),
+                            ->default(true)
+                            ->disabled()
+                            ->dehydrated(true),
                         Forms\Components\Textarea::make('notes')
                             ->label('Notes (optional)')
                             ->rows(2),
@@ -176,12 +179,12 @@ class ManageClassModules extends Page implements HasTable
                             foreach ($activities as $activity) {
                                 foreach ($participants as $participantId) {
                                     $rows[] = [
-                                        'class_module_id'      => $classModule->id,
+                                        'class_module_id' => $classModule->id,
                                         'class_participant_id' => $participantId,
-                                        'activity_id'          => $activity->id,
-                                        'status'               => 'pending',
-                                        'created_at'           => now(),
-                                        'updated_at'           => now(),
+                                        'activity_id' => $activity->id,
+                                        'status' => 'pending',
+                                        'created_at' => now(),
+                                        'updated_at' => now(),
                                     ];
                                 }
                             }
@@ -223,16 +226,18 @@ class ManageClassModules extends Page implements HasTable
         ];
     }
 
-    private function standardModulePickerSchema(array $availableModules): array
+    private function standardModulePickerSchema(): array
     {
+        $available = app(ModuleUsageService::class)
+            ->getAvailableModules($this->training, $this->class)
+            ->mapWithKeys(fn ($module) => [$module->id => $module->name])
+            ->toArray();
+
         return [
-            Forms\Components\CheckboxList::make('module_ids')
+            CardCheckboxList::make('module_ids')
                 ->label('Available Program Modules')
-                ->options($availableModules)
-                ->searchable()
-                ->bulkToggleable()
+                ->options($available)
                 ->required()
-                ->extraAttributes(['class' => 'module-list-scroll'])
                 ->helperText('Modules already added to this class are excluded. Modules used in other classes remain available.'),
         ];
     }

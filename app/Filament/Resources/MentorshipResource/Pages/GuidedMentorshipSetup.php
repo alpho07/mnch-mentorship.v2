@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MentorshipResource\Pages;
 
+use App\Filament\Forms\Components\CardCheckboxList;
 use App\Filament\Forms\Components\EmoncModulePicker;
 use App\Filament\Forms\Components\ProgramPicker;
 use App\Filament\Resources\MentorshipTrainingResource;
@@ -77,6 +78,12 @@ class GuidedMentorshipSetup extends Page implements HasForms
         $fill = [
             'module_ids' => [],
             'selected_users' => [],
+            // The wizard's fill() is called with an explicit array on every
+            // mount(), which bypasses each field's own ->default() (Filament
+            // only auto-applies defaults when fill() is passed null). This
+            // field is disabled/locked to true, so it must be seeded here or
+            // it renders unchecked despite ->default(true) on the component.
+            'auto_create_sessions' => true,
         ];
 
         // Resuming on Run Type/Location before a Training record exists:
@@ -345,12 +352,10 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     ->mapWithKeys(fn ($module) => [$module->id => $module->name])
                                     ->toArray();
 
-                                $picker = Forms\Components\CheckboxList::make('module_ids')
+                                $picker = CardCheckboxList::make('module_ids')
                                     ->label('Available Program Modules')
                                     ->options($available)
                                     ->default([])
-                                    ->searchable()
-                                    ->bulkToggleable()
                                     ->helperText('Optional — you can add modules later from the class Modules page.');
                             }
 
@@ -359,7 +364,9 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 $picker,
                                 Forms\Components\Toggle::make('auto_create_sessions')
                                     ->label('Auto-populate sessions from program template')
-                                    ->default(true),
+                                    ->default(true)
+                                    ->disabled()
+                                    ->dehydrated(true),
                             ];
                         })
                         ->afterValidation(function (Get $get) {
@@ -376,6 +383,17 @@ class GuidedMentorshipSetup extends Page implements HasForms
                         ->description('Who will be mentored in this class? You can skip this and enroll mentees later.')
                         ->icon('heroicon-o-user-plus')
                         ->schema([
+                            Forms\Components\Placeholder::make('enroll_mentees_program_intro')
+                                ->label('')
+                                ->content(fn () => new \Illuminate\Support\HtmlString(
+                                    '<p class="text-sm text-gray-600 dark:text-gray-400">'.
+                                    '<span class="font-semibold text-gray-950 dark:text-white">Program: '.
+                                    ($this->training?->program?->name ?? 'this program').
+                                    '</span><br>'.
+                                    'Select mentees to enroll in '.
+                                    ($this->training?->program?->name ?? 'this program').
+                                    '.</p>'
+                                )),
                             Forms\Components\Hidden::make('mentee_page')->default(1),
                             Forms\Components\Hidden::make('show_new_mentee_form')->default(false),
                             Forms\Components\TextInput::make('mentee_search')
@@ -384,7 +402,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 ->live(debounce: 400)
                                 ->afterStateUpdated(fn (Set $set) => $set('mentee_page', 1))
                                 ->prefixIcon('heroicon-o-magnifying-glass'),
-                            Forms\Components\CheckboxList::make('selected_users')
+                            CardCheckboxList::make('selected_users')
                                 ->label('Existing Users')
                                 ->options(fn (Get $get) => $this->searchMenteeUsers(
                                     $get('mentee_search'),
@@ -399,8 +417,6 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     ])),
                                 ])->toArray())
                                 ->default([])
-                                ->bulkToggleable()
-                                ->columns(1)
                                 ->columnSpanFull()
                                 ->helperText('Search and check existing users to enroll.'),
                             Forms\Components\Actions::make([
