@@ -6,6 +6,7 @@ use App\Models\ClassAttendance;
 use App\Models\ClassModule;
 use App\Models\ClassParticipant;
 use App\Models\MenteeModuleProgress;
+use App\Services\MenteeNextActionResolver;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 
@@ -74,6 +75,8 @@ class MenteeDashboard extends Page
 
     public array $activityFeed = [];
 
+    public array $nextAction = [];
+
     public function mount(): void
     {
         $this->loadDashboard();
@@ -123,6 +126,7 @@ class MenteeDashboard extends Page
             $this->globalStats = $this->emptyGlobalStats();
             $this->enrollments = [];
             $this->activityFeed = [];
+            $this->nextAction = [];
 
             return;
         }
@@ -225,16 +229,6 @@ class MenteeDashboard extends Page
             $programName = strtolower($training?->program?->name ?? '');
             $isEmonc = str_contains($programName, 'maternal') && str_contains($programName, 'emonc');
 
-            // Determine the next module a mentee should work on (EmONC only).
-            // Only surface modules where the mentee has confirmed attendance (progress = in_progress).
-            // Not-started modules are locked until the mentor starts them and attendance is confirmed.
-            $nextModule = null;
-            if ($isEmonc) {
-                $nextModule = $mods->first(function ($m) {
-                    return $m['progress_status'] === 'in_progress';
-                });
-            }
-
             return [
                 'participant_id' => $p->id,
                 'class_id' => $class?->id,
@@ -264,10 +258,6 @@ class MenteeDashboard extends Page
                 'mentor_approved' => (bool) $p->mentor_approved_at,
                 'cert_url'        => $p->isCertified() ? route('reports.class.certificate', [$class?->id, $p->id]) : null,
                 'modules' => $modules,
-                'next_module' => $nextModule ? [
-                    'id' => $nextModule['id'],
-                    'name' => $nextModule['name'],
-                ] : null,
             ];
         })->toArray();
 
@@ -313,6 +303,9 @@ class MenteeDashboard extends Page
 
         // ── 8. Activity feed ─────────────────────────────────────────────────
         $this->activityFeed = $this->buildActivityFeed($participants, $confirmedModuleIds);
+
+        // ── 9. Next-best-action ──────────────────────────────────────────────
+        $this->nextAction = app(MenteeNextActionResolver::class)->resolve($user);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
