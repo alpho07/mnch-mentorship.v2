@@ -125,6 +125,44 @@
     </div>
 </form>
 
+{{-- ── EXCEPTIONS ───────────────────────────────────────────────────────────── --}}
+@if(!empty($mentorExceptions))
+<div class="dash-section" data-aos="fade-up" style="margin-bottom:1.25rem;background:#fff;border:1px solid var(--gray-200);border-radius:12px;overflow:hidden;">
+    <div style="padding:.9rem 1.1rem;border-bottom:1px solid var(--gray-100);">
+        <h6 style="margin:0;font-weight:700;color:var(--gray-800);font-size:.92rem;">
+            <i class="fas fa-triangle-exclamation" style="color:#F59E0B;margin-right:.4rem;"></i>
+            {{ count($mentorExceptions) }} exception{{ count($mentorExceptions) !== 1 ? 's' : '' }} need attention
+        </h6>
+    </div>
+    @foreach($mentorExceptions as $item)
+        @php
+            $tierColor = match($item['tier']) {
+                1 => '#EF4444',
+                2 => '#F59E0B',
+                default => '#3B82F6',
+            };
+        @endphp
+        <div style="padding:.75rem 1.1rem;{{ !$loop->last ? 'border-bottom:1px solid var(--gray-100);' : '' }}display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+            <div style="display:flex;align-items:center;gap:.65rem;min-width:0;">
+                <span style="width:8px;height:8px;border-radius:50%;background:{{ $tierColor }};flex-shrink:0;"></span>
+                <div style="min-width:0;">
+                    <div style="font-size:.85rem;font-weight:700;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $item['headline'] }}</div>
+                    <div style="font-size:.76rem;color:var(--gray-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $item['subtext'] }}</div>
+                </div>
+            </div>
+            <a href="{{ $item['url'] }}" style="flex-shrink:0;padding:.4rem .9rem;border-radius:8px;background:{{ $tierColor }};color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;">
+                {{ $item['label'] }}
+            </a>
+        </div>
+    @endforeach
+</div>
+@else
+<div class="dash-section" data-aos="fade-up" style="margin-bottom:1.25rem;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:.9rem 1.1rem;">
+    <span style="font-size:.85rem;font-weight:700;color:#166534;">No exceptions</span>
+    <span style="font-size:.82rem;color:#15803D;margin-left:.4rem;">Every facility and mentor in view is healthy.</span>
+</div>
+@endif
+
 {{-- ── KPI STRIP ────────────────────────────────────────────────────────────── --}}
 <div class="kpi-strip-wrap mentor-kpi-strip" data-aos="fade-up">
     <div class="kpi-strip">

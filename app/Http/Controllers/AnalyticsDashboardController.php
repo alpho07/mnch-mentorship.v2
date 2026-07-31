@@ -79,11 +79,12 @@ class AnalyticsDashboardController extends Controller {
                 'department_id' => $request->get('department_id'),
             ];
 
-            $data           = app(MentorAnalyticsDashboardService::class)->build(auth()->user(), $mentorFilters);
-            $mentorKpis     = $data['kpis'];
-            $mentorMatrix   = $data['matrix'];
-            $mentorCharts   = $data['chartData'];
-            $mentorInsights = $data['insights'];
+            $data            = app(MentorAnalyticsDashboardService::class)->build(auth()->user(), $mentorFilters);
+            $mentorKpis      = $data['kpis'];
+            $mentorMatrix    = $data['matrix'];
+            $mentorCharts    = $data['chartData'];
+            $mentorInsights  = $data['insights'];
+            $mentorExceptions = $data['exceptions'];
 
             // Filter option lists
             $mentorPrograms    = \App\Models\Program::orderBy('name')->get(['id', 'name']);
@@ -110,7 +111,7 @@ class AnalyticsDashboardController extends Controller {
 
             return view('analytics.dashboard.index', compact(
                 'mode', 'selectedYear', 'availableYears',
-                'mentorKpis', 'mentorMatrix', 'mentorCharts', 'mentorInsights',
+                'mentorKpis', 'mentorMatrix', 'mentorCharts', 'mentorInsights', 'mentorExceptions',
                 'mentorFilters', 'mentorPrograms', 'mentorCounties', 'mentorSubcounties',
                 'mentorFacilities', 'mentorCadres', 'mentorDepartments', 'mentorUsers'
             ));
