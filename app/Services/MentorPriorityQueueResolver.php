@@ -162,7 +162,7 @@ class MentorPriorityQueueResolver
                 $lastActivity = $earliestEnrollment ? Carbon::parse($earliestEnrollment) : now();
             }
 
-            $daysInactive = $lastActivity->diffInDays(now());
+            $daysInactive = (int) $lastActivity->diffInDays(now());
             if ($daysInactive < self::INACTIVE_DAYS) {
                 continue;
             }

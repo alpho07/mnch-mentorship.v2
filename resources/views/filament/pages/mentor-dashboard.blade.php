@@ -13,10 +13,6 @@ $greeting  = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Goo
 
 // Insight cards
 $insightCards = [];
-if ($insights['mentees_needing_attention'] > 0)
-    $insightCards[] = ['color'=>'#ef4444','bg'=>'#fef2f2','text'=>"<strong>{$insights['mentees_needing_attention']}</strong> mentee(s) have low module completion — consider scheduling a check-in.",'icon'=>'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z','ic'=>'#ef4444'];
-if ($insights['low_attendance_classes'] > 0)
-    $insightCards[] = ['color'=>'#f59e0b','bg'=>'#fffbeb','text'=>"<strong>{$insights['low_attendance_classes']}</strong> class(es) have attendance below 60% — review and follow up.",'icon'=>'M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941','ic'=>'#f59e0b'];
 if ($insights['stalled_modules'] > 0)
     $insightCards[] = ['color'=>'#6366f1','bg'=>'#eef2ff','text'=>"<strong>{$insights['stalled_modules']}</strong> module(s) haven't been started yet — consider activating them.",'icon'=>'M15.75 5.25v13.5m-7.5-13.5v13.5','ic'=>'#6366f1'];
 if ($insights['recs_coverage'] < 50)
@@ -71,6 +67,47 @@ if (empty($insightCards))
     </div>
 </div>
 
+{{-- ═══ PRIORITY QUEUE ═════════════════════════════════════════════════════ --}}
+@if(!empty($priorityQueue))
+<div class="rv-animate md-card" style="animation-delay:0.05s;margin-bottom:24px;background:#fff;border:1.5px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05);">
+    <div style="padding:16px 22px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <h3 style="font-size:15px;font-weight:700;color:#111827;margin:0;">{{ count($priorityQueue) }} item{{ count($priorityQueue) !== 1 ? 's' : '' }} need your attention</h3>
+    </div>
+    <div>
+        @foreach(array_slice($priorityQueue, 0, 10) as $item)
+            @php
+                $tierColor = match(true) {
+                    $item['tier'] <= 2 => '#f59e0b',
+                    $item['tier'] === 3 => '#ef4444',
+                    default => '#3b82f6',
+                };
+            @endphp
+            <div class="md-row" style="padding:13px 22px;{{ !$loop->last ? 'border-bottom:1px solid #f9fafb;' : '' }}display:flex;align-items:center;justify-content:space-between;gap:16px;">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:{{ $tierColor }};flex-shrink:0;"></span>
+                    <div style="min-width:0;">
+                        <p style="font-size:13px;font-weight:700;color:#111827;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $item['headline'] }}</p>
+                        <p style="font-size:11px;color:#9ca3af;margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $item['subtext'] }}</p>
+                    </div>
+                </div>
+                <a href="{{ $item['url'] }}"
+                   style="display:inline-flex;align-items:center;gap:6px;background:{{ $tierColor }};color:#fff;border:none;border-radius:9px;padding:8px 16px;font-size:12px;font-weight:700;text-decoration:none;flex-shrink:0;">
+                    {{ $item['label'] }}
+                </a>
+            </div>
+        @endforeach
+    </div>
+</div>
+@else
+<div class="rv-animate" style="animation-delay:0.05s;margin-bottom:24px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:18px;padding:18px 22px;">
+    <p style="font-size:13px;font-weight:700;color:#166534;margin:0;">You're all caught up</p>
+    <p style="font-size:12px;color:#15803d;margin:3px 0 0;">Nothing needs your attention right now.</p>
+</div>
+@endif
+
+<details class="md-collapse-section" style="margin-bottom:16px;">
+    <summary class="md-collapse-summary" style="cursor:pointer;font-size:13px;font-weight:700;color:#475569;padding:10px 4px;list-style:none;user-select:none;">📊 Mentorship Overview</summary>
+    <div class="md-collapse-body" style="padding-top:6px;">
 {{-- ═══ KPI STRIP — all stats in one horizontal row ════════════════════════ --}}
 <div class="md-kpi-strip rv-animate" style="animation-delay:0.08s;margin-bottom:24px;">
 
@@ -427,9 +464,14 @@ $sortArrow = fn(string $f) => $mdSort === $f ? ($mdDir === 'asc' ? ' ↑' : ' �
         @endif
     </div>
 </div>
+    </div>
+</details>
 
 {{-- ═══ RECENT RECOMMENDATIONS ════════════════════════════════════════════ --}}
 @if(count($activityFeed) > 0)
+<details class="md-collapse-section" style="margin-bottom:16px;">
+    <summary class="md-collapse-summary" style="cursor:pointer;font-size:13px;font-weight:700;color:#475569;padding:10px 4px;list-style:none;user-select:none;">🕐 Recent Recommendations</summary>
+    <div class="md-collapse-body" style="padding-top:6px;">
 <div class="rv-animate" style="animation-delay:0.28s;">
     <div class="md-card" style="background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05);">
         <div style="padding:18px 24px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px;">
@@ -461,6 +503,8 @@ $sortArrow = fn(string $f) => $mdSort === $f ? ($mdDir === 'asc' ? ' ↑' : ' �
         @endforeach
     </div>
 </div>
+    </div>
+</details>
 @endif
 
 @endif {{-- end isEmpty check --}}
