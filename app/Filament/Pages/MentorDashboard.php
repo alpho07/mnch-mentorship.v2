@@ -10,6 +10,7 @@ use App\Models\MentorshipClass;
 use App\Models\MentorshipCoMentor;
 use App\Models\Training;
 use App\Services\EmoncReportingService;
+use App\Services\MentorPriorityQueueResolver;
 use Filament\Pages\Page;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -80,6 +81,8 @@ class MentorDashboard extends Page
 
     public array $insights = [];   // derived flags for decision-making
 
+    public array $priorityQueue = [];   // ranked cross-tier action queue
+
     public array $pendingVideoReviews = [];   // pending hands-on video reviews
 
     public array $allMentorships = [];   // full unfiltered list (for client-side sort/filter)
@@ -119,6 +122,7 @@ class MentorDashboard extends Page
                 'stalled_modules'           => 0,
                 'recs_coverage'             => 100,
             ];
+            $this->priorityQueue = [];
 
             return;
         }
@@ -337,6 +341,9 @@ class MentorDashboard extends Page
                 ? round(($recCount / max($totalEnrollments, 1)) * 100)
                 : 0,
         ];
+
+        // ── Priority queue ───────────────────────────────────────────────────
+        $this->priorityQueue = app(MentorPriorityQueueResolver::class)->resolve(auth()->user(), $trainingIds);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
