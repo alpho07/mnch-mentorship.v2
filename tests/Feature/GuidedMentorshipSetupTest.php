@@ -356,6 +356,69 @@ class GuidedMentorshipSetupTest extends TestCase
         ]);
     }
 
+    public function test_mount_restores_module_and_mentee_picks_from_training_draft(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'guided_setup_draft' => [
+                'module_ids' => [39, 41],
+                'selected_users' => [100],
+            ],
+        ]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+
+        // Simulates the pending-setup banner's Continue link: a brand new
+        // session that only ever knew the training/class IDs, never the
+        // original browser tab's URL — the draft on the Training record is
+        // the only place these picks could come from.
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->trainingId = $training->id;
+        $component->instance()->classId = $class->id;
+        $component->instance()->mount();
+
+        $component->assertFormSet([
+            'module_ids' => [39, 41],
+            'selected_users' => [100],
+        ]);
+    }
+
+    public function test_save_wizard_draft_merges_into_existing_training_draft(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'guided_setup_draft' => ['module_ids' => [39]],
+        ]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+
+        $reflection = new \ReflectionMethod($component->instance(), 'saveWizardDraft');
+        $reflection->setAccessible(true);
+        $reflection->invoke($component->instance(), 'selected_users', [100, 200]);
+
+        $this->assertSame(
+            ['module_ids' => [39], 'selected_users' => [100, 200]],
+            $training->fresh()->guided_setup_draft
+        );
+    }
+
+    public function test_send_invitations_clears_the_draft(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'guided_setup_draft' => ['module_ids' => [39]],
+        ]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $component->instance()->sendInvitations(['recipients' => 'all']);
+
+        $this->assertNull($training->fresh()->guided_setup_draft);
+    }
+
     public function test_enroll_mentees_does_not_duplicate_already_enrolled_user(): void
     {
         $this->actingAsCoordinator();

@@ -63,17 +63,6 @@ class GuidedMentorshipSetup extends Page implements HasForms
     #[Url(as: 'facility')]
     public ?int $urlFacilityId = null;
 
-    // Mirrors of the Modules/Enroll Mentees checkbox selections. Nothing is
-    // saved to the DB for these until the user clicks Next past that step
-    // (assignModules()/enrollMentees() run in afterValidation), so a refresh
-    // while still on either step would otherwise silently drop the picks —
-    // same idea as the URL mirrors above, comma-joined since these are lists.
-    #[Url(as: 'modules')]
-    public ?string $urlModuleIds = null;
-
-    #[Url(as: 'mentees')]
-    public ?string $urlSelectedUserIds = null;
-
     public ?Training $training = null;
 
     public ?MentorshipClass $class = null;
@@ -87,8 +76,8 @@ class GuidedMentorshipSetup extends Page implements HasForms
     public function mount(): void
     {
         $fill = [
-            'module_ids' => $this->idsFromUrlString($this->urlModuleIds),
-            'selected_users' => $this->idsFromUrlString($this->urlSelectedUserIds),
+            'module_ids' => [],
+            'selected_users' => [],
             // The wizard's fill() is called with an explicit array on every
             // mount(), which bypasses each field's own ->default() (Filament
             // only auto-applies defaults when fill() is passed null). This
@@ -126,6 +115,16 @@ class GuidedMentorshipSetup extends Page implements HasForms
                 $fill['start_date'] = $this->training->start_date;
                 $fill['end_date'] = $this->training->end_date;
                 $fill['max_participants'] = $this->training->max_participants;
+
+                // Resuming a genuinely different session (e.g. via the
+                // pending-setup banner's Continue link, not just a refresh
+                // of the same tab): module/mentee picks were never saved to
+                // their real tables yet, so they can only be recovered from
+                // this durable draft — a #[Url] mirror wouldn't survive a
+                // fresh URL that never carried it.
+                $draft = $this->training->guided_setup_draft ?? [];
+                $fill['module_ids'] = $draft['module_ids'] ?? [];
+                $fill['selected_users'] = $draft['selected_users'] ?? [];
             }
         }
 
@@ -356,6 +355,8 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     ->label('Available Program Modules')
                                     ->training($this->training)
                                     ->class($this->class)
+                                    ->live()
+                                    ->afterStateUpdated(fn ($state) => $this->saveWizardDraft('module_ids', $state))
                                     ->helperText('Click a module to select all its tracks, or pick tracks individually.');
                             } else {
                                 $available = app(ModuleUsageService::class)
@@ -368,7 +369,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     ->options($available)
                                     ->default([])
                                     ->live()
-                                    ->afterStateUpdated(fn ($state) => $this->urlModuleIds = empty($state) ? null : implode(',', $state))
+                                    ->afterStateUpdated(fn ($state) => $this->saveWizardDraft('module_ids', $state))
                                     ->helperText('Optional — you can add modules later from the class Modules page.');
                             }
 
@@ -425,7 +426,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 ->maxSelections(fn () => $this->training?->max_participants)
                                 ->default([])
                                 ->live()
-                                ->afterStateUpdated(fn ($state) => $this->urlSelectedUserIds = empty($state) ? null : implode(',', $state))
+                                ->afterStateUpdated(fn ($state) => $this->saveWizardDraft('selected_users', $state))
                                 ->columnSpanFull()
                                 ->helperText('Search and check existing users to enroll. Already-selected mentees stay pinned to the top.'),
                             Forms\Components\Actions::make([
@@ -760,7 +761,10 @@ class GuidedMentorshipSetup extends Page implements HasForms
 
         $this->invitedCount = $sent + $resent;
         $this->completed = true;
-        $this->training->update(['guided_setup_completed_at' => now()]);
+        $this->training->update([
+            'guided_setup_completed_at' => now(),
+            'guided_setup_draft' => null,
+        ]);
 
         return ['sent' => $sent, 'resent' => $resent];
     }
@@ -843,19 +847,21 @@ class GuidedMentorshipSetup extends Page implements HasForms
     }
 
     /**
-     * @return array<int, int>
+     * Persists an in-progress Modules/Enroll Mentees checkbox selection to
+     * the Training record so it survives a completely fresh session (e.g.
+     * the pending-setup banner's Continue link), not just a same-tab
+     * refresh. Safe to call repeatedly — merges into the existing draft.
      */
-    private function idsFromUrlString(?string $ids): array
+    private function saveWizardDraft(string $key, mixed $state): void
     {
-        if (! $ids) {
-            return [];
+        if (! $this->training) {
+            return;
         }
 
-        return collect(explode(',', $ids))
-            ->map(fn ($id) => (int) $id)
-            ->filter()
-            ->values()
-            ->toArray();
+        $draft = $this->training->guided_setup_draft ?? [];
+        $draft[$key] = array_values($state ?? []);
+
+        $this->training->update(['guided_setup_draft' => $draft]);
     }
 
     private function isEmoncProgram(?int $programId): bool

@@ -51,6 +51,7 @@ class Training extends Model
         'deletion_reason',
         'is_pilot',
         'guided_setup_completed_at',
+        'guided_setup_draft',
     ];
 
     protected $casts = [
@@ -65,6 +66,7 @@ class Training extends Model
         'provide_materials' => 'boolean',
         'is_pilot' => 'boolean',
         'guided_setup_completed_at' => 'datetime',
+        'guided_setup_draft' => 'array',
     ];
 
     public function scopeLive(Builder $query): Builder
