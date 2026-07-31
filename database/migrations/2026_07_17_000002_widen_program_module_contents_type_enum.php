@@ -9,15 +9,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE program_module_contents MODIFY type ENUM(
-            'introduction',
-            'video',
-            'case_scenario',
-            'expected_learning_outcome',
-            'case_scenario_progression',
-            'mentor_materials',
-            'mentor_course_intro'
-        ) NOT NULL");
+        // Raw ENUM widening is MySQL-only syntax — a no-op on SQLite (used in testing),
+        // where this column has no enforced enum constraint to widen.
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE program_module_contents MODIFY type ENUM(
+                'introduction',
+                'video',
+                'case_scenario',
+                'expected_learning_outcome',
+                'case_scenario_progression',
+                'mentor_materials',
+                'mentor_course_intro'
+            ) NOT NULL");
+        }
 
         Schema::table('program_module_contents', function (Blueprint $table) {
             $table->string('manual_reference_url')->nullable()->after('video_path');
@@ -30,10 +34,12 @@ return new class extends Migration
             $table->dropColumn('manual_reference_url');
         });
 
-        DB::statement("ALTER TABLE program_module_contents MODIFY type ENUM(
-            'introduction',
-            'video',
-            'case_scenario'
-        ) NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE program_module_contents MODIFY type ENUM(
+                'introduction',
+                'video',
+                'case_scenario'
+            ) NOT NULL");
+        }
     }
 };
