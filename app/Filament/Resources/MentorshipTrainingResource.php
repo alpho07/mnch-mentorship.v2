@@ -553,6 +553,7 @@ class MentorshipTrainingResource extends Resource
         return [
             'index' => Pages\ListMentorshipTrainings::route('/'),
             'create' => Pages\CreateMentorshipTraining::route('/create'),
+            'guided-setup' => Pages\GuidedMentorshipSetup::route('/guided-setup'),
             'view' => Pages\ViewMentorshipTraining::route('/{record}'),
             'edit' => Pages\EditMentorshipTraining::route('/{record}/edit'),
             'classes' => Pages\ManageMentorshipClasses::route('/{record}/classes'),
