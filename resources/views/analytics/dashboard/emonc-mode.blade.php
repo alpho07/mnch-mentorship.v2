@@ -340,7 +340,8 @@
             @if(count($emoncMatrix) === 0)
             <div style="padding:3rem;text-align:center;color:var(--gray-500);">
                 <i class="fas fa-heartbeat fa-2x mb-3" style="color:var(--gray-200);"></i>
-                <p style="font-size:.9rem;">No EmONC mentorship data found. Programmes must be tagged with <em>Maternal EmONC</em> in the program name.</p>
+                <p style="font-size:.95rem;font-weight:700;color:var(--gray-700);margin-bottom:.35rem;">No EmONC Mentorship Data Found</p>
+                <p style="font-size:.85rem;">Programmes must be tagged with <em>Maternal EmONC</em> in the program name.</p>
             </div>
             @else
             <table class="emonc-matrix" id="emoncMatrixTable">

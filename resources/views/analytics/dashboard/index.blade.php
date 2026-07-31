@@ -631,7 +631,9 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     @empty
                     <div class="sidebar-empty">
                         <i class="fas fa-chart-bar fa-2x mb-3"></i>
-                        <p>No training programs found for the selected period.</p>
+                        <p style="font-weight:700;margin-bottom:.3rem;">No Training Programs Found</p>
+                        <p style="font-size:.85rem;margin-bottom:.75rem;">No programs match the selected period.</p>
+                        <a href="{{ request()->fullUrlWithQuery(['year' => null]) }}" style="font-size:.82rem;font-weight:600;color:var(--gray-700);text-decoration:underline;">Reset Period</a>
                     </div>
                     @endforelse
                 </div>

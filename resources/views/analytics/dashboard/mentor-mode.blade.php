@@ -334,7 +334,11 @@
             @if(count($mentorMatrix) === 0)
             <div style="padding:3rem;text-align:center;color:var(--gray-500);">
                 <i class="fas fa-user-tie fa-2x mb-3" style="color:var(--gray-200);"></i>
-                <p style="font-size:.9rem;">No mentors found. Try adjusting the filters above.</p>
+                <p style="font-size:.95rem;font-weight:700;color:var(--gray-700);margin-bottom:.35rem;">No Mentors Found</p>
+                <p style="font-size:.85rem;margin-bottom:1rem;">No mentors match the current filters.</p>
+                <a href="?mode=mentor" class="mf-clear" style="display:inline-flex;">
+                    <i class="fas fa-times me-1" style="font-size:.72rem;"></i>Clear filters
+                </a>
             </div>
             @else
             <table class="mentor-matrix" id="mentorMatrixTable">
