@@ -16,7 +16,7 @@ class EmoncDashboardService
 {
     private const SENIOR_ROLES = ['super_admin', 'admin', 'division', 'national'];
 
-    public function build(User $user): array
+    public function build(?User $user): array
     {
         $trainingIds = $this->trainingIdsFor($user);
 
@@ -65,9 +65,9 @@ class EmoncDashboardService
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private function trainingIdsFor(User $user): array
+    private function trainingIdsFor(?User $user): array
     {
-        if ($user->hasRole(self::SENIOR_ROLES)) {
+        if ($user === null || $user->hasRole(self::SENIOR_ROLES)) {
             return Training::where('type', 'facility_mentorship')->pluck('id')->toArray();
         }
 

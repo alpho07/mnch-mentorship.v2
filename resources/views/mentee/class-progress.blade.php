@@ -28,15 +28,6 @@
                 }
             }
         </script>
-        <script>
-            (function () {
-                const stored = localStorage.getItem('theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (stored === 'dark' || (!stored && prefersDark)) {
-                    document.documentElement.classList.add('dark');
-                }
-            })();
-        </script>
         <style>
             .ring-fill {
                 stroke: #6366f1;
@@ -546,11 +537,31 @@
                 </div>
             </div>
 
-            {{-- ── Resource links (non-EmONC only) ───────────────────────────── --}}
-            @if(! $isEmonc)
-                <div class="space-y-2 pt-2">
-                    <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">Reference Materials</h2>
+            {{-- ── Resource links ─────────────────────────────────────────────── --}}
+            <div class="space-y-2 pt-2">
+                <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3">Reference Materials</h2>
 
+                @if($isEmonc)
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 flex items-center gap-3 hover:border-brand-200 dark:hover:border-brand-800 transition-colors group">
+                        <div class="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/50 flex items-center justify-center shrink-0 border border-brand-100 dark:border-brand-900/50">
+                            <svg class="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">EmONC Mentorship Manual</p>
+                            <p class="text-xs text-slate-400 dark:text-slate-500">Reference for emergency obstetric and newborn care</p>
+                        </div>
+                        <a href="{{ url('/resources/emonc-mentorship-manual') }}"
+                           target="_blank" rel="noopener noreferrer"
+                           class="flex items-center gap-1 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors shrink-0">
+                            Open
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                        </a>
+                    </div>
+                @else
                     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 flex items-center gap-3 hover:border-brand-200 dark:hover:border-brand-800 transition-colors group">
                         <div class="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/50 flex items-center justify-center shrink-0 border border-brand-100 dark:border-brand-900/50">
                             <svg class="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -590,8 +601,8 @@
                             </svg>
                         </a>
                     </div>
-                </div>
-            @endif
+                @endif
+            </div>
 
             <div class="h-6"></div>
         </main>

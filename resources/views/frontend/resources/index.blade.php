@@ -12,35 +12,75 @@
     </li>
 @endsection
 
-@section('page_header')
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">
-                <i class="fas fa-book text-primary-600 mr-3"></i>
-                Resources
-            </h1>
-            <p class="mt-2 text-lg text-gray-600">
-                Discover {{ number_format($resources->total()) }} educational resources and tools
-            </p>
+@section('content')
+{{-- ═══════════════════════════════════════════
+     RESOURCE LIBRARY HERO
+═══════════════════════════════════════════ --}}
+<section class="relative overflow-hidden" style="background: linear-gradient(135deg, #16224A 0%, #1B2E5E 48%, #2C478D 100%);">
+    <div class="absolute inset-0 opacity-[0.07]">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <pattern id="resources-hero-grid" width="42" height="42" patternUnits="userSpaceOnUse">
+                <path d="M 42 0 L 0 0 0 42" fill="none" stroke="white" stroke-width="1"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#resources-hero-grid)"/>
+        </svg>
+    </div>
+    <div class="absolute -right-20 -top-20 h-72 w-72 rounded-full opacity-20" style="background: radial-gradient(circle, #6FC4EF 0%, transparent 68%);"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <div>
+                <div class="inline-flex items-center gap-2 rounded-full border border-white/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-sky-100 mb-4"
+                     style="background: rgba(255,255,255,0.08);">
+                    <i class="fas fa-book-medical text-sky-200"></i>
+                    Clinical Knowledge Library
+                </div>
+                <h1 class="font-display text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+                    Resources for maternal, newborn &amp; child health
+                </h1>
+                <p class="mt-3 text-sm md:text-base text-sky-100/90 leading-relaxed max-w-2xl">
+                    {{ number_format($resources->total()) }} manuals, guidelines, and training materials — curated for
+                    healthcare workers mentoring across Kenya.
+                </p>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+                <a href="{{ route('resources.browse') }}"
+                   class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white text-primary-700 rounded-xl font-bold text-sm hover:bg-gray-100 transition-all shadow-lg">
+                    <i class="fas fa-sliders"></i>
+                    Advanced Search
+                </a>
+                <a href="{{ route('categories.index') }}"
+                   class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-white border-2 border-white/30 hover:border-white/60 transition-all"
+                   style="background: rgba(255,255,255,0.12);">
+                    <i class="fas fa-folder-open"></i>
+                    Browse Categories
+                </a>
+            </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="mt-6 lg:mt-0 flex flex-col sm:flex-row gap-3">
-            <a href="{{ route('resources.browse') }}"
-               class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-                <i class="fas fa-filter mr-2"></i>
-                Advanced Search
+        {{-- Pillar quick-filter chips --}}
+        <div class="flex flex-wrap gap-2.5 mt-8">
+            <a href="{{ route('resources.category', 'maternal-health') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold text-white transition-transform hover:scale-105"
+               style="background: linear-gradient(135deg, #C81E70 0%, #8F1152 100%);">
+                <i class="fas fa-heart-pulse"></i> Maternal Health
             </a>
-            <a href="{{ route('categories.index') }}"
-               class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                <i class="fas fa-folder mr-2"></i>
-                Browse Categories
+            <a href="{{ route('resources.category', 'newborn-care') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold text-white transition-transform hover:scale-105"
+               style="background: linear-gradient(135deg, #A855C8 0%, #6B2E8C 100%);">
+                <i class="fas fa-baby-carriage"></i> Newborn Care
+            </a>
+            <a href="{{ route('resources.category', 'child-health') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold text-white transition-transform hover:scale-105"
+               style="background: linear-gradient(135deg, #7DB83A 0%, #4B7A1A 100%);">
+                <i class="fas fa-child-reaching"></i> Infant &amp; Child
             </a>
         </div>
     </div>
-@endsection
+</section>
 
-@section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="resourcesPage">
     <div class="flex flex-col lg:flex-row gap-8">
         <!-- Sidebar Filters -->

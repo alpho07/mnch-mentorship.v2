@@ -1,4 +1,5 @@
 <x-filament-panels::page>
+    @if ($isEmonc)
     @php
         $sections = $this->getResourceSections();
     @endphp
@@ -72,6 +73,33 @@
                                         Type: {{ str_replace('_', ' ', $quiz->type) }}
                                     </span>
                                 </div>
+
+                                <div class="mt-4 space-y-3">
+                                    @forelse ($quiz->questions->sortBy('order_sequence') as $question)
+                                        <div class="border border-gray-100 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-900/40">
+                                            <p class="font-medium text-gray-900 dark:text-white text-sm">
+                                                {{ $loop->iteration }}. {{ $question->question_text }}
+                                            </p>
+                                            <ul class="mt-2 space-y-1">
+                                                @foreach ($question->options->sortBy('order_sequence') as $option)
+                                                    <li class="flex items-center gap-2 text-sm {{ $option->is_correct ? 'text-success-700 dark:text-success-400 font-semibold' : 'text-gray-600 dark:text-gray-400' }}">
+                                                        @if ($option->is_correct)
+                                                            <x-heroicon-o-check-circle class="w-4 h-4 shrink-0 text-success-600 dark:text-success-400" />
+                                                        @else
+                                                            <span class="w-4 h-4 shrink-0"></span>
+                                                        @endif
+                                                        {{ $option->option_text }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                            @if ($question->explanation)
+                                                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">{{ $question->explanation }}</p>
+                                            @endif
+                                        </div>
+                                    @empty
+                                        <p class="text-gray-500 text-sm">No questions configured for this quiz yet.</p>
+                                    @endforelse
+                                </div>
                             </div>
                         @empty
                             <p class="text-gray-500">No {{ strtolower($section['title']) }} quizzes configured.</p>
@@ -83,16 +111,16 @@
                             <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                 <h4 class="font-semibold text-gray-900 dark:text-white mb-3">{{ $video->title }}</h4>
                                 @if ($video->youtubeEmbedUrl())
-                                    <div class="aspect-video w-full rounded-lg overflow-hidden bg-black">
+                                    <div class="rounded-lg overflow-hidden" style="width:100%;max-height:400px;aspect-ratio:16/9;margin:0 auto;background:#000;">
                                         <iframe src="{{ $video->youtubeEmbedUrl() }}"
-                                                class="w-full h-full"
+                                                style="width:100%;height:100%;"
                                                 frameborder="0"
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                 allowfullscreen></iframe>
                                     </div>
                                 @elseif ($video->video_url)
-                                    <div class="aspect-video w-full rounded-lg overflow-hidden bg-black">
-                                        <video src="{{ $video->video_url }}" controls class="w-full h-full"></video>
+                                    <div class="rounded-lg overflow-hidden" style="width:100%;max-height:400px;aspect-ratio:16/9;margin:0 auto;background:#000;">
+                                        <video src="{{ $video->video_url }}" controls style="width:100%;height:100%;object-fit:contain;"></video>
                                     </div>
                                 @endif
                                 @if ($video->content)
@@ -166,6 +194,15 @@
                                            title="View resource">
                                             <x-heroicon-o-eye class="w-4 h-4" />
                                         </a>
+                                        @if ($this->isAdmin())
+                                            <button type="button"
+                                                    wire:click="detachResource({{ $resource->id }})"
+                                                    wire:confirm="Remove '{{ $resource->title }}' from this module?"
+                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-danger-100 text-danger-600 hover:bg-danger-200 dark:bg-danger-900 dark:text-danger-300"
+                                                    title="Remove from module">
+                                                <x-heroicon-o-trash class="w-4 h-4" />
+                                            </button>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -177,4 +214,66 @@
             </div>
         @endforeach
     </div>
+    @else
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        @if ($this->programModule->resources->isEmpty())
+            <p class="text-gray-500 p-4">No resources attached to this module.</p>
+        @else
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                        <th class="py-3 px-4 font-medium">Resource</th>
+                        <th class="py-3 px-4 font-medium">Links</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    @foreach ($this->programModule->resources as $resource)
+                        <tr>
+                            <td class="py-3 px-4">
+                                <p class="font-medium text-gray-900 dark:text-white">{{ $resource->title }}</p>
+                                @if ($resource->excerpt)
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ Str::limit($resource->excerpt, 120) }}</p>
+                                @endif
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="flex items-center gap-3">
+                                    @if ($resource->primaryFile?->exists())
+                                        <a href="{{ route('admin.resource-files.download', $resource->primaryFile) }}"
+                                           class="inline-flex items-center gap-1 text-success-600 dark:text-success-400 hover:underline">
+                                            <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
+                                            Download
+                                        </a>
+                                    @endif
+                                    @if (filled($resource->external_url))
+                                        <a href="{{ $resource->external_url }}"
+                                           target="_blank"
+                                           rel="noopener"
+                                           class="inline-flex items-center gap-1 text-warning-600 dark:text-warning-400 hover:underline">
+                                            <x-heroicon-o-link class="w-4 h-4" />
+                                            Open link
+                                        </a>
+                                    @endif
+                                    <a href="{{ App\Filament\Resources\ResourceResource::getUrl('view', ['record' => $resource]) }}"
+                                       class="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:underline">
+                                        <x-heroicon-o-eye class="w-4 h-4" />
+                                        View
+                                    </a>
+                                    @if ($this->isAdmin())
+                                        <button type="button"
+                                                wire:click="detachResource({{ $resource->id }})"
+                                                wire:confirm="Remove '{{ $resource->title }}' from this module?"
+                                                class="inline-flex items-center gap-1 text-danger-600 dark:text-danger-400 hover:underline">
+                                            <x-heroicon-o-trash class="w-4 h-4" />
+                                            Remove
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
+    </div>
+    @endif
 </x-filament-panels::page>

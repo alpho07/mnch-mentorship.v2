@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             ProgramModulesSeeder::class,   // Programs + modules required for mentorship creation
             EmoncProgramSeeder::class,         // Maternal Health (EmONC) program, modules, and tracks
             AphModuleContentSeeder::class,     // APH quiz (15 Qs pre/post test) + EmONC video links
+            EmoncAphIntroContentSeeder::class, // APH intro/outcome/objectives/workplan (skipped by the batch seeders)
             ModuleRubricSeeder::class,         // Practical rubrics for Modules 4, 5 and all PPH tracks
             EmoncBatchAContentSeeder::class,   // Modules 2,3,4,6 — content + quiz
             EmoncBatchBContentSeeder::class,   // Modules 7,8,9 — content + quiz
@@ -30,6 +31,7 @@ class DatabaseSeeder extends Seeder
             EmoncPphTracksBatch1Seeder::class,  // PPH Tracks 1-6 — content + quiz
             EmoncPphTracksBatch2Seeder::class,  // PPH Tracks 7-11 — content + quiz
             EmoncRubricItemsSeeder::class,      // Competency assessment checklist items (mentor manual)
+            EmoncModuleActivitiesSeeder::class, // Corrects module/track activity mix per EmONC Modules Summary.docx
             PptxResourceSeeder::class,         // Newborn Care + Infant & Child PPTX slide placeholders
             // Assessment configuration seeders — safe to re-run at any time:
             // AssessmentQuestionConfigSeeder::class,  // Sets explanation fields + mortality question type

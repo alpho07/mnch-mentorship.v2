@@ -2,7 +2,7 @@
 @php
     $dashTitle = match($mode) {
         'mentorship' => 'Infant, Child & Newborn Care Dashboard',
-
+        'emonc'      => 'EmONC Analytics Dashboard',
         'mentor'     => 'Mentor Analytics Dashboard',
         'assessment' => 'Assessment Analytics Dashboard',
         'training'   => 'Training Analytics Dashboard',
@@ -265,6 +265,8 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     Comprehensive insights across Kenya healthcare training programs
                 @elseif($mode === 'mentorship')
                     Infant, child &amp; newborn care facility-based mentorship — progress, modules &amp; mentee outcomes
+                @elseif($mode === 'emonc')
+                    Emergency Obstetric &amp; Newborn Care mentorship — mentee progress, competency assessments &amp; certification
                 @elseif($mode === 'mentor')
                     Mentor performance, CPD points, and active class activity
                 @elseif($mode === 'assessment')
@@ -293,6 +295,11 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     <i class="fas fa-user-friends me-1"></i> Mentorships
                 </button>
 
+                <button type="button" class="mode-btn {{ $mode === 'emonc' ? 'active' : '' }}" data-mode="emonc"
+                    title="EmONC Analytics — Emergency Obstetric &amp; Newborn Care mentee progress, competency assessments &amp; certification">
+                    <i class="fas fa-heart-pulse me-1"></i> EmONC
+                </button>
+
                 <button type="button" class="mode-btn {{ $mode === 'mentor' ? 'active' : '' }}" data-mode="mentor"
                     title="Mentor Analytics — mentor CPD points, active classes, mentee reach and leaderboards">
                     <i class="fas fa-user-tie me-1"></i> Mentors
@@ -318,6 +325,8 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
     @include('analytics.dashboard.assessment-mode')
 @elseif($mode === 'mentor')
     @include('analytics.dashboard.mentor-mode')
+@elseif($mode === 'emonc')
+    @include('analytics.dashboard.emonc-mode')
 @else
 <!-- ████████ KPI STRIP ████████ -->
 <div class="kpi-strip-wrap" data-intro="Key performance metrics for the selected mode and filters." data-step="4">

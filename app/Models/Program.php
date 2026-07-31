@@ -35,6 +35,16 @@ class Program extends Model
         return $this->hasMany(ProgramModule::class);
     }
 
+    /**
+     * Top-level curriculum modules only — excludes track rows (e.g. PPH's 11
+     * tracks), which are sub-procedures under their parent module, not
+     * separate modules in their own right.
+     */
+    public function topLevelModules(): HasMany
+    {
+        return $this->programModules()->whereNull('parent_id');
+    }
+
     public function trainings(): HasMany
     {
         return $this->hasMany(Training::class);
@@ -92,11 +102,6 @@ class Program extends Model
     }
 
     // Computed Attributes
-    public function getModuleCountAttribute(): int
-    {
-        return $this->modules()->count();
-    }
-
     public function getTrainingCountAttribute(): int
     {
         return $this->trainings()->count();

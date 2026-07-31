@@ -446,7 +446,7 @@ class MenteeClassProgressController extends Controller
         }
 
         return redirect()->route('mentee.class.module', [$class->id, $classModule->id])
-            ->with('success', "Quiz submitted. Score: {$attempt->score}%");
+            ->with('success', "Quiz submitted. Score: {$attempt->correct_answers}/{$attempt->total_questions}");
     }
 
     public function uploadHandsOnVideo(Request $request, int $classId, int $classModuleId)

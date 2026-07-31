@@ -529,7 +529,7 @@ class Training extends Model
     {
         $totalProgramModules = ProgramModule::whereHas('program', function ($query) {
             $query->where('id', $this->program_id);
-        })->where('is_active', true)->count();
+        })->where('is_active', true)->whereNull('parent_id')->count();
 
         $usedCount = ClassModule::whereHas('mentorshipClass', fn ($query) => $query->where('training_id', $this->id))
             ->distinct('program_module_id')

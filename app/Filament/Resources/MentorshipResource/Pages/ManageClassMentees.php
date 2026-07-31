@@ -63,7 +63,7 @@ class ManageClassMentees extends Page implements HasTable
             ->whereIn('status', ['enrolled', 'active'])
             ->count();
 
-        return "{$enrolled} enrolled · {$this->training->title}";
+        return "{$enrolled} enrolled · ".\Illuminate\Support\Str::limit($this->training->title, 60);
     }
 
     // Pass variables the blade view needs
@@ -858,12 +858,8 @@ class ManageClassMentees extends Page implements HasTable
                             ->persistent()
                             ->send();
                     }),
-            ])->label('Register Mentee')
-                ->icon('heroicon-o-ellipsis-vertical')
-                ->color('gray')
-                ->button(),
-            // ─── Enrollment link ──────────────────────────────────────────────
-            Actions\Action::make('enrollment_link')
+                // ─── Enrollment link ──────────────────────────────────────────────
+                Actions\Action::make('enrollment_link')
                 ->label('Enrollment Link')
                 ->icon('heroicon-o-link')
                 ->color('info')
@@ -1022,6 +1018,10 @@ class ManageClassMentees extends Page implements HasTable
                             ->send();
                     }
                 }),
+            ])->label('Enroll Mentees')
+                ->icon('heroicon-o-user-group')
+                ->color('primary')
+                ->button(),
             Actions\Action::make('start_class')
                 ->label('Start Class')
                 ->icon('heroicon-o-play')

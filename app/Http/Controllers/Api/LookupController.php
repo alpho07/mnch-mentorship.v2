@@ -17,7 +17,7 @@ class LookupController extends Controller
 {
     public function programs(): JsonResponse
     {
-        $programs = Program::withCount('programModules as module_count')->orderBy('name')->get(['id', 'name', 'description']);
+        $programs = Program::withCount('topLevelModules as module_count')->orderBy('name')->get(['id', 'name', 'description']);
         return response()->json(['data' => $programs]);
     }
 
@@ -25,6 +25,7 @@ class LookupController extends Controller
     {
         $modules = ProgramModule::where('program_id', $program->id)
             ->where('is_active', true)
+            ->whereNull('parent_id')
             ->withCount(['moduleSessions as session_count' => fn($q) => $q->where('is_active', true)])
             ->orderBy('order_sequence')
             ->get()

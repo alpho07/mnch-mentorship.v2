@@ -12,7 +12,7 @@
             </div>
         </div>
 
-        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <a href="{{ url('/resources/infant-child-mentorship-manual') }}" target="_blank" rel="noopener noreferrer" class="rounded-lg border border-gray-200 p-3 text-sm hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:hover:bg-gray-800">
                 <div class="font-semibold">Infant and Child Mentorship Manual</div>
                 <div class="text-gray-600 dark:text-gray-400">Plan what to mentor and how to deliver it.</div>
@@ -20,6 +20,10 @@
             <a href="https://mnchkenyamentorship.org/resources/newborn-mentorship-mentors-manual" target="_blank" rel="noopener noreferrer" class="rounded-lg border border-gray-200 p-3 text-sm hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:hover:bg-gray-800">
                 <div class="font-semibold">Newborn Mentorship Mentor's Manual</div>
                 <div class="text-gray-600 dark:text-gray-400">Review newborn care mentorship content.</div>
+            </a>
+            <a href="{{ url('/resources/emonc-mentorship-manual') }}" target="_blank" rel="noopener noreferrer" class="rounded-lg border border-gray-200 p-3 text-sm hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:hover:bg-gray-800">
+                <div class="font-semibold">EmONC Mentorship Manual</div>
+                <div class="text-gray-600 dark:text-gray-400">Review the EmONC knowledge pack and participant manual.</div>
             </a>
             <a href="{{ route('resources.search', ['q' => 'mentorship manual']) }}" target="_blank" rel="noopener noreferrer" class="rounded-lg border border-gray-200 p-3 text-sm hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:hover:bg-gray-800">
                 <div class="font-semibold">All Mentorship Manuals</div>

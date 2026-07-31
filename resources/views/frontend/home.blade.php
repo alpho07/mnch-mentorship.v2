@@ -31,10 +31,115 @@
     </section>
 
     {{-- ═══════════════════════════════════════════
+         THREE PILLARS OF CARE — MoH clinical hero
+    ═══════════════════════════════════════════ --}}
+    <section class="relative overflow-hidden bg-gradient-to-b from-white via-primary-50/40 to-white py-16 md:py-20" data-aos="fade-up" data-aos-delay="80">
+        {{-- Halftone dot watermark, echoing the official manual cover art --}}
+        <div class="pointer-events-none absolute inset-0 opacity-[0.4]"
+             style="background-image: radial-gradient(circle, #9EDDFA 1.2px, transparent 1.2px); background-size: 22px 22px; mask-image: radial-gradient(ellipse 60% 50% at 50% 0%, black 0%, transparent 70%);"></div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <div class="inline-flex items-center gap-2 rounded-full bg-white border border-primary-100 shadow-sm px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary-700 mb-5">
+                    <i class="fas fa-shield-heart text-primary-600"></i>
+                    Ministry of Health &middot; Kenya
+                </div>
+                <h1 class="font-display text-3xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                    Strengthening care for
+                    <span style="color:#C81E70">mothers</span>,
+                    <span style="color:#A855C8">newborns</span>
+                    &amp;
+                    <span style="color:#7DB83A">children</span>
+                </h1>
+                <p class="mt-4 text-base md:text-lg text-gray-600 leading-relaxed">
+                    Structured mentorship and clinical training for Kenya's healthcare workers — from pregnancy
+                    and delivery, through the newborn period, and into early childhood.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {{-- Maternal Health --}}
+                <a href="{{ route('resources.category', 'maternal-health') }}"
+                   class="group relative overflow-hidden rounded-3xl p-7 min-h-[280px] flex flex-col justify-end text-white shadow-lg transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+                   style="background: linear-gradient(155deg, #C81E70 0%, #8F1152 100%);"
+                   data-aos="fade-up" data-aos-delay="120">
+                    <div class="absolute inset-0 opacity-[0.16]"
+                         style="background-image: radial-gradient(circle, white 1.2px, transparent 1.2px); background-size: 18px 18px;"></div>
+                    <div class="absolute -right-8 -top-8 h-40 w-40 rounded-full opacity-20" style="background: radial-gradient(circle, white 0%, transparent 70%);"></div>
+                    <div class="relative">
+                        <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-5 border border-white/25 transition-transform group-hover:scale-110">
+                            <i class="fas fa-heart-pulse text-2xl"></i>
+                        </div>
+                        <p class="text-xs font-bold uppercase tracking-widest text-white/75 mb-1.5">Maternal Health</p>
+                        <h3 class="text-xl font-extrabold mb-2">EmONC Mentorship</h3>
+                        <p class="text-sm text-white/85 leading-relaxed">
+                            Emergency obstetric &amp; newborn care — labour, delivery, and life-saving
+                            complication management.
+                        </p>
+                        <span class="inline-flex items-center gap-1.5 mt-4 text-sm font-bold text-white/95">
+                            Explore resources
+                            <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
+                        </span>
+                    </div>
+                </a>
+
+                {{-- Newborn Care --}}
+                <a href="{{ route('resources.category', 'newborn-care') }}"
+                   class="group relative overflow-hidden rounded-3xl p-7 min-h-[280px] flex flex-col justify-end text-white shadow-lg transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+                   style="background: linear-gradient(155deg, #A855C8 0%, #6B2E8C 100%);"
+                   data-aos="fade-up" data-aos-delay="200">
+                    <div class="absolute inset-0 opacity-[0.16]"
+                         style="background-image: radial-gradient(circle, white 1.2px, transparent 1.2px); background-size: 18px 18px;"></div>
+                    <div class="absolute -right-8 -top-8 h-40 w-40 rounded-full opacity-20" style="background: radial-gradient(circle, white 0%, transparent 70%);"></div>
+                    <div class="relative">
+                        <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-5 border border-white/25 transition-transform group-hover:scale-110">
+                            <i class="fas fa-baby-carriage text-2xl"></i>
+                        </div>
+                        <p class="text-xs font-bold uppercase tracking-widest text-white/75 mb-1.5">Neonatal Care</p>
+                        <h3 class="text-xl font-extrabold mb-2">Newborn Mentorship</h3>
+                        <p class="text-sm text-white/85 leading-relaxed">
+                            Essential newborn care, resuscitation, and management of the small and sick newborn.
+                        </p>
+                        <span class="inline-flex items-center gap-1.5 mt-4 text-sm font-bold text-white/95">
+                            Explore resources
+                            <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
+                        </span>
+                    </div>
+                </a>
+
+                {{-- Infant & Child Care --}}
+                <a href="{{ route('resources.category', 'child-health') }}"
+                   class="group relative overflow-hidden rounded-3xl p-7 min-h-[280px] flex flex-col justify-end text-white shadow-lg transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+                   style="background: linear-gradient(155deg, #7DB83A 0%, #4B7A1A 100%);"
+                   data-aos="fade-up" data-aos-delay="280">
+                    <div class="absolute inset-0 opacity-[0.16]"
+                         style="background-image: radial-gradient(circle, white 1.2px, transparent 1.2px); background-size: 18px 18px;"></div>
+                    <div class="absolute -right-8 -top-8 h-40 w-40 rounded-full opacity-20" style="background: radial-gradient(circle, white 0%, transparent 70%);"></div>
+                    <div class="relative">
+                        <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-5 border border-white/25 transition-transform group-hover:scale-110">
+                            <i class="fas fa-child-reaching text-2xl"></i>
+                        </div>
+                        <p class="text-xs font-bold uppercase tracking-widest text-white/75 mb-1.5">Paediatric Care</p>
+                        <h3 class="text-xl font-extrabold mb-2">Infant &amp; Child Mentorship</h3>
+                        <p class="text-sm text-white/85 leading-relaxed">
+                            Access to quality paediatric care everywhere — from infancy through early
+                            childhood illness management.
+                        </p>
+                        <span class="inline-flex items-center gap-1.5 mt-4 text-sm font-bold text-white/95">
+                            Explore resources
+                            <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    {{-- ═══════════════════════════════════════════
          TRAINING + MENTORSHIP INSIGHTS
     ═══════════════════════════════════════════ --}}
     @if($trainingInsights['has_data'] ?? false)
-    <section class="relative overflow-hidden py-14" data-aos="fade-up" data-aos-delay="100" style="background: linear-gradient(135deg, #062F2F 0%, #004D40 48%, #0F766E 100%);">
+    <section class="relative overflow-hidden py-14" data-aos="fade-up" data-aos-delay="100" style="background: linear-gradient(135deg, #16224A 0%, #1B2E5E 48%, #2C478D 100%);">
         <div class="absolute inset-0 opacity-[0.07]">
             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
                 <pattern id="insight-grid" width="42" height="42" patternUnits="userSpaceOnUse">
@@ -43,27 +148,27 @@
                 <rect width="100%" height="100%" fill="url(#insight-grid)"/>
             </svg>
         </div>
-        <div class="absolute -right-24 -top-24 h-72 w-72 rounded-full opacity-20" style="background: radial-gradient(circle, #67E8F9 0%, transparent 68%);"></div>
+        <div class="absolute -right-24 -top-24 h-72 w-72 rounded-full opacity-20" style="background: radial-gradient(circle, #6FC4EF 0%, transparent 68%);"></div>
         <div class="absolute -left-20 bottom-0 h-64 w-64 rounded-full opacity-10" style="background: radial-gradient(circle, #FCD34D 0%, transparent 70%);"></div>
 
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-8">
                 <div class="max-w-3xl">
-                    <div class="inline-flex items-center gap-2 rounded-full border border-cyan-200/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-cyan-100"
+                    <div class="inline-flex items-center gap-2 rounded-full border border-sky-200/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-sky-100"
                          style="background: rgba(255,255,255,0.08);">
-                        <i class="fas fa-chart-line text-cyan-200"></i>
+                        <i class="fas fa-chart-line text-sky-200"></i>
                         Program Intelligence
                     </div>
                     <h2 class="mt-4 text-2xl md:text-4xl font-extrabold text-white tracking-tight">
                         Training and mentorship signals that need attention
                     </h2>
-                    <p class="mt-2 text-sm md:text-base text-cyan-100/90 leading-relaxed">
+                    <p class="mt-2 text-sm md:text-base text-sky-100/90 leading-relaxed">
                         A live readout from scheduled trainings, facility mentorships, class enrollments, and participant records.
                     </p>
                 </div>
                 <a href="{{ url('analytics/dashboard') }}"
                    class="analytics-cta-pulse inline-flex w-fit items-center gap-2 rounded-xl border border-white/30 px-5 py-3 text-sm font-bold text-white transition-all hover:border-white/60 hover:scale-105"
-                   style="background: rgba(255,255,255,0.15); box-shadow: 0 0 20px rgba(103, 232, 249, 0.25);">
+                   style="background: rgba(255,255,255,0.15); box-shadow: 0 0 20px rgba(111, 196, 239, 0.25);">
                     Open analytics map <i class="fas fa-arrow-right text-xs analytics-cta-arrow"></i>
                 </a>
             </div>
@@ -100,8 +205,8 @@
                 <div class="rounded-2xl border border-white/15 p-5 text-white"
                      data-aos="fade-up" data-aos-delay="{{ 200 + $index * 100 }}"
                      style="background: rgba(255,255,255,0.09); backdrop-filter: blur(10px);">
-                    <div class="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-cyan-100">
-                        <span class="h-2 w-2 rounded-full bg-cyan-300"></span>
+                    <div class="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-sky-100">
+                        <span class="h-2 w-2 rounded-full bg-sky-300"></span>
                         {{ $signal['title'] }}
                     </div>
                     <p class="text-sm leading-relaxed text-white/88">{{ $signal['text'] }}</p>
@@ -121,7 +226,7 @@
             <div class="flex items-end justify-between mb-8">
                 <div>
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-1 h-5 rounded-full" style="background: linear-gradient(180deg, #0097A7, #26C6DA);"></div>
+                        <div class="w-1 h-5 rounded-full" style="background: linear-gradient(180deg, #1D6FB8, #4FB3E8);"></div>
                         <span class="text-xs font-semibold text-primary-600 uppercase tracking-widest">Scheduled</span>
                     </div>
                     <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900">Upcoming Trainings</h2>
@@ -137,11 +242,11 @@
                 <div class="group relative bg-white rounded-2xl border border-gray-200 p-5 hover:border-primary-300 hover:shadow-lg transition-all duration-200 overflow-hidden"
                      data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
                     <div class="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl"
-                         style="background: linear-gradient(90deg, #0097A7 0%, #26C6DA 100%);"></div>
+                         style="background: linear-gradient(90deg, #1D6FB8 0%, #4FB3E8 100%);"></div>
                     @if($training->start_date)
                     <div class="inline-flex items-center gap-2 mb-3">
                         <div class="w-10 h-10 rounded-xl text-white flex flex-col items-center justify-center leading-none flex-shrink-0"
-                             style="background: linear-gradient(135deg, #0097A7 0%, #26C6DA 100%);">
+                             style="background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);">
                             <span class="text-sm font-extrabold">{{ $training->start_date->format('d') }}</span>
                             <span class="font-semibold uppercase" style="font-size: 8px; letter-spacing: 0.5px;">{{ $training->start_date->format('M') }}</span>
                         </div>
@@ -162,7 +267,7 @@
                         </div>
                         @endif
                         <div class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
-                             style="background: #E0F7FA; color: #006064;">
+                             style="background: #EAF7FE; color: #2C478D;">
                             {{ ucfirst($training->status) }}
                         </div>
                     </div>
@@ -177,7 +282,7 @@
          ONGOING MENTORSHIPS
     ═══════════════════════════════════════════ --}}
     @if(isset($ongoingMentorships) && $ongoingMentorships->count() > 0)
-    <section class="py-14" data-aos="fade-up" style="background: linear-gradient(135deg, #E0F7FA 0%, #F0FDFF 100%);">
+    <section class="py-14" data-aos="fade-up" style="background: linear-gradient(135deg, #EAF7FE 0%, #F0FDFF 100%);">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-end justify-between mb-8">
                 <div>
@@ -197,10 +302,10 @@
                 @foreach($ongoingMentorships as $index => $mentorship)
                 <div class="group bg-white rounded-2xl border border-primary-100 p-5 hover:border-primary-300 hover:shadow-lg transition-all duration-200 relative overflow-hidden"
                      data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
-                    <div class="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style="background: linear-gradient(90deg, #00838F, #0097A7);"></div>
+                    <div class="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style="background: linear-gradient(90deg, #17579A, #1D6FB8);"></div>
                     <div class="flex items-start justify-between mb-3 mt-1">
                         <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                             style="background: linear-gradient(135deg, #00838F 0%, #0097A7 100%);">
+                             style="background: linear-gradient(135deg, #17579A 0%, #1D6FB8 100%);">
                             <i class="fas fa-user-md text-white text-xs"></i>
                         </div>
                         <div class="text-right text-xs text-gray-500 leading-tight">
@@ -228,7 +333,7 @@
                         </div>
                         @endif
                         <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
-                             style="background: #E0F7FA; color: #0097A7;">
+                             style="background: #EAF7FE; color: #1D6FB8;">
                             <span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>
                             Ongoing
                         </div>
@@ -374,7 +479,7 @@
             <div class="flex items-end justify-between mb-8">
                 <div>
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-1 h-5 rounded-full" style="background: linear-gradient(180deg, #0097A7, #26C6DA);"></div>
+                        <div class="w-1 h-5 rounded-full" style="background: linear-gradient(180deg, #1D6FB8, #4FB3E8);"></div>
                         <span class="text-xs font-semibold text-primary-600 uppercase tracking-widest">Curated</span>
                     </div>
                     <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900">Featured Resources</h2>
@@ -395,7 +500,7 @@
             <div class="text-center mt-8 md:hidden">
                 <a href="{{ route('resources.index', ['featured' => 1]) }}"
                    class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white text-sm font-semibold shadow-md"
-                   style="background: linear-gradient(135deg, #0097A7 0%, #26C6DA 100%);">
+                   style="background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);">
                     <i class="fas fa-star"></i>View All Featured
                 </a>
             </div>
@@ -411,7 +516,7 @@
             <div class="flex items-end justify-between mb-8">
                 <div>
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-1 h-5 rounded-full" style="background: linear-gradient(180deg, #0097A7, #26C6DA);"></div>
+                        <div class="w-1 h-5 rounded-full" style="background: linear-gradient(180deg, #1D6FB8, #4FB3E8);"></div>
                         <span class="text-xs font-semibold text-primary-600 uppercase tracking-widest">Browse by Topic</span>
                     </div>
                     <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900">Explore Categories</h2>
@@ -429,7 +534,7 @@
                    data-aos="fade-up" data-aos-delay="{{ $index * 75 }}">
                     <div class="flex items-center gap-3 mb-3">
                         <div class="w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
-                             style="background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%);">
+                             style="background: linear-gradient(135deg, #EAF7FE 0%, #CFEEFC 100%);">
                             <i class="{{ $category->icon ?? 'fas fa-folder' }} text-primary-600 text-sm"></i>
                         </div>
                         <div>
@@ -521,14 +626,14 @@
     {{-- ═══════════════════════════════════════════
          CTA BANNER
     ═══════════════════════════════════════════ --}}
-    <section class="py-16 relative overflow-hidden" data-aos="zoom-in" data-aos-duration="800" style="background: linear-gradient(135deg, #004D40 0%, #0097A7 100%);">
+    <section class="py-16 relative overflow-hidden" data-aos="zoom-in" data-aos-duration="800" style="background: linear-gradient(135deg, #1B2E5E 0%, #1D6FB8 100%);">
         <div class="absolute inset-0 opacity-[0.04]">
             <svg width="100%" height="100%"><pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1.5" fill="white"/></pattern><rect width="100%" height="100%" fill="url(#dots)"/></svg>
         </div>
         <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div class="mb-10">
                 <h2 class="text-2xl md:text-3xl font-extrabold text-white mb-2">Stay Informed</h2>
-                <p class="text-cyan-100 text-sm mb-6">Receive updates on new resources, training schedules, and clinical guidelines</p>
+                <p class="text-sky-100 text-sm mb-6">Receive updates on new resources, training schedules, and clinical guidelines</p>
                 <form class="max-w-md mx-auto" x-data="{ email: '', subscribed: false }">
                     <div class="flex gap-2">
                         <input type="email" x-model="email" placeholder="Your email address"
@@ -538,7 +643,7 @@
                             Subscribe
                         </button>
                     </div>
-                    <p x-show="subscribed" x-transition class="text-cyan-200 text-xs mt-2">
+                    <p x-show="subscribed" x-transition class="text-sky-200 text-xs mt-2">
                         <i class="fas fa-check-circle mr-1"></i>Thank you! You're subscribed.
                     </p>
                 </form>
@@ -563,10 +668,10 @@
                         <i class="fas fa-map"></i>View Training Map
                     </a>
                 </div>
-                <div class="flex items-center justify-center gap-8 mt-8 text-cyan-200 text-xs">
-                    <div class="flex items-center gap-1.5"><i class="fas fa-shield-alt text-cyan-300"></i>Secure Platform</div>
-                    <div class="flex items-center gap-1.5"><i class="fas fa-mobile-alt text-cyan-300"></i>Mobile Ready</div>
-                    <div class="flex items-center gap-1.5"><i class="fas fa-cloud-download-alt text-cyan-300"></i>Offline Access</div>
+                <div class="flex items-center justify-center gap-8 mt-8 text-sky-200 text-xs">
+                    <div class="flex items-center gap-1.5"><i class="fas fa-shield-alt text-sky-300"></i>Secure Platform</div>
+                    <div class="flex items-center gap-1.5"><i class="fas fa-mobile-alt text-sky-300"></i>Mobile Ready</div>
+                    <div class="flex items-center gap-1.5"><i class="fas fa-cloud-download-alt text-sky-300"></i>Offline Access</div>
                 </div>
             </div>
         </div>
@@ -589,8 +694,8 @@
         animation-play-state: paused;
     }
     @keyframes analyticsPulse {
-        0%, 100% { box-shadow: 0 0 18px rgba(103, 232, 249, 0.25); transform: scale(1); }
-        50% { box-shadow: 0 0 32px rgba(103, 232, 249, 0.55); transform: scale(1.03); }
+        0%, 100% { box-shadow: 0 0 18px rgba(111, 196, 239, 0.25); transform: scale(1); }
+        50% { box-shadow: 0 0 32px rgba(111, 196, 239, 0.55); transform: scale(1.03); }
     }
     .analytics-cta-arrow {
         animation: arrowBounce 1.4s ease-in-out infinite;

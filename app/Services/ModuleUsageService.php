@@ -68,6 +68,7 @@ class ModuleUsageService
     {
         $totalModules = ProgramModule::where('program_id', $training->program_id)
             ->where('is_active', true)
+            ->whereNull('parent_id')
             ->count();
 
         $usedCount = ClassModule::whereHas('mentorshipClass',

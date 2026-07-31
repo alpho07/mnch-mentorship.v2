@@ -20,7 +20,6 @@
             }
         }
     </script>
-    <script>(function(){const s=localStorage.getItem('theme'),d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(!s&&d))document.documentElement.classList.add('dark');})()</script>
     <style>
         *:focus-visible{outline:2px solid #4f46e5;outline-offset:2px}
         @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
@@ -547,16 +546,6 @@
                         </div>
                         @if($preTestStatus['completed'])
                             @include('mentee.partials.quiz-review', ['status' => $preTestStatus, 'revealAnswers' => $postTestStatus['completed'] ?? false])
-                            <div class="mt-3">
-                                <form action="{{ route('mentee.class.quiz.start', [$class->id, $classModule->id, $preTestStatus['quiz']->id]) }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="attempt_type" value="pre_test">
-                                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-semibold hover:bg-slate-50 transition-colors">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                        Retake Pre-Test
-                                    </button>
-                                </form>
-                            </div>
                         @else
                             <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Complete the pre-test to unlock module content, case scenarios, and the hands-on video section.</p>
                             <form action="{{ route('mentee.class.quiz.start', [$class->id, $classModule->id, $preTestStatus['quiz']->id]) }}" method="POST">

@@ -28,9 +28,12 @@ class ProgramPicker extends Field
             $programs->splice($insertAt, 0, [$emonc]);
         }
 
-        // Load active ProgramModules in one query, then group by program
+        // Load active top-level ProgramModules in one query, then group by program.
+        // Excludes track rows (parent_id set, e.g. PPH's 11 tracks) — those aren't
+        // separate modules, just sub-procedures under their parent module.
         $modulesByProgram = ProgramModule::whereIn('program_id', $programs->pluck('id'))
             ->where('is_active', true)
+            ->whereNull('parent_id')
             ->orderBy('order_sequence')
             ->get(['id', 'name', 'program_id', 'order_sequence'])
             ->groupBy('program_id');

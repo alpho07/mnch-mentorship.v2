@@ -12,7 +12,7 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lexend:wght@500;600;700;800&display=swap" rel="stylesheet">
 
         <!-- Icons -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,19 +27,29 @@
                     extend: {
                         fontFamily: {
                             'sans': ['Inter', 'system-ui', 'sans-serif'],
+                            'display': ['Lexend', 'Inter', 'system-ui', 'sans-serif'],
                         },
                         colors: {
+                            /* MoH Kenya clinical blue — sampled from the official EmONC
+                               manual cover (sky blue to navy gradient). */
                             primary: {
-                                50:  '#E0F7FA',
-                                100: '#B2EBF2',
-                                200: '#80DEEA',
-                                300: '#4DD0E1',
-                                400: '#26C6DA',
-                                500: '#00BCD4',
-                                600: '#0097A7',
-                                700: '#00838F',
-                                800: '#006064',
-                                900: '#004D40',
+                                50:  '#EAF7FE',
+                                100: '#CFEEFC',
+                                200: '#9EDDFA',
+                                300: '#6FC4EF',
+                                400: '#4FB3E8',
+                                500: '#2E93D6',
+                                600: '#1D6FB8',
+                                700: '#17579A',
+                                800: '#2C478D',
+                                900: '#1B2E5E',
+                            },
+                            /* Programme pillar accents, sampled/derived from the real
+                               mentorship manual covers. */
+                            pillar: {
+                                maternal: '#C81E70',
+                                newborn:  '#A855C8',
+                                child:    '#7DB83A',
                             }
                         }
                     }
@@ -117,7 +127,7 @@
                     <div class="flex items-center flex-shrink-0">
                         <a href="{{ route('home') }}" class="flex items-center gap-2.5">
                             <div class="w-9 h-9 rounded-xl flex items-center justify-center"
-                                 style="background: linear-gradient(135deg, #0097A7 0%, #26C6DA 100%);">
+                                 style="background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);">
                                 <i class="fas fa-stethoscope text-white text-sm"></i>
                             </div>
                             <span class="text-lg font-bold text-gray-900 leading-tight">
@@ -165,7 +175,7 @@
                                 <button @click="open = !open"
                                         class="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-gray-100 transition-colors">
                                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                                         style="background: linear-gradient(135deg, #0097A7 0%, #26C6DA 100%);">
+                                         style="background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);">
                                         {{ strtoupper(substr(auth()->user()->full_name, 0, 1)) }}
                                     </div>
                                     <i class="fas fa-chevron-down text-xs text-gray-500 hidden sm:block"></i>
@@ -243,7 +253,7 @@
                     <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                         <div class="flex items-center gap-2">
                             <div class="w-7 h-7 rounded-lg flex items-center justify-center"
-                                 style="background: linear-gradient(135deg, #0097A7 0%, #26C6DA 100%);">
+                                 style="background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);">
                                 <i class="fas fa-stethoscope text-white text-xs"></i>
                             </div>
                             <span class="font-bold text-gray-900 text-sm">MNCH Kenya</span>
@@ -282,7 +292,7 @@
                         <a href="{{ route('home') }}" @click="mobileOpen = false"
                            class="mobile-nav-animate flex items-center gap-4 px-3 py-3 rounded-2xl transition-all duration-150 {{ $navHome ? 'bg-primary-50' : 'hover:bg-gray-50' }}">
                             <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm"
-                                 style="{{ $navHome ? 'background: linear-gradient(135deg,#0097A7 0%,#26C6DA 100%);' : 'background:#F3F4F6;' }}">
+                                 style="{{ $navHome ? 'background: linear-gradient(135deg,#1D6FB8 0%,#4FB3E8 100%);' : 'background:#F3F4F6;' }}">
                                 <i class="fas fa-home {{ $navHome ? 'text-white' : 'text-gray-500' }}" style="font-size:15px;"></i>
                             </div>
                             <div class="flex-1 min-w-0">
@@ -290,7 +300,7 @@
                                 <p class="text-xs text-gray-400 mt-0.5">Dashboard &amp; overview</p>
                             </div>
                             @if($navHome)
-                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#0097A7;"></span>
+                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#1D6FB8;"></span>
                             @endif
                         </a>
 
@@ -298,7 +308,7 @@
                         <a href="{{ route('resources.index') }}" @click="mobileOpen = false"
                            class="mobile-nav-animate flex items-center gap-4 px-3 py-3 rounded-2xl transition-all duration-150 {{ $navResources ? 'bg-primary-50' : 'hover:bg-gray-50' }}">
                             <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm"
-                                 style="{{ $navResources ? 'background: linear-gradient(135deg,#0097A7 0%,#26C6DA 100%);' : 'background:#F3F4F6;' }}">
+                                 style="{{ $navResources ? 'background: linear-gradient(135deg,#1D6FB8 0%,#4FB3E8 100%);' : 'background:#F3F4F6;' }}">
                                 <i class="fas fa-book-open {{ $navResources ? 'text-white' : 'text-gray-500' }}" style="font-size:15px;"></i>
                             </div>
                             <div class="flex-1 min-w-0">
@@ -306,7 +316,7 @@
                                 <p class="text-xs text-gray-400 mt-0.5">Guidelines &amp; materials</p>
                             </div>
                             @if($navResources)
-                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#0097A7;"></span>
+                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#1D6FB8;"></span>
                             @endif
                         </a>
 
@@ -314,7 +324,7 @@
                         <a href="{{ route('categories.index') }}" @click="mobileOpen = false"
                            class="mobile-nav-animate flex items-center gap-4 px-3 py-3 rounded-2xl transition-all duration-150 {{ $navCategories ? 'bg-primary-50' : 'hover:bg-gray-50' }}">
                             <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm"
-                                 style="{{ $navCategories ? 'background: linear-gradient(135deg,#0097A7 0%,#26C6DA 100%);' : 'background:#F3F4F6;' }}">
+                                 style="{{ $navCategories ? 'background: linear-gradient(135deg,#1D6FB8 0%,#4FB3E8 100%);' : 'background:#F3F4F6;' }}">
                                 <i class="fas fa-th-large {{ $navCategories ? 'text-white' : 'text-gray-500' }}" style="font-size:15px;"></i>
                             </div>
                             <div class="flex-1 min-w-0">
@@ -322,7 +332,7 @@
                                 <p class="text-xs text-gray-400 mt-0.5">Browse by topic</p>
                             </div>
                             @if($navCategories)
-                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#0097A7;"></span>
+                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#1D6FB8;"></span>
                             @endif
                         </a>
 
@@ -330,7 +340,7 @@
                         <a href="{{ url('analytics/dashboard') }}" @click="mobileOpen = false"
                            class="mobile-nav-animate flex items-center gap-4 px-3 py-3 rounded-2xl transition-all duration-150 {{ request()->is('analytics*') ? 'bg-primary-50' : 'hover:bg-gray-50' }}">
                             <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm"
-                                 style="{{ request()->is('analytics*') ? 'background: linear-gradient(135deg,#0097A7 0%,#26C6DA 100%);' : 'background:#F3F4F6;' }}">
+                                 style="{{ request()->is('analytics*') ? 'background: linear-gradient(135deg,#1D6FB8 0%,#4FB3E8 100%);' : 'background:#F3F4F6;' }}">
                                 <i class="fas fa-chart-bar {{ request()->is('analytics*') ? 'text-white' : 'text-gray-500' }}" style="font-size:15px;"></i>
                             </div>
                             <div class="flex-1 min-w-0">
@@ -338,7 +348,7 @@
                                 <p class="text-xs text-gray-400 mt-0.5">Analytics &amp; reports</p>
                             </div>
                             @if(request()->is('analytics*'))
-                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#0097A7;"></span>
+                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#1D6FB8;"></span>
                             @endif
                         </a>
 
@@ -349,7 +359,7 @@
                         @auth
                             <div class="flex items-center gap-3 mb-3">
                                 <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                                     style="background: linear-gradient(135deg, #0097A7 0%, #26C6DA 100%);">
+                                     style="background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);">
                                     {{ strtoupper(substr(auth()->user()->full_name, 0, 1)) }}
                                 </div>
                                 <div class="flex-1 min-w-0">
@@ -371,7 +381,7 @@
                         @else
                             <a href="{{ url('admin/login') }}"
                                class="flex items-center justify-center gap-2 w-full px-4 py-3 text-sm font-semibold text-white rounded-xl transition-all"
-                               style="background: linear-gradient(135deg, #0097A7 0%, #26C6DA 100%);"
+                               style="background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);"
                                @click="mobileOpen = false">
                                 <i class="fas fa-sign-in-alt"></i>Sign In
                             </a>
@@ -446,7 +456,7 @@
                     <div class="md:col-span-1">
                         <div class="flex items-center gap-2.5 mb-4">
                             <div class="w-9 h-9 rounded-xl flex items-center justify-center"
-                                 style="background: linear-gradient(135deg, #0097A7 0%, #26C6DA 100%);">
+                                 style="background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);">
                                 <i class="fas fa-stethoscope text-white text-sm"></i>
                             </div>
                             <span class="text-lg font-bold"><span class="text-primary-400">MNCH</span> Kenya</span>

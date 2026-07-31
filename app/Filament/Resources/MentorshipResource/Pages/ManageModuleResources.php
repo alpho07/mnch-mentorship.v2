@@ -28,18 +28,28 @@ class ManageModuleResources extends Page
 
     public ProgramModule $programModule;
 
+    public bool $isEmonc = false;
+
     public function mount(Training $training, MentorshipClass $class, ClassModule $module): void
     {
-        $this->training = $training;
+        $this->training = $training->load('program');
         $this->class = $class;
         $this->module = $module->load([
             'programModule' => fn ($q) => $q->with([
                 'contents',
-                'quizzes.questions',
+                'quizzes.questions.options',
                 'resources' => fn ($q) => $q->with(['primaryFile', 'category', 'resourceType']),
             ]),
         ]);
         $this->programModule = $module->programModule;
+        $this->isEmonc = $this->detectEmonc();
+    }
+
+    private function detectEmonc(): bool
+    {
+        $name = strtolower($this->training->program?->name ?? '');
+
+        return str_contains($name, 'maternal') && str_contains($name, 'emonc');
     }
 
     public function getTitle(): string
@@ -49,14 +59,36 @@ class ManageModuleResources extends Page
 
     public function getSubheading(): ?string
     {
+        if (! $this->isEmonc) {
+            return $this->programModule->resources->count().' resource(s) attached';
+        }
+
         $sectionCount = count($this->getResourceSections());
 
         return "{$sectionCount} section(s) in this module";
     }
 
-    private function isAdmin(): bool
+    public function isAdmin(): bool
     {
         return auth()->user()?->can('update_program::module') ?? false;
+    }
+
+    public function detachResource(int $resourceId): void
+    {
+        if (! $this->isAdmin()) {
+            Notification::make()->danger()->title('Not authorized')->send();
+
+            return;
+        }
+
+        $resource = $this->programModule->resources->firstWhere('id', $resourceId);
+
+        $this->programModule->resources()->detach($resourceId);
+        $this->programModule->load([
+            'resources' => fn ($q) => $q->with(['primaryFile', 'category', 'resourceType']),
+        ]);
+
+        Notification::make()->success()->title(($resource?->title ?? 'Resource').' removed from module')->send();
     }
 
     public function getResourceSections(): array

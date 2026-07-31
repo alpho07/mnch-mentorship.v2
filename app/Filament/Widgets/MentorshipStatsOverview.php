@@ -3,44 +3,36 @@
 namespace App\Filament\Widgets;
 
 use App\Models\ClassParticipant;
+use App\Models\Program;
 use App\Models\Training;
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\Widget;
 use Illuminate\Database\Eloquent\Builder;
 
-class MentorshipStatsOverview extends BaseWidget
+class MentorshipStatsOverview extends Widget
 {
-    protected function getStats(): array
+    protected static string $view = 'filament.widgets.mentorship-stats-overview';
+
+    protected int|string|array $columnSpan = 'full';
+
+    protected static bool $isLazy = false;
+
+    public function getViewData(): array
     {
-        $stats = $this->getQuickStats();
+        $programs = $this->programStats();
 
         return [
-            Stat::make('All Mentorships', $stats['total'])
-                ->description('All mentorships')
-                ->descriptionIcon('heroicon-m-academic-cap')
-                ->color('primary'),
-            Stat::make('Active Mentorships', $stats['active'])
-                ->description('Currently running')
-                ->descriptionIcon('heroicon-m-play')
-                ->color('success'),
-            Stat::make('Total Mentees', $stats['mentees'])
-                ->description('Total Enrolled')
-                ->descriptionIcon('heroicon-m-users')
-                ->color('info'),
-            /* Stat::make('Upcoming Programs', $stats['upcoming'])
-                  ->description('Scheduled to start')
-                  ->descriptionIcon('heroicon-m-calendar')
-                  ->color('warning'), */
+            'overall' => $this->overallStats($programs),
+            'programs' => $programs,
         ];
     }
 
     /**
-     * Build a base query scoped by role: admins see all, others see only their own.
+     * Live mentorships only — pilot runs are excluded from every count here.
      */
-    protected function getScopedBaseQuery(): Builder
+    private function baseTrainingQuery(): Builder
     {
         $query = Training::where('type', 'facility_mentorship')
-            ->where('is_pilot', false);   // pilots excluded from all KPI counts
+            ->where('is_pilot', false);
 
         $user = auth()->user();
         if (! $user->hasRole(['super_admin', 'admin', 'division'])) {
@@ -50,34 +42,51 @@ class MentorshipStatsOverview extends BaseWidget
         return $query;
     }
 
-    protected function getQuickStats(): array
-    {
-        return [
-            'total' => $this->getScopedBaseQuery()->count(),
-            'active' => $this->getScopedBaseQuery()
-                ->where(function (Builder $query) {
-                    $query->whereIn('status', ['active', 'ongoing'])
-                        ->orWhereHas('mentorshipClasses', fn (Builder $classQuery) => $classQuery->where('status', 'active'));
-                })
-                ->count(),
-            'completed' => $this->getScopedBaseQuery()->where('status', 'completed')->count(),
-            'draft' => $this->getScopedBaseQuery()->whereIn('status', ['draft', 'new'])->count(),
-            'upcoming' => $this->getScopedBaseQuery()->where('start_date', '>', now())->count(),
-            'mentees' => $this->getScopedMenteesQuery()->distinct('class_participants.user_id')->count('class_participants.user_id'),
-        ];
-    }
-
-    protected function getScopedMenteesQuery(): Builder
+    private function menteesQuery(?int $programId = null): Builder
     {
         $user = auth()->user();
 
         return ClassParticipant::query()
-            ->whereHas('mentorshipClass.training', function (Builder $query) use ($user) {
-                $query->where('type', 'facility_mentorship');
+            ->whereHas('mentorshipClass.training', function (Builder $query) use ($user, $programId) {
+                $query->where('type', 'facility_mentorship')->where('is_pilot', false);
+
+                if ($programId) {
+                    $query->where('program_id', $programId);
+                }
 
                 if (! $user->hasRole(['super_admin', 'admin', 'division'])) {
                     $query->forMentorOrCoMentor($user->id);
                 }
             });
+    }
+
+    /**
+     * Mentee count is the sum of the per-program breakdown (not a cross-program
+     * distinct count), so the "All Mentorships" card always reconciles with the
+     * program cards below it — a mentee active in two programs is counted once
+     * per program here, matching how the breakdown itself counts them.
+     */
+    private function overallStats(array $programs): array
+    {
+        return [
+            'mentorships' => $this->baseTrainingQuery()->count(),
+            'mentees' => array_sum(array_column($programs, 'mentees')),
+        ];
+    }
+
+    private function programStats(): array
+    {
+        return Program::whereHas('trainings', fn (Builder $q) => $q
+            ->where('type', 'facility_mentorship')
+            ->where('is_pilot', false))
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Program $program) => [
+                'name' => $program->name,
+                'mentorships' => $this->baseTrainingQuery()->where('program_id', $program->id)->count(),
+                'mentees' => $this->menteesQuery($program->id)->distinct('class_participants.user_id')->count('class_participants.user_id'),
+            ])
+            ->values()
+            ->all();
     }
 }

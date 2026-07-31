@@ -182,7 +182,7 @@
         .auth-shell{display:flex;height:100vh;width:100vw;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 
         /* ── Hero (left) ─────────────────────────────────────────────────── */
-        .auth-hero{flex:0 0 58%;position:relative;overflow:hidden;overflow-y:auto;display:flex;align-items:flex-start;scrollbar-width:none}
+        .auth-hero{flex:0 0 58%;position:relative;overflow:hidden;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;scrollbar-width:none}
         .auth-hero::-webkit-scrollbar{display:none}
         .hero-bg{position:fixed;left:0;top:0;width:58%;height:100vh;background:url('https://images.unsplash.com/photo-1584515933487-779824d29309?w=1200&q=80') center/cover no-repeat}
         .hero-gradient{position:fixed;left:0;top:0;width:58%;height:100vh;background:linear-gradient(135deg,rgba(8,28,90,.96) 0%,rgba(18,69,168,.91) 45%,rgba(37,99,235,.86) 100%)}
@@ -192,7 +192,7 @@
         .hero-orb-2{width:320px;height:320px;bottom:50px;left:28%;animation:float-orb 11s ease-in-out infinite reverse}
         .hero-orb-3{width:220px;height:220px;top:38%;left:52%;animation:float-orb 7s ease-in-out infinite 2s}
 
-        .hero-content{position:relative;z-index:2;padding:2.5rem 2.75rem 2.75rem;max-width:620px;color:#fff}
+        .hero-content{position:relative;z-index:2;padding:2.5rem 2.75rem 2.75rem;width:100%;max-width:760px;box-sizing:border-box;color:#fff}
 
         .hero-badge{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);padding:.35rem .85rem;border-radius:999px;margin-bottom:1.35rem;border:1px solid rgba(255,255,255,.14)}
         .hero-dot{width:7px;height:7px;border-radius:50%;background:#60a5fa;box-shadow:0 0 7px #60a5fa;animation:pulse-dot 2s ease-in-out infinite;flex-shrink:0}

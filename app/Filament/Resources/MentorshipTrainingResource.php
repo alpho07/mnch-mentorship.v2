@@ -204,6 +204,8 @@ class MentorshipTrainingResource extends Resource
                                             <span class="text-gray-400">|</span>
                                             <a class="text-primary-600 hover:underline" href="https://mnchkenyamentorship.org/resources/newborn-mentorship-mentors-manual" target="_blank" rel="noopener noreferrer">Newborn Mentorship Mentor\'s Manual</a>
                                             <span class="text-gray-400">|</span>
+                                            <a class="text-primary-600 hover:underline" href="'.url('/resources/emonc-mentorship-manual').'" target="_blank" rel="noopener noreferrer">EmONC Mentorship Manual</a>
+                                            <span class="text-gray-400">|</span>
                                             <a class="text-primary-600 hover:underline" href="'.route('resources.search', ['q' => 'mentorship manual']).'" target="_blank" rel="noopener noreferrer">Search mentorship manuals</a>
                                             <span class="text-gray-400">|</span>
                                             <a class="text-primary-600 hover:underline" href="'.route('resources.search', ['q' => 'MNCH guidelines']).'" target="_blank" rel="noopener noreferrer">MNCH guidelines</a>
@@ -385,9 +387,16 @@ class MentorshipTrainingResource extends Resource
                         'cancelled' => 'Cancelled',
                     ]),
                 Tables\Filters\SelectFilter::make('program_id')
-                    ->label('Program')
-                    ->relationship('program', 'name'),
-            ])
+                    ->label('Program Area')
+                    ->options(fn () => Program::withCount([
+                        'trainings' => fn (Builder $q) => $q->where('type', 'facility_mentorship'),
+                    ])
+                        ->orderBy('name')
+                        ->get()
+                        ->mapWithKeys(fn (Program $program) => [
+                            $program->id => "{$program->name} ({$program->trainings_count})",
+                        ])),
+            ], layout: Tables\Enums\FiltersLayout::AboveContent)
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\Action::make('manage_classes')
