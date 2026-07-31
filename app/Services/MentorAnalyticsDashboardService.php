@@ -88,8 +88,9 @@ class MentorAnalyticsDashboardService
         $kpis      = $this->buildKpis($mentors, $allClasses, $liveClasses, $participants, $cpdData);
         $chartData = $this->buildChartData($matrix, $allClasses, $mentors, $trainings, $cpdData);
         $insights  = $this->buildInsights($kpis, $matrix);
+        $exceptions = app(CoordinatorExceptionResolver::class)->resolve($trainings, $liveClasses, $participants, $cpdData);
 
-        return compact('kpis', 'matrix', 'chartData', 'insights');
+        return compact('kpis', 'matrix', 'chartData', 'insights', 'exceptions');
     }
 
     // ── Matrix: one row per live class ───────────────────────────────────────
