@@ -14,6 +14,7 @@ use App\Models\Department;
 use App\Models\Facility;
 use App\Models\MentorshipClass;
 use App\Models\Program;
+use App\Models\ProgramModule;
 use App\Models\Training;
 use App\Models\User;
 use App\Services\EnrollmentService;
@@ -115,16 +116,6 @@ class GuidedMentorshipSetup extends Page implements HasForms
                 $fill['start_date'] = $this->training->start_date;
                 $fill['end_date'] = $this->training->end_date;
                 $fill['max_participants'] = $this->training->max_participants;
-
-                // Resuming a genuinely different session (e.g. via the
-                // pending-setup banner's Continue link, not just a refresh
-                // of the same tab): module/mentee picks were never saved to
-                // their real tables yet, so they can only be recovered from
-                // this durable draft — a #[Url] mirror wouldn't survive a
-                // fresh URL that never carried it.
-                $draft = $this->training->guided_setup_draft ?? [];
-                $fill['module_ids'] = $draft['module_ids'] ?? [];
-                $fill['selected_users'] = $draft['selected_users'] ?? [];
             }
         }
 
@@ -137,19 +128,23 @@ class GuidedMentorshipSetup extends Page implements HasForms
                 $fill['class_end_date'] = $this->class->end_date;
                 $fill['class_description'] = $this->class->description;
 
-                // Defensive: drop any draft module/mentee picks that have
-                // already become real records (normally cleared by
-                // assignModules()/enrollMentees(), but this keeps a stale
-                // draft from ever making an already-assigned module vanish
-                // from the picker instead of showing as "Already added").
-                if (! empty($fill['module_ids'])) {
-                    $assignedModuleIds = $this->class->classModules()->pluck('program_module_id')->toArray();
-                    $fill['module_ids'] = array_values(array_diff($fill['module_ids'], $assignedModuleIds));
-                }
-                if (! empty($fill['selected_users'])) {
-                    $enrolledUserIds = $this->class->participants()->pluck('user_id')->toArray();
-                    $fill['selected_users'] = array_values(array_diff($fill['selected_users'], $enrolledUserIds));
-                }
+                // module_ids/selected_users represent the full desired
+                // state (already-assigned modules/mentees are pre-checked,
+                // and can be unchecked to remove them) — so the draft, once
+                // the user has touched this step, is authoritative even if
+                // it lists FEWER ids than what's really assigned (that's a
+                // legitimate "I want to remove this" signal, not staleness
+                // to correct). Only fall back to "= what's really there"
+                // when the step has never been visited (no draft key yet).
+                $draft = $this->training->guided_setup_draft ?? [];
+
+                $fill['module_ids'] = array_key_exists('module_ids', $draft)
+                    ? $draft['module_ids']
+                    : $this->class->classModules()->pluck('program_module_id')->toArray();
+
+                $fill['selected_users'] = array_key_exists('selected_users', $draft)
+                    ? $draft['selected_users']
+                    : $this->class->participants()->pluck('user_id')->toArray();
             }
         }
 
@@ -369,29 +364,25 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     ->label('Available Program Modules')
                                     ->training($this->training)
                                     ->class($this->class)
+                                    ->includeAssigned()
                                     ->live()
                                     ->afterStateUpdated(fn ($state) => $this->saveWizardDraft('module_ids', $state))
-                                    ->helperText('Click a module to select all its tracks, or pick tracks individually.');
+                                    ->helperText('Already-added modules/tracks are pre-checked — uncheck one to remove it.');
                             } else {
-                                $available = app(ModuleUsageService::class)
-                                    ->getAvailableModules($this->training, $this->class)
-                                    ->mapWithKeys(fn ($module) => [$module->id => $module->name])
-                                    ->toArray();
-
-                                $locked = $this->class->classModules()
-                                    ->with('programModule')
-                                    ->get()
-                                    ->mapWithKeys(fn ($cm) => [$cm->program_module_id => $cm->programModule?->name ?? 'Module'])
+                                $allModules = ProgramModule::where('program_id', $this->training->program_id)
+                                    ->where('is_active', true)
+                                    ->whereNull('parent_id')
+                                    ->orderBy('order_sequence')
+                                    ->pluck('name', 'id')
                                     ->toArray();
 
                                 $picker = CardCheckboxList::make('module_ids')
                                     ->label('Available Program Modules')
-                                    ->options($available)
-                                    ->lockedOptions($locked)
+                                    ->options($allModules)
                                     ->default([])
                                     ->live()
                                     ->afterStateUpdated(fn ($state) => $this->saveWizardDraft('module_ids', $state))
-                                    ->helperText('Optional — you can add modules later from the class Modules page.');
+                                    ->helperText('Already-added modules are pre-checked — uncheck one to remove it.');
                             }
 
                             return [
@@ -449,7 +440,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 ->live()
                                 ->afterStateUpdated(fn ($state) => $this->saveWizardDraft('selected_users', $state))
                                 ->columnSpanFull()
-                                ->helperText('Search and check existing users to enroll. Already-selected mentees stay pinned to the top.'),
+                                ->helperText('Search and check existing users to enroll. Already-enrolled mentees are pre-checked and pinned to the top — uncheck one to remove it.'),
                             Forms\Components\Actions::make([
                                 Forms\Components\Actions\Action::make('mentee_previous')
                                     ->label('Previous Page')
@@ -617,47 +608,77 @@ class GuidedMentorshipSetup extends Page implements HasForms
     }
 
     /**
-     * Assigns modules to the class. Mirrors the persistence portion of
-     * ManageClassModules's "Add Modules" action exactly (dates/notes
-     * fields are intentionally omitted — see design spec).
+     * Syncs the class's modules to the checked set: adds newly-picked ones
+     * (mirroring ManageClassModules's "Add Modules" persistence — dates/
+     * notes fields intentionally omitted, see design spec) and removes any
+     * that were unchecked, since module_ids is pre-filled with what's
+     * already assigned so a user can change their mind.
      */
     public function assignModules(array $data): int
     {
-        $moduleIds = $data['module_ids'] ?? [];
+        $desiredIds = collect($data['module_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $currentIds = $this->class->classModules()->pluck('program_module_id')->toArray();
 
-        if (empty($moduleIds)) {
-            return 0;
+        $toAdd = array_values(array_diff($desiredIds, $currentIds));
+        $toRemove = array_values(array_diff($currentIds, $desiredIds));
+
+        $blockedRemovals = [];
+        foreach ($toRemove as $moduleId) {
+            $classModule = $this->class->classModules()->where('program_module_id', $moduleId)->first();
+
+            if ($classModule && ! $this->removeWizardModule($classModule)) {
+                $blockedRemovals[] = $classModule->programModule?->name ?? "Module {$moduleId}";
+            }
         }
 
-        $service = app(ModuleUsageService::class);
-        $createdModuleIds = [];
+        $created = 0;
 
-        $created = $service->assignModulesToClass(
-            $this->training,
-            $this->class,
-            $moduleIds,
-            null,
-            function (ClassModule $classModule) use (&$createdModuleIds) {
-                $createdModuleIds[] = $classModule->id;
-            }
-        );
+        if (! empty($toAdd)) {
+            $service = app(ModuleUsageService::class);
+            $created = $service->assignModulesToClass($this->training, $this->class, $toAdd);
 
-        if (($data['auto_create_sessions'] ?? true) && $created > 0) {
-            $this->class->load('classModules');
-            foreach ($this->class->classModules as $classModule) {
-                if (method_exists($classModule, 'autoCreateSessions')) {
-                    $classModule->autoCreateSessions();
+            if (($data['auto_create_sessions'] ?? true) && $created > 0) {
+                $this->class->load('classModules');
+                foreach ($this->class->classModules as $classModule) {
+                    if (method_exists($classModule, 'autoCreateSessions')) {
+                        $classModule->autoCreateSessions();
+                    }
                 }
             }
         }
 
+        if (! empty($blockedRemovals)) {
+            Notification::make()
+                ->warning()
+                ->title('Some modules could not be removed')
+                ->body(implode(', ', $blockedRemovals).' already has mentee progress recorded.')
+                ->send();
+        }
+
         // These picks are now real ClassModule rows — the draft entry would
-        // otherwise linger stale and, since getAvailableModules() correctly
-        // excludes already-assigned modules, make them vanish from the
-        // picker entirely on a later resume instead of showing as assigned.
+        // otherwise linger stale and, on a later resume, mount() would
+        // treat it as authoritative and could re-apply a since-reverted
+        // removal.
         $this->clearWizardDraft('module_ids');
 
         return $created;
+    }
+
+    /**
+     * Removes a module the user unchecked during the guided wizard. Skips
+     * the stricter production canBeRemoved() sessions-count guard — the
+     * wizard's own auto-populated sessions have no real attendance yet —
+     * but still refuses if a mentee has genuine progress recorded.
+     */
+    private function removeWizardModule(ClassModule $classModule): bool
+    {
+        if ($classModule->status !== 'not_started' || $classModule->menteeProgress()->count() > 0) {
+            return false;
+        }
+
+        $classModule->delete();
+
+        return true;
     }
 
     /**
@@ -669,7 +690,21 @@ class GuidedMentorshipSetup extends Page implements HasForms
         $service = app(EnrollmentService::class);
         $count = 0;
 
-        foreach ($data['selected_users'] ?? [] as $userId) {
+        // selected_users is pre-filled with who's already enrolled (so a
+        // user can uncheck someone to remove them) — sync to that desired
+        // set rather than only ever adding.
+        $desiredIds = collect($data['selected_users'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $currentIds = $this->class->participants()->pluck('user_id')->toArray();
+
+        $toRemove = array_values(array_diff($currentIds, $desiredIds));
+        foreach ($toRemove as $userId) {
+            $participant = $this->class->participants()->where('user_id', $userId)->first();
+            if ($participant) {
+                $service->removeFromClass($participant);
+            }
+        }
+
+        foreach (array_values(array_diff($desiredIds, $currentIds)) as $userId) {
             $user = User::find($userId);
             if ($user && ! $service->isEnrolled($user->id, $this->class->id)) {
                 $service->enrollInClass($user, $this->class, 'manual');

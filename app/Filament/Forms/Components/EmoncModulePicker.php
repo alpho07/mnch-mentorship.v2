@@ -16,6 +16,8 @@ class EmoncModulePicker extends Field
 
     protected ?MentorshipClass $class = null;
 
+    protected bool $includeAssigned = false;
+
     public function training(Training $training): static
     {
         $this->training = $training;
@@ -26,6 +28,20 @@ class EmoncModulePicker extends Field
     public function class(MentorshipClass $class): static
     {
         $this->class = $class;
+
+        return $this;
+    }
+
+    /**
+     * Include already-assigned tracks/modules in the list instead of
+     * excluding them — used by the guided wizard, where module_ids is
+     * pre-filled with the already-assigned ids so they render checked and
+     * can be unchecked to remove them. The legacy one-shot "Add Modules"
+     * modal leaves this off (its default), since it has no removal flow.
+     */
+    public function includeAssigned(bool $include = true): static
+    {
+        $this->includeAssigned = $include;
 
         return $this;
     }
@@ -41,13 +57,15 @@ class EmoncModulePicker extends Field
     }
 
     /**
-     * Return parent modules with their available children attached.
-     * A parent is included if it is a leaf (no tracks) or has at least one
-     * available track. Already-assigned tracks are excluded.
+     * Return parent modules with their children attached. A parent is
+     * included if it is a leaf or has at least one visible track.
+     * Already-assigned tracks are excluded unless includeAssigned() is set.
      */
     public function getModules(): Collection
     {
-        $assignedIds = $this->class->classModules()->pluck('program_module_id')->toArray();
+        $assignedIds = $this->includeAssigned
+            ? []
+            : $this->class->classModules()->pluck('program_module_id')->toArray();
 
         $parents = ProgramModule::where('program_id', $this->training->program_id)
             ->where('is_active', true)
@@ -72,45 +90,6 @@ class EmoncModulePicker extends Field
             }
 
             $parent->setRelation('availableChildren', $availableChildren);
-
-            return $parent;
-        })->filter();
-    }
-
-    /**
-     * Parent modules whose tracks (or, for leaf modules, itself) are
-     * already assigned to the class — for a read-only "Already added"
-     * display, so real assignments stay visible instead of just
-     * disappearing from getModules() once no longer pickable.
-     */
-    public function getAssignedModules(): Collection
-    {
-        $assignedIds = $this->class->classModules()->pluck('program_module_id')->toArray();
-
-        if (empty($assignedIds)) {
-            return collect();
-        }
-
-        $parents = ProgramModule::where('program_id', $this->training->program_id)
-            ->whereNull('parent_id')
-            ->with(['children' => fn ($query) => $query->orderBy('order_sequence')])
-            ->orderBy('order_sequence')
-            ->get();
-
-        return $parents->map(function (ProgramModule $parent) use ($assignedIds) {
-            $assignedChildren = $parent->children->filter(
-                fn (ProgramModule $track) => in_array($track->id, $assignedIds)
-            )->values();
-
-            if ($parent->children->isEmpty()) {
-                return in_array($parent->id, $assignedIds) ? $parent : null;
-            }
-
-            if ($assignedChildren->isEmpty()) {
-                return null;
-            }
-
-            $parent->setRelation('assignedChildren', $assignedChildren);
 
             return $parent;
         })->filter();

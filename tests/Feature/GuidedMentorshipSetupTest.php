@@ -157,22 +157,16 @@ class GuidedMentorshipSetupTest extends TestCase
         ]);
     }
 
-    public function test_mount_defensively_filters_already_assigned_ids_out_of_a_stale_draft(): void
+    public function test_mount_falls_back_to_real_assignments_when_no_draft_exists(): void
     {
         $this->actingAsCoordinator();
         $program = Program::factory()->create(['name' => 'Newborn Care']);
         $programModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
-        $stillPending = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
         $mentee = User::factory()->create();
 
         $training = \App\Models\Training::factory()->facilityMentorship()->create([
             'program_id' => $program->id,
-            // Simulates the exact bug found in production: the draft was
-            // never cleared after a real assignment/enrollment happened.
-            'guided_setup_draft' => [
-                'module_ids' => [$programModule->id, $stillPending->id],
-                'selected_users' => [$mentee->id],
-            ],
+            'guided_setup_draft' => null,
         ]);
         $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
         \App\Models\ClassModule::factory()->create([
@@ -189,13 +183,40 @@ class GuidedMentorshipSetupTest extends TestCase
         $component->instance()->classId = $class->id;
         $component->instance()->mount();
 
-        // Only the still-pending pick remains in module_ids' live state —
-        // the already-assigned one is dropped so it can't try to be
-        // "selected" against an options list that correctly excludes it.
+        // Never visited this step before (no draft key) — defaults to
+        // what's really assigned/enrolled, pre-checked.
         $component->assertFormSet([
-            'module_ids' => [$stillPending->id],
-            'selected_users' => [],
+            'module_ids' => [$programModule->id],
+            'selected_users' => [$mentee->id],
         ]);
+    }
+
+    public function test_mount_treats_an_explicit_draft_as_authoritative_over_real_assignments(): void
+    {
+        $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care']);
+        $programModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'program_id' => $program->id,
+            // The user already unchecked this module once and it's
+            // pending removal on the next Next click — the draft explicitly
+            // omitting it must NOT be overridden by what's still (for now)
+            // really assigned.
+            'guided_setup_draft' => ['module_ids' => []],
+        ]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        \App\Models\ClassModule::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $programModule->id,
+        ]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->trainingId = $training->id;
+        $component->instance()->classId = $class->id;
+        $component->instance()->mount();
+
+        $component->assertFormSet(['module_ids' => []]);
     }
 
     public function test_assign_modules_is_skippable(): void
@@ -211,6 +232,63 @@ class GuidedMentorshipSetupTest extends TestCase
         $created = $component->instance()->assignModules(['module_ids' => [], 'auto_create_sessions' => false]);
 
         $this->assertSame(0, $created);
+    }
+
+    public function test_assign_modules_removes_an_unchecked_module(): void
+    {
+        $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care']);
+        $training = \App\Models\Training::factory()->facilityMentorship()->create(['program_id' => $program->id]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $programModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+        \App\Models\ClassModule::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $programModule->id,
+            'status' => 'not_started',
+        ]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        // Empty desired set = the user unchecked the only assigned module.
+        $component->instance()->assignModules(['module_ids' => [], 'auto_create_sessions' => false]);
+
+        $this->assertDatabaseMissing('class_modules', [
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $programModule->id,
+        ]);
+    }
+
+    public function test_assign_modules_refuses_to_remove_a_module_with_mentee_progress(): void
+    {
+        $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care']);
+        $training = \App\Models\Training::factory()->facilityMentorship()->create(['program_id' => $program->id]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $programModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+        $classModule = \App\Models\ClassModule::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $programModule->id,
+            'status' => 'not_started',
+        ]);
+        $participant = \App\Models\ClassParticipant::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'user_id' => User::factory(),
+        ]);
+        \App\Models\MenteeModuleProgress::create([
+            'class_participant_id' => $participant->id,
+            'class_module_id' => $classModule->id,
+            'status' => 'not_started',
+        ]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $component->instance()->assignModules(['module_ids' => [], 'auto_create_sessions' => false]);
+
+        $this->assertDatabaseHas('class_modules', ['id' => $classModule->id]);
     }
 
     public function test_enroll_mentees_enrolls_existing_selected_users(): void
@@ -516,5 +594,29 @@ class GuidedMentorshipSetupTest extends TestCase
         $this->assertSame(1, \App\Models\ClassParticipant::where('mentorship_class_id', $class->id)
             ->where('user_id', $mentee->id)
             ->count());
+    }
+
+    public function test_enroll_mentees_removes_an_unchecked_mentee(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $mentee = User::factory()->create();
+        \App\Models\ClassParticipant::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'user_id' => $mentee->id,
+        ]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        // Empty desired set = the user unchecked the only enrolled mentee.
+        $component->instance()->enrollMentees(['selected_users' => [], 'new_mentee' => null]);
+
+        $this->assertDatabaseMissing('class_participants', [
+            'mentorship_class_id' => $class->id,
+            'user_id' => $mentee->id,
+        ]);
     }
 }

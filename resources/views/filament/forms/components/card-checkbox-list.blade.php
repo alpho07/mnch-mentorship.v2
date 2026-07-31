@@ -1,7 +1,6 @@
 @php
     $statePath = $field->getStatePath();
     $options = $field->getOptionsList();
-    $lockedOptions = $field->getLockedOptionsList();
     $hasError = $errors->has($statePath);
     $max = $field->getMaxSelections();
 @endphp
@@ -42,30 +41,10 @@
         </div>
     @endif
 
-    @if(! empty($lockedOptions))
-        <div class="mb-3 space-y-3">
-            @foreach($lockedOptions as $id => $label)
-                <div class="rounded-lg border border-success-200 dark:border-success-800 overflow-hidden">
-                    <div class="flex items-center gap-3 px-4 py-3 bg-success-50 dark:bg-success-900/20">
-                        <x-heroicon-o-check-circle class="h-4 w-4 shrink-0 text-success-600 dark:text-success-400" />
-                        <span class="font-semibold text-sm text-gray-900 dark:text-gray-100">
-                            {{ $label }}
-                        </span>
-                        <span class="ms-auto text-xs font-medium text-success-700 dark:text-success-400">
-                            Already added
-                        </span>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    @endif
-
     @if(empty($options))
-        @if(empty($lockedOptions))
-            <div class="text-sm text-gray-500 dark:text-gray-400">
-                No options available.
-            </div>
-        @endif
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+            No options available.
+        </div>
     @else
         <div class="space-y-3">
             @foreach($options as $id => $label)
