@@ -674,6 +674,104 @@
                 font-size: 18px;
             }
         }
+
+        /* ── Hero next-action card ────────────────────────────────────────────── */
+        .md-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            border-radius: 18px;
+            padding: 22px 26px;
+            margin-bottom: 14px;
+            text-decoration: none;
+            transition: transform .15s ease;
+        }
+        .md-hero:hover {
+            transform: translateY(-1px);
+        }
+        .md-hero-urgent {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border: 1px solid #fca5a5;
+        }
+        .md-hero-active {
+            background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+            border: 1px solid #93c5fd;
+        }
+        .md-hero-clear {
+            background: linear-gradient(135deg, #dcfce7, #d1fae5);
+            border: 1px solid #86efac;
+        }
+        .md-hero-headline {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+        .md-hero-subtext {
+            font-size: 13px;
+            color: #475569;
+            font-weight: 500;
+        }
+        .md-hero-action {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            white-space: nowrap;
+            padding: 10px 18px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.6);
+        }
+
+        /* ── Secondary strip ──────────────────────────────────────────────────── */
+        .md-secondary-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 12.5px;
+            color: #64748b;
+            margin-bottom: 20px;
+            padding: 0 4px;
+        }
+        .dark .md-secondary-strip {
+            color: #94a3b8;
+        }
+        .md-secondary-item strong {
+            color: #1e293b;
+            font-weight: 800;
+        }
+        .dark .md-secondary-item strong {
+            color: #f1f5f9;
+        }
+
+        /* ── Collapsible sections ─────────────────────────────────────────────── */
+        .md-collapse-section {
+            margin-bottom: 16px;
+        }
+        .md-collapse-summary {
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            color: #475569;
+            padding: 10px 4px;
+            list-style: none;
+            user-select: none;
+        }
+        .dark .md-collapse-summary {
+            color: #94a3b8;
+        }
+        .md-collapse-summary::-webkit-details-marker {
+            display: none;
+        }
+        .md-collapse-summary::before {
+            content: '▸ ';
+        }
+        details[open] > .md-collapse-summary::before {
+            content: '▾ ';
+        }
+        .md-collapse-body {
+            padding-top: 6px;
+        }
     </style>
 
     <div class="md-container">
@@ -725,33 +823,6 @@
             </div>
         </div>
 
-        {{-- ══ GLOBAL STATS ═══════════════════════════════════════════════════════ --}}
-@php
-$stats = $globalStats;
-$cards = [
-    ['icon' => '📚', 'value' => $stats['total_classes'],       'label' => 'Classes Enrolled',   'bg' => '#eff6ff', 'ic' => '#dbeafe', 'vc' => '#1d4ed8'],
-    ['icon' => '✅', 'value' => $stats['completed_classes'],   'label' => 'Classes Completed',   'bg' => '#f0fdf4', 'ic' => '#dcfce7', 'vc' => '#16a34a'],
-    ['icon' => '🔵', 'value' => $stats['active_classes'],      'label' => 'Classes Active',      'bg' => '#f0f9ff', 'ic' => '#e0f2fe', 'vc' => '#0284c7'],
-    ['icon' => '🧩', 'value' => $stats['total_modules'],       'label' => 'Total Modules',       'bg' => '#faf5ff', 'ic' => '#ede9fe', 'vc' => '#7c3aed'],
-    ['icon' => '🏆', 'value' => $stats['completed_modules'],   'label' => 'Modules Completed',   'bg' => '#f0fdf4', 'ic' => '#dcfce7', 'vc' => '#16a34a'],
-    ['icon' => '⏳', 'value' => $stats['in_progress_modules'], 'label' => 'Modules In Progress', 'bg' => '#fffbeb', 'ic' => '#fef9c3', 'vc' => '#d97706'],
-    ['icon' => '📋', 'value' => $stats['pending_attendance'],  'label' => 'Pending Attendance',  'bg' => '#fef2f2', 'ic' => '#fee2e2', 'vc' => '#dc2626'],
-    ['icon' => '⭐', 'value' => $stats['exempted_modules'],    'label' => 'Modules Exempted',    'bg' => '#f8fafc', 'ic' => '#f1f5f9', 'vc' => '#475569'],
-];
-        @endphp
-
-        <div class="md-stats-grid">
-            @foreach($cards as $c)
-                <div class="md-stat-card">
-                    <div class="md-stat-icon" style="background:{{ $c['ic'] }}">{{ $c['icon'] }}</div>
-                    <div>
-                        <div class="md-stat-value" style="color:{{ $c['vc'] }}">{{ $c['value'] }}</div>
-                        <div class="md-stat-label">{{ $c['label'] }}</div>
-                    </div>
-            </div>
-        @endforeach
-        </div>
-
 {{-- ══ PENDING ENROLLMENT ══════════════════════════════════════════════════ --}}
         @php
             $pendingEnrollment = session('enrollment_intent');
@@ -786,14 +857,78 @@ $cards = [
             @endif
         @endif
 
-{{-- ══ MAIN CONTENT + SIDEBAR ══════════════════════════════════════════════ --}}
-            @if(empty($enrollments))
+        @if(empty($enrollments))
         <div class="md-empty">
                 <div class="md-empty-icon">🎓</div>
                 <div class="md-empty-title">You're not enrolled in any classes yet</div>
             <div class="md-empty-sub">Your mentor will send you an enrollment invitation. Check your email inbox.</div>
         </div>
-@else
+        @else
+
+        {{-- ══ HERO: NEXT BEST ACTION ═══════════════════════════════════════════ --}}
+        @php
+            $tier = $nextAction['tier'] ?? 6;
+            $heroClass = $tier <= 2 ? 'md-hero-urgent' : ($tier <= 5 ? 'md-hero-active' : 'md-hero-clear');
+        @endphp
+        @if(!empty($nextAction))
+            <a href="{{ $nextAction['url'] }}" class="md-hero {{ $heroClass }}">
+                <div class="md-hero-text">
+                    <div class="md-hero-headline">{{ $nextAction['headline'] }}</div>
+                    <div class="md-hero-subtext">{{ $nextAction['subtext'] }}</div>
+                </div>
+                <div class="md-hero-action">{{ $nextAction['label'] }} →</div>
+            </a>
+        @endif
+
+        {{-- ── Secondary strip ──────────────────────────────────────────────── --}}
+        <div class="md-secondary-strip">
+            <div class="md-secondary-item">
+                <strong>{{ $globalStats['pending_attendance'] ?? 0 }}</strong> pending attendance
+            </div>
+            <div class="md-secondary-item">
+                <strong>{{ count($recommendations) }}</strong> mentor feedback item{{ count($recommendations) !== 1 ? 's' : '' }}
+            </div>
+            <div class="md-secondary-item">
+                <strong>{{ $globalStats['completion_rate'] ?? 0 }}%</strong> overall completion
+            </div>
+        </div>
+
+        {{-- ══ GLOBAL STATS ═══════════════════════════════════════════════════════ --}}
+        <details class="md-collapse-section">
+            <summary class="md-collapse-summary">📊 My Progress</summary>
+            <div class="md-collapse-body">
+@php
+$stats = $globalStats;
+$cards = [
+    ['icon' => '📚', 'value' => $stats['total_classes'],       'label' => 'Classes Enrolled',   'bg' => '#eff6ff', 'ic' => '#dbeafe', 'vc' => '#1d4ed8'],
+    ['icon' => '✅', 'value' => $stats['completed_classes'],   'label' => 'Classes Completed',   'bg' => '#f0fdf4', 'ic' => '#dcfce7', 'vc' => '#16a34a'],
+    ['icon' => '🔵', 'value' => $stats['active_classes'],      'label' => 'Classes Active',      'bg' => '#f0f9ff', 'ic' => '#e0f2fe', 'vc' => '#0284c7'],
+    ['icon' => '🧩', 'value' => $stats['total_modules'],       'label' => 'Total Modules',       'bg' => '#faf5ff', 'ic' => '#ede9fe', 'vc' => '#7c3aed'],
+    ['icon' => '🏆', 'value' => $stats['completed_modules'],   'label' => 'Modules Completed',   'bg' => '#f0fdf4', 'ic' => '#dcfce7', 'vc' => '#16a34a'],
+    ['icon' => '⏳', 'value' => $stats['in_progress_modules'], 'label' => 'Modules In Progress', 'bg' => '#fffbeb', 'ic' => '#fef9c3', 'vc' => '#d97706'],
+    ['icon' => '📋', 'value' => $stats['pending_attendance'],  'label' => 'Pending Attendance',  'bg' => '#fef2f2', 'ic' => '#fee2e2', 'vc' => '#dc2626'],
+    ['icon' => '⭐', 'value' => $stats['exempted_modules'],    'label' => 'Modules Exempted',    'bg' => '#f8fafc', 'ic' => '#f1f5f9', 'vc' => '#475569'],
+];
+        @endphp
+
+        <div class="md-stats-grid">
+            @foreach($cards as $c)
+                <div class="md-stat-card">
+                    <div class="md-stat-icon" style="background:{{ $c['ic'] }}">{{ $c['icon'] }}</div>
+                    <div>
+                        <div class="md-stat-value" style="color:{{ $c['vc'] }}">{{ $c['value'] }}</div>
+                        <div class="md-stat-label">{{ $c['label'] }}</div>
+                    </div>
+            </div>
+        @endforeach
+        </div>
+            </div>
+        </details>
+
+{{-- ══ MAIN CONTENT + SIDEBAR ══════════════════════════════════════════════ --}}
+        <details class="md-collapse-section">
+            <summary class="md-collapse-summary">📚 My Classes</summary>
+            <div class="md-collapse-body">
 
         <div class="md-two-col">
 
@@ -983,7 +1118,9 @@ $cards = [
 
             </div>{{-- /sidebar --}}
         </div>{{-- /two-col --}}
-@endif
+            </div>{{-- /md-collapse-body --}}
+        </details>
+        @endif
 
     </div>{{-- /container --}}
 
