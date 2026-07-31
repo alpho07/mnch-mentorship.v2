@@ -766,7 +766,7 @@
 
                     {{-- ── Submit Hands-on Video ────────────────────────────── --}}
                     @if($isEmonc)
-                    <div id="submit-video" class="section-card" x-data="{ inputType: 'file' }">
+                    <div id="submit-video" class="section-card" x-data="{ inputType: 'file', uploading: false, uploadPct: 0, uploadFailed: false }">
                         <div class="card-stripe" style="background:#f59e0b"></div>
                         <div class="p-5 sm:p-6">
                             <div class="flex items-center justify-between gap-3 mb-4">
@@ -824,7 +824,13 @@
                             <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
                                 {{ $progress->hands_on_video_url ? 'Upload a replacement or paste a new link:' : 'Record yourself performing the skill and upload or share a link:' }}
                             </p>
-                            <form action="{{ route('mentee.class.video.upload', [$class->id, $classModule->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                            <form
+                                action="{{ route('mentee.class.video.upload', [$class->id, $classModule->id]) }}"
+                                method="POST"
+                                enctype="multipart/form-data"
+                                class="space-y-4"
+                                x-on:submit.prevent="uploadFailed = false; uploadVideoForm($event.target, () => { uploading = true; uploadPct = 0; }, (pct) => { uploadPct = pct; }, () => { window.location.reload(); }, () => { uploading = false; uploadFailed = true; })"
+                            >
                                 @csrf
                                 <div class="flex items-center gap-4">
                                     <label class="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
@@ -851,6 +857,23 @@
                                     {{ $progress->hands_on_video_url ? 'Replace Video' : 'Submit Video' }}
                                 </button>
                             </form>
+
+                            <div x-show="uploading" x-cloak style="margin-top:14px">
+                                <div style="display:flex;justify-content:space-between;font-size:11px;color:#92400e;margin-bottom:5px;font-weight:600">
+                                    <span>Uploading…</span>
+                                    <span x-text="uploadPct + '%'"></span>
+                                </div>
+                                <div style="height:6px;border-radius:100px;background:#fef3c7;overflow:hidden">
+                                    <div style="height:100%;background:#f59e0b;border-radius:100px;transition:width .2s" :style="'width:' + uploadPct + '%'"></div>
+                                </div>
+                            </div>
+
+                            <div x-show="uploadFailed" x-cloak style="margin-top:14px;padding:12px 14px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;display:flex;align-items:center;justify-content:space-between;gap:12px">
+                                <span style="font-size:12px;font-weight:600;color:#b91c1c">Upload didn't finish — your file is still selected. Check your connection and retry.</span>
+                                <button type="button" x-on:click="$el.closest('.section-card').querySelector('form').requestSubmit()" style="flex-shrink:0;padding:6px 14px;border-radius:8px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;border:none;cursor:pointer">
+                                    Retry Upload
+                                </button>
+                            </div>
                         </div>
                     </div>
                     @endif
@@ -1077,5 +1100,34 @@
 @endif
 
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
+function uploadVideoForm(formEl, onStart, onProgress, onSuccess, onError) {
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData(formEl);
+
+    xhr.open('POST', formEl.action, true);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+    xhr.upload.addEventListener('progress', function (e) {
+        if (e.lengthComputable) {
+            onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+    });
+
+    xhr.addEventListener('load', function () {
+        if (xhr.status >= 200 && xhr.status < 400) {
+            onSuccess();
+        } else {
+            onError();
+        }
+    });
+
+    xhr.addEventListener('error', onError);
+    xhr.addEventListener('timeout', onError);
+
+    onStart();
+    xhr.send(formData);
+}
+</script>
 </body>
 </html>
