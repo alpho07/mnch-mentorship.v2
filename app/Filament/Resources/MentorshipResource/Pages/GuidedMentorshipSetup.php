@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\MentorshipResource\Pages;
 
+use App\Filament\Forms\Components\EmoncModulePicker;
 use App\Filament\Forms\Components\ProgramPicker;
 use App\Filament\Resources\MentorshipTrainingResource;
+use App\Models\ClassModule;
 use App\Models\Facility;
 use App\Models\MentorshipClass;
 use App\Models\Program;
 use App\Models\Training;
+use App\Services\ModuleUsageService;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -208,6 +211,55 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 $this->stepFailed($e);
                             }
                         }),
+                    Forms\Components\Wizard\Step::make('Modules')
+                        ->description("Now let's add modules to this class. You can skip this and add them later.")
+                        ->icon('heroicon-o-book-open')
+                        ->schema(function () {
+                            if (! $this->training || ! $this->class) {
+                                return [
+                                    Forms\Components\Placeholder::make('modules_placeholder')
+                                        ->label('')
+                                        ->content('Modules will be available once the class above is created.'),
+                                ];
+                            }
+
+                            if ($this->isEmoncProgram($this->training?->program_id)) {
+                                $picker = EmoncModulePicker::make('module_ids')
+                                    ->label('Available Program Modules')
+                                    ->training($this->training)
+                                    ->class($this->class)
+                                    ->helperText('Click a module to select all its tracks, or pick tracks individually.');
+                            } else {
+                                $available = app(ModuleUsageService::class)
+                                    ->getAvailableModules($this->training, $this->class)
+                                    ->mapWithKeys(fn ($module) => [$module->id => $module->name])
+                                    ->toArray();
+
+                                $picker = Forms\Components\CheckboxList::make('module_ids')
+                                    ->label('Available Program Modules')
+                                    ->options($available)
+                                    ->searchable()
+                                    ->bulkToggleable()
+                                    ->helperText('Optional — you can add modules later from the class Modules page.');
+                            }
+
+                            return [
+                                $picker,
+                                Forms\Components\Toggle::make('auto_create_sessions')
+                                    ->label('Auto-populate sessions from program template')
+                                    ->default(true),
+                            ];
+                        })
+                        ->afterValidation(function (Get $get) {
+                            try {
+                                $this->assignModules([
+                                    'module_ids' => $get('module_ids') ?? [],
+                                    'auto_create_sessions' => $get('auto_create_sessions') ?? true,
+                                ]);
+                            } catch (\Throwable $e) {
+                                $this->stepFailed($e);
+                            }
+                        }),
                 ])
                     ->persistStepInQueryString(null)
                     ->skippable(false),
@@ -257,6 +309,44 @@ class GuidedMentorshipSetup extends Page implements HasForms
         ]);
 
         return $this->class;
+    }
+
+    /**
+     * Assigns modules to the class. Mirrors the persistence portion of
+     * ManageClassModules's "Add Modules" action exactly (dates/notes
+     * fields are intentionally omitted — see design spec).
+     */
+    public function assignModules(array $data): int
+    {
+        $moduleIds = $data['module_ids'] ?? [];
+
+        if (empty($moduleIds)) {
+            return 0;
+        }
+
+        $service = app(ModuleUsageService::class);
+        $createdModuleIds = [];
+
+        $created = $service->assignModulesToClass(
+            $this->training,
+            $this->class,
+            $moduleIds,
+            null,
+            function (ClassModule $classModule) use (&$createdModuleIds) {
+                $createdModuleIds[] = $classModule->id;
+            }
+        );
+
+        if (($data['auto_create_sessions'] ?? true) && $created > 0) {
+            $this->class->load('classModules');
+            foreach ($this->class->classModules as $classModule) {
+                if (method_exists($classModule, 'autoCreateSessions')) {
+                    $classModule->autoCreateSessions();
+                }
+            }
+        }
+
+        return $created;
     }
 
     /**

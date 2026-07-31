@@ -94,4 +94,44 @@ class GuidedMentorshipSetupTest extends TestCase
             'status' => 'draft',
         ]);
     }
+
+    public function test_assign_modules_creates_class_modules_for_standard_program(): void
+    {
+        $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care']);
+        $training = \App\Models\Training::factory()->facilityMentorship()->create(['program_id' => $program->id]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $programModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $created = $component->instance()->assignModules([
+            'module_ids' => [$programModule->id],
+            'auto_create_sessions' => false,
+        ]);
+
+        $this->assertSame(1, $created);
+        $this->assertDatabaseHas('class_modules', [
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $programModule->id,
+            'status' => 'not_started',
+        ]);
+    }
+
+    public function test_assign_modules_is_skippable(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $created = $component->instance()->assignModules(['module_ids' => [], 'auto_create_sessions' => false]);
+
+        $this->assertSame(0, $created);
+    }
 }
