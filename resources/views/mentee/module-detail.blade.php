@@ -348,9 +348,12 @@
                         <p style="font-size:13px;color:#64748b;max-width:380px;margin:0 auto 20px;line-height:1.6">
                             Your mentor hasn't added any content to this module yet — no introduction, pre/post tests, case scenarios, or activities have been configured for you.
                         </p>
-                        <div style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;background:linear-gradient(135deg,#eff6ff,#eef2ff);border:1px solid #bfdbfe">
+                        <div style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;background:linear-gradient(135deg,#eff6ff,#eef2ff);border:1px solid #bfdbfe;margin-bottom:14px">
                             <svg style="width:16px;height:16px;color:#1d4ed8;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                             <span style="font-size:12px;font-weight:600;color:#1d4ed8">Contact your mentor to be enrolled in the module services</span>
+                        </div>
+                        <div>
+                            <a href="{{ route('mentee.class.progress', $class->id) }}" style="font-size:12px;font-weight:700;color:#475569;text-decoration:none">← Back to Class</a>
                         </div>
                     </div>
                 </div>
