@@ -599,7 +599,16 @@ class ManageModuleMentees extends Page implements HasTable
                     }),
             ])
             ->emptyStateHeading('No Mentees Enrolled')
-            ->emptyStateDescription('Enroll mentees in the class first.');
+            ->emptyStateDescription('Enroll mentees in the class first.')
+            ->emptyStateActions([
+                Tables\Actions\Action::make('go_enroll_mentees')
+                    ->label('Enroll Mentees')
+                    ->icon('heroicon-o-user-plus')
+                    ->url(fn () => MentorshipTrainingResource::getUrl('class-mentees', [
+                        'training' => $this->training->id,
+                        'class' => $this->class->id,
+                    ])),
+            ]);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

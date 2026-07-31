@@ -193,7 +193,15 @@ class ManageMentorshipCoMentors extends Page implements HasTable
             ])
             ->defaultSort('created_at', 'desc')
             ->emptyStateHeading('No Classes Yet')
-            ->emptyStateDescription('Create a class cohort to assign co-mentors.');
+            ->emptyStateDescription('Create a class cohort to assign co-mentors.')
+            ->emptyStateActions([
+                Tables\Actions\Action::make('go_create_class')
+                    ->label('Create Class')
+                    ->icon('heroicon-o-plus-circle')
+                    ->url(fn () => MentorshipTrainingResource::getUrl('classes', [
+                        'record' => $this->record->id,
+                    ])),
+            ]);
     }
 
     private function getCoMentorsTable(Table $table): Table
