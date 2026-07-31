@@ -16,6 +16,8 @@ class CardCheckboxList extends Field
 
     protected array|Closure $options = [];
 
+    protected int|Closure|null $maxSelections = null;
+
     public function options(array|Closure $options): static
     {
         $this->options = $options;
@@ -23,8 +25,36 @@ class CardCheckboxList extends Field
         return $this;
     }
 
+    /**
+     * Caps how many items can be checked. Once reached, unchecked cards
+     * become non-interactive client-side (already-checked ones can still
+     * be unchecked) and the server rejects an over-the-cap submission.
+     */
+    public function maxSelections(int|Closure|null $max): static
+    {
+        $this->maxSelections = $max;
+
+        $this->rule(
+            fn () => function (string $attribute, $value, Closure $fail) {
+                $max = $this->getMaxSelections();
+
+                if ($max !== null && count($value ?? []) > $max) {
+                    $fail("You can select at most {$max}.");
+                }
+            },
+            fn () => $this->getMaxSelections() !== null,
+        );
+
+        return $this;
+    }
+
     public function getOptionsList(): array
     {
         return $this->evaluate($this->options) ?? [];
+    }
+
+    public function getMaxSelections(): ?int
+    {
+        return $this->evaluate($this->maxSelections);
     }
 }

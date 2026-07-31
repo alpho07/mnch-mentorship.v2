@@ -63,6 +63,17 @@ class GuidedMentorshipSetup extends Page implements HasForms
     #[Url(as: 'facility')]
     public ?int $urlFacilityId = null;
 
+    // Mirrors of the Modules/Enroll Mentees checkbox selections. Nothing is
+    // saved to the DB for these until the user clicks Next past that step
+    // (assignModules()/enrollMentees() run in afterValidation), so a refresh
+    // while still on either step would otherwise silently drop the picks —
+    // same idea as the URL mirrors above, comma-joined since these are lists.
+    #[Url(as: 'modules')]
+    public ?string $urlModuleIds = null;
+
+    #[Url(as: 'mentees')]
+    public ?string $urlSelectedUserIds = null;
+
     public ?Training $training = null;
 
     public ?MentorshipClass $class = null;
@@ -76,8 +87,8 @@ class GuidedMentorshipSetup extends Page implements HasForms
     public function mount(): void
     {
         $fill = [
-            'module_ids' => [],
-            'selected_users' => [],
+            'module_ids' => $this->idsFromUrlString($this->urlModuleIds),
+            'selected_users' => $this->idsFromUrlString($this->urlSelectedUserIds),
             // The wizard's fill() is called with an explicit array on every
             // mount(), which bypasses each field's own ->default() (Filament
             // only auto-applies defaults when fill() is passed null). This
@@ -356,6 +367,8 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     ->label('Available Program Modules')
                                     ->options($available)
                                     ->default([])
+                                    ->live()
+                                    ->afterStateUpdated(fn ($state) => $this->urlModuleIds = empty($state) ? null : implode(',', $state))
                                     ->helperText('Optional — you can add modules later from the class Modules page.');
                             }
 
@@ -404,21 +417,17 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 ->prefixIcon('heroicon-o-magnifying-glass'),
                             CardCheckboxList::make('selected_users')
                                 ->label('Existing Users')
-                                ->options(fn (Get $get) => $this->searchMenteeUsers(
+                                ->options(fn (Get $get) => $this->menteeOptions(
                                     $get('mentee_search'),
-                                    (int) ($get('mentee_page') ?? 1)
-                                )->mapWithKeys(fn ($u) => [
-                                    $u->id => implode(' · ', array_filter([
-                                        $u->name,
-                                        $u->phone,
-                                        $u->email,
-                                        $u->facility ? "{$u->facility->name}".
-                                            ($u->facility->mfl_code ? " (MFL {$u->facility->mfl_code})" : '') : null,
-                                    ])),
-                                ])->toArray())
+                                    (int) ($get('mentee_page') ?? 1),
+                                    collect($get('selected_users') ?? [])->map(fn ($id) => (int) $id)->all()
+                                ))
+                                ->maxSelections(fn () => $this->training?->max_participants)
                                 ->default([])
+                                ->live()
+                                ->afterStateUpdated(fn ($state) => $this->urlSelectedUserIds = empty($state) ? null : implode(',', $state))
                                 ->columnSpanFull()
-                                ->helperText('Search and check existing users to enroll.'),
+                                ->helperText('Search and check existing users to enroll. Already-selected mentees stay pinned to the top.'),
                             Forms\Components\Actions::make([
                                 Forms\Components\Actions\Action::make('mentee_previous')
                                     ->label('Previous Page')
@@ -800,6 +809,52 @@ class GuidedMentorshipSetup extends Page implements HasForms
         }
 
         return $query->skip(($page - 1) * $perPage)->take($perPage)->get();
+    }
+
+    /**
+     * Builds the Enroll Mentees id => label options, with already-selected
+     * mentees pinned to the top (fetched separately so they stay visible
+     * even if a later search/page filters them out of the main results).
+     */
+    private function menteeOptions(?string $search, int $page, array $selectedIds): array
+    {
+        $selected = empty($selectedIds)
+            ? collect()
+            : User::whereIn('id', $selectedIds)->with('facility')->orderBy('first_name')->get();
+
+        $results = $this->searchMenteeUsers($search, $page)
+            ->reject(fn ($u) => in_array($u->id, $selectedIds));
+
+        return $selected->concat($results)
+            ->mapWithKeys(fn ($u) => [$u->id => $this->formatMenteeLabel($u)])
+            ->toArray();
+    }
+
+    private function formatMenteeLabel(User $u): string
+    {
+        return implode(' · ', array_filter([
+            $u->name,
+            $u->phone,
+            $u->email,
+            $u->facility ? "{$u->facility->name}".
+                ($u->facility->mfl_code ? " (MFL {$u->facility->mfl_code})" : '') : null,
+        ]));
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function idsFromUrlString(?string $ids): array
+    {
+        if (! $ids) {
+            return [];
+        }
+
+        return collect(explode(',', $ids))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->values()
+            ->toArray();
     }
 
     private function isEmoncProgram(?int $programId): bool
