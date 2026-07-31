@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\EmoncNotificationService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -220,6 +221,8 @@ class ClassModule extends Model
                             'attendance_percentage' => 100.0,
                         ]);
                     }
+
+                    app(EmoncNotificationService::class)->moduleCompleted($progress);
                 } else {
                     // Absent → leave 'exempted' untouched, others go to 'not_started'
                     MenteeModuleProgress::where('class_participant_id', $participant->id)
