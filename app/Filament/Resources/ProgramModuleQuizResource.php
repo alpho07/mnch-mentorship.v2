@@ -174,6 +174,8 @@ class ProgramModuleQuizResource extends Resource
                     Tables\Actions\DeleteBulkAction::make()->requiresConfirmation(),
                 ]),
             ])
+            ->emptyStateHeading('No Quizzes Yet')
+            ->emptyStateDescription('Quizzes are attached to a module as its pre-test or post-test.')
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make(),
             ]);

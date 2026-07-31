@@ -219,6 +219,8 @@ class ProgramModuleResource extends Resource
                     Tables\Actions\DeleteBulkAction::make()->requiresConfirmation(),
                 ]),
             ])
+            ->emptyStateHeading('No Program Modules Yet')
+            ->emptyStateDescription("Modules make up a program's curriculum.")
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make(),
             ]);

@@ -80,6 +80,8 @@ class ActivityResource extends Resource
                     Tables\Actions\DeleteBulkAction::make()->requiresConfirmation(),
                 ]),
             ])
+            ->emptyStateHeading('No Activities Yet')
+            ->emptyStateDescription('Activities (CME, Hands-on Demo, Drill) are assigned to mentorship modules.')
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make(),
             ]);
