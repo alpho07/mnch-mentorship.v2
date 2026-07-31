@@ -412,7 +412,12 @@ class ResourceResource extends FilamentResource {
                                 ->deselectRecordsAfterCompletion(),
                             ]),
                         ])
-                        ->defaultSort('created_at', 'desc');
+                        ->defaultSort('created_at', 'desc')
+                        ->emptyStateHeading('No Resources Yet')
+                        ->emptyStateDescription('Add articles, guides, or files to the knowledge base.')
+                        ->emptyStateActions([
+                            Tables\Actions\CreateAction::make(),
+                        ]);
     }
 
     public static function getRelations(): array {

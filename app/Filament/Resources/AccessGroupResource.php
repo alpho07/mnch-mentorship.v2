@@ -130,7 +130,12 @@ class AccessGroupResource extends Resource {
                                 ->color('danger'),
                             ]),
                         ])
-                        ->defaultSort('name');
+                        ->defaultSort('name')
+                        ->emptyStateHeading('No Access Groups Yet')
+                        ->emptyStateDescription('Access groups control which restricted resources a facility or role can see.')
+                        ->emptyStateActions([
+                            Tables\Actions\CreateAction::make(),
+                        ]);
     }
 
     public static function getRelations(): array {

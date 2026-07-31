@@ -130,7 +130,12 @@ class CategoryResource extends Resource
                     Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('sort_order');
+            ->defaultSort('sort_order')
+            ->emptyStateHeading('No Categories Yet')
+            ->emptyStateDescription('Categories help organize knowledge base resources.')
+            ->emptyStateActions([
+                Tables\Actions\CreateAction::make(),
+            ]);
     }
 
     public static function getPages(): array

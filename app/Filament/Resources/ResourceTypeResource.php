@@ -141,7 +141,12 @@ class ResourceTypeResource extends Resource {
                                 ->color('danger'),
                             ]),
                         ])
-                        ->defaultSort('sort_order');
+                        ->defaultSort('sort_order')
+                        ->emptyStateHeading('No Resource Types Yet')
+                        ->emptyStateDescription('Resource types classify knowledge base content (e.g. guide, video, form).')
+                        ->emptyStateActions([
+                            Tables\Actions\CreateAction::make(),
+                        ]);
     }
 
     public static function getRelations(): array {
