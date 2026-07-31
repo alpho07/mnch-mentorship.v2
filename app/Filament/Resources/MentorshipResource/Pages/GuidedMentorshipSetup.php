@@ -165,6 +165,49 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 $this->stepFailed($e);
                             }
                         }),
+                    Forms\Components\Wizard\Step::make('First Class')
+                        ->description("Let's create your first class or cohort.")
+                        ->icon('heroicon-o-user-group')
+                        ->schema([
+                            Forms\Components\TextInput::make('class_name')
+                                ->label('Class/Cohort Name')
+                                ->required()
+                                ->placeholder('e.g., January 2027 Cohort')
+                                ->maxLength(255),
+                            Forms\Components\Grid::make(2)->schema([
+                                Forms\Components\DatePicker::make('class_start_date')
+                                    ->label('Start Date')
+                                    ->required(fn () => ! $this->isEmoncProgram($this->training?->program_id))
+                                    ->visible(fn () => ! $this->isEmoncProgram($this->training?->program_id))
+                                    ->native(false)
+                                    ->minDate(fn () => $this->training?->start_date)
+                                    ->maxDate(fn () => $this->training?->end_date),
+                                Forms\Components\DatePicker::make('class_end_date')
+                                    ->label('End Date')
+                                    ->required(fn () => ! $this->isEmoncProgram($this->training?->program_id))
+                                    ->visible(fn () => ! $this->isEmoncProgram($this->training?->program_id))
+                                    ->native(false)
+                                    ->minDate(fn (Get $get) => $get('class_start_date') ?: $this->training?->start_date)
+                                    ->maxDate(fn () => $this->training?->end_date)
+                                    ->afterOrEqual('class_start_date'),
+                            ]),
+                            Forms\Components\Textarea::make('class_description')
+                                ->label('Description')
+                                ->rows(3)
+                                ->placeholder('Describe the gap identified and how this class will be delivered.'),
+                        ])
+                        ->afterValidation(function (Get $get) {
+                            try {
+                                $this->createFirstClass([
+                                    'name' => $get('class_name'),
+                                    'start_date' => $get('class_start_date'),
+                                    'end_date' => $get('class_end_date'),
+                                    'description' => $get('class_description'),
+                                ]);
+                            } catch (\Throwable $e) {
+                                $this->stepFailed($e);
+                            }
+                        }),
                 ])
                     ->persistStepInQueryString(null)
                     ->skippable(false),
@@ -195,6 +238,25 @@ class GuidedMentorshipSetup extends Page implements HasForms
         $this->training = Training::create($data);
 
         return $this->training;
+    }
+
+    /**
+     * Creates the first MentorshipClass. Mirrors
+     * ManageMentorshipClasses::createClass() exactly.
+     */
+    public function createFirstClass(array $data): MentorshipClass
+    {
+        $this->class = MentorshipClass::create([
+            'training_id' => $this->training->id,
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'start_date' => $data['start_date'] ?? null,
+            'end_date' => $data['end_date'] ?? null,
+            'status' => 'draft',
+            'created_by' => auth()->id(),
+        ]);
+
+        return $this->class;
     }
 
     /**

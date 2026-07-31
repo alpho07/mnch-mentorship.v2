@@ -71,4 +71,27 @@ class GuidedMentorshipSetupTest extends TestCase
         $this->assertStringContainsString('Newborn Care', $training->title);
         $this->assertStringContainsString('Test Facility', $training->title);
     }
+
+    public function test_create_first_class_persists_and_links_to_training(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+
+        $class = $component->instance()->createFirstClass([
+            'name' => 'January 2027 Cohort',
+            'start_date' => now()->addDay()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
+            'description' => 'Gap identified: newborn resuscitation.',
+        ]);
+
+        $this->assertDatabaseHas('mentorship_classes', [
+            'id' => $class->id,
+            'training_id' => $training->id,
+            'name' => 'January 2027 Cohort',
+            'status' => 'draft',
+        ]);
+    }
 }
