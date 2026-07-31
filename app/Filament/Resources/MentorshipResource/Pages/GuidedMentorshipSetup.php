@@ -760,6 +760,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
 
         $this->invitedCount = $sent + $resent;
         $this->completed = true;
+        $this->training->update(['guided_setup_completed_at' => now()]);
 
         return ['sent' => $sent, 'resent' => $resent];
     }

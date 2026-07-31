@@ -226,6 +226,31 @@ class GuidedMentorshipSetupTest extends TestCase
         $this->assertTrue($component->instance()->completed);
         $participant->refresh();
         $this->assertNotNull($participant->invitation_sent_at);
+        $this->assertNotNull($training->fresh()->guided_setup_completed_at);
+    }
+
+    public function test_pending_guided_setup_scope_excludes_completed_and_other_users_trainings(): void
+    {
+        $mentor = $this->actingAsCoordinator();
+        $otherMentor = User::factory()->create();
+
+        $pending = \App\Models\Training::factory()->facilityMentorship()->create([
+            'mentor_id' => $mentor->id,
+            'guided_setup_completed_at' => null,
+        ]);
+        \App\Models\Training::factory()->facilityMentorship()->create([
+            'mentor_id' => $mentor->id,
+            'guided_setup_completed_at' => now(),
+        ]);
+        \App\Models\Training::factory()->facilityMentorship()->create([
+            'mentor_id' => $otherMentor->id,
+            'guided_setup_completed_at' => null,
+        ]);
+
+        $result = \App\Models\Training::pendingGuidedSetup()->where('mentor_id', $mentor->id)->get();
+
+        $this->assertCount(1, $result);
+        $this->assertSame($pending->id, $result->first()->id);
     }
 
     public function test_send_invitations_completes_with_zero_mentees(): void

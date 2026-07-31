@@ -50,6 +50,7 @@ class Training extends Model
         'deleted_by',
         'deletion_reason',
         'is_pilot',
+        'guided_setup_completed_at',
     ];
 
     protected $casts = [
@@ -63,6 +64,7 @@ class Training extends Model
         'assess_participants' => 'boolean',
         'provide_materials' => 'boolean',
         'is_pilot' => 'boolean',
+        'guided_setup_completed_at' => 'datetime',
     ];
 
     public function scopeLive(Builder $query): Builder
@@ -73,6 +75,17 @@ class Training extends Model
     public function scopePilot(Builder $query): Builder
     {
         return $query->where('is_pilot', true);
+    }
+
+    /**
+     * Facility-mentorship trainings started via the guided wizard but never
+     * finished (Send Invitations never submitted). Legacy /create and
+     * pre-migration trainings are backfilled to "complete" and excluded.
+     */
+    public function scopePendingGuidedSetup(Builder $query): Builder
+    {
+        return $query->where('type', 'facility_mentorship')
+            ->whereNull('guided_setup_completed_at');
     }
 
     // ============================================

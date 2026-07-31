@@ -51,6 +51,7 @@ class ListMentorshipTrainings extends ListRecords
         }
 
         return [
+            \App\Filament\Widgets\PendingGuidedSetupNotice::class,
             \App\Filament\Widgets\MentorshipGuidanceNotice::class,
             \App\Filament\Widgets\MentorshipStatsOverview::class,
         ];
