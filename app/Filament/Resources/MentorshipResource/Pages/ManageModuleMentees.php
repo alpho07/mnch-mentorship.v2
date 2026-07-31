@@ -471,7 +471,7 @@ class ManageModuleMentees extends Page implements HasTable
                         ])
                         ->action(function (ClassParticipant $record, array $data) {
                             // Always query fresh from DB — never use eager-loaded moduleProgress
-                            MenteeModuleProgress::updateOrCreate(
+                            $progress = MenteeModuleProgress::updateOrCreate(
                                 [
                                     'class_participant_id' => $record->id,
                                     'class_module_id' => $this->module->id,
@@ -484,6 +484,8 @@ class ManageModuleMentees extends Page implements HasTable
                                     'recommendation_written_at' => now(),
                                 ]
                             );
+
+                            app(EmoncNotificationService::class)->mentorRecommendationWritten($progress);
 
                             Notification::make()
                                 ->success()
