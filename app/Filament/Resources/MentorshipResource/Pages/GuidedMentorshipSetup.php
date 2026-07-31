@@ -5,11 +5,15 @@ namespace App\Filament\Resources\MentorshipResource\Pages;
 use App\Filament\Forms\Components\EmoncModulePicker;
 use App\Filament\Forms\Components\ProgramPicker;
 use App\Filament\Resources\MentorshipTrainingResource;
+use App\Models\Cadre;
 use App\Models\ClassModule;
+use App\Models\Department;
 use App\Models\Facility;
 use App\Models\MentorshipClass;
 use App\Models\Program;
 use App\Models\Training;
+use App\Models\User;
+use App\Services\EnrollmentService;
 use App\Services\ModuleUsageService;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -20,6 +24,7 @@ use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Filament\Support\Exceptions\Halt;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class GuidedMentorshipSetup extends Page implements HasForms
@@ -260,6 +265,67 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 $this->stepFailed($e);
                             }
                         }),
+                    Forms\Components\Wizard\Step::make('Enroll Mentees')
+                        ->description('Who will be mentored in this class? You can skip this and enroll mentees later.')
+                        ->icon('heroicon-o-user-plus')
+                        ->schema([
+                            Forms\Components\CheckboxList::make('selected_users')
+                                ->label('Existing Users')
+                                ->options(fn () => User::query()
+                                    ->where('status', 'active')
+                                    ->orderBy('first_name')
+                                    ->limit(100)
+                                    ->get()
+                                    ->mapWithKeys(fn ($u) => [
+                                        $u->id => implode(' · ', array_filter([$u->name, $u->email])),
+                                    ])
+                                    ->toArray())
+                                ->searchable()
+                                ->bulkToggleable()
+                                ->helperText('Search and check existing users to enroll.'),
+                            Forms\Components\Fieldset::make('Or Add a New Mentee')
+                                ->schema([
+                                    Forms\Components\TextInput::make('new_mentee.email')
+                                        ->label('Email Address')
+                                        ->email()
+                                        ->placeholder('e.g. jane.wanjiku@moh.go.ke'),
+                                    Forms\Components\Grid::make(2)->schema([
+                                        Forms\Components\TextInput::make('new_mentee.first_name')
+                                            ->label('First Name')
+                                            ->requiredWith('new_mentee.email'),
+                                        Forms\Components\TextInput::make('new_mentee.last_name')
+                                            ->label('Last Name')
+                                            ->requiredWith('new_mentee.email'),
+                                    ]),
+                                    Forms\Components\TextInput::make('new_mentee.phone')
+                                        ->label('Phone')
+                                        ->tel(),
+                                    Forms\Components\Grid::make(2)->schema([
+                                        Forms\Components\Select::make('new_mentee.cadre_id')
+                                            ->label('Cadre')
+                                            ->options(Cadre::orderBy('name')->pluck('name', 'id')),
+                                        Forms\Components\Select::make('new_mentee.department_id')
+                                            ->label('Department')
+                                            ->options(Department::orderBy('name')->pluck('name', 'id')),
+                                    ]),
+                                    Forms\Components\Select::make('new_mentee.facility_id')
+                                        ->label('Facility')
+                                        ->options(fn () => Facility::orderBy('name')
+                                            ->limit(200)
+                                            ->get()
+                                            ->mapWithKeys(fn ($f) => [$f->id => "{$f->mfl_code} - {$f->name}"])),
+                                ]),
+                        ])
+                        ->afterValidation(function (Get $get) {
+                            try {
+                                $this->enrollMentees([
+                                    'selected_users' => $get('selected_users') ?? [],
+                                    'new_mentee' => $get('new_mentee.email') ? $get('new_mentee') : null,
+                                ]);
+                            } catch (\Throwable $e) {
+                                $this->stepFailed($e);
+                            }
+                        }),
                 ])
                     ->persistStepInQueryString(null)
                     ->skippable(false),
@@ -347,6 +413,67 @@ class GuidedMentorshipSetup extends Page implements HasForms
         }
 
         return $created;
+    }
+
+    /**
+     * Enrolls selected existing users and/or a newly-created mentee.
+     * Mirrors ManageClassMentees's "Add from List" / "Add Mentee" logic.
+     */
+    public function enrollMentees(array $data): int
+    {
+        $service = app(EnrollmentService::class);
+        $count = 0;
+
+        foreach ($data['selected_users'] ?? [] as $userId) {
+            $user = User::find($userId);
+            if ($user) {
+                $service->enrollInClass($user, $this->class, 'manual');
+                $count++;
+            }
+        }
+
+        $newMentee = $data['new_mentee'] ?? null;
+        if (! empty($newMentee['email'])) {
+            $existing = User::where('email', $newMentee['email'])->first();
+
+            if ($existing) {
+                $service->enrollInClass($existing, $this->class, 'manual');
+            } else {
+                $displayName = trim(implode(' ', array_filter([
+                    $newMentee['first_name'] ?? null,
+                    $newMentee['last_name'] ?? null,
+                ])));
+
+                $user = User::create([
+                    'first_name' => $newMentee['first_name'] ?? null,
+                    'last_name' => $newMentee['last_name'] ?? null,
+                    'name' => $displayName,
+                    'email' => $newMentee['email'],
+                    'phone' => $newMentee['phone'] ?? null,
+                    'cadre_id' => $newMentee['cadre_id'] ?? null,
+                    'department_id' => $newMentee['department_id'] ?? null,
+                    'facility_id' => $newMentee['facility_id'] ?? null,
+                    'password' => Hash::make('123456'),
+                    'status' => 'active',
+                    'role' => 'mentee',
+                ]);
+
+                if (method_exists($user, 'assignRole')) {
+                    try {
+                        $user->assignRole('mentee');
+                    } catch (\Exception) {
+                    }
+                }
+
+                $service->enrollInClass($user, $this->class, 'manual');
+            }
+
+            $count++;
+        }
+
+        $this->enrolledCount = $count;
+
+        return $count;
     }
 
     /**

@@ -134,4 +134,71 @@ class GuidedMentorshipSetupTest extends TestCase
 
         $this->assertSame(0, $created);
     }
+
+    public function test_enroll_mentees_enrolls_existing_selected_users(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $mentee = User::factory()->create();
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $count = $component->instance()->enrollMentees([
+            'selected_users' => [$mentee->id],
+            'new_mentee' => null,
+        ]);
+
+        $this->assertSame(1, $count);
+        $this->assertDatabaseHas('class_participants', [
+            'mentorship_class_id' => $class->id,
+            'user_id' => $mentee->id,
+            'status' => 'enrolled',
+        ]);
+    }
+
+    public function test_enroll_mentees_creates_and_enrolls_new_mentee(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $count = $component->instance()->enrollMentees([
+            'selected_users' => [],
+            'new_mentee' => [
+                'email' => 'jane.wanjiku@example.com',
+                'first_name' => 'Jane',
+                'last_name' => 'Wanjiku',
+            ],
+        ]);
+
+        $this->assertSame(1, $count);
+        $this->assertDatabaseHas('users', ['email' => 'jane.wanjiku@example.com', 'role' => 'mentee']);
+        $newUser = User::where('email', 'jane.wanjiku@example.com')->first();
+        $this->assertDatabaseHas('class_participants', [
+            'mentorship_class_id' => $class->id,
+            'user_id' => $newUser->id,
+        ]);
+    }
+
+    public function test_enroll_mentees_is_skippable(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $count = $component->instance()->enrollMentees(['selected_users' => [], 'new_mentee' => null]);
+
+        $this->assertSame(0, $count);
+    }
 }
