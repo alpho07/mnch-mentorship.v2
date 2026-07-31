@@ -5,8 +5,10 @@ namespace App\Filament\Resources\MentorshipResource\Pages;
 use App\Filament\Forms\Components\EmoncModulePicker;
 use App\Filament\Forms\Components\ProgramPicker;
 use App\Filament\Resources\MentorshipTrainingResource;
+use App\Mail\MenteeEnrollmentInvitationMail;
 use App\Models\Cadre;
 use App\Models\ClassModule;
+use App\Models\ClassParticipant;
 use App\Models\Department;
 use App\Models\Facility;
 use App\Models\MentorshipClass;
@@ -25,6 +27,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Filament\Support\Exceptions\Halt;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class GuidedMentorshipSetup extends Page implements HasForms
@@ -326,9 +329,23 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 $this->stepFailed($e);
                             }
                         }),
+                    Forms\Components\Wizard\Step::make('Send Invitations')
+                        ->description('Time to invite your mentees!')
+                        ->icon('heroicon-o-paper-airplane')
+                        ->schema([
+                            Forms\Components\Radio::make('recipients')
+                                ->label('Who should receive the email?')
+                                ->options([
+                                    'all' => 'All mentees with email addresses',
+                                    'not_sent' => 'Only those not yet invited',
+                                ])
+                                ->default('all')
+                                ->required(),
+                        ]),
                 ])
                     ->persistStepInQueryString(null)
-                    ->skippable(false),
+                    ->skippable(false)
+                    ->submitAction(view('filament.pages.partials.guided-wizard-submit')),
             ])
             ->statePath('data');
     }
@@ -474,6 +491,75 @@ class GuidedMentorshipSetup extends Page implements HasForms
         $this->enrolledCount = $count;
 
         return $count;
+    }
+
+    public function submit(): void
+    {
+        $data = $this->form->getState();
+
+        try {
+            $this->sendInvitations([
+                'recipients' => $data['recipients'] ?? 'all',
+            ]);
+        } catch (\Throwable $e) {
+            // Note: unlike afterValidation() on a Wizard\Step (caught internally
+            // by Wizard.php), this submit() method is invoked directly by
+            // wire:submit — nothing upstream catches Halt here, so we handle
+            // the failure inline instead and simply stay on this step.
+            Notification::make()
+                ->danger()
+                ->title('Something Went Wrong')
+                ->body($e->getMessage())
+                ->send();
+        }
+    }
+
+    /**
+     * Sends enrollment invitation emails. Mirrors ManageClassMentees's
+     * "Send Invitations" bulk action exactly.
+     */
+    public function sendInvitations(array $data): array
+    {
+        if (! $this->class->enrollment_token) {
+            $this->class->update([
+                'enrollment_token' => Str::random(32),
+                'enrollment_link_active' => true,
+            ]);
+        } else {
+            $this->class->update(['enrollment_link_active' => true]);
+        }
+        $this->class->refresh();
+
+        $query = ClassParticipant::where('mentorship_class_id', $this->class->id)
+            ->whereHas('user', fn ($q) => $q->whereNotNull('email')->where('email', '!=', ''))
+            ->with('user');
+
+        if (($data['recipients'] ?? 'all') === 'not_sent') {
+            $query->whereNull('invitation_sent_at');
+        }
+
+        $participants = $query->get();
+        $sent = 0;
+        $resent = 0;
+
+        foreach ($participants as $record) {
+            $isResend = (bool) $record->invitation_sent_at;
+
+            Mail::to($record->user->email)->send(new MenteeEnrollmentInvitationMail(
+                $record->user,
+                $this->class,
+                $record,
+                $isResend
+            ));
+
+            $record->update(['invitation_sent_at' => now()]);
+            $isResend ? $resent++ : $sent++;
+        }
+
+        $this->invitedCount = $sent + $resent;
+        $this->completed = true;
+
+        return ['sent' => $sent, 'resent' => $resent];
     }
 
     /**

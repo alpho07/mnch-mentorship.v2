@@ -201,4 +201,46 @@ class GuidedMentorshipSetupTest extends TestCase
 
         $this->assertSame(0, $count);
     }
+
+    public function test_send_invitations_emails_all_enrolled_mentees_with_email(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $mentee = User::factory()->create(['email' => 'mentee@example.com']);
+        $participant = \App\Models\ClassParticipant::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'user_id' => $mentee->id,
+            'status' => 'enrolled',
+        ]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $result = $component->instance()->sendInvitations(['recipients' => 'all']);
+
+        $this->assertSame(1, $result['sent']);
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
+        $this->assertTrue($component->instance()->completed);
+        $participant->refresh();
+        $this->assertNotNull($participant->invitation_sent_at);
+    }
+
+    public function test_send_invitations_completes_with_zero_mentees(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $result = $component->instance()->sendInvitations(['recipients' => 'all']);
+
+        $this->assertSame(0, $result['sent']);
+        $this->assertTrue($component->instance()->completed);
+    }
 }
