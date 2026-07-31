@@ -54,7 +54,10 @@ class GuidedMentorshipSetup extends Page implements HasForms
 
     public function mount(): void
     {
-        $this->form->fill();
+        $this->form->fill([
+            'module_ids' => [],
+            'selected_users' => [],
+        ]);
     }
 
     public function getTitle(): string
@@ -231,6 +234,18 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 ];
                             }
 
+                            $programName = $this->training->program?->name ?? 'this program';
+
+                            $intro = Forms\Components\Placeholder::make('modules_intro')
+                                ->label('')
+                                ->content(new \Illuminate\Support\HtmlString(
+                                    "<p class=\"text-sm text-gray-600 dark:text-gray-400\">".
+                                    "<span class=\"font-semibold text-gray-950 dark:text-white\">Program: {$programName}</span><br>".
+                                    'Pick as many or as few modules as you like — one, several, or all of them. '.
+                                    "You'll be able to add more later from the class's Modules page.".
+                                    '</p>'
+                                ));
+
                             if ($this->isEmoncProgram($this->training?->program_id)) {
                                 $picker = EmoncModulePicker::make('module_ids')
                                     ->label('Available Program Modules')
@@ -246,12 +261,14 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 $picker = Forms\Components\CheckboxList::make('module_ids')
                                     ->label('Available Program Modules')
                                     ->options($available)
+                                    ->default([])
                                     ->searchable()
                                     ->bulkToggleable()
                                     ->helperText('Optional — you can add modules later from the class Modules page.');
                             }
 
                             return [
+                                $intro,
                                 $picker,
                                 Forms\Components\Toggle::make('auto_create_sessions')
                                     ->label('Auto-populate sessions from program template')
