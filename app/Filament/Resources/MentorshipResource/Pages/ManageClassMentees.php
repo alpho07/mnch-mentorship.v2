@@ -366,6 +366,14 @@ class ManageClassMentees extends Page implements HasTable
                             $parts[] = "{$resent} resent";
                         }
 
+                        // Mirrors ClassLifecycleController::start() — requires
+                        // modules and enrolled mentees, so a class with no
+                        // modules assigned yet stays in draft.
+                        if ($this->class->canStart()) {
+                            $this->class->start();
+                            $parts[] = 'class started';
+                        }
+
                         Notification::make()
                             ->success()
                             ->title('Invitations Sent')

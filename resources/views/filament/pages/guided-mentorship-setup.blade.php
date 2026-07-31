@@ -7,6 +7,11 @@
             @if ($class)
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                     Class "{{ $class->name }}" has {{ $invitedCount }} mentee(s) invited.
+                    @if ($classStarted)
+                        The class is now <span class="font-semibold text-success-600 dark:text-success-400">active</span> — modules are open and mentors can begin.
+                    @else
+                        It's still saved as a draft — add modules and enroll mentees before it can start.
+                    @endif
                 </p>
             @endif
             <div class="mt-4 flex gap-3">

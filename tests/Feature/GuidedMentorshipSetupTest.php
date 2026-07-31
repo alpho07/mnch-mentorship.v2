@@ -383,6 +383,41 @@ class GuidedMentorshipSetupTest extends TestCase
         $participant->refresh();
         $this->assertNotNull($participant->invitation_sent_at);
         $this->assertNotNull($training->fresh()->guided_setup_completed_at);
+        // No modules assigned (Modules step was skipped) — canStart() is
+        // false, so the class correctly stays in draft rather than being
+        // force-started.
+        $this->assertFalse($component->instance()->classStarted);
+        $this->assertSame('draft', $class->fresh()->status);
+    }
+
+    public function test_send_invitations_starts_the_class_when_it_has_modules_and_mentees(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care']);
+        $training = \App\Models\Training::factory()->facilityMentorship()->create(['program_id' => $program->id]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $programModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+        \App\Models\ClassModule::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $programModule->id,
+            'status' => 'not_started',
+        ]);
+        $mentee = User::factory()->create(['email' => 'mentee2@example.com']);
+        \App\Models\ClassParticipant::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'user_id' => $mentee->id,
+            'status' => 'enrolled',
+        ]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $component->instance()->sendInvitations(['recipients' => 'all']);
+
+        $this->assertTrue($component->instance()->classStarted);
+        $this->assertSame('active', $class->fresh()->status);
     }
 
     public function test_pending_guided_setup_scope_excludes_completed_and_other_users_trainings(): void

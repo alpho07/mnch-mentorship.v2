@@ -70,6 +70,8 @@ class GuidedMentorshipSetup extends Page implements HasForms
 
     public bool $completed = false;
 
+    public bool $classStarted = false;
+
     public int $enrolledCount = 0;
 
     public int $invitedCount = 0;
@@ -828,6 +830,14 @@ class GuidedMentorshipSetup extends Page implements HasForms
             'guided_setup_completed_at' => now(),
             'guided_setup_draft' => null,
         ]);
+
+        // Mirrors ClassLifecycleController::start() — requires modules and
+        // enrolled mentees, so a class with the Modules step skipped stays
+        // in draft (nothing to start yet) rather than being force-started.
+        if ($this->class->canStart()) {
+            $this->class->start();
+            $this->classStarted = true;
+        }
 
         return ['sent' => $sent, 'resent' => $resent];
     }
