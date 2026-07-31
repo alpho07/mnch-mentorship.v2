@@ -120,6 +120,84 @@ class GuidedMentorshipSetupTest extends TestCase
         ]);
     }
 
+    public function test_assign_modules_clears_module_ids_from_the_draft_and_locked_options_reflect_it(): void
+    {
+        $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care']);
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'program_id' => $program->id,
+            'guided_setup_draft' => ['module_ids' => [], 'selected_users' => [1]],
+        ]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $programModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+        $component->instance()->assignModules([
+            'module_ids' => [$programModule->id],
+            'auto_create_sessions' => false,
+        ]);
+
+        // The draft's module_ids key is gone — the pick is now a real
+        // ClassModule row, not a pending draft — but the unrelated
+        // selected_users key must survive untouched.
+        $this->assertSame(
+            ['selected_users' => [1]],
+            $training->fresh()->guided_setup_draft
+        );
+
+        // A fresh "Continue" session must show the module as "Already
+        // added" (locked), not have it silently vanish from the picker.
+        $available = app(\App\Services\ModuleUsageService::class)->getAvailableModules($training, $class);
+        $this->assertFalse($available->pluck('id')->contains($programModule->id));
+        $this->assertDatabaseHas('class_modules', [
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $programModule->id,
+        ]);
+    }
+
+    public function test_mount_defensively_filters_already_assigned_ids_out_of_a_stale_draft(): void
+    {
+        $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care']);
+        $programModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+        $stillPending = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+        $mentee = User::factory()->create();
+
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'program_id' => $program->id,
+            // Simulates the exact bug found in production: the draft was
+            // never cleared after a real assignment/enrollment happened.
+            'guided_setup_draft' => [
+                'module_ids' => [$programModule->id, $stillPending->id],
+                'selected_users' => [$mentee->id],
+            ],
+        ]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        \App\Models\ClassModule::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $programModule->id,
+        ]);
+        \App\Models\ClassParticipant::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'user_id' => $mentee->id,
+        ]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->trainingId = $training->id;
+        $component->instance()->classId = $class->id;
+        $component->instance()->mount();
+
+        // Only the still-pending pick remains in module_ids' live state —
+        // the already-assigned one is dropped so it can't try to be
+        // "selected" against an options list that correctly excludes it.
+        $component->assertFormSet([
+            'module_ids' => [$stillPending->id],
+            'selected_users' => [],
+        ]);
+    }
+
     public function test_assign_modules_is_skippable(): void
     {
         $this->actingAsCoordinator();

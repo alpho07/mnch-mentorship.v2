@@ -136,6 +136,20 @@ class GuidedMentorshipSetup extends Page implements HasForms
                 $fill['class_start_date'] = $this->class->start_date;
                 $fill['class_end_date'] = $this->class->end_date;
                 $fill['class_description'] = $this->class->description;
+
+                // Defensive: drop any draft module/mentee picks that have
+                // already become real records (normally cleared by
+                // assignModules()/enrollMentees(), but this keeps a stale
+                // draft from ever making an already-assigned module vanish
+                // from the picker instead of showing as "Already added").
+                if (! empty($fill['module_ids'])) {
+                    $assignedModuleIds = $this->class->classModules()->pluck('program_module_id')->toArray();
+                    $fill['module_ids'] = array_values(array_diff($fill['module_ids'], $assignedModuleIds));
+                }
+                if (! empty($fill['selected_users'])) {
+                    $enrolledUserIds = $this->class->participants()->pluck('user_id')->toArray();
+                    $fill['selected_users'] = array_values(array_diff($fill['selected_users'], $enrolledUserIds));
+                }
             }
         }
 
@@ -364,9 +378,16 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     ->mapWithKeys(fn ($module) => [$module->id => $module->name])
                                     ->toArray();
 
+                                $locked = $this->class->classModules()
+                                    ->with('programModule')
+                                    ->get()
+                                    ->mapWithKeys(fn ($cm) => [$cm->program_module_id => $cm->programModule?->name ?? 'Module'])
+                                    ->toArray();
+
                                 $picker = CardCheckboxList::make('module_ids')
                                     ->label('Available Program Modules')
                                     ->options($available)
+                                    ->lockedOptions($locked)
                                     ->default([])
                                     ->live()
                                     ->afterStateUpdated(fn ($state) => $this->saveWizardDraft('module_ids', $state))
@@ -630,6 +651,12 @@ class GuidedMentorshipSetup extends Page implements HasForms
             }
         }
 
+        // These picks are now real ClassModule rows — the draft entry would
+        // otherwise linger stale and, since getAvailableModules() correctly
+        // excludes already-assigned modules, make them vanish from the
+        // picker entirely on a later resume instead of showing as assigned.
+        $this->clearWizardDraft('module_ids');
+
         return $created;
     }
 
@@ -692,6 +719,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
         }
 
         $this->enrolledCount = $count;
+        $this->clearWizardDraft('selected_users');
 
         return $count;
     }
@@ -862,6 +890,27 @@ class GuidedMentorshipSetup extends Page implements HasForms
         $draft[$key] = array_values($state ?? []);
 
         $this->training->update(['guided_setup_draft' => $draft]);
+    }
+
+    /**
+     * Drops one key from the draft once its picks have become real records
+     * (assignModules()/enrollMentees()), so it doesn't linger stale.
+     */
+    private function clearWizardDraft(string $key): void
+    {
+        if (! $this->training) {
+            return;
+        }
+
+        $draft = $this->training->guided_setup_draft ?? [];
+
+        if (! array_key_exists($key, $draft)) {
+            return;
+        }
+
+        unset($draft[$key]);
+
+        $this->training->update(['guided_setup_draft' => $draft ?: null]);
     }
 
     private function isEmoncProgram(?int $programId): bool

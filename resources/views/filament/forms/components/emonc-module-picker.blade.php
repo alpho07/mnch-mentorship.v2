@@ -1,6 +1,7 @@
 @php
     $statePath = $field->getStatePath();
     $modules = $field->getModules();
+    $assignedModules = $field->getAssignedModules();
     $hasError = $errors->has($statePath);
 @endphp
 
@@ -50,6 +51,39 @@
     }"
     class="emonc-module-picker {{ $hasError ? 'emonc-module-picker--error' : '' }}"
 >
+    @if($assignedModules->isNotEmpty())
+        <div class="mb-3 space-y-3">
+            @foreach($assignedModules as $module)
+                @php
+                    $assignedChildren = $module->assignedChildren ?? collect();
+                @endphp
+                <div class="rounded-lg border border-success-200 dark:border-success-800 overflow-hidden">
+                    <div class="flex items-center gap-3 px-4 py-3 bg-success-50 dark:bg-success-900/20">
+                        <x-heroicon-o-check-circle class="h-4 w-4 shrink-0 text-success-600 dark:text-success-400" />
+                        <span class="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                            {{ $module->name }}
+                        </span>
+                        <span class="ms-auto text-xs font-medium text-success-700 dark:text-success-400">
+                            Already added
+                        </span>
+                    </div>
+                    @if($assignedChildren->isNotEmpty())
+                        <div class="divide-y divide-success-100 dark:divide-success-900">
+                            @foreach($assignedChildren as $track)
+                                <div class="flex items-center gap-3 px-4 py-2.5">
+                                    <x-heroicon-o-check-circle class="h-4 w-4 shrink-0 text-success-600 dark:text-success-400" />
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">
+                                        {{ $track->name }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     @if($modules->isEmpty())
         <div class="text-sm text-gray-500 dark:text-gray-400">
             No modules available to add.

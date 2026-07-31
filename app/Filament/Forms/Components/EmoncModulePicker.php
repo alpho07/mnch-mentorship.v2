@@ -76,4 +76,43 @@ class EmoncModulePicker extends Field
             return $parent;
         })->filter();
     }
+
+    /**
+     * Parent modules whose tracks (or, for leaf modules, itself) are
+     * already assigned to the class — for a read-only "Already added"
+     * display, so real assignments stay visible instead of just
+     * disappearing from getModules() once no longer pickable.
+     */
+    public function getAssignedModules(): Collection
+    {
+        $assignedIds = $this->class->classModules()->pluck('program_module_id')->toArray();
+
+        if (empty($assignedIds)) {
+            return collect();
+        }
+
+        $parents = ProgramModule::where('program_id', $this->training->program_id)
+            ->whereNull('parent_id')
+            ->with(['children' => fn ($query) => $query->orderBy('order_sequence')])
+            ->orderBy('order_sequence')
+            ->get();
+
+        return $parents->map(function (ProgramModule $parent) use ($assignedIds) {
+            $assignedChildren = $parent->children->filter(
+                fn (ProgramModule $track) => in_array($track->id, $assignedIds)
+            )->values();
+
+            if ($parent->children->isEmpty()) {
+                return in_array($parent->id, $assignedIds) ? $parent : null;
+            }
+
+            if ($assignedChildren->isEmpty()) {
+                return null;
+            }
+
+            $parent->setRelation('assignedChildren', $assignedChildren);
+
+            return $parent;
+        })->filter();
+    }
 }

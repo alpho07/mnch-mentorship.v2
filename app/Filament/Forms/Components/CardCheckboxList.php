@@ -16,6 +16,8 @@ class CardCheckboxList extends Field
 
     protected array|Closure $options = [];
 
+    protected array|Closure $lockedOptions = [];
+
     protected int|Closure|null $maxSelections = null;
 
     public function options(array|Closure $options): static
@@ -23,6 +25,24 @@ class CardCheckboxList extends Field
         $this->options = $options;
 
         return $this;
+    }
+
+    /**
+     * Items already committed elsewhere (e.g. a module already assigned to
+     * the class via a prior "Next" click) — rendered checked and
+     * non-interactive, separately from the normal picker list, so they
+     * stay visible instead of just disappearing once no longer "available".
+     */
+    public function lockedOptions(array|Closure $options): static
+    {
+        $this->lockedOptions = $options;
+
+        return $this;
+    }
+
+    public function getLockedOptionsList(): array
+    {
+        return $this->evaluate($this->lockedOptions) ?? [];
     }
 
     /**
