@@ -243,4 +243,68 @@ class GuidedMentorshipSetupTest extends TestCase
         $this->assertSame(0, $result['sent']);
         $this->assertTrue($component->instance()->completed);
     }
+
+    public function test_create_training_updates_existing_training_instead_of_duplicating(): void
+    {
+        $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care']);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $first = $component->instance()->createTraining([
+            'is_pilot' => 0,
+            'program_id' => $program->id,
+            'start_date' => now()->addDay()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
+            'max_participants' => 10,
+        ]);
+
+        $second = $component->instance()->createTraining([
+            'is_pilot' => 0,
+            'program_id' => $program->id,
+            'start_date' => now()->addDay()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
+            'max_participants' => 25,
+        ]);
+
+        $this->assertSame($first->id, $second->id);
+        $this->assertSame(1, \App\Models\Training::where('program_id', $program->id)->count());
+        $this->assertSame(25, $second->fresh()->max_participants);
+    }
+
+    public function test_create_first_class_updates_existing_class_instead_of_duplicating(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+
+        $first = $component->instance()->createFirstClass(['name' => 'Original Name']);
+        $second = $component->instance()->createFirstClass(['name' => 'Renamed Cohort']);
+
+        $this->assertSame($first->id, $second->id);
+        $this->assertSame(1, \App\Models\MentorshipClass::where('training_id', $training->id)->count());
+        $this->assertSame('Renamed Cohort', $second->fresh()->name);
+    }
+
+    public function test_enroll_mentees_does_not_duplicate_already_enrolled_user(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $mentee = User::factory()->create();
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $firstCount = $component->instance()->enrollMentees(['selected_users' => [$mentee->id], 'new_mentee' => null]);
+        $secondCount = $component->instance()->enrollMentees(['selected_users' => [$mentee->id], 'new_mentee' => null]);
+
+        $this->assertSame(1, $firstCount);
+        $this->assertSame(0, $secondCount);
+        $this->assertSame(1, \App\Models\ClassParticipant::where('mentorship_class_id', $class->id)
+            ->where('user_id', $mentee->id)
+            ->count());
+    }
 }

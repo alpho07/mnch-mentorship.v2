@@ -29,6 +29,7 @@ use Filament\Support\Exceptions\Halt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Url;
 
 class GuidedMentorshipSetup extends Page implements HasForms
 {
@@ -42,6 +43,12 @@ class GuidedMentorshipSetup extends Page implements HasForms
 
     public ?array $data = [];
 
+    #[Url(as: 'training')]
+    public ?int $trainingId = null;
+
+    #[Url(as: 'class')]
+    public ?int $classId = null;
+
     public ?Training $training = null;
 
     public ?MentorshipClass $class = null;
@@ -54,10 +61,42 @@ class GuidedMentorshipSetup extends Page implements HasForms
 
     public function mount(): void
     {
-        $this->form->fill([
+        $fill = [
             'module_ids' => [],
             'selected_users' => [],
-        ]);
+        ];
+
+        // Resuming after a page refresh: the Training/Class records already
+        // exist in the DB, but the Wizard's own form state (used for its
+        // whole-form validation on final submit) resets on every fresh
+        // mount(). Re-seed the earlier steps' fields from the persisted
+        // records so a resumed session can still reach Send Invitations.
+        if ($this->trainingId) {
+            $this->training = Training::find($this->trainingId);
+
+            if ($this->training) {
+                $fill['is_pilot'] = (int) $this->training->is_pilot;
+                $fill['county_id'] = $this->training->county_id;
+                $fill['facility_id'] = $this->training->facility_id;
+                $fill['program_id'] = $this->training->program_id;
+                $fill['start_date'] = $this->training->start_date;
+                $fill['end_date'] = $this->training->end_date;
+                $fill['max_participants'] = $this->training->max_participants;
+            }
+        }
+
+        if ($this->classId) {
+            $this->class = MentorshipClass::find($this->classId);
+
+            if ($this->class) {
+                $fill['class_name'] = $this->class->name;
+                $fill['class_start_date'] = $this->class->start_date;
+                $fill['class_end_date'] = $this->class->end_date;
+                $fill['class_description'] = $this->class->description;
+            }
+        }
+
+        $this->form->fill($fill);
     }
 
     public function getTitle(): string
@@ -289,21 +328,73 @@ class GuidedMentorshipSetup extends Page implements HasForms
                         ->description('Who will be mentored in this class? You can skip this and enroll mentees later.')
                         ->icon('heroicon-o-user-plus')
                         ->schema([
+                            Forms\Components\Hidden::make('mentee_page')->default(1),
+                            Forms\Components\Hidden::make('show_new_mentee_form')->default(false),
+                            Forms\Components\TextInput::make('mentee_search')
+                                ->label('Search')
+                                ->placeholder('Search by name, phone, email, or facility...')
+                                ->live(debounce: 400)
+                                ->afterStateUpdated(fn (Set $set) => $set('mentee_page', 1))
+                                ->prefixIcon('heroicon-o-magnifying-glass'),
                             Forms\Components\CheckboxList::make('selected_users')
                                 ->label('Existing Users')
-                                ->options(fn () => User::query()
-                                    ->where('status', 'active')
-                                    ->orderBy('first_name')
-                                    ->limit(100)
-                                    ->get()
-                                    ->mapWithKeys(fn ($u) => [
-                                        $u->id => implode(' · ', array_filter([$u->name, $u->email])),
-                                    ])
-                                    ->toArray())
-                                ->searchable()
+                                ->options(fn (Get $get) => $this->searchMenteeUsers(
+                                    $get('mentee_search'),
+                                    (int) ($get('mentee_page') ?? 1)
+                                )->mapWithKeys(fn ($u) => [
+                                    $u->id => implode(' · ', array_filter([
+                                        $u->name,
+                                        $u->phone,
+                                        $u->email,
+                                        $u->facility ? "{$u->facility->name}".
+                                            ($u->facility->mfl_code ? " (MFL {$u->facility->mfl_code})" : '') : null,
+                                    ])),
+                                ])->toArray())
+                                ->default([])
                                 ->bulkToggleable()
+                                ->columns(1)
+                                ->columnSpanFull()
                                 ->helperText('Search and check existing users to enroll.'),
+                            Forms\Components\Actions::make([
+                                Forms\Components\Actions\Action::make('mentee_previous')
+                                    ->label('Previous Page')
+                                    ->color('gray')
+                                    ->action(fn (Set $set, Get $get) => $set('mentee_page', max(1, (int) $get('mentee_page') - 1))),
+                                Forms\Components\Actions\Action::make('mentee_next')
+                                    ->label('Next Page')
+                                    ->color('gray')
+                                    ->action(fn (Set $set, Get $get) => $set('mentee_page', (int) $get('mentee_page') + 1)),
+                            ])->columnSpanFull(),
+                            Forms\Components\Actions::make([
+                                Forms\Components\Actions\Action::make('reveal_new_mentee_form')
+                                    ->label(fn (Get $get) => trim((string) $get('mentee_search')) !== ''
+                                        ? "Mentee \"{$get('mentee_search')}\" not found — click here to add"
+                                        : '+ Add a new mentee')
+                                    ->icon('heroicon-o-user-plus')
+                                    ->color(fn (Get $get) => trim((string) $get('mentee_search')) !== '' ? 'warning' : 'gray')
+                                    ->action(function (Set $set, Get $get) {
+                                        $set('show_new_mentee_form', true);
+
+                                        $search = trim((string) $get('mentee_search'));
+                                        if ($search === '') {
+                                            return;
+                                        }
+
+                                        if (str_contains($search, '@')) {
+                                            $set('new_mentee.email', $search);
+
+                                            return;
+                                        }
+
+                                        $parts = preg_split('/\s+/', $search, 2);
+                                        $set('new_mentee.first_name', $parts[0] ?? null);
+                                        $set('new_mentee.last_name', $parts[1] ?? null);
+                                    }),
+                            ])
+                                ->visible(fn (Get $get) => ! $get('show_new_mentee_form'))
+                                ->columnSpanFull(),
                             Forms\Components\Fieldset::make('Or Add a New Mentee')
+                                ->visible(fn (Get $get) => (bool) $get('show_new_mentee_form'))
                                 ->schema([
                                     Forms\Components\TextInput::make('new_mentee.email')
                                         ->label('Email Address')
@@ -360,7 +451,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 ->required(),
                         ]),
                 ])
-                    ->persistStepInQueryString(null)
+                    ->persistStepInQueryString('step')
                     ->skippable(false)
                     ->submitAction(view('filament.pages.partials.guided-wizard-submit')),
             ])
@@ -375,7 +466,6 @@ class GuidedMentorshipSetup extends Page implements HasForms
     {
         $data['type'] = 'facility_mentorship';
         $data['mentor_id'] = auth()->id();
-        $data['identifier'] = 'MT-'.strtoupper(Str::random(6));
 
         $program = isset($data['program_id']) ? Program::find($data['program_id']) : null;
         $facility = isset($data['facility_id']) ? Facility::find($data['facility_id']) : null;
@@ -387,7 +477,17 @@ class GuidedMentorshipSetup extends Page implements HasForms
             $date,
         ])));
 
-        $this->training = Training::create($data);
+        if ($this->training) {
+            // Resuming an earlier step (e.g. after a page refresh, or clicking
+            // Back then Next again) — update the existing record instead of
+            // creating a duplicate.
+            $this->training->update($data);
+        } else {
+            $data['identifier'] = 'MT-'.strtoupper(Str::random(6));
+            $this->training = Training::create($data);
+        }
+
+        $this->trainingId = $this->training->id;
 
         return $this->training;
     }
@@ -398,15 +498,25 @@ class GuidedMentorshipSetup extends Page implements HasForms
      */
     public function createFirstClass(array $data): MentorshipClass
     {
-        $this->class = MentorshipClass::create([
+        $payload = [
             'training_id' => $this->training->id,
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'start_date' => $data['start_date'] ?? null,
             'end_date' => $data['end_date'] ?? null,
-            'status' => 'draft',
-            'created_by' => auth()->id(),
-        ]);
+        ];
+
+        if ($this->class) {
+            // Resuming an earlier step — update instead of duplicating.
+            $this->class->update($payload);
+        } else {
+            $this->class = MentorshipClass::create($payload + [
+                'status' => 'draft',
+                'created_by' => auth()->id(),
+            ]);
+        }
+
+        $this->classId = $this->class->id;
 
         return $this->class;
     }
@@ -460,7 +570,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
 
         foreach ($data['selected_users'] ?? [] as $userId) {
             $user = User::find($userId);
-            if ($user) {
+            if ($user && ! $service->isEnrolled($user->id, $this->class->id)) {
                 $service->enrollInClass($user, $this->class, 'manual');
                 $count++;
             }
@@ -471,7 +581,10 @@ class GuidedMentorshipSetup extends Page implements HasForms
             $existing = User::where('email', $newMentee['email'])->first();
 
             if ($existing) {
-                $service->enrollInClass($existing, $this->class, 'manual');
+                if (! $service->isEnrolled($existing->id, $this->class->id)) {
+                    $service->enrollInClass($existing, $this->class, 'manual');
+                    $count++;
+                }
             } else {
                 $displayName = trim(implode(' ', array_filter([
                     $newMentee['first_name'] ?? null,
@@ -500,9 +613,8 @@ class GuidedMentorshipSetup extends Page implements HasForms
                 }
 
                 $service->enrollInClass($user, $this->class, 'manual');
+                $count++;
             }
-
-            $count++;
         }
 
         $this->enrolledCount = $count;
@@ -595,6 +707,35 @@ class GuidedMentorshipSetup extends Page implements HasForms
             ->send();
 
         throw new Halt;
+    }
+
+    /**
+     * Searches active users for the Enroll Mentees step. Mirrors
+     * ManageClassMentees's "Add from List" query exactly (search across
+     * name/phone/email/facility, paginated 25 at a time).
+     */
+    private function searchMenteeUsers(?string $search, int $page, int $perPage = 25): \Illuminate\Support\Collection
+    {
+        $query = User::query()
+            ->where('status', 'active')
+            ->with(['facility'])
+            ->orderBy('first_name');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('facility', function ($facilityQuery) use ($search) {
+                        $facilityQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('mfl_code', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query->skip(($page - 1) * $perPage)->take($perPage)->get();
     }
 
     private function isEmoncProgram(?int $programId): bool
