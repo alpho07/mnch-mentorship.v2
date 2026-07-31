@@ -1047,17 +1047,22 @@ $cards = [
                 </div>
         @endif
 
-        {{-- Mentor Recommendations --}}
+        {{-- Mentor Recommendations + Video Review Feedback --}}
         @if(!empty($recommendations))
                 <div class="md-sidebar-card">
                     <div class="md-sidebar-header">📋 Mentor Feedback</div>
                     <div class="md-sidebar-body" style="padding-bottom:8px;">
                 @foreach($recommendations as $rec)
                         <div class="md-rec-card">
-                            <div class="md-rec-module">{{ $rec['name'] }}</div>
-                            <div class="md-rec-text">{{ $rec['recommendation'] }}</div>
-                    @if($rec['rec_at'])
-                            <div class="md-rec-date">{{ $rec['rec_at'] }}</div>
+                            <div class="md-rec-module">
+                                {{ $rec['name'] }}
+                                @if($rec['type'] === 'video_review')
+                                    <span style="margin-left:6px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;background:#fee2e2;color:#b91c1c;text-transform:uppercase;letter-spacing:.04em;">Needs Revision</span>
+                                @endif
+                            </div>
+                            <div class="md-rec-text">{{ $rec['text'] }}</div>
+                    @if($rec['at'])
+                            <div class="md-rec-date">{{ $rec['at'] }}</div>
                     @endif
                         </div>
                 @endforeach

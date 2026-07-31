@@ -194,6 +194,9 @@ class MenteeDashboard extends Page
                     'prev_class' => (bool) $prog?->completed_in_previous_class,
                     'recommendation' => $prog?->mentor_recommendation,
                     'rec_at' => $prog?->recommendation_written_at ? Carbon::parse($prog->recommendation_written_at)->format('d M Y') : null,
+                    'video_review_status' => $prog?->video_review_status,
+                    'video_review_notes' => $prog?->video_review_notes,
+                    'video_reviewed_at' => $prog?->video_reviewed_at ? Carbon::parse($prog->video_reviewed_at)->format('d M Y') : null,
                     'assessment_score' => $prog?->assessment_score,
                     'pre_test_score'   => $prog?->preTestAttempt?->score,
                     'post_test_score'  => $prog?->postTestAttempt?->score,
@@ -286,10 +289,28 @@ class MenteeDashboard extends Page
             'streak_days' => $this->currentStreak($confirmedModuleIds, $classIds->toArray()),
         ];
 
-        // ── 6. Mentor recommendations ────────────────────────────────────────
-        $this->recommendations = $allModules
+        // ── 6. Mentor recommendations + failed video-review feedback ─────────
+        $mentorRecommendations = $allModules
             ->filter(fn ($m) => ! empty($m['recommendation']))
-            ->sortByDesc('rec_at')
+            ->map(fn ($m) => [
+                'name' => $m['name'],
+                'text' => $m['recommendation'],
+                'at' => $m['rec_at'],
+                'type' => 'recommendation',
+            ]);
+
+        $videoFeedback = $allModules
+            ->filter(fn ($m) => ($m['video_review_status'] ?? null) === 'failed' && ! empty($m['video_review_notes']))
+            ->map(fn ($m) => [
+                'name' => $m['name'],
+                'text' => $m['video_review_notes'],
+                'at' => $m['video_reviewed_at'],
+                'type' => 'video_review',
+            ]);
+
+        $this->recommendations = $mentorRecommendations
+            ->merge($videoFeedback)
+            ->sortByDesc('at')
             ->take(5)
             ->values()
             ->toArray();
