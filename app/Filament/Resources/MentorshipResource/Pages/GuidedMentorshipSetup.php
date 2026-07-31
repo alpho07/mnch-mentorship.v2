@@ -1,0 +1,230 @@
+<?php
+
+namespace App\Filament\Resources\MentorshipResource\Pages;
+
+use App\Filament\Forms\Components\ProgramPicker;
+use App\Filament\Resources\MentorshipTrainingResource;
+use App\Models\Facility;
+use App\Models\MentorshipClass;
+use App\Models\Program;
+use App\Models\Training;
+use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\Page;
+use Filament\Support\Exceptions\Halt;
+use Illuminate\Support\Str;
+
+class GuidedMentorshipSetup extends Page implements HasForms
+{
+    use InteractsWithForms;
+
+    protected static string $resource = MentorshipTrainingResource::class;
+
+    protected static string $view = 'filament.pages.guided-mentorship-setup';
+
+    protected static bool $shouldRegisterNavigation = false;
+
+    public ?array $data = [];
+
+    public ?Training $training = null;
+
+    public ?MentorshipClass $class = null;
+
+    public bool $completed = false;
+
+    public int $enrolledCount = 0;
+
+    public int $invitedCount = 0;
+
+    public function mount(): void
+    {
+        $this->form->fill();
+    }
+
+    public function getTitle(): string
+    {
+        return 'Guided Mentorship Setup';
+    }
+
+    public function getSubheading(): ?string
+    {
+        return "We'll walk through this one step at a time — from creating the mentorship to inviting your mentees.";
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Wizard::make([
+                    Forms\Components\Wizard\Step::make('Run Type')
+                        ->description('Is this a real live mentorship or a pilot/test run?')
+                        ->icon('heroicon-o-beaker')
+                        ->schema([
+                            Forms\Components\Radio::make('is_pilot')
+                                ->label('')
+                                ->options([
+                                    0 => 'Live Mentorship',
+                                    1 => 'Pilot Run',
+                                ])
+                                ->descriptions([
+                                    0 => 'Counts in dashboards, KPI badges, and analytics reports.',
+                                    1 => 'Excluded from all counts, badges, and analytics. Use for testing.',
+                                ])
+                                ->default(0)
+                                ->required()
+                                ->inline(false),
+                        ]),
+                    Forms\Components\Wizard\Step::make('Location')
+                        ->description('Where is this mentorship being conducted?')
+                        ->icon('heroicon-o-map-pin')
+                        ->columns(2)
+                        ->schema([
+                            Forms\Components\Select::make('county_id')
+                                ->label('County')
+                                ->options(fn () => \App\Models\County::orderBy('name')->pluck('name', 'id'))
+                                ->searchable()
+                                ->preload()
+                                ->required()
+                                ->live()
+                                ->afterStateUpdated(fn (Set $set) => $set('facility_id', null))
+                                ->prefixIcon('heroicon-o-map')
+                                ->helperText('Select the county first'),
+                            Forms\Components\Select::make('facility_id')
+                                ->label('Facility')
+                                ->options(function (Get $get) {
+                                    $countyId = $get('county_id');
+                                    if (! $countyId) {
+                                        return [];
+                                    }
+
+                                    return Facility::whereHas('subcounty', fn ($q) => $q->where('county_id', $countyId))
+                                        ->get()
+                                        ->mapWithKeys(fn ($f) => [$f->id => "{$f->mfl_code} — {$f->name}"]);
+                                })
+                                ->searchable()
+                                ->required()
+                                ->disabled(fn (Get $get) => ! $get('county_id'))
+                                ->prefixIcon('heroicon-o-building-office-2')
+                                ->helperText('Facilities load after selecting a county'),
+                        ]),
+                    Forms\Components\Wizard\Step::make('Program & Schedule')
+                        ->description('What program is being mentored, and when?')
+                        ->icon('heroicon-o-calendar-days')
+                        ->schema([
+                            ProgramPicker::make('program_id')
+                                ->label('Mentorship Program')
+                                ->helperText('Tap a programme card to select it.')
+                                ->required()
+                                ->validationMessages([
+                                    'required' => 'Please pick a programme card.',
+                                ])
+                                ->columnSpanFull(),
+                            Forms\Components\Grid::make(3)->schema([
+                                Forms\Components\DatePicker::make('start_date')
+                                    ->label('Start Date')
+                                    ->required(fn (Get $get) => ! $this->isEmoncProgram($get('program_id')))
+                                    ->visible(fn (Get $get) => ! $this->isEmoncProgram($get('program_id')))
+                                    ->native(false)
+                                    ->minDate(today())
+                                    ->displayFormat('M j, Y')
+                                    ->prefixIcon('heroicon-o-play'),
+                                Forms\Components\DatePicker::make('end_date')
+                                    ->label('End Date')
+                                    ->required(fn (Get $get) => ! $this->isEmoncProgram($get('program_id')))
+                                    ->visible(fn (Get $get) => ! $this->isEmoncProgram($get('program_id')))
+                                    ->native(false)
+                                    ->minDate(fn (Get $get) => $get('start_date') ?? now())
+                                    ->after('start_date')
+                                    ->displayFormat('M j, Y')
+                                    ->prefixIcon('heroicon-o-stop'),
+                                Forms\Components\TextInput::make('max_participants')
+                                    ->label('Number of Mentees')
+                                    ->numeric()
+                                    ->default(20)
+                                    ->suffix('mentees')
+                                    ->prefixIcon('heroicon-o-users'),
+                            ]),
+                        ])
+                        ->afterValidation(function (Get $get) {
+                            try {
+                                $this->createTraining([
+                                    'is_pilot' => $get('is_pilot'),
+                                    'county_id' => $get('county_id'),
+                                    'facility_id' => $get('facility_id'),
+                                    'program_id' => $get('program_id'),
+                                    'start_date' => $get('start_date'),
+                                    'end_date' => $get('end_date'),
+                                    'max_participants' => $get('max_participants'),
+                                ]);
+                            } catch (\Throwable $e) {
+                                $this->stepFailed($e);
+                            }
+                        }),
+                ])
+                    ->persistStepInQueryString(null)
+                    ->skippable(false),
+            ])
+            ->statePath('data');
+    }
+
+    /**
+     * Creates the Training record. Mirrors
+     * CreateMentorshipTraining::mutateFormDataBeforeCreate() exactly.
+     */
+    public function createTraining(array $data): Training
+    {
+        $data['type'] = 'facility_mentorship';
+        $data['mentor_id'] = auth()->id();
+        $data['identifier'] = 'MT-'.strtoupper(Str::random(6));
+
+        $program = isset($data['program_id']) ? Program::find($data['program_id']) : null;
+        $facility = isset($data['facility_id']) ? Facility::find($data['facility_id']) : null;
+        $date = ! empty($data['start_date']) ? \Carbon\Carbon::parse($data['start_date'])->format('M Y') : now()->format('M Y');
+
+        $data['title'] = trim(implode(' - ', array_filter([
+            $program?->name ?? 'MNCH Mentorship',
+            $facility?->name,
+            $date,
+        ])));
+
+        $this->training = Training::create($data);
+
+        return $this->training;
+    }
+
+    /**
+     * Shows a danger notification and halts the wizard on the current
+     * step. Filament's Wizard component catches Halt exceptions thrown
+     * inside afterValidation() and keeps the user on the current step
+     * instead of advancing or crashing — see
+     * vendor/filament/forms/src/Components/Wizard.php:105-107.
+     */
+    private function stepFailed(\Throwable $e): never
+    {
+        Notification::make()
+            ->danger()
+            ->title('Something Went Wrong')
+            ->body($e->getMessage())
+            ->send();
+
+        throw new Halt;
+    }
+
+    private function isEmoncProgram(?int $programId): bool
+    {
+        if (! $programId) {
+            return false;
+        }
+
+        $program = Program::find($programId);
+
+        return $program
+            && str_contains(strtolower($program->name), 'maternal')
+            && str_contains(strtolower($program->name), 'emonc');
+    }
+}

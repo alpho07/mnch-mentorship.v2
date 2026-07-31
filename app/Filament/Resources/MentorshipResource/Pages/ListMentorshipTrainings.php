@@ -23,6 +23,11 @@ class ListMentorshipTrainings extends ListRecords
                 ->label('New Mentorship')
                 ->icon('heroicon-o-plus')
                 ->color('primary'),
+            Actions\Action::make('guided_setup')
+                ->label('Guided Setup')
+                ->icon('heroicon-o-sparkles')
+                ->color('gray')
+                ->url(fn () => MentorshipTrainingResource::getUrl('guided-setup')),
         ];
     }
 
