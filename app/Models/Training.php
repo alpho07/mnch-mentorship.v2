@@ -52,6 +52,8 @@ class Training extends Model
         'is_pilot',
         'guided_setup_completed_at',
         'guided_setup_draft',
+        'guided_setup_method',
+        'chat_setup_transcript',
     ];
 
     protected $casts = [
@@ -67,6 +69,7 @@ class Training extends Model
         'is_pilot' => 'boolean',
         'guided_setup_completed_at' => 'datetime',
         'guided_setup_draft' => 'array',
+        'chat_setup_transcript' => 'array',
     ];
 
     public function scopeLive(Builder $query): Builder
@@ -88,6 +91,19 @@ class Training extends Model
     {
         return $query->where('type', 'facility_mentorship')
             ->whereNull('guided_setup_completed_at');
+    }
+
+    /**
+     * Appends one message to the chat assistant's transcript. Safe to call
+     * repeatedly — read-modify-write against the current column value, same
+     * pattern as MentorshipWizardService::saveWizardDraft().
+     */
+    public function appendChatTranscript(array $message): void
+    {
+        $transcript = $this->chat_setup_transcript ?? [];
+        $transcript[] = $message;
+
+        $this->update(['chat_setup_transcript' => $transcript]);
     }
 
     // ============================================
