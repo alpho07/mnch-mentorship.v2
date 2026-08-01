@@ -62,14 +62,17 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
                         ? str($record->description)->limit(60)->toString()
                         : null),
 
-                Tables\Columns\IconColumn::make('is_active')
-                    ->label('Status')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-x-circle')
-                    ->trueColor('success')
-                    ->falseColor('danger')
-                    ->tooltip(fn (Program $record): string => $record->is_active ? 'Active — visible to all' : 'Deactivated'),
+                Tables\Columns\ToggleColumn::make('is_active')
+                    ->label('Active')
+                    ->onColor('success')
+                    ->offColor('danger')
+                    ->tooltip(fn (Program $record): string => $record->is_active ? 'Active — visible to all' : 'Deactivated')
+                    ->afterStateUpdated(function (Program $record, bool $state): void {
+                        Notification::make()
+                            ->title($state ? 'Program activated' : 'Program deactivated')
+                            ->success()
+                            ->send();
+                    }),
 
                 Tables\Columns\TextColumn::make('visible_to_roles')
                     ->label('Still visible when off')
@@ -80,28 +83,6 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
                     ->placeholder('—'),
             ])
             ->defaultSort('name')
-            ->actions([
-                Tables\Actions\Action::make('toggle_active')
-                    ->label(fn (Program $record): string => $record->is_active ? 'Deactivate' : 'Activate')
-                    ->icon(fn (Program $record): string => $record->is_active
-                        ? 'heroicon-o-x-circle'
-                        : 'heroicon-o-check-circle')
-                    ->color(fn (Program $record): string => $record->is_active ? 'danger' : 'success')
-                    ->requiresConfirmation()
-                    ->modalHeading(fn (Program $record): string => $record->is_active
-                        ? "Deactivate \"{$record->name}\"?"
-                        : "Activate \"{$record->name}\"?")
-                    ->modalDescription(fn (Program $record): string => $record->is_active
-                        ? 'This program will show as "Not Active" and can\'t be picked when starting a new mentorship, for most roles.'
-                        : 'This program becomes selectable again in the mentorship creation flow for everyone.')
-                    ->action(function (Program $record): void {
-                        $record->update(['is_active' => ! $record->is_active]);
-                        Notification::make()
-                            ->title($record->is_active ? 'Program activated' : 'Program deactivated')
-                            ->success()
-                            ->send();
-                    }),
-            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\BulkAction::make('activate')

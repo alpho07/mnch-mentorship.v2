@@ -206,10 +206,6 @@
 }
 
 /* Column headers */
-.fi-ta-header {
-    background: linear-gradient(90deg, #004D40 0%, #00695C 60%, #007569 100%) !important;
-}
-
 .fi-ta-header-cell {
     background: linear-gradient(90deg, #004D40 0%, #00695C 100%) !important;
     color: rgba(255, 255, 255, 0.88) !important;

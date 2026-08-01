@@ -45,18 +45,18 @@ class MentorshipSettingsTest extends TestCase
         $response->assertSee('Inactive Program Y');
     }
 
-    public function test_toggle_active_action_flips_the_programs_status(): void
+    public function test_active_toggle_column_flips_the_programs_status(): void
     {
         $this->actingAsAdmin();
         $program = Program::factory()->create(['is_active' => true]);
 
         Livewire::test(MentorshipSettings::class)
-            ->callTableAction('toggle_active', $program);
+            ->call('updateTableColumnState', 'is_active', $program->getKey(), false);
 
         $this->assertFalse($program->fresh()->is_active);
 
         Livewire::test(MentorshipSettings::class)
-            ->callTableAction('toggle_active', $program);
+            ->call('updateTableColumnState', 'is_active', $program->getKey(), true);
 
         $this->assertTrue($program->fresh()->is_active);
     }
@@ -67,7 +67,7 @@ class MentorshipSettingsTest extends TestCase
         $program = Program::factory()->create(['name' => 'Toggle Target', 'is_active' => true, 'visible_to_roles' => []]);
 
         Livewire::test(MentorshipSettings::class)
-            ->callTableAction('toggle_active', $program);
+            ->call('updateTableColumnState', 'is_active', $program->getKey(), false);
 
         $this->assertFalse($program->fresh()->isSelectableBy($admin));
     }
