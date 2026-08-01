@@ -200,29 +200,30 @@
         x-transition:leave-end="opacity-0"
         @click.self="skipDateModal()"
         @keydown.escape.window="skipDateModal()"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/50 p-6"
     >
         <div
             @click.stop
             x-transition:enter="transition ease-out duration-150"
             x-transition:enter-start="opacity-0 scale-95"
             x-transition:enter-end="opacity-100 scale-100"
-            class="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl dark:bg-gray-900"
+            class="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900"
         >
             <h3 class="text-base font-semibold text-gray-950 dark:text-white">
-                Set dates (optional)
+                Set dates
             </h3>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                When does this run? You can skip this and set it later.
+            <p class="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+                When does this run? You can set it later, but it's needed for every selected module before you can continue.
             </p>
 
-            <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="mt-5 grid grid-cols-2 gap-4">
                 <div>
                     <label class="text-xs font-medium text-gray-700 dark:text-gray-300">Start Date</label>
                     <input
                         type="date"
                         x-model="dateModal.start"
-                        class="mt-1 block w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                        min="{{ now()->toDateString() }}"
+                        class="mt-1.5 block w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                     >
                 </div>
                 <div>
@@ -230,24 +231,24 @@
                     <input
                         type="date"
                         x-model="dateModal.end"
-                        :min="dateModal.start"
-                        class="mt-1 block w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                        :min="dateModal.start || '{{ now()->toDateString() }}'"
+                        class="mt-1.5 block w-full rounded-lg border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                     >
                 </div>
             </div>
 
-            <div class="mt-5 flex justify-end gap-2">
+            <div class="mt-6 flex justify-end gap-2">
                 <button
                     type="button"
                     @click="skipDateModal()"
-                    class="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                    class="rounded-lg px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
                 >
-                    Skip
+                    Later
                 </button>
                 <button
                     type="button"
                     @click="saveDateModal()"
-                    class="rounded-lg bg-primary-600 px-3 py-2 text-sm font-semibold text-white hover:bg-primary-500"
+                    class="rounded-lg bg-primary-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-primary-500"
                 >
                     Save
                 </button>

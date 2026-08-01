@@ -379,7 +379,12 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     ->includeAssigned()
                                     ->live()
                                     ->afterStateUpdated(fn ($state) => $this->saveWizardDraft('module_ids', $state))
-                                    ->helperText('Already-added modules/tracks are pre-checked — uncheck one to remove it. Checking a new row opens a quick prompt for its start/end date.');
+                                    ->helperText('Already-added modules/tracks are pre-checked — uncheck one to remove it. Checking a new row opens a quick prompt for its start/end date.')
+                                    ->rule(fn () => function (string $attribute, $value, \Closure $fail) {
+                                        if ($error = $this->validateModuleDates($value ?? [])) {
+                                            $fail($error);
+                                        }
+                                    });
                             } else {
                                 $allModules = ProgramModule::where('program_id', $this->training->program_id)
                                     ->where('is_active', true)
@@ -958,6 +963,32 @@ class GuidedMentorshipSetup extends Page implements HasForms
             $u->facility ? "{$u->facility->name}".
                 ($u->facility->mfl_code ? " (MFL {$u->facility->mfl_code})" : '') : null,
         ]));
+    }
+
+    /**
+     * EmONC-only guard for the Modules step: every currently-checked
+     * module/track must have a start and end date recorded in
+     * $this->moduleDates (set via the picker's per-row modal) before the
+     * step can advance. Returns the first validation error found, or null
+     * if every selected id has a valid date range.
+     */
+    public function validateModuleDates(array $moduleIds): ?string
+    {
+        foreach (collect($moduleIds)->unique() as $id) {
+            $dates = $this->moduleDates[$id] ?? null;
+            $start = $dates['start'] ?? null;
+            $end = $dates['end'] ?? null;
+
+            if (empty($start) || empty($end)) {
+                return 'Set a start and end date for every selected module/track before continuing — use "Set dates" on the row.';
+            }
+
+            if (\Illuminate\Support\Carbon::parse($end)->lt(\Illuminate\Support\Carbon::parse($start))) {
+                return 'End date must be on or after the start date for every selected module/track.';
+            }
+        }
+
+        return null;
     }
 
     /**

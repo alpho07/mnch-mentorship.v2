@@ -120,6 +120,49 @@ class GuidedMentorshipSetupTest extends TestCase
         ]);
     }
 
+    public function test_validate_module_dates_fails_when_a_selected_module_has_no_dates(): void
+    {
+        $this->actingAsCoordinator();
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->moduleDates = [];
+
+        $error = $component->instance()->validateModuleDates([56]);
+
+        $this->assertNotNull($error);
+        $this->assertStringContainsString('Set a start and end date', $error);
+    }
+
+    public function test_validate_module_dates_fails_when_end_is_before_start(): void
+    {
+        $this->actingAsCoordinator();
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->moduleDates = [
+            56 => ['start' => '2027-03-10', 'end' => '2027-03-01'],
+        ];
+
+        $error = $component->instance()->validateModuleDates([56]);
+
+        $this->assertNotNull($error);
+        $this->assertStringContainsString('on or after', $error);
+    }
+
+    public function test_validate_module_dates_passes_when_every_selected_module_has_a_valid_range(): void
+    {
+        $this->actingAsCoordinator();
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->moduleDates = [
+            56 => ['start' => '2027-03-01', 'end' => '2027-03-01'], // same-day allowed
+            57 => ['start' => '2027-04-01', 'end' => '2027-04-10'],
+        ];
+
+        $error = $component->instance()->validateModuleDates([56, 57]);
+
+        $this->assertNull($error);
+    }
+
     public function test_assign_modules_applies_per_module_dates_to_newly_created_modules_only(): void
     {
         $this->actingAsCoordinator();
