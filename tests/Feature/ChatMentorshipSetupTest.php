@@ -179,4 +179,23 @@ class ChatMentorshipSetupTest extends TestCase
         $this->assertSame(0, $component->instance()->class->classModules()->count());
         $this->assertArrayHasKey('module_ids', $component->instance()->answers);
     }
+
+    public function test_enroll_mentees_stage_enrolls_selected_users(): void
+    {
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = \App\Models\Facility::factory()->create();
+        $mentee = User::factory()->create();
+
+        $component = Livewire::test(ChatMentorshipSetup::class);
+        $this->advanceThroughFirstClass($component, $program, $facility);
+        $component->call('submitModules', []);
+
+        $component->call('submitMentees', [$mentee->id], null);
+
+        $this->assertDatabaseHas('class_participants', [
+            'mentorship_class_id' => $component->instance()->class->id,
+            'user_id' => $mentee->id,
+        ]);
+    }
 }

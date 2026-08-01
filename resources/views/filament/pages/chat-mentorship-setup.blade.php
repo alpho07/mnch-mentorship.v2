@@ -5,6 +5,8 @@
         @unless ($completed)
             @if ($this->activeStage() === 'modules')
                 @include('filament.pages.partials.chat-modules-turn')
+            @elseif ($this->activeStage() === 'enroll_mentees')
+                @include('filament.pages.partials.chat-mentees-turn')
             @elseif ($this->nextUnfilledSlot())
                 @include('filament.pages.partials.chat-turn', ['slot' => $this->nextUnfilledSlot(), 'answers' => $answers])
             @endif

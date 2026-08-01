@@ -70,6 +70,10 @@ class ChatMentorshipSetup extends Page implements HasForms
             return 'modules';
         }
 
+        if (! array_key_exists('selected_users', $this->answers) && $this->class && array_key_exists('module_ids', $this->answers)) {
+            return 'enroll_mentees';
+        }
+
         return 'slot';
     }
 
@@ -125,6 +129,57 @@ class ChatMentorshipSetup extends Page implements HasForms
         $this->messages[] = [
             'role' => 'bot',
             'text' => 'Who will be mentored in this class? Search or tell me a name to add someone new — or say "skip" for now.',
+            'timestamp' => now()->toIso8601String(),
+        ];
+        $this->appendTranscript($this->messages[count($this->messages) - 1]);
+    }
+
+    public string $menteeSearch = '';
+
+    public int $menteePage = 1;
+
+    public function updatedMenteeSearch(): void
+    {
+        $this->menteePage = 1;
+    }
+
+    public function getMenteeFieldOptions(): array
+    {
+        return app(MentorshipWizardService::class)->menteeOptions(
+            $this->menteeSearch ?: null,
+            $this->menteePage,
+            []
+        );
+    }
+
+    public function submitMentees(array $selectedUserIds, ?array $newMentee = null): void
+    {
+        $echo = empty($selectedUserIds) && empty($newMentee['email'] ?? null)
+            ? 'Skip for now'
+            : trim(implode(', ', array_filter([
+                ! empty($selectedUserIds) ? \App\Models\User::whereIn('id', $selectedUserIds)->pluck('name')->implode(', ') : null,
+                ! empty($newMentee['email'] ?? null) ? trim(($newMentee['first_name'] ?? '').' '.($newMentee['last_name'] ?? '')) : null,
+            ])));
+
+        $this->messages[] = ['role' => 'user', 'text' => $echo, 'slot' => 'selected_users', 'timestamp' => now()->toIso8601String()];
+        $this->appendTranscript($this->messages[count($this->messages) - 1]);
+
+        try {
+            app(MentorshipWizardService::class)->enrollMentees([
+                'selected_users' => $selectedUserIds,
+                'new_mentee' => ! empty($newMentee['email'] ?? null) ? $newMentee : null,
+            ], $this->class);
+        } catch (\Throwable $e) {
+            $this->messages[] = ['role' => 'bot', 'text' => "⚠️ Something went wrong: {$e->getMessage()}", 'timestamp' => now()->toIso8601String()];
+
+            return;
+        }
+
+        $this->answers['selected_users'] = $selectedUserIds;
+
+        $this->messages[] = [
+            'role' => 'bot',
+            'text' => 'Time to invite your mentees! Who should receive the email — everyone with an email address, or only those not yet invited?',
             'timestamp' => now()->toIso8601String(),
         ];
         $this->appendTranscript($this->messages[count($this->messages) - 1]);
