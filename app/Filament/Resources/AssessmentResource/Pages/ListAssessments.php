@@ -113,6 +113,13 @@ class ListAssessments extends ListRecords
                         'endline' => 'success',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('assessmentType.name')
+                    ->label('Template')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('gray')
+                    ->placeholder('—'),
                 Tables\Columns\TextColumn::make('assessment_date')
                     ->date()
                     ->sortable(),

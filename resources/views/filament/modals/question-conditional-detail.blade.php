@@ -8,7 +8,7 @@
     </div>
 
     @php
-        $logic = $question->conditional_logic ?? [];
+        $logic = $question->display_conditions ?? [];
         $hasOperator = isset($logic['operator']) && in_array($logic['operator'], ['and', 'or']);
         $conditions  = $hasOperator ? ($logic['conditions'] ?? []) : [];
         $isSingle    = isset($logic['question_code']);
@@ -72,8 +72,8 @@
 
     {{-- Dependent questions (who depends on this one?) --}}
     @php
-        $dependents = \App\Models\AssessmentQuestion::where('conditional_logic->question_code', $question->question_code)
-            ->orWhereJsonContains('conditional_logic->conditions', ['question_code' => $question->question_code])
+        $dependents = \App\Models\AssessmentQuestion::where('display_conditions->question_code', $question->question_code)
+            ->orWhereJsonContains('display_conditions->conditions', ['question_code' => $question->question_code])
             ->get();
     @endphp
 

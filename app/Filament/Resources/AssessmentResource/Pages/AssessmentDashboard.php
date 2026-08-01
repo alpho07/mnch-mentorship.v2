@@ -44,15 +44,13 @@ class AssessmentDashboard extends Page
         $this->record = AssessmentResource::getEloquentQuery()->findOrFail($this->record->id);
 
         if (! $this->record->section_progress) {
-            $this->record->section_progress = [
-                'facility_assessor' => true,
-                'infrastructure' => false,
-                'skills_lab' => false,
-                'human_resources' => false,
-                'health_products' => false,
-                'information_systems' => false,
-                'quality_of_care' => false,
-            ];
+            $sectionCodes = $this->record->assessmentType
+                ?->sections()->active()->pluck('code')->toArray() ?? [];
+
+            $this->record->section_progress = array_merge(
+                ['facility_assessor' => true],
+                array_fill_keys($sectionCodes, false)
+            );
             $this->record->save();
         }
     }
@@ -144,61 +142,63 @@ class AssessmentDashboard extends Page
     }
 
     /**
-     * Define all sections
+     * All sections on this assessment's own template, in order — dynamic
+     * per template rather than a fixed list of 6. "Facility & Assessor"
+     * isn't a real assessment_sections row; it's a synthetic first entry
+     * representing the create-assessment step itself, always complete once
+     * the record exists.
      */
     protected function getAllSections(): array
     {
-        return [
+        $progress = $this->record->section_progress ?? [];
+
+        $result = [
             [
                 'key' => 'facility_assessor',
                 'label' => 'Facility & Assessor',
                 'route' => null,
-                'done' => $this->record->section_progress['facility_assessor'] ?? false,
+                'done' => $progress['facility_assessor'] ?? false,
                 'icon' => 'heroicon-o-building-office-2',
             ],
-            [
-                'key' => 'infrastructure',
-                'label' => 'Infrastructure',
-                'route' => AssessmentResource::getUrl('edit-infrastructure', ['record' => $this->record->id]),
-                'done' => $this->record->section_progress['infrastructure'] ?? false,
-                'icon' => 'heroicon-o-building-office',
-            ],
-            [
-                'key' => 'skills_lab',
-                'label' => 'Skills Lab',
-                'route' => AssessmentResource::getUrl('edit-skills-lab', ['record' => $this->record->id]),
-                'done' => $this->record->section_progress['skills_lab'] ?? false,
-                'icon' => 'heroicon-o-beaker',
-            ],
-            [
-                'key' => 'human_resources',
-                'label' => 'Human Resources',
-                'route' => AssessmentResource::getUrl('edit-human-resources', ['record' => $this->record->id]),
-                'done' => $this->record->section_progress['human_resources'] ?? false,
-                'icon' => 'heroicon-o-user-group',
-            ],
-            [
-                'key' => 'health_products',
-                'label' => 'Health Products',
-                'route' => AssessmentResource::getUrl('edit-health-products', ['record' => $this->record->id]),
-                'done' => $this->record->section_progress['health_products'] ?? false,
-                'icon' => 'heroicon-o-cube',
-            ],
-            [
-                'key' => 'information_systems',
-                'label' => 'Information Systems',
-                'route' => AssessmentResource::getUrl('edit-information-systems', ['record' => $this->record->id]),
-                'done' => $this->record->section_progress['information_systems'] ?? false,
-                'icon' => 'heroicon-o-computer-desktop',
-            ],
-            [
-                'key' => 'quality_of_care',
-                'label' => 'Quality of Care',
-                'route' => AssessmentResource::getUrl('edit-quality-of-care', ['record' => $this->record->id]),
-                'done' => $this->record->section_progress['quality_of_care'] ?? false,
-                'icon' => 'heroicon-o-star',
-            ],
         ];
+
+        $sections = $this->record->assessmentType
+            ?->sections()
+            ->where('is_active', true)
+            ->orderBy('order')
+            ->get() ?? collect();
+
+        foreach ($sections as $section) {
+            $kind = $section->resolvedKind();
+
+            $route = match ($kind) {
+                'question_group' => AssessmentResource::getUrl('edit-section', [
+                    'record' => $this->record->id,
+                    'sectionCode' => $section->code,
+                ]),
+                'human_resources' => AssessmentResource::getUrl('edit-human-resources', ['record' => $this->record->id]),
+                'commodity_matrix' => AssessmentResource::getUrl('edit-health-products', ['record' => $this->record->id]),
+                default => null, // informational — no dedicated page
+            };
+
+            if ($route === null) {
+                continue;
+            }
+
+            $result[] = [
+                'key' => $section->code,
+                'label' => $section->name,
+                'route' => $route,
+                'done' => $progress[$section->code] ?? false,
+                'icon' => $section->icon ?: match ($kind) {
+                    'human_resources' => 'heroicon-o-user-group',
+                    'commodity_matrix' => 'heroicon-o-cube',
+                    default => 'heroicon-o-clipboard-document-list',
+                },
+            ];
+        }
+
+        return $result;
     }
 
     public function submitAssessment()

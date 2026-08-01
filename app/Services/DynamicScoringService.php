@@ -3,47 +3,40 @@
 namespace App\Services;
 
 use App\Models\Assessment;
+use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentSection;
 use App\Models\AssessmentSectionScore;
-use App\Models\AssessmentQuestionResponse;
 
-class DynamicScoringService {
-
-    /**
-     * Skills Lab question codes that are ONLY scored when SKILLS_MASTER = "No".
-     *
-     * Context: these two questions ask about fallback space/storage when a
-     * dedicated skills lab does NOT exist. When the facility has a skills lab
-     * (SKILLS_MASTER = "Yes") these questions are not shown and must not be
-     * counted against the section score.
-     */
-    private const SKILLS_LAB_CONDITIONAL_CODES = [
-        'SKILLS_ROOM', // "Is there a room/space used for skills teaching and simulation?"
-        'SKILLS_STORAGE', // "Is there a lockable storage area for the equipment…?"
-    ];
-
+class DynamicScoringService
+{
     /**
      * Recalculate score for a specific section.
      */
-    public static function recalculateSectionScore(int $assessmentId, int $sectionId): void {
+    public static function recalculateSectionScore(int $assessmentId, int $sectionId): void
+    {
         $section = AssessmentSection::findOrFail($sectionId);
 
-        if (!$section->is_scored) {
+        if (! $section->is_scored) {
             return;
         }
 
-        // Get all active, scored questions
+        // Get all active, scored questions — mortality_three_month is
+        // always excluded regardless of its is_scored flag: a 3-count
+        // value is data for the PDF report only, never a scoreable answer.
         $questions = $section->questions()
-                ->active()
-                ->scored()
-                ->get();
+            ->active()
+            ->scored()
+            ->where('question_type', '!=', 'mortality_three_month')
+            ->get();
 
-        // ── Skills Lab conditional exclusion ──────────────────────────────────
-        // When SKILLS_MASTER = "Yes" the two fallback questions are hidden by
-        // conditional_logic on the form and should be excluded from scoring.
-        if ($section->code === 'skills_lab') {
-            $questions = self::filterSkillsLabQuestions($assessmentId, $questions);
-        }
+        // ── Conditional exclusion ───────────────────────────────────────────
+        // A scored question whose display_conditions resolve to "hidden"
+        // (given the assessment's actual answers so far) doesn't count
+        // toward the section's max_score/total_score — general rule, not
+        // special-cased per section. Conditions can reference a question in
+        // a different section, so the resolver looks across the whole
+        // assessment, not just this section's responses.
+        $questions = self::excludeConditionallyHiddenQuestions($assessmentId, $questions);
         // ─────────────────────────────────────────────────────────────────────
 
         $totalQuestions = $questions->count();
@@ -53,8 +46,8 @@ class DynamicScoringService {
         }
 
         $responses = AssessmentQuestionResponse::where('assessment_id', $assessmentId)
-                ->whereIn('assessment_question_id', $questions->pluck('id'))
-                ->get();
+            ->whereIn('assessment_question_id', $questions->pluck('id'))
+            ->get();
 
         $totalScore = $responses->whereNotNull('score')->sum('score');
         $maxScore = $totalQuestions;
@@ -63,58 +56,60 @@ class DynamicScoringService {
         $percentage = $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 2) : 0;
 
         AssessmentSectionScore::updateOrCreate(
-                ['assessment_id' => $assessmentId, 'assessment_section_id' => $sectionId],
-                [
-                    'total_score' => $totalScore,
-                    'max_score' => $maxScore,
-                    'percentage' => $percentage,
-                    'grade' => self::calculateGrade($percentage),
-                    'total_questions' => $totalQuestions,
-                    'answered_questions' => $answeredQuestions,
-                    'skipped_questions' => $skippedQuestions,
-                ]
+            ['assessment_id' => $assessmentId, 'assessment_section_id' => $sectionId],
+            [
+                'total_score' => $totalScore,
+                'max_score' => $maxScore,
+                'percentage' => $percentage,
+                'grade' => self::calculateGrade($percentage),
+                'total_questions' => $totalQuestions,
+                'answered_questions' => $answeredQuestions,
+                'skipped_questions' => $skippedQuestions,
+            ]
         );
 
         self::recalculateOverallScore($assessmentId);
     }
 
     /**
-     * Filter Skills Lab questions based on the SKILLS_MASTER response.
-     *
-     * - SKILLS_MASTER = "Yes" → exclude SKILLS_ROOM and SKILLS_STORAGE
-     *   (these questions are hidden on the form; scoring them would penalise
-     *    a facility for not having a fallback space when they have a proper lab)
-     *
-     * - SKILLS_MASTER = "No" / not answered → include all questions
-     *   (the facility needs the fallback space, so we count those questions)
+     * Excludes any scored question whose display_conditions evaluate to
+     * "hidden" given the assessment's actual submitted responses — a
+     * question that wouldn't have been shown on the form shouldn't count
+     * against the section's score. Questions with no display_conditions are
+     * always included (unconditional).
      */
-    private static function filterSkillsLabQuestions(int $assessmentId, $questions): mixed {
-        // Find SKILLS_MASTER question ID
-        $masterQuestion = $questions->first(fn($q) => $q->question_code === 'SKILLS_MASTER');
+    private static function excludeConditionallyHiddenQuestions(int $assessmentId, $questions): mixed
+    {
+        $conditional = $questions->filter(fn ($q) => ! empty($q->display_conditions));
 
-        if (!$masterQuestion) {
-            return $questions; // Can't determine — score everything
+        if ($conditional->isEmpty()) {
+            return $questions;
         }
 
-        $masterResponse = AssessmentQuestionResponse::where('assessment_id', $assessmentId)
-                ->where('assessment_question_id', $masterQuestion->id)
-                ->value('response_value');
+        // question_code => response_value map, built once, spanning the
+        // whole assessment (not just this section) since a condition can
+        // reference a question in a different section.
+        $responsesByCode = AssessmentQuestionResponse::query()
+            ->where('assessment_id', $assessmentId)
+            ->join('assessment_questions', 'assessment_questions.id', '=', 'assessment_question_responses.assessment_question_id')
+            ->pluck('assessment_question_responses.response_value', 'assessment_questions.question_code');
 
-        if ($masterResponse === 'Yes') {
-            // Has a skills lab — exclude the two fallback questions
-            return $questions->filter(
-                            fn($q) => !in_array($q->question_code, self::SKILLS_LAB_CONDITIONAL_CODES)
-                    );
-        }
+        $valueResolver = fn (string $questionCode) => $responsesByCode[$questionCode] ?? null;
 
-        // Skills lab = No or not yet answered — include everything
-        return $questions;
+        return $questions->filter(function ($question) use ($valueResolver) {
+            if (empty($question->display_conditions)) {
+                return true;
+            }
+
+            return ConditionalLogicEvaluator::isVisible($question->display_conditions, $valueResolver);
+        });
     }
 
     /**
      * Recalculate overall assessment score from all section scores.
      */
-    public static function recalculateOverallScore(int $assessmentId): void {
+    public static function recalculateOverallScore(int $assessmentId): void
+    {
         $sectionScores = AssessmentSectionScore::where('assessment_id', $assessmentId)->get();
 
         if ($sectionScores->isEmpty()) {
@@ -137,7 +132,8 @@ class DynamicScoringService {
      * Recalculate all scored sections for an assessment.
      * Called on final submission.
      */
-    public function recalculateAllSections(int $assessmentId): void {
+    public function recalculateAllSections(int $assessmentId): void
+    {
         $sections = AssessmentSection::active()->scored()->get();
 
         foreach ($sections as $section) {
@@ -150,23 +146,30 @@ class DynamicScoringService {
     /**
      * Grade thresholds: ≥80% = green, ≥50% = yellow, <50% = red.
      */
-    protected static function calculateGrade(float $percentage): string {
-        if ($percentage >= 80)
+    protected static function calculateGrade(float $percentage): string
+    {
+        if ($percentage >= 80) {
             return 'green';
-        if ($percentage >= 50)
+        }
+        if ($percentage >= 50) {
             return 'yellow';
+        }
+
         return 'red';
     }
 
     // ── Legacy / compatibility methods ────────────────────────────────────────
 
-    public function isSectionComplete(int $assessmentId, int $sectionId): bool {
+    public function isSectionComplete(int $assessmentId, int $sectionId): bool
+    {
         $section = AssessmentSection::findOrFail($sectionId);
         $progress = $section->getProgressForAssessment($assessmentId);
+
         return ($progress['percentage'] ?? 0) === 100.0;
     }
 
-    public function getSectionResponses(int $assessmentId, int $sectionId): array {
+    public function getSectionResponses(int $assessmentId, int $sectionId): array
+    {
         $section = AssessmentSection::with('questions')->findOrFail($sectionId);
         $responses = [];
         foreach ($section->questions as $question) {
@@ -177,18 +180,20 @@ class DynamicScoringService {
                 'answered' => $response && $response->response_value !== null,
             ];
         }
+
         return $responses;
     }
 
-    public function getAssessmentSummary(int $assessmentId): array {
+    public function getAssessmentSummary(int $assessmentId): array
+    {
         $assessment = Assessment::findOrFail($assessmentId);
         $sections = AssessmentSection::active()->scored()->ordered()->get();
         $summary = [];
 
         foreach ($sections as $section) {
             $sectionScore = AssessmentSectionScore::where('assessment_id', $assessmentId)
-                    ->where('assessment_section_id', $section->id)
-                    ->first();
+                ->where('assessment_section_id', $section->id)
+                ->first();
             $summary[$section->code] = [
                 'section' => $section,
                 'score' => $sectionScore,
@@ -206,11 +211,13 @@ class DynamicScoringService {
         ];
     }
 
-    public function getAssessmentStats(int $assessmentId): array {
+    public function getAssessmentStats(int $assessmentId): array
+    {
         $sectionScores = AssessmentSectionScore::where('assessment_id', $assessmentId)->get();
         if ($sectionScores->isEmpty()) {
             return ['overall_percentage' => 0, 'overall_grade' => null, 'total_sections' => 0];
         }
+
         return [
             'overall_percentage' => $sectionScores->avg('percentage'),
             'overall_grade' => self::calculateGrade($sectionScores->avg('percentage')),

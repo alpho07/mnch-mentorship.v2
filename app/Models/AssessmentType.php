@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AssessmentType extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -18,11 +19,15 @@ class AssessmentType extends Model
         'is_active',
         'validity_period_days',
         'metadata',
+        'period_start',
+        'period_end',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'metadata' => 'array',
+        'period_start' => 'date',
+        'period_end' => 'date',
     ];
 
     public function assessments(): HasMany

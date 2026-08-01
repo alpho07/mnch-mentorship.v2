@@ -101,6 +101,13 @@ class AssessmentResource extends Resource
                         'heroicon-m-arrow-trending-up' => 'midline',
                         'heroicon-m-check-circle' => 'endline',
                     ]),
+                Tables\Columns\TextColumn::make('assessmentType.name')
+                    ->label('Template')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('gray')
+                    ->placeholder('—'),
                 Tables\Columns\TextColumn::make('assessment_date')
                     ->label('Date')
                     ->date('M d, Y')
@@ -370,12 +377,9 @@ class AssessmentResource extends Resource
             'index' => Pages\ListAssessments::route('/'),
             'create' => Pages\CreateAssessment::route('/create'),
             'dashboard' => Pages\AssessmentDashboard::route('/{record}/dashboard'),
-            'edit-infrastructure' => Pages\EditInfrastructure::route('/{record}/infrastructure'),
-            'edit-skills-lab' => Pages\EditSkillsLab::route('/{record}/skills-lab'),
+            'edit-section' => Pages\EditSection::route('/{record}/section/{sectionCode}'),
             'edit-human-resources' => Pages\EditHumanResources::route('/{record}/human-resources'),
             'edit-health-products' => Pages\EditHealthProducts::route('/{record}/health-products'),
-            'edit-information-systems' => Pages\EditInformationSystems::route('/{record}/information-systems'),
-            'edit-quality-of-care' => Pages\EditQualityOfCare::route('/{record}/quality-of-care'),
             'summary' => Pages\ViewAssessmentSummary::route('/{record}/summary'),
         ];
     }
