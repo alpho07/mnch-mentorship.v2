@@ -241,4 +241,21 @@ class ChatMentorshipSetupTest extends TestCase
         $this->assertSame('Live Mentorship', collect($resumed->instance()->messages)->firstWhere('slot', 'is_pilot')['text']);
         $this->assertSame($program->id, $resumed->instance()->answers['program_id']);
     }
+
+    public function test_editing_a_past_answer_reopens_it_without_discarding_later_answers(): void
+    {
+        $this->actingAsCoordinator();
+        $facility = \App\Models\Facility::factory()->create();
+
+        $component = Livewire::test(ChatMentorshipSetup::class);
+        $component->call('answer', 'is_pilot', 0);
+        $component->call('answer', 'county_id', $facility->subcounty->county_id);
+        $component->call('answer', 'facility_id', $facility->id);
+
+        $component->call('editSlot', 'facility_id');
+
+        $this->assertArrayNotHasKey('facility_id', $component->instance()->answers);
+        $this->assertSame(0, $component->instance()->answers['is_pilot']);
+        $this->assertSame($facility->subcounty->county_id, $component->instance()->answers['county_id']);
+    }
 }

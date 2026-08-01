@@ -365,6 +365,22 @@ class ChatMentorshipSetup extends Page implements HasForms
         $this->syncTranscript();
     }
 
+    public function editSlot(string $slotId): void
+    {
+        unset($this->answers[$slotId]);
+
+        $next = $this->nextUnfilledSlot();
+
+        if ($next) {
+            $this->messages[] = [
+                'role' => 'bot',
+                'text' => 'No problem — '.$next->getQuestion($this->answers),
+                'timestamp' => now()->toIso8601String(),
+            ];
+            $this->syncTranscript();
+        }
+    }
+
     /**
      * Fires $onComplete the moment every required, visible slot in $stage
      * has just been filled — guarded on $justAnsweredSlotId belonging to
