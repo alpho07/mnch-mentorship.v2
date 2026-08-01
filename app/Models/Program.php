@@ -101,9 +101,12 @@ class Program extends Model
     }
 
     /**
-     * Per-record version of scopeAvailableTo() — same eligibility rules,
-     * used where inactive programs still need to be listed (e.g. shown
-     * but disabled) rather than filtered out of the query entirely.
+     * Whether a deactivated program is still pickable by the given user.
+     * Deliberately has no super_admin bypass — the Mentorship Settings
+     * "Program Activation" toggle is meant to apply to everyone the same
+     * way the "New Mentorship" / "Guided Setup" button toggles do, with no
+     * exceptions. The only carve-out is the explicit per-role
+     * visible_to_roles override editable on Curriculum -> Programs.
      */
     public function isSelectableBy(?User $user = null): bool
     {
@@ -115,10 +118,6 @@ class Program extends Model
 
         if (! $user) {
             return false;
-        }
-
-        if ($user->hasRole('super_admin')) {
-            return true;
         }
 
         $roles = $user->getRoleNames()->toArray();

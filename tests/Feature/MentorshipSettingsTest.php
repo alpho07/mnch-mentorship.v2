@@ -75,6 +75,20 @@ class MentorshipSettingsTest extends TestCase
         $this->assertFalse($program->fresh()->isSelectableBy($admin));
     }
 
+    public function test_deactivating_a_program_disables_it_even_for_super_admin(): void
+    {
+        // The toggle is meant to apply universally, the same way the New
+        // Mentorship / Guided Setup button toggles do — no role bypasses
+        // the "not active" state except an explicit visible_to_roles entry.
+        $superAdmin = User::factory()->create(['name' => 'Super Admin Tester']);
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $superAdmin->assignRole('super_admin');
+
+        $program = Program::factory()->create(['is_active' => false, 'visible_to_roles' => []]);
+
+        $this->assertFalse($program->isSelectableBy($superAdmin));
+    }
+
     public function test_setting_defaults_to_true_when_never_set(): void
     {
         $this->assertTrue(Setting::getBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED));
