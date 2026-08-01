@@ -120,7 +120,7 @@ class GuidedMentorshipSetupTest extends TestCase
         ]);
     }
 
-    public function test_assign_modules_applies_optional_dates_to_newly_created_modules_only(): void
+    public function test_assign_modules_applies_per_module_dates_to_newly_created_modules_only(): void
     {
         $this->actingAsCoordinator();
         $program = Program::factory()->create(['name' => 'Newborn Care']);
@@ -133,24 +133,35 @@ class GuidedMentorshipSetupTest extends TestCase
             'start_date' => null,
             'end_date' => null,
         ]);
-        $newModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+        $newModuleA = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+        $newModuleB = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
 
         $component = Livewire::test(GuidedMentorshipSetup::class);
         $component->instance()->training = $training;
         $component->instance()->class = $class;
 
         $component->instance()->assignModules([
-            'module_ids' => [$existingModule->id, $newModule->id],
+            'module_ids' => [$existingModule->id, $newModuleA->id, $newModuleB->id],
             'auto_create_sessions' => false,
-            'module_start_date' => '2027-02-01',
-            'module_end_date' => '2027-02-14',
+            // Per-row dates, keyed by program_module_id — each newly-picked
+            // module/track can carry its own range from the wizard's modal.
+            'module_dates' => [
+                $newModuleA->id => ['start' => '2027-02-01', 'end' => '2027-02-14'],
+                $newModuleB->id => ['start' => '2027-03-01', 'end' => '2027-03-10'],
+            ],
         ]);
 
         $this->assertDatabaseHas('class_modules', [
             'mentorship_class_id' => $class->id,
-            'program_module_id' => $newModule->id,
-            'start_date' => '2027-02-01',
-            'end_date' => '2027-02-14',
+            'program_module_id' => $newModuleA->id,
+            'start_date' => '2027-02-01 00:00:00',
+            'end_date' => '2027-02-14 00:00:00',
+        ]);
+        $this->assertDatabaseHas('class_modules', [
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $newModuleB->id,
+            'start_date' => '2027-03-01 00:00:00',
+            'end_date' => '2027-03-10 00:00:00',
         ]);
         // Already-assigned module wasn't touched — dates only apply to
         // what's newly added in this pass, not re-stamped on old ones.
