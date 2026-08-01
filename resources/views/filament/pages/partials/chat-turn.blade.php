@@ -14,6 +14,17 @@
             </div>
         @endif
 
+        @if ($slot->renderKind() === \App\Services\Chat\Render::WIDGET)
+            <form wire:submit.prevent="answer('{{ $slot->id }}', $refs.widgetInput.value)" class="flex gap-2">
+                @if (str_ends_with($slot->id, '_date'))
+                    <input type="date" x-ref="widgetInput" class="fi-input rounded-lg border-gray-300 dark:border-gray-600 text-sm" required>
+                @else
+                    <input type="number" x-ref="widgetInput" min="2" max="10" class="fi-input rounded-lg border-gray-300 dark:border-gray-600 text-sm" required>
+                @endif
+                <x-filament::button type="submit">Send</x-filament::button>
+            </form>
+        @endif
+
         @error('value')
             <p class="text-sm text-danger-600 dark:text-danger-400">{{ $message }}</p>
         @enderror

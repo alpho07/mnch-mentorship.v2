@@ -3,7 +3,9 @@
         @include('filament.pages.partials.chat-transcript', ['messages' => $messages])
 
         @unless ($completed)
-            @include('filament.pages.partials.chat-turn', ['slot' => $this->currentSlot(), 'answers' => $answers])
+            @if ($this->nextUnfilledSlot())
+                @include('filament.pages.partials.chat-turn', ['slot' => $this->nextUnfilledSlot(), 'answers' => $answers])
+            @endif
         @endunless
     </div>
 </x-filament-panels::page>

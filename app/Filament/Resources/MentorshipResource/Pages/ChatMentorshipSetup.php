@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Models\Training;
 use App\Services\Chat\MentorshipChatScript;
 use App\Services\Chat\Slot;
+use App\Services\MentorshipWizardService;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Resources\Pages\Page;
@@ -46,17 +47,23 @@ class ChatMentorshipSetup extends Page implements HasForms
     {
         $this->messages[] = [
             'role' => 'bot',
-            'text' => 'Welcome, '.explode(' ', auth()->user()->name)[0].'! '.$this->currentSlot()->getQuestion($this->answers),
+            'text' => 'Welcome, '.explode(' ', auth()->user()->name)[0].'! '.$this->nextUnfilledSlot()->getQuestion($this->answers),
             'timestamp' => now()->toIso8601String(),
         ];
     }
 
-    protected function slots(): array
+    public function slots(): array
     {
         return MentorshipChatScript::build($this);
     }
 
-    protected function currentSlot(): Slot
+    /**
+     * The next question to ask, or null once every currently-defined slot
+     * is answered (e.g. all of training_details is filled but no later
+     * stage exists in the script yet, or the flow is genuinely done). The
+     * view treats null as "nothing generic to render right now."
+     */
+    public function nextUnfilledSlot(): ?Slot
     {
         foreach ($this->slots() as $slot) {
             if (array_key_exists($slot->id, $this->answers)) {
@@ -70,7 +77,7 @@ class ChatMentorshipSetup extends Page implements HasForms
             return $slot;
         }
 
-        throw new \RuntimeException('No slot left to ask — stage completion should have handled this.');
+        return null;
     }
 
     public function answer(string $slotId, mixed $value): void
@@ -109,23 +116,55 @@ class ChatMentorshipSetup extends Page implements HasForms
             ];
             $this->appendTranscript($this->messages[count($this->messages) - 1]);
         }
+
+        $this->maybeCompleteStage($slotId, 'training_details', function () {
+            $this->training = app(MentorshipWizardService::class)->createTraining([
+                'is_pilot' => $this->answers['is_pilot'],
+                'county_id' => $this->answers['county_id'],
+                'facility_id' => $this->answers['facility_id'],
+                'program_id' => $this->answers['program_id'],
+                'start_date' => $this->answers['start_date'] ?? null,
+                'end_date' => $this->answers['end_date'] ?? null,
+                'max_participants' => $this->answers['max_participants'],
+            ], $this->training);
+
+            $this->training->update(['guided_setup_method' => 'chat']);
+        });
     }
 
-    protected function nextUnfilledSlot(): ?Slot
+    /**
+     * Fires $onComplete the moment every required, visible slot in $stage
+     * has just been filled — guarded on $justAnsweredSlotId belonging to
+     * $stage so it only fires once per stage, since
+     * MentorshipWizardService::createTraining()/etc. are upserts and a
+     * repeat call would be harmless but would spam duplicate confirmation
+     * messages into the transcript.
+     */
+    protected function maybeCompleteStage(string $justAnsweredSlotId, string $stage, \Closure $onComplete): void
     {
-        foreach ($this->slots() as $slot) {
-            if (array_key_exists($slot->id, $this->answers)) {
-                continue;
-            }
+        $stageSlots = array_filter($this->slots(), fn ($s) => $s->stage === $stage);
 
-            if (! $slot->isVisible($this->answers)) {
-                continue;
-            }
-
-            return $slot;
+        if (empty($stageSlots) || ! collect($stageSlots)->contains(fn ($s) => $s->id === $justAnsweredSlotId)) {
+            return;
         }
 
-        return null;
+        $allFilled = collect($stageSlots)->every(
+            fn ($slot) => ! $slot->isVisible($this->answers) || array_key_exists($slot->id, $this->answers)
+        );
+
+        if (! $allFilled) {
+            return;
+        }
+
+        try {
+            $onComplete();
+        } catch (\Throwable $e) {
+            $this->messages[] = [
+                'role' => 'bot',
+                'text' => "⚠️ Something went wrong: {$e->getMessage()}",
+                'timestamp' => now()->toIso8601String(),
+            ];
+        }
     }
 
     protected function appendTranscript(?array $message): void

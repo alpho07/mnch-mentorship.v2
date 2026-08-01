@@ -5,6 +5,9 @@ namespace App\Services\Chat;
 use App\Filament\Resources\MentorshipResource\Pages\ChatMentorshipSetup;
 use App\Models\County;
 use App\Models\Facility;
+use App\Models\Program;
+use App\Services\MentorshipWizardService;
+use Illuminate\Support\Carbon;
 
 /**
  * Declares every slot the chat assistant can ask about, grouped into the
@@ -47,6 +50,61 @@ class MentorshipChatScript
                     ->mapWithKeys(fn ($f) => [$f->id => "{$f->mfl_code} — {$f->name}"])
                     ->all())
                 ->echoUsing(fn ($v) => Facility::find($v)?->name ?? (string) $v),
+
+            Slot::make('program_id')
+                ->stage('training_details')
+                ->render(Render::CARDS)
+                ->question(fn () => 'What program is being mentored?')
+                ->optionsFrom(fn () => Program::query()
+                    ->get()
+                    ->filter(fn ($p) => $p->isSelectableBy(auth()->user()))
+                    ->mapWithKeys(fn ($p) => [$p->id => $p->name])
+                    ->all())
+                ->echoUsing(fn ($v) => Program::find($v)?->name ?? (string) $v)
+                ->rule(function ($value) {
+                    $program = $value ? Program::find($value) : null;
+
+                    if (! $program || ! $program->isSelectableBy(auth()->user())) {
+                        return 'That program is not active — pick a different one.';
+                    }
+
+                    return null;
+                }),
+
+            Slot::make('start_date')
+                ->stage('training_details')
+                ->render(Render::WIDGET)
+                ->visibleWhen(fn ($a) => ! app(MentorshipWizardService::class)->isEmoncProgram($a['program_id'] ?? null))
+                ->question(fn () => 'When does it start?')
+                ->echoUsing(fn ($v) => Carbon::parse($v)->format('M j, Y')),
+
+            Slot::make('end_date')
+                ->stage('training_details')
+                ->render(Render::WIDGET)
+                ->visibleWhen(fn ($a) => ! app(MentorshipWizardService::class)->isEmoncProgram($a['program_id'] ?? null))
+                ->dependsOn('start_date')
+                ->question(fn () => 'And when does it end?')
+                ->echoUsing(fn ($v) => Carbon::parse($v)->format('M j, Y'))
+                ->rule(function ($value, $a) {
+                    if (! empty($a['start_date']) && Carbon::parse($value)->lt(Carbon::parse($a['start_date']))) {
+                        return 'End date must be on or after the start date.';
+                    }
+
+                    return null;
+                }),
+
+            Slot::make('max_participants')
+                ->stage('training_details')
+                ->render(Render::WIDGET)
+                ->question(fn () => 'How many mentees, at most (2–10)?')
+                ->echoUsing(fn ($v) => "{$v} mentees")
+                ->rule(function ($value) {
+                    if (! is_numeric($value) || $value < 2 || $value > 10) {
+                        return 'Must be between 2 and 10 mentees.';
+                    }
+
+                    return null;
+                }),
         ];
     }
 }
