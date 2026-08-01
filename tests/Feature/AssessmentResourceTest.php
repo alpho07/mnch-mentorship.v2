@@ -98,15 +98,34 @@ class AssessmentResourceTest extends TestCase
         $this->assertSame('Renamed Assessor', $assessment->fresh()->assessor->name);
     }
 
-    public function test_list_page_does_not_show_the_mfl_code_column(): void
+    public function test_dashboard_page_shows_the_assessors_current_name_via_the_relationship(): void
+    {
+        $assessor = $this->makeUserWithRole('assessor');
+        $assessment = $this->createAssessmentAs($assessor);
+        $assessor->update(['name' => 'Renamed On Dashboard']);
+
+        $response = $this->get(AssessmentResource::getUrl('dashboard', ['record' => $assessment]));
+
+        $response->assertOk();
+        $response->assertSee('Renamed On Dashboard');
+    }
+
+    public function test_list_page_appends_mfl_code_to_the_facility_name_instead_of_a_separate_column(): void
     {
         $admin = $this->makeUserWithRole('admin');
-        $this->createAssessmentAs($admin);
-
         $this->actingAs($admin);
+        $facility = Facility::factory()->create(['name' => 'Test Facility Name', 'mfl_code' => '99999']);
+
+        Assessment::create([
+            'facility_id' => $facility->id,
+            'assessment_type' => 'baseline',
+            'assessment_date' => now(),
+        ]);
+
         $response = $this->get(AssessmentResource::getUrl());
 
         $response->assertOk();
         $response->assertDontSee('MFL Code');
+        $response->assertSee('Test Facility Name (99999)');
     }
 }

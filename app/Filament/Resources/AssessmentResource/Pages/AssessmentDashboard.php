@@ -35,7 +35,13 @@ class AssessmentDashboard extends Page
         // Scoped through the resource's own getEloquentQuery() — an
         // assessor hitting another assessor's dashboard URL directly
         // should 404, same as the list/edit/view pages.
-        $this->record = AssessmentResource::getEloquentQuery()->findOrFail($record);
+        // $record (the method param) isn't reliable here — Livewire already
+        // resolves the typed $this->record property via implicit binding
+        // before mount() runs, using the *unscoped* model; $this->record->id
+        // is the one safe thing to pull off it. Re-fetching by that id
+        // through the resource's scoped query is what actually enforces
+        // that an assessor can't reach another assessor's dashboard.
+        $this->record = AssessmentResource::getEloquentQuery()->findOrFail($this->record->id);
 
         if (! $this->record->section_progress) {
             $this->record->section_progress = [
@@ -65,7 +71,7 @@ class AssessmentDashboard extends Page
                         TextEntry::make('facility.name')->label('Facility'),
                         TextEntry::make('assessment_type')->label('Type'),
                         TextEntry::make('assessment_date')->label('Date')->date(),
-                        TextEntry::make('assessor_name')->label('Assessor'),
+                        TextEntry::make('assessor.name')->label('Assessor'),
                     ])
                     ->columns(2),
             ]);

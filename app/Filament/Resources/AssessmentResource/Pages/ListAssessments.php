@@ -100,7 +100,10 @@ class ListAssessments extends ListRecords
             ->columns([
                 Tables\Columns\TextColumn::make('facility.name')
                     ->label('Facility')
-                    ->searchable()
+                    ->formatStateUsing(fn (string $state, $record): string => $record->facility?->mfl_code
+                        ? "{$state} ({$record->facility->mfl_code})"
+                        : $state)
+                    ->searchable(['name', 'mfl_code'])
                     ->sortable(),
                 Tables\Columns\TextColumn::make('assessment_type')
                     ->badge()

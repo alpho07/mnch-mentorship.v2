@@ -80,7 +80,10 @@ class AssessmentResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('facility.name')
                     ->label('Facility')
-                    ->searchable()
+                    ->formatStateUsing(fn (string $state, $record): string => $record->facility?->mfl_code
+                        ? "{$state} ({$record->facility->mfl_code})"
+                        : $state)
+                    ->searchable(['name', 'mfl_code'])
                     ->sortable()
                     ->weight('bold')
                     ->icon('heroicon-m-building-office-2')
