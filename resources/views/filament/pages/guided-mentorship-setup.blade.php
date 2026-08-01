@@ -16,7 +16,7 @@
             @endif
             <div class="mt-4 flex gap-3">
                 @if ($class)
-                    <a href="{{ \App\Filament\Resources\MentorshipTrainingResource::getUrl('class-mentees', ['training' => $training->id, 'class' => $class->id]) }}"
+                    <a href="{{ \App\Filament\Resources\MentorshipTrainingResource::getUrl('classes', ['record' => $training->id]) }}"
                        class="fi-btn fi-btn-color-primary fi-btn-size-md fi-color-primary rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white">
                         Go to Class
                     </a>

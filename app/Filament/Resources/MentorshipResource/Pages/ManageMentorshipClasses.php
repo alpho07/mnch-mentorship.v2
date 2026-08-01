@@ -75,18 +75,6 @@ class ManageMentorshipClasses extends Page implements HasTable
         return $this->getClassHeaderActions();
     }
 
-    protected function getHeaderWidgets(): array
-    {
-        return [
-            \App\Filament\Widgets\MentorshipSetupNotice::class,
-        ];
-    }
-
-    public function getHeaderWidgetsColumns(): int|array
-    {
-        return 1;
-    }
-
     private function getClassHeaderActions(): array
     {
         return [
