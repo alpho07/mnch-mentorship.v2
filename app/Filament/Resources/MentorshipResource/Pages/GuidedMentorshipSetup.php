@@ -922,6 +922,8 @@ class GuidedMentorshipSetup extends Page implements HasForms
             $this->classStarted = true;
         }
 
+        $this->discardSupersededDrafts();
+
         return ['sent' => $sent, 'resent' => $resent];
     }
 
@@ -1069,6 +1071,25 @@ class GuidedMentorshipSetup extends Page implements HasForms
         unset($draft[$key]);
 
         $this->training->update(['guided_setup_draft' => $draft ?: null]);
+    }
+
+    /**
+     * Successfully finishing a new guided setup supersedes any earlier
+     * drafts the same mentor abandoned mid-wizard (e.g. started a training,
+     * got partway through modules, then walked away and started a fresh
+     * one instead of resuming it). Without this, the pending-setup banner
+     * keeps nagging about that old draft even though the mentor just
+     * completed a different mentorship — force-deleted, same as the
+     * banner's own manual "Discard" action, letting cascadeOnDelete clean
+     * up its class/modules/participants.
+     */
+    private function discardSupersededDrafts(): void
+    {
+        Training::pendingGuidedSetup()
+            ->where('mentor_id', $this->training->mentor_id)
+            ->where('id', '!=', $this->training->id)
+            ->get()
+            ->each(fn (Training $stale) => $stale->forceDelete());
     }
 
     private function isEmoncProgram(?int $programId): bool

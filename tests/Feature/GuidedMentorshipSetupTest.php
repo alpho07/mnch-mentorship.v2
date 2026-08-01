@@ -851,6 +851,40 @@ class GuidedMentorshipSetupTest extends TestCase
         $this->assertNull($training->fresh()->guided_setup_draft);
     }
 
+    public function test_send_invitations_discards_the_same_mentors_other_abandoned_drafts(): void
+    {
+        // A mentor starts a wizard, gets partway (e.g. modules assigned,
+        // no mentees/invitations), abandons it, and starts a fresh one
+        // instead. Completing the fresh one should clear the pending-setup
+        // banner entirely, not leave the old abandoned draft still nagging.
+        $mentor = $this->actingAsCoordinator();
+        $abandoned = \App\Models\Training::factory()->facilityMentorship()->create([
+            'mentor_id' => $mentor->id,
+            'guided_setup_completed_at' => null,
+        ]);
+        $abandonedClass = \App\Models\MentorshipClass::factory()->create(['training_id' => $abandoned->id]);
+
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'mentor_id' => $mentor->id,
+            'guided_setup_completed_at' => null,
+        ]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $component->instance()->sendInvitations(['recipients' => 'all']);
+
+        $this->assertDatabaseMissing('trainings', ['id' => $abandoned->id]);
+        $this->assertDatabaseMissing('mentorship_classes', ['id' => $abandonedClass->id]);
+        $this->assertNotNull($training->fresh()->guided_setup_completed_at);
+        $this->assertNull(
+            \App\Filament\Widgets\PendingGuidedSetupNotice::pendingTraining(),
+            'A stale draft from the same mentor should no longer trigger the pending-setup banner.'
+        );
+    }
+
     public function test_enroll_mentees_does_not_duplicate_already_enrolled_user(): void
     {
         $this->actingAsCoordinator();
