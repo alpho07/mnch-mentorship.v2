@@ -293,4 +293,52 @@ class ChatMentorshipSetupTest extends TestCase
 
         $this->assertStringContainsString('chat-setup', $viewData['continueUrl']);
     }
+
+    public function test_completing_first_class_does_not_jump_ahead_to_send_invitations(): void
+    {
+        // Regression: module_ids/selected_users aren't generic Slot objects
+        // (Modules/Enroll Mentees are bespoke turns), so the moment
+        // createFirstClass() fires, a naive "what's the next generic slot"
+        // lookup skips straight past both bespoke stages to `recipients` —
+        // announcing "Who should receive the email?" before the mentorship
+        // has any modules or mentees, while the actually-rendered turn
+        // underneath is still the modules picker. Caught live in a browser,
+        // not by earlier tests, because they only asserted DB side effects,
+        // never the transcript's ordering at this exact boundary.
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = \App\Models\Facility::factory()->create();
+
+        $component = Livewire::test(ChatMentorshipSetup::class);
+        $this->advanceThroughFirstClass($component, $program, $facility);
+
+        $texts = collect($component->instance()->messages)->pluck('text');
+
+        $this->assertFalse(
+            $texts->contains('Who should receive the email?'),
+            'send_invitations was announced before Modules/Enroll Mentees ran.'
+        );
+        $this->assertSame('modules', $component->instance()->activeStage());
+    }
+
+    public function test_the_full_conversation_reaches_send_invitations_in_the_right_order(): void
+    {
+        $this->actingAsCoordinator();
+        \Illuminate\Support\Facades\Mail::fake();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = \App\Models\Facility::factory()->create();
+        $mentee = User::factory()->create(['email' => 'mentee@example.com']);
+
+        $component = Livewire::test(ChatMentorshipSetup::class);
+        $this->advanceThroughFirstClass($component, $program, $facility);
+        $component->call('submitModules', []);
+        $component->call('submitMentees', [$mentee->id], null);
+
+        $texts = collect($component->instance()->messages)->pluck('text');
+        $this->assertTrue($texts->contains(fn ($t) => str_contains($t, 'Who should receive the email')));
+
+        $component->call('answer', 'recipients', 'all');
+
+        $this->assertTrue($component->instance()->completed);
+    }
 }

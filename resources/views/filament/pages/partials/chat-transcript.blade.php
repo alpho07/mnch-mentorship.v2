@@ -6,7 +6,7 @@
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100' }}">
                 <span>{{ $message['text'] }}</span>
-                @if ($message['role'] === 'user' && ! empty($message['slot']))
+                @if ($message['role'] === 'user' && ! empty($message['slot']) && collect($this->slots())->contains('id', $message['slot']))
                     <button type="button" wire:click="editSlot('{{ $message['slot'] }}')" class="text-xs underline opacity-75 hover:opacity-100">
                         Edit
                     </button>

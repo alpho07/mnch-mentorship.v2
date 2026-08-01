@@ -143,7 +143,8 @@ class MentorshipChatScript
                 ->stage('send_invitations')
                 ->render(Render::CARDS)
                 ->question(fn () => 'Who should receive the email?')
-                ->optionsFrom(fn () => ['all' => 'All mentees with email addresses', 'not_sent' => 'Only those not yet invited']),
+                ->optionsFrom(fn () => ['all' => 'All mentees with email addresses', 'not_sent' => 'Only those not yet invited'])
+                ->echoUsing(fn ($v) => $v === 'not_sent' ? 'Only those not yet invited' : 'All mentees with email addresses'),
         ];
     }
 }

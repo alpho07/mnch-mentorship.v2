@@ -312,16 +312,6 @@ class ChatMentorshipSetup extends Page implements HasForms
             'timestamp' => now()->toIso8601String(),
         ];
 
-        $next = $this->nextUnfilledSlot();
-
-        if ($next) {
-            $this->messages[] = [
-                'role' => 'bot',
-                'text' => $next->getQuestion($this->answers),
-                'timestamp' => now()->toIso8601String(),
-            ];
-        }
-
         $this->maybeCompleteStage($slotId, 'training_details', function () {
             $this->training = app(MentorshipWizardService::class)->createTraining([
                 'is_pilot' => $this->answers['is_pilot'],
@@ -362,11 +352,42 @@ class ChatMentorshipSetup extends Page implements HasForms
             ];
         });
 
+        // Only announce the next *generic* slot's question here once we're
+        // genuinely back to plain slot-answering. If completing training_
+        // details/first_class just moved us into the bespoke Modules or
+        // Enroll Mentees stage (activeStage() !== 'slot'), module_ids/
+        // selected_users aren't generic Slot objects at all — calling
+        // nextUnfilledSlot() here would skip straight past them to
+        // whatever generic slot comes next in the script (recipients),
+        // announcing "Who should receive the email?" before the mentorship
+        // even has modules or mentees. submitModules()/submitMentees()
+        // each append their own transition message once *they* complete.
+        if ($this->activeStage() === 'slot') {
+            $next = $this->nextUnfilledSlot();
+
+            if ($next) {
+                $this->messages[] = [
+                    'role' => 'bot',
+                    'text' => $next->getQuestion($this->answers),
+                    'timestamp' => now()->toIso8601String(),
+                ];
+            }
+        }
+
         $this->syncTranscript();
     }
 
     public function editSlot(string $slotId): void
     {
+        // module_ids/selected_users aren't generic Slot objects (see the
+        // comment in answer()) — editing those bubbles goes through
+        // submitModules()/submitMentees() re-rendering the bespoke turn,
+        // not this generic re-ask flow, so there's nothing to do here for
+        // them (their own bubble UI still checks the Continue action).
+        if (! collect($this->slots())->contains('id', $slotId)) {
+            return;
+        }
+
         unset($this->answers[$slotId]);
 
         $next = $this->nextUnfilledSlot();
