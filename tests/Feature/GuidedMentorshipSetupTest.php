@@ -780,6 +780,60 @@ class GuidedMentorshipSetupTest extends TestCase
         $this->assertSame([], $component->instance()->moduleDates);
     }
 
+    public function test_module_dates_survives_a_second_unrelated_request_in_the_same_session(): void
+    {
+        // Simulates "go back and forth": set a date via ->set() (the real
+        // entangle path), then fire a SECOND, unrelated Livewire update
+        // (like toggling module_ids on the next interaction) and confirm
+        // moduleDates isn't wiped by that second request's hydrate cycle.
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+
+        $component = Livewire::withQueryParams(['training' => $training->id])
+            ->test(GuidedMentorshipSetup::class);
+
+        $component->set('moduleDates', [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']]);
+        $this->assertSame([56 => ['start' => '2027-03-01', 'end' => '2027-03-10']], $component->instance()->moduleDates);
+
+        // An unrelated second request against the same live component.
+        $component->set('data.auto_create_sessions', true);
+
+        $this->assertSame(
+            [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']],
+            $component->instance()->moduleDates,
+            'moduleDates was wiped by an unrelated subsequent request.'
+        );
+        $this->assertSame(
+            [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']],
+            $training->fresh()->guided_setup_draft['moduleDates'] ?? null
+        );
+    }
+
+    public function test_a_real_livewire_property_update_triggers_the_hook_and_persists(): void
+    {
+        // Unlike the tests above (which set the PHP property directly and
+        // call updatedModuleDates() by hand), ->set() drives Livewire's
+        // actual request cycle — the same path a real browser's
+        // $wire.entangle('moduleDates').live takes. This is the one that
+        // actually proves the hook fires for a real update.
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+
+        // Route trainingId through the query string so mount() populates
+        // $this->training for real, exactly like a real page load —
+        // manually assigning ->instance()->training bypasses Livewire's
+        // hydrate cycle and doesn't reflect production behavior.
+        $component = Livewire::withQueryParams(['training' => $training->id])
+            ->test(GuidedMentorshipSetup::class);
+
+        $component->set('moduleDates', [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']]);
+
+        $this->assertSame(
+            [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']],
+            $training->fresh()->guided_setup_draft['moduleDates'] ?? null
+        );
+    }
+
     public function test_send_invitations_clears_the_draft(): void
     {
         $this->actingAsCoordinator();
@@ -840,5 +894,50 @@ class GuidedMentorshipSetupTest extends TestCase
             'mentorship_class_id' => $class->id,
             'user_id' => $mentee->id,
         ]);
+    }
+
+    public function test_modules_step_reseeds_dates_from_the_db_after_they_were_cleared_by_assign_modules(): void
+    {
+        // Reproduces "Next then Back": assignModules() (called from the
+        // Modules step's afterValidation on Next) commits dates to the
+        // ClassModule row and clears $this->moduleDates as cleanup. Going
+        // Back to the step re-renders its schema closure — without the
+        // re-seed, the bracket display would read from the now-empty
+        // moduleDates and show nothing despite the DB having the dates.
+        // Livewire::test()->html() doesn't reliably reflect dynamic
+        // Wizard-step-closure output, so this drives a real HTTP request.
+        $this->actingAsCoordinator();
+        // Filament's avatar component needs a non-null name — the shared
+        // helper's factory-generated user doesn't guarantee one, and this
+        // is the only test in the file that actually renders the page.
+        $user = User::factory()->create(['name' => 'Test Coordinator']);
+        Permission::firstOrCreate(['name' => 'create_mentorship::training', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'view_any_mentorship::training', 'guard_name' => 'web']);
+        $user->givePermissionTo(['create_mentorship::training', 'view_any_mentorship::training']);
+        $program = Program::factory()->create(['name' => 'Maternal EmONC']);
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'program_id' => $program->id,
+        ]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $programModule = \App\Models\ProgramModule::factory()->create([
+            'program_id' => $program->id,
+            'is_active' => true,
+        ]);
+        \App\Models\ClassModule::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $programModule->id,
+            'start_date' => '2027-03-01',
+            'end_date' => '2027-03-10',
+        ]);
+
+        $url = \App\Filament\Resources\MentorshipTrainingResource::getUrl('guided-setup', [
+            'training' => $training->id,
+            'class' => $class->id,
+        ]);
+
+        $response = $this->actingAs($user)->get($url);
+
+        $response->assertOk();
+        $response->assertSee('2027-03-01');
     }
 }

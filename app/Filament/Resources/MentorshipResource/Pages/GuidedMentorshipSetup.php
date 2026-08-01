@@ -390,6 +390,23 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 ));
 
                             if ($this->isEmoncProgram($this->training?->program_id)) {
+                                // Re-seed dates for modules already committed to the
+                                // DB. assignModules() clears $this->moduleDates once a
+                                // module's dates land on its ClassModule row (see
+                                // afterValidation() below) — so after Next then Back,
+                                // this property is empty even though the dates are
+                                // safely persisted. Without this, the row's bracket
+                                // display would go blank despite the data being fine.
+                                foreach ($this->class->classModules as $classModule) {
+                                    $id = $classModule->program_module_id;
+                                    if (! isset($this->moduleDates[$id]) && ($classModule->start_date || $classModule->end_date)) {
+                                        $this->moduleDates[$id] = [
+                                            'start' => optional($classModule->start_date)->toDateString(),
+                                            'end' => optional($classModule->end_date)->toDateString(),
+                                        ];
+                                    }
+                                }
+
                                 $picker = EmoncModulePicker::make('module_ids')
                                     ->label('Available Program Modules')
                                     ->training($this->training)
