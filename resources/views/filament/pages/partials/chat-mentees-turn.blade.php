@@ -1,4 +1,4 @@
-<div x-data="{ selected: [], newEmail: '', newFirst: '', newLast: '' }" class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+<div wire:key="turn-enroll-mentees" x-data="{ selected: [], newEmail: '', newFirst: '', newLast: '' }" class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
     <input
         type="text"
         wire:model.live.debounce.400ms="menteeSearch"

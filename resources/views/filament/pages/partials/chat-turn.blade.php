@@ -1,4 +1,4 @@
-<div class="flex justify-start">
+<div class="flex justify-start" wire:key="turn-{{ $slot->id }}">
     <div class="max-w-lg w-full rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
         @if ($slot->renderKind() === \App\Services\Chat\Render::CARDS)
             @php $cardOptions = $slot->getOptions($answers); @endphp

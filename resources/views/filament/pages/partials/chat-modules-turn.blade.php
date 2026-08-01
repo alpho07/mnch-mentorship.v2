@@ -1,5 +1,6 @@
 @php $moduleOptions = $this->getModuleFieldOptions(); @endphp
 <div
+    wire:key="turn-modules"
     x-data="{ selected: [], search: '' }"
     class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3"
 >
