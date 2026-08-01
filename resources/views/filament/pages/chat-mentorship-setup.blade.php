@@ -3,7 +3,9 @@
         @include('filament.pages.partials.chat-transcript', ['messages' => $messages])
 
         @unless ($completed)
-            @if ($this->nextUnfilledSlot())
+            @if ($this->activeStage() === 'modules')
+                @include('filament.pages.partials.chat-modules-turn')
+            @elseif ($this->nextUnfilledSlot())
                 @include('filament.pages.partials.chat-turn', ['slot' => $this->nextUnfilledSlot(), 'answers' => $answers])
             @endif
         @endunless

@@ -131,4 +131,52 @@ class ChatMentorshipSetupTest extends TestCase
         ]);
         $this->assertNotNull($component->instance()->class);
     }
+
+    private function advanceThroughFirstClass(\Livewire\Features\SupportTesting\Testable $component, \App\Models\Program $program, \App\Models\Facility $facility): void
+    {
+        $component->call('answer', 'is_pilot', 0);
+        $component->call('answer', 'county_id', $facility->subcounty->county_id);
+        $component->call('answer', 'facility_id', $facility->id);
+        $component->call('answer', 'program_id', $program->id);
+        $component->call('answer', 'start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'end_date', now()->addMonth()->toDateString());
+        $component->call('answer', 'max_participants', 8);
+        $component->call('answer', 'class_name', 'Cohort A');
+        $component->call('answer', 'class_start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'class_end_date', now()->addMonth()->toDateString());
+        $component->call('answer', 'class_description', 'skip');
+    }
+
+    public function test_modules_stage_assigns_modules_for_a_standard_program(): void
+    {
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = \App\Models\Facility::factory()->create();
+        $module = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+
+        $component = Livewire::test(ChatMentorshipSetup::class);
+        $this->advanceThroughFirstClass($component, $program, $facility);
+
+        $component->call('submitModules', [$module->id]);
+
+        $this->assertDatabaseHas('class_modules', [
+            'mentorship_class_id' => $component->instance()->class->id,
+            'program_module_id' => $module->id,
+        ]);
+    }
+
+    public function test_modules_stage_is_skippable(): void
+    {
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = \App\Models\Facility::factory()->create();
+
+        $component = Livewire::test(ChatMentorshipSetup::class);
+        $this->advanceThroughFirstClass($component, $program, $facility);
+
+        $component->call('submitModules', []);
+
+        $this->assertSame(0, $component->instance()->class->classModules()->count());
+        $this->assertArrayHasKey('module_ids', $component->instance()->answers);
+    }
 }

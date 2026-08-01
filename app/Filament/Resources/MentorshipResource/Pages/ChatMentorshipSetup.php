@@ -46,6 +46,90 @@ class ChatMentorshipSetup extends Page implements HasForms
 
     public bool $completed = false;
 
+    public array $moduleDates = [];
+
+    public function updatedModuleDates(): void
+    {
+        if ($this->training) {
+            app(MentorshipWizardService::class)->saveWizardDraft($this->training, 'moduleDates', $this->moduleDates);
+        }
+    }
+
+    /**
+     * Which turn to render below the transcript: the two composite stages
+     * (module picking, mentee search/enroll) aren't declared as generic
+     * Slot objects — their options and widgets depend on real $training/
+     * $class model instances and, for modules, a per-row date modal — same
+     * reasoning the wizard itself already applies to these two steps (see
+     * docs/GUIDED-MENTORSHIP-SETUP-REFERENCE.md §6, Modules & Enroll
+     * Mentees). Everything else goes through nextUnfilledSlot().
+     */
+    public function activeStage(): string
+    {
+        if (! array_key_exists('module_ids', $this->answers) && $this->class) {
+            return 'modules';
+        }
+
+        return 'slot';
+    }
+
+    public function getModuleFieldOptions(): array
+    {
+        if (app(MentorshipWizardService::class)->isEmoncProgram($this->training->program_id)) {
+            $picker = new \App\Filament\Forms\Components\EmoncModulePicker('module_ids');
+            $picker->training($this->training)->class($this->class)->includeAssigned();
+
+            return $picker->getModules()->pluck('name', 'id')->all();
+        }
+
+        return \App\Models\ProgramModule::where('program_id', $this->training->program_id)
+            ->where('is_active', true)
+            ->whereNull('parent_id')
+            ->orderBy('order_sequence')
+            ->pluck('name', 'id')
+            ->toArray();
+    }
+
+    public function submitModules(array $moduleIds): void
+    {
+        if (app(MentorshipWizardService::class)->isEmoncProgram($this->training->program_id)) {
+            if ($error = app(MentorshipWizardService::class)->validateModuleDates($moduleIds, $this->moduleDates)) {
+                $this->addError('value', $error);
+
+                return;
+            }
+        }
+
+        $echo = empty($moduleIds)
+            ? 'Skip for now'
+            : \App\Models\ProgramModule::whereIn('id', $moduleIds)->pluck('name')->implode(', ');
+
+        $this->messages[] = ['role' => 'user', 'text' => $echo, 'slot' => 'module_ids', 'timestamp' => now()->toIso8601String()];
+        $this->appendTranscript($this->messages[count($this->messages) - 1]);
+
+        try {
+            app(MentorshipWizardService::class)->assignModules([
+                'module_ids' => $moduleIds,
+                'auto_create_sessions' => true,
+                'module_dates' => $this->moduleDates,
+            ], $this->training, $this->class);
+        } catch (\Throwable $e) {
+            $this->messages[] = ['role' => 'bot', 'text' => "⚠️ Something went wrong: {$e->getMessage()}", 'timestamp' => now()->toIso8601String()];
+
+            return;
+        }
+
+        $this->moduleDates = [];
+        $this->answers['module_ids'] = $moduleIds;
+
+        $this->messages[] = [
+            'role' => 'bot',
+            'text' => 'Who will be mentored in this class? Search or tell me a name to add someone new — or say "skip" for now.',
+            'timestamp' => now()->toIso8601String(),
+        ];
+        $this->appendTranscript($this->messages[count($this->messages) - 1]);
+    }
+
     public function mount(): void
     {
         $this->messages[] = [
