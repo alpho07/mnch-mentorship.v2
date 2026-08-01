@@ -12,6 +12,7 @@ use App\Services\MentorshipWizardService;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Resources\Pages\Page;
+use Livewire\Attributes\Url;
 
 class ChatMentorshipSetup extends Page implements HasForms
 {
@@ -113,7 +114,6 @@ class ChatMentorshipSetup extends Page implements HasForms
             : \App\Models\ProgramModule::whereIn('id', $moduleIds)->pluck('name')->implode(', ');
 
         $this->messages[] = ['role' => 'user', 'text' => $echo, 'slot' => 'module_ids', 'timestamp' => now()->toIso8601String()];
-        $this->appendTranscript($this->messages[count($this->messages) - 1]);
 
         try {
             app(MentorshipWizardService::class)->assignModules([
@@ -123,6 +123,7 @@ class ChatMentorshipSetup extends Page implements HasForms
             ], $this->training, $this->class);
         } catch (\Throwable $e) {
             $this->messages[] = ['role' => 'bot', 'text' => "⚠️ Something went wrong: {$e->getMessage()}", 'timestamp' => now()->toIso8601String()];
+            $this->syncTranscript();
 
             return;
         }
@@ -135,7 +136,7 @@ class ChatMentorshipSetup extends Page implements HasForms
             'text' => 'Who will be mentored in this class? Search or tell me a name to add someone new — or say "skip" for now.',
             'timestamp' => now()->toIso8601String(),
         ];
-        $this->appendTranscript($this->messages[count($this->messages) - 1]);
+        $this->syncTranscript();
     }
 
     public string $menteeSearch = '';
@@ -166,7 +167,6 @@ class ChatMentorshipSetup extends Page implements HasForms
             ])));
 
         $this->messages[] = ['role' => 'user', 'text' => $echo, 'slot' => 'selected_users', 'timestamp' => now()->toIso8601String()];
-        $this->appendTranscript($this->messages[count($this->messages) - 1]);
 
         try {
             app(MentorshipWizardService::class)->enrollMentees([
@@ -175,6 +175,7 @@ class ChatMentorshipSetup extends Page implements HasForms
             ], $this->class);
         } catch (\Throwable $e) {
             $this->messages[] = ['role' => 'bot', 'text' => "⚠️ Something went wrong: {$e->getMessage()}", 'timestamp' => now()->toIso8601String()];
+            $this->syncTranscript();
 
             return;
         }
@@ -186,16 +187,78 @@ class ChatMentorshipSetup extends Page implements HasForms
             'text' => 'Time to invite your mentees! Who should receive the email — everyone with an email address, or only those not yet invited?',
             'timestamp' => now()->toIso8601String(),
         ];
-        $this->appendTranscript($this->messages[count($this->messages) - 1]);
+        $this->syncTranscript();
     }
+
+    #[Url(as: 'training')]
+    public ?int $trainingId = null;
+
+    #[Url(as: 'class')]
+    public ?int $classId = null;
 
     public function mount(): void
     {
+        if ($this->trainingId) {
+            $this->training = Training::find($this->trainingId);
+        }
+
+        if ($this->classId) {
+            $this->class = MentorshipClass::find($this->classId);
+        }
+
+        if ($this->training && ! empty($this->training->chat_setup_transcript)) {
+            $this->messages = $this->training->chat_setup_transcript;
+            $this->answers = $this->rebuildAnswersFromTraining();
+
+            return;
+        }
+
         $this->messages[] = [
             'role' => 'bot',
             'text' => 'Welcome, '.explode(' ', auth()->user()->name)[0].'! '.$this->nextUnfilledSlot()->getQuestion($this->answers),
             'timestamp' => now()->toIso8601String(),
         ];
+    }
+
+    /**
+     * On resume, real committed columns are authoritative for the
+     * training_details/first_class slots (same precedence rule the
+     * wizard's own mount() uses — see
+     * docs/GUIDED-MENTORSHIP-SETUP-REFERENCE.md §4). module_ids/
+     * selected_users come from guided_setup_draft, same as the wizard,
+     * defaulting to what's really assigned if the draft never set that key.
+     */
+    protected function rebuildAnswersFromTraining(): array
+    {
+        $answers = [
+            'is_pilot' => (int) $this->training->is_pilot,
+            'county_id' => $this->training->county_id,
+            'facility_id' => $this->training->facility_id,
+            'program_id' => $this->training->program_id,
+            'start_date' => optional($this->training->start_date)->toDateString(),
+            'end_date' => optional($this->training->end_date)->toDateString(),
+            'max_participants' => $this->training->max_participants,
+        ];
+
+        if ($this->class) {
+            $answers['class_name'] = $this->class->name;
+            $answers['class_start_date'] = optional($this->class->start_date)->toDateString();
+            $answers['class_end_date'] = optional($this->class->end_date)->toDateString();
+            $answers['class_description'] = $this->class->description ?? 'skip';
+
+            $draft = $this->training->guided_setup_draft ?? [];
+            $this->moduleDates = $draft['moduleDates'] ?? [];
+
+            if (array_key_exists('module_ids', $draft) || $this->class->classModules()->exists()) {
+                $answers['module_ids'] = $draft['module_ids'] ?? $this->class->classModules()->pluck('program_module_id')->toArray();
+            }
+
+            if (array_key_exists('selected_users', $draft) || $this->class->participants()->exists()) {
+                $answers['selected_users'] = $draft['selected_users'] ?? $this->class->participants()->pluck('user_id')->toArray();
+            }
+        }
+
+        return array_filter($answers, fn ($v) => $v !== null);
     }
 
     public function slots(): array
@@ -249,9 +312,6 @@ class ChatMentorshipSetup extends Page implements HasForms
             'timestamp' => now()->toIso8601String(),
         ];
 
-        $this->appendTranscript($this->messages[count($this->messages) - 2] ?? null);
-        $this->appendTranscript($this->messages[count($this->messages) - 1]);
-
         $next = $this->nextUnfilledSlot();
 
         if ($next) {
@@ -260,7 +320,6 @@ class ChatMentorshipSetup extends Page implements HasForms
                 'text' => $next->getQuestion($this->answers),
                 'timestamp' => now()->toIso8601String(),
             ];
-            $this->appendTranscript($this->messages[count($this->messages) - 1]);
         }
 
         $this->maybeCompleteStage($slotId, 'training_details', function () {
@@ -301,8 +360,9 @@ class ChatMentorshipSetup extends Page implements HasForms
                     ($this->classStarted ? ' The class is now active.' : " It's still saved as a draft."),
                 'timestamp' => now()->toIso8601String(),
             ];
-            $this->appendTranscript(end($this->messages));
         });
+
+        $this->syncTranscript();
     }
 
     /**
@@ -340,12 +400,21 @@ class ChatMentorshipSetup extends Page implements HasForms
         }
     }
 
-    protected function appendTranscript(?array $message): void
+    /**
+     * Overwrites the persisted transcript with the full current
+     * $this->messages array — not an incremental append, since $this
+     * ->training frequently doesn't exist yet for the first several turns
+     * (it's only created once the training_details stage completes,
+     * partway through a call to answer()), so there's no reliable "append
+     * from here" point. Safe/cheap to call repeatedly; a no-op until a
+     * Training exists.
+     */
+    protected function syncTranscript(): void
     {
-        if (! $message || ! $this->training) {
+        if (! $this->training) {
             return;
         }
 
-        $this->training->appendChatTranscript($message);
+        $this->training->update(['chat_setup_transcript' => $this->messages]);
     }
 }

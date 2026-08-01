@@ -217,4 +217,28 @@ class ChatMentorshipSetupTest extends TestCase
         \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
         $this->assertNotNull($component->instance()->training->fresh()->guided_setup_completed_at);
     }
+
+    public function test_resuming_replays_the_full_transcript_and_lands_on_the_next_question(): void
+    {
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = \App\Models\Facility::factory()->create();
+
+        $first = Livewire::test(ChatMentorshipSetup::class);
+        $first->call('answer', 'is_pilot', 0);
+        $first->call('answer', 'county_id', $facility->subcounty->county_id);
+        $first->call('answer', 'facility_id', $facility->id);
+        $first->call('answer', 'program_id', $program->id);
+        $first->call('answer', 'start_date', now()->addDay()->toDateString());
+        $first->call('answer', 'end_date', now()->addMonth()->toDateString());
+        $first->call('answer', 'max_participants', 8);
+
+        $trainingId = $first->instance()->training->id;
+
+        $resumed = Livewire::withQueryParams(['training' => $trainingId])->test(ChatMentorshipSetup::class);
+
+        $this->assertGreaterThanOrEqual(count($first->instance()->messages), count($resumed->instance()->messages));
+        $this->assertSame('Live Mentorship', collect($resumed->instance()->messages)->firstWhere('slot', 'is_pilot')['text']);
+        $this->assertSame($program->id, $resumed->instance()->answers['program_id']);
+    }
 }
