@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     @unless ($viewingModules)
-        <div class="mb-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+        <div class="mb-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
             <div class="flex items-start gap-3">
                 <span class="text-2xl">👋</span>
                 <div class="text-sm text-gray-700 dark:text-gray-300">
