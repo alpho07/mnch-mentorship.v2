@@ -6,10 +6,7 @@ use App\Filament\Forms\Components\CardCheckboxList;
 use App\Filament\Forms\Components\EmoncModulePicker;
 use App\Filament\Forms\Components\ProgramPicker;
 use App\Filament\Resources\MentorshipTrainingResource;
-use App\Mail\MenteeEnrollmentInvitationMail;
 use App\Models\Cadre;
-use App\Models\ClassModule;
-use App\Models\ClassParticipant;
 use App\Models\Department;
 use App\Models\Facility;
 use App\Models\MentorshipClass;
@@ -17,8 +14,7 @@ use App\Models\Program;
 use App\Models\ProgramModule;
 use App\Models\Training;
 use App\Models\User;
-use App\Services\EnrollmentService;
-use App\Services\ModuleUsageService;
+use App\Services\MentorshipWizardService;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -28,9 +24,6 @@ use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Filament\Support\Exceptions\Halt;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Url;
 
 class GuidedMentorshipSetup extends Page implements HasForms
@@ -633,29 +626,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
      */
     public function createTraining(array $data): Training
     {
-        $data['type'] = 'facility_mentorship';
-        $data['mentor_id'] = auth()->id();
-
-        $program = isset($data['program_id']) ? Program::find($data['program_id']) : null;
-        $facility = isset($data['facility_id']) ? Facility::find($data['facility_id']) : null;
-        $date = ! empty($data['start_date']) ? \Carbon\Carbon::parse($data['start_date'])->format('M Y') : now()->format('M Y');
-
-        $data['title'] = trim(implode(' - ', array_filter([
-            $program?->name ?? 'MNCH Mentorship',
-            $facility?->name,
-            $date,
-        ])));
-
-        if ($this->training) {
-            // Resuming an earlier step (e.g. after a page refresh, or clicking
-            // Back then Next again) — update the existing record instead of
-            // creating a duplicate.
-            $this->training->update($data);
-        } else {
-            $data['identifier'] = 'MT-'.strtoupper(Str::random(6));
-            $this->training = Training::create($data);
-        }
-
+        $this->training = app(MentorshipWizardService::class)->createTraining($data, $this->training);
         $this->trainingId = $this->training->id;
 
         return $this->training;
@@ -667,24 +638,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
      */
     public function createFirstClass(array $data): MentorshipClass
     {
-        $payload = [
-            'training_id' => $this->training->id,
-            'name' => $data['name'],
-            'description' => $data['description'] ?? null,
-            'start_date' => $data['start_date'] ?? null,
-            'end_date' => $data['end_date'] ?? null,
-        ];
-
-        if ($this->class) {
-            // Resuming an earlier step — update instead of duplicating.
-            $this->class->update($payload);
-        } else {
-            $this->class = MentorshipClass::create($payload + [
-                'status' => 'draft',
-                'created_by' => auth()->id(),
-            ]);
-        }
-
+        $this->class = app(MentorshipWizardService::class)->createFirstClass($data, $this->training, $this->class);
         $this->classId = $this->class->id;
 
         return $this->class;
@@ -699,101 +653,16 @@ class GuidedMentorshipSetup extends Page implements HasForms
      */
     public function assignModules(array $data): int
     {
-        $desiredIds = collect($data['module_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
-        $currentIds = $this->class->classModules()->pluck('program_module_id')->toArray();
-
-        $toAdd = array_values(array_diff($desiredIds, $currentIds));
-        $toRemove = array_values(array_diff($currentIds, $desiredIds));
-
-        $blockedRemovals = [];
-        foreach ($toRemove as $moduleId) {
-            $classModule = $this->class->classModules()->where('program_module_id', $moduleId)->first();
-
-            if ($classModule && ! $this->removeWizardModule($classModule)) {
-                $blockedRemovals[] = $classModule->programModule?->name ?? "Module {$moduleId}";
-            }
-        }
-
-        $created = 0;
-
-        if (! empty($toAdd)) {
-            $service = app(ModuleUsageService::class);
-            $createdModules = [];
-
-            $created = $service->assignModulesToClass(
-                $this->training,
-                $this->class,
-                $toAdd,
-                null,
-                function (ClassModule $classModule) use (&$createdModules) {
-                    $createdModules[$classModule->program_module_id] = $classModule;
-                }
-            );
-
-            // EmONC-only: per-row start/end dates collected via the modal
-            // right after checking that module/track (module_dates is keyed
-            // by program_module_id, string keys since it round-trips
-            // through Alpine/JSON).
-            foreach ($data['module_dates'] ?? [] as $programModuleId => $dates) {
-                $classModule = $createdModules[(int) $programModuleId] ?? null;
-
-                if ($classModule && (! empty($dates['start']) || ! empty($dates['end']))) {
-                    $classModule->update([
-                        'start_date' => $dates['start'] ?? null,
-                        'end_date' => $dates['end'] ?? null,
-                    ]);
-                }
-            }
-
-            if (($data['auto_create_sessions'] ?? true) && $created > 0) {
-                $this->class->load('classModules');
-                foreach ($this->class->classModules as $classModule) {
-                    if (method_exists($classModule, 'autoCreateSessions')) {
-                        $classModule->autoCreateSessions();
-                    }
-                }
-            }
-        }
-
-        if (! empty($blockedRemovals)) {
-            Notification::make()
-                ->warning()
-                ->title('Some modules could not be removed')
-                ->body(implode(', ', $blockedRemovals).' already has mentee progress recorded.')
-                ->send();
-        }
-
-        // These picks are now real ClassModule rows — the draft entry would
-        // otherwise linger stale and, on a later resume, mount() would
-        // treat it as authoritative and could re-apply a since-reverted
-        // removal.
-        $this->clearWizardDraft('module_ids');
+        $created = app(MentorshipWizardService::class)->assignModules($data, $this->training, $this->class);
 
         // Applied (or the module was removed) — either way this side-channel
         // shouldn't carry over and get misapplied to a different module
         // picked in a later pass. Direct property assignment doesn't fire
-        // updatedModuleDates(), so clear the persisted draft explicitly too.
+        // updatedModuleDates(), so clear it explicitly (the service already
+        // cleared the persisted draft copy).
         $this->moduleDates = [];
-        $this->clearWizardDraft('moduleDates');
 
         return $created;
-    }
-
-    /**
-     * Removes a module the user unchecked during the guided wizard. Skips
-     * the stricter production canBeRemoved() sessions-count guard — the
-     * wizard's own auto-populated sessions have no real attendance yet —
-     * but still refuses if a mentee has genuine progress recorded.
-     */
-    private function removeWizardModule(ClassModule $classModule): bool
-    {
-        if ($classModule->status !== 'not_started' || $classModule->menteeProgress()->count() > 0) {
-            return false;
-        }
-
-        $classModule->delete();
-
-        return true;
     }
 
     /**
@@ -802,74 +671,8 @@ class GuidedMentorshipSetup extends Page implements HasForms
      */
     public function enrollMentees(array $data): int
     {
-        $service = app(EnrollmentService::class);
-        $count = 0;
-
-        // selected_users is pre-filled with who's already enrolled (so a
-        // user can uncheck someone to remove them) — sync to that desired
-        // set rather than only ever adding.
-        $desiredIds = collect($data['selected_users'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
-        $currentIds = $this->class->participants()->pluck('user_id')->toArray();
-
-        $toRemove = array_values(array_diff($currentIds, $desiredIds));
-        foreach ($toRemove as $userId) {
-            $participant = $this->class->participants()->where('user_id', $userId)->first();
-            if ($participant) {
-                $service->removeFromClass($participant);
-            }
-        }
-
-        foreach (array_values(array_diff($desiredIds, $currentIds)) as $userId) {
-            $user = User::find($userId);
-            if ($user && ! $service->isEnrolled($user->id, $this->class->id)) {
-                $service->enrollInClass($user, $this->class, 'manual');
-                $count++;
-            }
-        }
-
-        $newMentee = $data['new_mentee'] ?? null;
-        if (! empty($newMentee['email'])) {
-            $existing = User::where('email', $newMentee['email'])->first();
-
-            if ($existing) {
-                if (! $service->isEnrolled($existing->id, $this->class->id)) {
-                    $service->enrollInClass($existing, $this->class, 'manual');
-                    $count++;
-                }
-            } else {
-                $displayName = trim(implode(' ', array_filter([
-                    $newMentee['first_name'] ?? null,
-                    $newMentee['last_name'] ?? null,
-                ])));
-
-                $user = User::create([
-                    'first_name' => $newMentee['first_name'] ?? null,
-                    'last_name' => $newMentee['last_name'] ?? null,
-                    'name' => $displayName,
-                    'email' => $newMentee['email'],
-                    'phone' => $newMentee['phone'] ?? null,
-                    'cadre_id' => $newMentee['cadre_id'] ?? null,
-                    'department_id' => $newMentee['department_id'] ?? null,
-                    'facility_id' => $newMentee['facility_id'] ?? null,
-                    'password' => Hash::make('123456'),
-                    'status' => 'active',
-                    'role' => 'mentee',
-                ]);
-
-                if (method_exists($user, 'assignRole')) {
-                    try {
-                        $user->assignRole('mentee');
-                    } catch (\Exception) {
-                    }
-                }
-
-                $service->enrollInClass($user, $this->class, 'manual');
-                $count++;
-            }
-        }
-
+        $count = app(MentorshipWizardService::class)->enrollMentees($data, $this->class);
         $this->enrolledCount = $count;
-        $this->clearWizardDraft('selected_users');
 
         return $count;
     }
@@ -901,60 +704,16 @@ class GuidedMentorshipSetup extends Page implements HasForms
      */
     public function sendInvitations(array $data): array
     {
-        if (! $this->class->enrollment_token) {
-            $this->class->update([
-                'enrollment_token' => Str::random(32),
-                'enrollment_link_active' => true,
-            ]);
-        } else {
-            $this->class->update(['enrollment_link_active' => true]);
-        }
-        $this->class->refresh();
+        $result = app(MentorshipWizardService::class)->sendInvitations($data, $this->training, $this->class);
 
-        $query = ClassParticipant::where('mentorship_class_id', $this->class->id)
-            ->whereHas('user', fn ($q) => $q->whereNotNull('email')->where('email', '!=', ''))
-            ->with('user');
-
-        if (($data['recipients'] ?? 'all') === 'not_sent') {
-            $query->whereNull('invitation_sent_at');
-        }
-
-        $participants = $query->get();
-        $sent = 0;
-        $resent = 0;
-
-        foreach ($participants as $record) {
-            $isResend = (bool) $record->invitation_sent_at;
-
-            Mail::to($record->user->email)->send(new MenteeEnrollmentInvitationMail(
-                $record->user,
-                $this->class,
-                $record,
-                $isResend
-            ));
-
-            $record->update(['invitation_sent_at' => now()]);
-            $isResend ? $resent++ : $sent++;
-        }
-
-        $this->invitedCount = $sent + $resent;
+        $this->invitedCount = $result['sent'] + $result['resent'];
         $this->completed = true;
-        $this->training->update([
-            'guided_setup_completed_at' => now(),
-            'guided_setup_draft' => null,
-        ]);
 
-        // Mirrors ClassLifecycleController::start() — requires modules and
-        // enrolled mentees, so a class with the Modules step skipped stays
-        // in draft (nothing to start yet) rather than being force-started.
-        if ($this->class->canStart()) {
-            $this->class->start();
+        if ($this->class->fresh()->status === 'active') {
             $this->classStarted = true;
         }
 
-        $this->discardSupersededDrafts();
-
-        return ['sent' => $sent, 'resent' => $resent];
+        return $result;
     }
 
     /**
@@ -976,62 +735,13 @@ class GuidedMentorshipSetup extends Page implements HasForms
     }
 
     /**
-     * Searches active users for the Enroll Mentees step. Mirrors
-     * ManageClassMentees's "Add from List" query exactly (search across
-     * name/phone/email/facility, paginated 25 at a time).
-     */
-    private function searchMenteeUsers(?string $search, int $page, int $perPage = 25): \Illuminate\Support\Collection
-    {
-        $query = User::query()
-            ->where('status', 'active')
-            ->with(['facility'])
-            ->orderBy('first_name');
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhereHas('facility', function ($facilityQuery) use ($search) {
-                        $facilityQuery->where('name', 'like', "%{$search}%")
-                            ->orWhere('mfl_code', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        return $query->skip(($page - 1) * $perPage)->take($perPage)->get();
-    }
-
-    /**
      * Builds the Enroll Mentees id => label options, with already-selected
      * mentees pinned to the top (fetched separately so they stay visible
      * even if a later search/page filters them out of the main results).
      */
     private function menteeOptions(?string $search, int $page, array $selectedIds): array
     {
-        $selected = empty($selectedIds)
-            ? collect()
-            : User::whereIn('id', $selectedIds)->with('facility')->orderBy('first_name')->get();
-
-        $results = $this->searchMenteeUsers($search, $page)
-            ->reject(fn ($u) => in_array($u->id, $selectedIds));
-
-        return $selected->concat($results)
-            ->mapWithKeys(fn ($u) => [$u->id => $this->formatMenteeLabel($u)])
-            ->toArray();
-    }
-
-    private function formatMenteeLabel(User $u): string
-    {
-        return implode(' · ', array_filter([
-            $u->name,
-            $u->phone,
-            $u->email,
-            $u->facility ? "{$u->facility->name}".
-                ($u->facility->mfl_code ? " (MFL {$u->facility->mfl_code})" : '') : null,
-        ]));
+        return app(MentorshipWizardService::class)->menteeOptions($search, $page, $selectedIds);
     }
 
     /**
@@ -1043,21 +753,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
      */
     public function validateModuleDates(array $moduleIds): ?string
     {
-        foreach (collect($moduleIds)->unique() as $id) {
-            $dates = $this->moduleDates[$id] ?? null;
-            $start = $dates['start'] ?? null;
-            $end = $dates['end'] ?? null;
-
-            if (empty($start) || empty($end)) {
-                return 'Set a start and end date for every selected module/track before continuing — use "Set dates" on the row.';
-            }
-
-            if (\Illuminate\Support\Carbon::parse($end)->lt(\Illuminate\Support\Carbon::parse($start))) {
-                return 'End date must be on or after the start date for every selected module/track.';
-            }
-        }
-
-        return null;
+        return app(MentorshipWizardService::class)->validateModuleDates($moduleIds, $this->moduleDates);
     }
 
     /**
@@ -1072,14 +768,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
             return;
         }
 
-        // module_ids/selected_users are flat id lists (re-index defensively
-        // in case of gaps); moduleDates is an id => {start,end} map and
-        // must keep its keys, so only re-index actual lists.
-        $state = $state ?? [];
-        $draft = $this->training->guided_setup_draft ?? [];
-        $draft[$key] = array_is_list($state) ? array_values($state) : $state;
-
-        $this->training->update(['guided_setup_draft' => $draft]);
+        app(MentorshipWizardService::class)->saveWizardDraft($this->training, $key, $state);
     }
 
     /**
@@ -1092,46 +781,11 @@ class GuidedMentorshipSetup extends Page implements HasForms
             return;
         }
 
-        $draft = $this->training->guided_setup_draft ?? [];
-
-        if (! array_key_exists($key, $draft)) {
-            return;
-        }
-
-        unset($draft[$key]);
-
-        $this->training->update(['guided_setup_draft' => $draft ?: null]);
-    }
-
-    /**
-     * Successfully finishing a new guided setup supersedes any earlier
-     * drafts the same mentor abandoned mid-wizard (e.g. started a training,
-     * got partway through modules, then walked away and started a fresh
-     * one instead of resuming it). Without this, the pending-setup banner
-     * keeps nagging about that old draft even though the mentor just
-     * completed a different mentorship — force-deleted, same as the
-     * banner's own manual "Discard" action, letting cascadeOnDelete clean
-     * up its class/modules/participants.
-     */
-    private function discardSupersededDrafts(): void
-    {
-        Training::pendingGuidedSetup()
-            ->where('mentor_id', $this->training->mentor_id)
-            ->where('id', '!=', $this->training->id)
-            ->get()
-            ->each(fn (Training $stale) => $stale->forceDelete());
+        app(MentorshipWizardService::class)->clearWizardDraft($this->training, $key);
     }
 
     private function isEmoncProgram(?int $programId): bool
     {
-        if (! $programId) {
-            return false;
-        }
-
-        $program = Program::find($programId);
-
-        return $program
-            && str_contains(strtolower($program->name), 'maternal')
-            && str_contains(strtolower($program->name), 'emonc');
+        return app(MentorshipWizardService::class)->isEmoncProgram($programId);
     }
 }

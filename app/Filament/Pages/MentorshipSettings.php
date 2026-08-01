@@ -61,6 +61,7 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
         $this->form->fill([
             'new_mentorship_button_enabled' => Setting::getBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED),
             'guided_setup_button_enabled' => Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED),
+            'chat_setup_button_enabled' => Setting::getBool(Setting::CHAT_SETUP_BUTTON_ENABLED),
         ]);
     }
 
@@ -98,8 +99,21 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
                                     ->success()
                                     ->send();
                             }),
+                        Forms\Components\Toggle::make('chat_setup_button_enabled')
+                            ->label('"Chat Setup" button')
+                            ->helperText('The conversational assistant.')
+                            ->onColor('success')
+                            ->offColor('danger')
+                            ->live()
+                            ->afterStateUpdated(function (bool $state): void {
+                                Setting::setBool(Setting::CHAT_SETUP_BUTTON_ENABLED, $state);
+                                Notification::make()
+                                    ->title($state ? 'Chat Setup enabled' : 'Chat Setup disabled')
+                                    ->success()
+                                    ->send();
+                            }),
                     ])
-                    ->columns(2),
+                    ->columns(3),
             ])
             ->statePath('data');
     }
