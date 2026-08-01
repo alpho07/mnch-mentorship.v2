@@ -47,20 +47,37 @@
         @endphp
 
         <div
-            class="pgpicker-card"
+            class="pgpicker-card {{ $prog->canSelect ? '' : 'pgpicker-card--disabled' }}"
             :class="{ 'pgpicker-card--on': selected == {{ $prog->id }} }"
-            @click="pick({{ $prog->id }})"
             style="--grad-from:{{ $theme['from'] }};--grad-to:{{ $theme['to'] }};--card-shadow:{{ $theme['shadow'] }}"
             role="radio"
             :aria-checked="selected == {{ $prog->id }}"
-            tabindex="0"
-            @keydown.space.prevent="pick({{ $prog->id }})"
-            @keydown.enter.prevent="pick({{ $prog->id }})"
+            @if($prog->canSelect)
+                @click="pick({{ $prog->id }})"
+                tabindex="0"
+                @keydown.space.prevent="pick({{ $prog->id }})"
+                @keydown.enter.prevent="pick({{ $prog->id }})"
+            @else
+                aria-disabled="true"
+                tabindex="-1"
+                title="This program is not active"
+            @endif
         >
             {{-- Dot-pattern watermark (manual cover motif) --}}
             <div class="pgcover-dots" aria-hidden="true"></div>
             {{-- Radial glow circle --}}
             <div class="pgcover-glow" aria-hidden="true"></div>
+
+            @unless($prog->canSelect)
+                <div class="pgpicker-inactive-ribbon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="10" rx="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    Not Active
+                </div>
+            @endunless
 
             {{-- Top row: MoH badge + checkmark --}}
             <div class="pgcover-toprow">
@@ -282,6 +299,43 @@
     bottom: 30%;
     transform: translateX(-50%);
     pointer-events: none;
+}
+
+/* ── Disabled (inactive program) state ─────────────────────────── */
+.pgpicker-card--disabled {
+    cursor: not-allowed;
+    filter: grayscale(.6) brightness(.9);
+    opacity: .75;
+}
+.pgpicker-card--disabled:hover {
+    transform: none;
+    box-shadow: 0 3px 12px rgba(0,0,0,.18);
+    border-color: transparent;
+}
+
+.pgpicker-inactive-ribbon {
+    position: absolute;
+    top: .85rem;
+    right: -2.1rem;
+    transform: rotate(40deg);
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    background: #dc2626;
+    color: #fff;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .28rem 2.5rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    z-index: 3;
+    pointer-events: none;
+}
+.pgpicker-inactive-ribbon svg {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
 }
 
 /* ── Top row ─────────────────────────────────────────────────────── */

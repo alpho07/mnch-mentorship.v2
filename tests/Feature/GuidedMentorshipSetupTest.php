@@ -974,4 +974,34 @@ class GuidedMentorshipSetupTest extends TestCase
         $response->assertOk();
         $response->assertSee('2027-03-01');
     }
+
+    public function test_program_and_schedule_step_shows_inactive_programs_disabled_instead_of_hidden(): void
+    {
+        // Inactive programs used to be filtered out of the picker entirely
+        // (Program::availableTo()) — now every program renders, with
+        // inactive-and-not-overridden ones shown disabled and labelled, so
+        // users understand why a program they expect can't be picked.
+        $this->actingAsCoordinator();
+        $user = User::factory()->create(['name' => 'Test Coordinator']);
+        Permission::firstOrCreate(['name' => 'create_mentorship::training', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'view_any_mentorship::training', 'guard_name' => 'web']);
+        $user->givePermissionTo(['create_mentorship::training', 'view_any_mentorship::training']);
+
+        Program::factory()->create(['name' => 'Active Program X', 'is_active' => true]);
+        Program::factory()->create([
+            'name' => 'Inactive Program Y',
+            'is_active' => false,
+            'visible_to_roles' => [],
+        ]);
+
+        $url = \App\Filament\Resources\MentorshipTrainingResource::getUrl('guided-setup');
+
+        $response = $this->actingAs($user)->get($url);
+
+        $response->assertOk();
+        $response->assertSee('Active Program X');
+        $response->assertSee('Inactive Program Y');
+        $response->assertSee('Not Active');
+        $response->assertSee('pgpicker-card--disabled');
+    }
 }

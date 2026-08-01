@@ -260,6 +260,13 @@ class MentorshipTrainingResource extends Resource
                         ->validationMessages([
                             'required' => 'Please pick either the Infant and Child or Newborn programme card.',
                         ])
+                        ->rule(fn () => function (string $attribute, $value, \Closure $fail) {
+                            $program = $value ? Program::find($value) : null;
+
+                            if ($program && ! $program->isSelectableBy(auth()->user())) {
+                                $fail('That program is not active — pick a different one.');
+                            }
+                        })
                         ->columnSpanFull(),
                     Grid::make(3)->schema([
                         DatePicker::make('start_date')

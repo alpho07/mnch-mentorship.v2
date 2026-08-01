@@ -266,6 +266,13 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                 ->validationMessages([
                                     'required' => 'Please pick a programme card.',
                                 ])
+                                ->rule(fn () => function (string $attribute, $value, \Closure $fail) {
+                                    $program = $value ? Program::find($value) : null;
+
+                                    if ($program && ! $program->isSelectableBy(auth()->user())) {
+                                        $fail('That program is not active — pick a different one.');
+                                    }
+                                })
                                 ->columnSpanFull(),
                             Forms\Components\Grid::make(3)->schema([
                                 Forms\Components\DatePicker::make('start_date')

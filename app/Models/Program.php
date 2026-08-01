@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\ProgramModule;
 
 class Program extends Model
 {
@@ -20,7 +19,7 @@ class Program extends Model
     ];
 
     protected $casts = [
-        'is_active'        => 'boolean',
+        'is_active' => 'boolean',
         'visible_to_roles' => 'array',
     ];
 
@@ -99,6 +98,34 @@ class Program extends Model
                 $q->orWhereJsonContains('visible_to_roles', $role);
             }
         });
+    }
+
+    /**
+     * Per-record version of scopeAvailableTo() — same eligibility rules,
+     * used where inactive programs still need to be listed (e.g. shown
+     * but disabled) rather than filtered out of the query entirely.
+     */
+    public function isSelectableBy(?User $user = null): bool
+    {
+        if ($this->is_active) {
+            return true;
+        }
+
+        $user = $user ?? auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        $roles = $user->getRoleNames()->toArray();
+
+        return collect($this->visible_to_roles ?? [])
+            ->intersect($roles)
+            ->isNotEmpty();
     }
 
     // Computed Attributes

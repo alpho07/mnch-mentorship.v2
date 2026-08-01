@@ -13,7 +13,12 @@ class ProgramPicker extends Field
 
     public function getPrograms(): Collection
     {
-        $programs = Program::availableTo(auth()->user())->orderBy('name')->get();
+        $user = auth()->user();
+
+        // Show every program, active or not — inactive ones are rendered
+        // disabled with a "not active" indicator rather than hidden, so
+        // users understand why a program they expect is missing.
+        $programs = Program::orderBy('name')->get();
 
         // Move Maternal Health (EmONC) to the 3rd position so the card order is:
         // Infant/Child, Newborn, EmONC, then any remaining programmes.
@@ -38,8 +43,9 @@ class ProgramPicker extends Field
             ->get(['id', 'name', 'program_id', 'order_sequence'])
             ->groupBy('program_id');
 
-        return $programs->each(
-            fn ($p) => $p->setRelation('programModules', $modulesByProgram->get($p->id, collect()))
-        );
+        return $programs->each(function (Program $p) use ($modulesByProgram, $user) {
+            $p->setRelation('programModules', $modulesByProgram->get($p->id, collect()));
+            $p->canSelect = $p->isSelectableBy($user);
+        });
     }
 }

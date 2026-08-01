@@ -2,23 +2,23 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\MyProfile;
 use App\Livewire\Auth\CustomLogin;
 use App\Livewire\Auth\CustomRegister;
 use App\Livewire\Auth\CustomRequestPasswordReset;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationItem;
-use Filament\Enums\ThemeMode;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
 use Filament\View\PanelsRenderHook;
-use App\Filament\Pages\MyProfile;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -70,6 +70,7 @@ class AdminPanelProvider extends PanelProvider
                 'Inventory',
                 'Report Management',
                 'Reports & Analytics',
+                'System Administration',
             ])
             ->navigationItems([
                 NavigationItem::make('Newborn Care')
@@ -140,6 +141,7 @@ class AdminPanelProvider extends PanelProvider
                 if ($user->hasRole('head_drmh')) {
                     return '/admin/head-drmh-dashboard';
                 }
+
                 return '/admin';
             })
             ->authMiddleware([
