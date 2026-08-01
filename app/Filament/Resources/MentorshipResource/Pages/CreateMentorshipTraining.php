@@ -6,12 +6,24 @@ use App\Filament\Resources\MentorshipTrainingResource;
 use App\Models\Facility;
 use App\Models\FacilityAssessment;
 use App\Models\Program;
+use App\Models\Setting;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateMentorshipTraining extends CreateRecord
 {
     protected static string $resource = MentorshipTrainingResource::class;
+
+    /**
+     * Backs the "New Mentorship" button's own ->disabled() state on the list
+     * page (cosmetic) — this is the actual enforcement, so the /create route
+     * can't be reached directly while the method is turned off in
+     * Mentorship Settings.
+     */
+    public static function canAccess(array $parameters = []): bool
+    {
+        return parent::canAccess($parameters) && Setting::getBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED);
+    }
 
     protected function getRedirectUrl(): string
     {

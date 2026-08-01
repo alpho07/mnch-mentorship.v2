@@ -43,6 +43,29 @@ class GuidedMentorshipSetup extends Page implements HasForms
 
     protected static bool $shouldRegisterNavigation = false;
 
+    /**
+     * Backs the "New Mentorship Guided Setup" button's own ->disabled()
+     * state on the list page (cosmetic) — this is the actual enforcement,
+     * blocking a *fresh* /guided-setup visit while the method is turned off
+     * in Mentorship Settings. A `?training=` query string means someone is
+     * resuming a wizard they already started (e.g. via the pending-setup
+     * banner's Continue link) — that's always allowed regardless of the
+     * button's current state, so turning it off can't strand in-progress
+     * work with modules/mentees already committed to the DB.
+     */
+    public static function canAccess(array $parameters = []): bool
+    {
+        if (! parent::canAccess($parameters)) {
+            return false;
+        }
+
+        if (request()->filled('training')) {
+            return true;
+        }
+
+        return \App\Models\Setting::getBool(\App\Models\Setting::GUIDED_SETUP_BUTTON_ENABLED);
+    }
+
     public ?array $data = [];
 
     #[Url(as: 'training')]

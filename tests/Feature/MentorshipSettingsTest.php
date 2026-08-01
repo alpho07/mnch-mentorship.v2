@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\MentorshipSettings;
+use App\Filament\Resources\MentorshipResource\Pages\CreateMentorshipTraining;
+use App\Filament\Resources\MentorshipResource\Pages\GuidedMentorshipSetup;
 use App\Models\Program;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -70,5 +73,80 @@ class MentorshipSettingsTest extends TestCase
             ->call('updateTableColumnState', 'is_active', $program->getKey(), false);
 
         $this->assertFalse($program->fresh()->isSelectableBy($admin));
+    }
+
+    public function test_setting_defaults_to_true_when_never_set(): void
+    {
+        $this->assertTrue(Setting::getBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED));
+        $this->assertTrue(Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED));
+    }
+
+    public function test_setting_bool_round_trips_and_updates_the_cached_value(): void
+    {
+        Setting::setBool(Setting::GUIDED_SETUP_BUTTON_ENABLED, false);
+        $this->assertFalse(Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED));
+
+        Setting::setBool(Setting::GUIDED_SETUP_BUTTON_ENABLED, true);
+        $this->assertTrue(Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED));
+    }
+
+    public function test_creation_method_toggles_on_the_settings_page_persist_to_the_setting_model(): void
+    {
+        $this->actingAsAdmin();
+
+        Livewire::test(MentorshipSettings::class)
+            ->set('data.new_mentorship_button_enabled', false)
+            ->set('data.guided_setup_button_enabled', false);
+
+        $this->assertFalse(Setting::getBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED));
+        $this->assertFalse(Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED));
+    }
+
+    public function test_mentorships_list_header_actions_are_disabled_when_their_setting_is_off(): void
+    {
+        $user = User::factory()->create(['name' => 'List Viewer']);
+        Permission::firstOrCreate(['name' => 'create_mentorship::training', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'view_any_mentorship::training', 'guard_name' => 'web']);
+        $user->givePermissionTo(['create_mentorship::training', 'view_any_mentorship::training']);
+        $this->actingAs($user);
+
+        Setting::setBool(Setting::GUIDED_SETUP_BUTTON_ENABLED, false);
+
+        $response = $this->get(\App\Filament\Resources\MentorshipTrainingResource::getUrl());
+
+        $response->assertOk();
+        $response->assertSee('New Mentorship Guided Setup');
+    }
+
+    public function test_create_mentorship_training_page_blocks_access_when_its_setting_is_off(): void
+    {
+        Setting::setBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED, false);
+
+        $this->assertFalse(CreateMentorshipTraining::canAccess());
+
+        Setting::setBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED, true);
+
+        $this->assertTrue(CreateMentorshipTraining::canAccess());
+    }
+
+    public function test_guided_setup_blocks_a_fresh_start_but_allows_resuming_when_disabled(): void
+    {
+        Setting::setBool(Setting::GUIDED_SETUP_BUTTON_ENABLED, false);
+        $this->assertFalse(GuidedMentorshipSetup::canAccess());
+
+        $user = User::factory()->create(['name' => 'Resuming User']);
+        Permission::firstOrCreate(['name' => 'create_mentorship::training', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'view_any_mentorship::training', 'guard_name' => 'web']);
+        $user->givePermissionTo(['create_mentorship::training', 'view_any_mentorship::training']);
+        $this->actingAs($user);
+
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+
+        // A fresh visit (no ?training=) stays blocked even while resuming
+        // is allowed — the setting only gates *starting new* wizards.
+        $this->get(GuidedMentorshipSetup::getUrl())->assertForbidden();
+
+        // Resuming an existing draft works regardless of the setting.
+        $this->get(GuidedMentorshipSetup::getUrl(['training' => $training->id]))->assertOk();
     }
 }

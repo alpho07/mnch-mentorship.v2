@@ -3,10 +3,13 @@
 namespace App\Filament\Pages;
 
 use App\Models\Program;
+use App\Models\Setting;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Tables;
@@ -20,6 +23,10 @@ use Filament\Tables\Table;
  * Active" rather than hidden outright. Full program editing (name,
  * description, per-role visibility overrides) stays under Curriculum →
  * Programs; this page is deliberately just the on/off switch.
+ *
+ * Also controls whether the "New Mentorship" / "New Mentorship Guided
+ * Setup" buttons on the mentorships list are usable — see Setting and
+ * ListMentorshipTrainings::getHeaderActions().
  */
 class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Contracts\HasTable
 {
@@ -37,6 +44,8 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
 
     protected static string $view = 'filament.pages.mentorship-settings';
 
+    public ?array $data = [];
+
     public static function shouldRegisterNavigation(): bool
     {
         return auth()->check() && auth()->user()->can('update_program');
@@ -45,6 +54,54 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
     public static function canAccess(): bool
     {
         return auth()->check() && auth()->user()->can('update_program');
+    }
+
+    public function mount(): void
+    {
+        $this->form->fill([
+            'new_mentorship_button_enabled' => Setting::getBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED),
+            'guided_setup_button_enabled' => Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED),
+        ]);
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Section::make('Mentorship Creation Methods')
+                    ->description('Turn a method off to disable its button on the Mentorships page (shown greyed out with a tooltip) and block the page directly. Anyone already partway through a guided setup can still finish it.')
+                    ->icon('heroicon-o-cursor-arrow-rays')
+                    ->schema([
+                        Forms\Components\Toggle::make('new_mentorship_button_enabled')
+                            ->label('"New Mentorship" button')
+                            ->helperText('The single-step create form.')
+                            ->onColor('success')
+                            ->offColor('danger')
+                            ->live()
+                            ->afterStateUpdated(function (bool $state): void {
+                                Setting::setBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED, $state);
+                                Notification::make()
+                                    ->title($state ? '"New Mentorship" enabled' : '"New Mentorship" disabled')
+                                    ->success()
+                                    ->send();
+                            }),
+                        Forms\Components\Toggle::make('guided_setup_button_enabled')
+                            ->label('"New Mentorship Guided Setup" button')
+                            ->helperText('The step-by-step wizard.')
+                            ->onColor('success')
+                            ->offColor('danger')
+                            ->live()
+                            ->afterStateUpdated(function (bool $state): void {
+                                Setting::setBool(Setting::GUIDED_SETUP_BUTTON_ENABLED, $state);
+                                Notification::make()
+                                    ->title($state ? 'Guided Setup enabled' : 'Guided Setup disabled')
+                                    ->success()
+                                    ->send();
+                            }),
+                    ])
+                    ->columns(2),
+            ])
+            ->statePath('data');
     }
 
     public function table(Table $table): Table

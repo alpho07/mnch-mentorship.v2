@@ -4,6 +4,7 @@ namespace App\Filament\Resources\MentorshipResource\Pages;
 
 use App\Filament\Resources\MentorshipTrainingResource;
 use App\Models\ClassParticipant;
+use App\Models\Setting;
 use App\Models\Training;
 use Filament\Actions;
 use Filament\Resources\Components\Tab;
@@ -18,16 +19,23 @@ class ListMentorshipTrainings extends ListRecords
 
     protected function getHeaderActions(): array
     {
+        $newMentorshipEnabled = Setting::getBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED);
+        $guidedSetupEnabled = Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED);
+
         return [
             Actions\CreateAction::make()
                 ->label('New Mentorship')
                 ->icon('heroicon-o-plus')
-                ->color('primary'),
+                ->color('primary')
+                ->disabled(! $newMentorshipEnabled)
+                ->tooltip($newMentorshipEnabled ? null : 'Turned off in Mentorship Settings'),
             Actions\Action::make('guided_setup')
-                ->label('Guided Setup')
+                ->label('New Mentorship Guided Setup')
                 ->icon('heroicon-o-sparkles')
                 ->color('gray')
-                ->url(fn () => MentorshipTrainingResource::getUrl('guided-setup')),
+                ->url(fn () => MentorshipTrainingResource::getUrl('guided-setup'))
+                ->disabled(! $guidedSetupEnabled)
+                ->tooltip($guidedSetupEnabled ? null : 'Turned off in Mentorship Settings'),
         ];
     }
 
