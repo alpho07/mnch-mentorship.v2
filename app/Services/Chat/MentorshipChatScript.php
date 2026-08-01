@@ -138,6 +138,12 @@ class MentorshipChatScript
                 ->render(Render::FREE_TEXT)
                 ->required(false)
                 ->question(fn () => 'Want to describe the gap identified and how this class will be delivered? (optional — just say "skip")'),
+
+            Slot::make('recipients')
+                ->stage('send_invitations')
+                ->render(Render::CARDS)
+                ->question(fn () => 'Who should receive the email?')
+                ->optionsFrom(fn () => ['all' => 'All mentees with email addresses', 'not_sent' => 'Only those not yet invited']),
         ];
     }
 }

@@ -198,4 +198,23 @@ class ChatMentorshipSetupTest extends TestCase
             'user_id' => $mentee->id,
         ]);
     }
+
+    public function test_send_invitations_stage_completes_the_flow(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = \App\Models\Facility::factory()->create();
+        $mentee = User::factory()->create(['email' => 'mentee@example.com']);
+
+        $component = Livewire::test(ChatMentorshipSetup::class);
+        $this->advanceThroughFirstClass($component, $program, $facility);
+        $component->call('submitModules', []);
+        $component->call('submitMentees', [$mentee->id], null);
+        $component->call('answer', 'recipients', 'all');
+
+        $this->assertTrue($component->instance()->completed);
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
+        $this->assertNotNull($component->instance()->training->fresh()->guided_setup_completed_at);
+    }
 }

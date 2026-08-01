@@ -46,6 +46,10 @@ class ChatMentorshipSetup extends Page implements HasForms
 
     public bool $completed = false;
 
+    public bool $classStarted = false;
+
+    public int $invitedCount = 0;
+
     public array $moduleDates = [];
 
     public function updatedModuleDates(): void
@@ -280,6 +284,24 @@ class ChatMentorshipSetup extends Page implements HasForms
                 'end_date' => $this->answers['class_end_date'] ?? null,
                 'description' => ($this->answers['class_description'] ?? null) === 'skip' ? null : ($this->answers['class_description'] ?? null),
             ], $this->training, $this->class);
+        });
+
+        $this->maybeCompleteStage($slotId, 'send_invitations', function () {
+            $result = app(MentorshipWizardService::class)->sendInvitations([
+                'recipients' => $this->answers['recipients'],
+            ], $this->training, $this->class);
+
+            $this->invitedCount = $result['sent'] + $result['resent'];
+            $this->completed = true;
+            $this->classStarted = $this->class->fresh()->status === 'active';
+
+            $this->messages[] = [
+                'role' => 'bot',
+                'text' => "Mentorship \"{$this->training->title}\" created. Class \"{$this->class->name}\" has {$this->invitedCount} mentee(s) invited.".
+                    ($this->classStarted ? ' The class is now active.' : " It's still saved as a draft."),
+                'timestamp' => now()->toIso8601String(),
+            ];
+            $this->appendTranscript(end($this->messages));
         });
     }
 
