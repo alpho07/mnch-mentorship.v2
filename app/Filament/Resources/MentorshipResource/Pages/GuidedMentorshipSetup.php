@@ -82,6 +82,18 @@ class GuidedMentorshipSetup extends Page implements HasForms
      */
     public array $moduleDates = [];
 
+    /**
+     * Livewire's own updated{Property}() hook — fires whenever moduleDates
+     * changes (the modal's Save, or a track/parent toggle clearing an
+     * entry). Persists it into the same durable draft as module_ids/
+     * selected_users, so it survives Back/Next, a refresh, and resuming
+     * from a completely different session via the pending-setup banner.
+     */
+    public function updatedModuleDates(): void
+    {
+        $this->saveWizardDraft('moduleDates', $this->moduleDates);
+    }
+
     public int $enrolledCount = 0;
 
     public int $invitedCount = 0;
@@ -128,6 +140,12 @@ class GuidedMentorshipSetup extends Page implements HasForms
                 $fill['start_date'] = $this->training->start_date;
                 $fill['end_date'] = $this->training->end_date;
                 $fill['max_participants'] = $this->training->max_participants;
+
+                // EmONC per-row dates, collected via the picker's modal —
+                // same durable-draft story as module_ids/selected_users
+                // below, just restored here since it's a plain property
+                // rather than a form field.
+                $this->moduleDates = $this->training->guided_setup_draft['moduleDates'] ?? [];
             }
         }
 
@@ -706,8 +724,10 @@ class GuidedMentorshipSetup extends Page implements HasForms
 
         // Applied (or the module was removed) — either way this side-channel
         // shouldn't carry over and get misapplied to a different module
-        // picked in a later pass.
+        // picked in a later pass. Direct property assignment doesn't fire
+        // updatedModuleDates(), so clear the persisted draft explicitly too.
         $this->moduleDates = [];
+        $this->clearWizardDraft('moduleDates');
 
         return $created;
     }
@@ -1003,8 +1023,12 @@ class GuidedMentorshipSetup extends Page implements HasForms
             return;
         }
 
+        // module_ids/selected_users are flat id lists (re-index defensively
+        // in case of gaps); moduleDates is an id => {start,end} map and
+        // must keep its keys, so only re-index actual lists.
+        $state = $state ?? [];
         $draft = $this->training->guided_setup_draft ?? [];
-        $draft[$key] = array_values($state ?? []);
+        $draft[$key] = array_is_list($state) ? array_values($state) : $state;
 
         $this->training->update(['guided_setup_draft' => $draft]);
     }

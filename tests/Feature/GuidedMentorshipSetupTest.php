@@ -689,6 +689,97 @@ class GuidedMentorshipSetupTest extends TestCase
         );
     }
 
+    public function test_save_wizard_draft_preserves_associative_keys_for_module_dates(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+
+        $reflection = new \ReflectionMethod($component->instance(), 'saveWizardDraft');
+        $reflection->setAccessible(true);
+        // moduleDates is an id => {start,end} map — array_is_list() must
+        // route it away from the array_values() re-indexing used for the
+        // flat module_ids/selected_users id lists, or the keys (module
+        // ids) would be silently discarded.
+        $reflection->invoke($component->instance(), 'moduleDates', [
+            56 => ['start' => '2027-03-01', 'end' => '2027-03-10'],
+        ]);
+
+        $this->assertSame(
+            ['moduleDates' => [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']]],
+            $training->fresh()->guided_setup_draft
+        );
+    }
+
+    public function test_updated_module_dates_hook_persists_to_the_draft(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->moduleDates = [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']];
+        $component->instance()->updatedModuleDates();
+
+        $this->assertSame(
+            [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']],
+            $training->fresh()->guided_setup_draft['moduleDates']
+        );
+    }
+
+    public function test_mount_restores_module_dates_from_the_training_draft(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'guided_setup_draft' => [
+                'moduleDates' => [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']],
+            ],
+        ]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->trainingId = $training->id;
+        $component->instance()->classId = $class->id;
+        $component->instance()->mount();
+
+        $this->assertSame(
+            [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']],
+            $component->instance()->moduleDates
+        );
+    }
+
+    public function test_assign_modules_clears_the_module_dates_draft_after_applying(): void
+    {
+        $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care']);
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'program_id' => $program->id,
+            'guided_setup_draft' => [
+                'moduleDates' => [999 => ['start' => '2027-01-01', 'end' => '2027-01-05']],
+            ],
+        ]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $programModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+
+        $component = Livewire::test(GuidedMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+        $component->instance()->moduleDates = [
+            $programModule->id => ['start' => '2027-02-01', 'end' => '2027-02-05'],
+        ];
+
+        $component->instance()->assignModules([
+            'module_ids' => [$programModule->id],
+            'auto_create_sessions' => false,
+            'module_dates' => $component->instance()->moduleDates,
+        ]);
+
+        $this->assertArrayNotHasKey('moduleDates', $training->fresh()->guided_setup_draft ?? []);
+        $this->assertSame([], $component->instance()->moduleDates);
+    }
+
     public function test_send_invitations_clears_the_draft(): void
     {
         $this->actingAsCoordinator();
