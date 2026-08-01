@@ -50,6 +50,25 @@ class AssessmentResource extends Resource
         return static::canAccess();
     }
 
+    /**
+     * Row-level scoping: super_admin/admin/division see every assessment;
+     * everyone else (assessor and any other role) only sees assessments
+     * they personally conducted. This also naturally blocks direct-URL
+     * access to another assessor's record, since edit/view/dashboard pages
+     * resolve records through this same scoped query.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user && ! $user->hasRole(['super_admin', 'admin', 'division'])) {
+            $query->where('assessor_id', $user->id);
+        }
+
+        return $query;
+    }
+
     public static function form(Form $form): Form
     {
         return $form; // Empty — pages define their own forms
@@ -66,12 +85,6 @@ class AssessmentResource extends Resource
                     ->weight('bold')
                     ->icon('heroicon-m-building-office-2')
                     ->iconColor('primary'),
-                Tables\Columns\TextColumn::make('facility.mfl_code')
-                    ->label('MFL Code')
-                    ->searchable()
-                    ->sortable()
-                    ->badge()
-                    ->color('gray'),
                 Tables\Columns\BadgeColumn::make('assessment_type')
                     ->label('Type')
                     ->sortable()
@@ -91,7 +104,7 @@ class AssessmentResource extends Resource
                     ->sortable()
                     ->icon('heroicon-m-calendar')
                     ->iconColor('info'),
-                Tables\Columns\TextColumn::make('assessor_name')
+                Tables\Columns\TextColumn::make('assessor.name')
                     ->label('Assessor')
                     ->searchable()
                     ->sortable()
@@ -163,9 +176,9 @@ class AssessmentResource extends Resource
                 Filter::make('assessment_date')
                     ->form([
                         \Filament\Forms\Components\DatePicker::make('from')
-                    ->label('From Date'),
+                            ->label('From Date'),
                         \Filament\Forms\Components\DatePicker::make('until')
-                    ->label('Until Date'),
+                            ->label('Until Date'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
@@ -366,7 +379,7 @@ class AssessmentResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $count = Assessment::whereIn('status', ['draft', 'in_progress'])->count();
+        $count = static::getEloquentQuery()->whereIn('status', ['draft', 'in_progress'])->count();
 
         return $count > 0 ? (string) $count : null;
     }

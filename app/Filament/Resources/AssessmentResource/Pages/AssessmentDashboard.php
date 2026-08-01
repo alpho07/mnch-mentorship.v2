@@ -5,30 +5,39 @@ namespace App\Filament\Resources\AssessmentResource\Pages;
 use App\Filament\Resources\AssessmentResource;
 use App\Models\Assessment;
 use Filament\Actions;
-use Filament\Infolists\Infolist;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Form;
-use Illuminate\Database\Eloquent\Builder;
 
-class AssessmentDashboard extends Page {
-
+class AssessmentDashboard extends Page
+{
     protected static string $resource = AssessmentResource::class;
+
     protected static string $view = 'filament.pages.assessment.dashboard';
+
     protected static ?string $infolist = 'assessment_summary';
+
     public Assessment $record;
+
     public ?string $searchTerm = null;
+
     public ?string $statusFilter = null;
+
     public ?string $completionFilter = null;
 
-    public function mount(int|string $record): void {
-        $this->record = Assessment::findOrFail( $this->record->id);
+    public function mount(int|string $record): void
+    {
+        // Scoped through the resource's own getEloquentQuery() — an
+        // assessor hitting another assessor's dashboard URL directly
+        // should 404, same as the list/edit/view pages.
+        $this->record = AssessmentResource::getEloquentQuery()->findOrFail($record);
 
-        if (!$this->record->section_progress) {
+        if (! $this->record->section_progress) {
             $this->record->section_progress = [
                 'facility_assessor' => true,
                 'infrastructure' => false,
@@ -42,71 +51,74 @@ class AssessmentDashboard extends Page {
         }
     }
 
-    public function getInfolist(string $name): ?Infolist {
+    public function getInfolist(string $name): ?Infolist
+    {
         if ($name !== 'assessment_summary') {
             return null;
         }
 
         return Infolist::make()
-                        ->record($this->record)
-                        ->schema([
-                            Section::make('Assessment Details')
-                            ->schema([
-                                TextEntry::make('facility.name')->label('Facility'),
-                                TextEntry::make('assessment_type')->label('Type'),
-                                TextEntry::make('assessment_date')->label('Date')->date(),
-                                TextEntry::make('assessor_name')->label('Assessor'),
-                            ])
-                            ->columns(2),
-        ]);
+            ->record($this->record)
+            ->schema([
+                Section::make('Assessment Details')
+                    ->schema([
+                        TextEntry::make('facility.name')->label('Facility'),
+                        TextEntry::make('assessment_type')->label('Type'),
+                        TextEntry::make('assessment_date')->label('Date')->date(),
+                        TextEntry::make('assessor_name')->label('Assessor'),
+                    ])
+                    ->columns(2),
+            ]);
     }
 
     /**
      * Filter form in the header
      */
-    public function filtersForm(Form $form): Form {
+    public function filtersForm(Form $form): Form
+    {
         return $form
-                        ->schema([
-                            TextInput::make('searchTerm')
-                            ->label('Search sections')
-                            ->placeholder('Search by section name...')
-                            ->live(onBlur: true),
-                            Select::make('statusFilter')
-                            ->label('Status')
-                            ->options([
-                                'all' => 'All Sections',
-                                'completed' => 'Completed',
-                                'incomplete' => 'Incomplete',
-                            ])
-                            ->default('all')
-                            ->live(),
-                            Select::make('completionFilter')
-                            ->label('Progress')
-                            ->options([
-                                'all' => 'All',
-                                'not_started' => 'Not Started',
-                                'in_progress' => 'In Progress',
-                                'done' => 'Completed',
-                            ])
-                            ->default('all')
-                            ->live(),
-                        ])
-                        ->columns(3)
-                        ->statePath('filters');
+            ->schema([
+                TextInput::make('searchTerm')
+                    ->label('Search sections')
+                    ->placeholder('Search by section name...')
+                    ->live(onBlur: true),
+                Select::make('statusFilter')
+                    ->label('Status')
+                    ->options([
+                        'all' => 'All Sections',
+                        'completed' => 'Completed',
+                        'incomplete' => 'Incomplete',
+                    ])
+                    ->default('all')
+                    ->live(),
+                Select::make('completionFilter')
+                    ->label('Progress')
+                    ->options([
+                        'all' => 'All',
+                        'not_started' => 'Not Started',
+                        'in_progress' => 'In Progress',
+                        'done' => 'Completed',
+                    ])
+                    ->default('all')
+                    ->live(),
+            ])
+            ->columns(3)
+            ->statePath('filters');
     }
 
     /**
      * Get filtered sections based on search and filters
      */
-    protected function getFilteredSections(): array {
+    protected function getFilteredSections(): array
+    {
         $sections = $this->getAllSections();
 
         // Apply search filter
         if ($this->searchTerm) {
             $sections = array_filter($sections, function ($section) {
                 return str_contains(
-                        strtolower($section['label']),
-                        strtolower($this->searchTerm)
+                    strtolower($section['label']),
+                    strtolower($this->searchTerm)
                 );
             });
         }
@@ -117,6 +129,7 @@ class AssessmentDashboard extends Page {
                 if ($this->statusFilter === 'completed') {
                     return $section['done'] === true;
                 }
+
                 return $section['done'] === false;
             });
         }
@@ -127,7 +140,8 @@ class AssessmentDashboard extends Page {
     /**
      * Define all sections
      */
-    protected function getAllSections(): array {
+    protected function getAllSections(): array
+    {
         return [
             [
                 'key' => 'facility_assessor',
@@ -181,15 +195,17 @@ class AssessmentDashboard extends Page {
         ];
     }
 
-    public function submitAssessment() {
+    public function submitAssessment()
+    {
         $progress = $this->record->section_progress;
 
         if (in_array(false, $progress, true)) {
             Notification::make()
-                    ->warning()
-                    ->title('Cannot submit')
-                    ->body('Please complete all sections before submitting.')
-                    ->send();
+                ->warning()
+                ->title('Cannot submit')
+                ->body('Please complete all sections before submitting.')
+                ->send();
+
             return;
         }
 
@@ -200,33 +216,37 @@ class AssessmentDashboard extends Page {
         ]);
 
         Notification::make()
-                ->success()
-                ->title('Assessment submitted')
-                ->body('Assessment successfully completed.')
-                ->send();
+            ->success()
+            ->title('Assessment submitted')
+            ->body('Assessment successfully completed.')
+            ->send();
 
         return redirect(AssessmentResource::getUrl());
     }
 
-    protected function getHeaderActions(): array {
+    protected function getHeaderActions(): array
+    {
         return [
-                    Actions\Action::make('submitAssessment')
-                    ->label('Submit Assessment')
-                    ->color('success')
-                    ->icon('heroicon-o-check-circle')
-                    ->visible(fn() => $this->canSubmit())
-                    ->action('submitAssessment'),
+            Actions\Action::make('submitAssessment')
+                ->label('Submit Assessment')
+                ->color('success')
+                ->icon('heroicon-o-check-circle')
+                ->visible(fn () => $this->canSubmit())
+                ->action('submitAssessment'),
         ];
     }
 
-    private function canSubmit(): bool {
+    private function canSubmit(): bool
+    {
         $progress = $this->record->section_progress ?? [];
-        return $progress && !in_array(false, $progress, true);
+
+        return $progress && ! in_array(false, $progress, true);
     }
 
-    protected function getViewData(): array {
+    protected function getViewData(): array
+    {
         $allSections = $this->getAllSections();
-        $completed = count(array_filter($allSections, fn($s) => $s['done']));
+        $completed = count(array_filter($allSections, fn ($s) => $s['done']));
         $total = count($allSections);
 
         return [
