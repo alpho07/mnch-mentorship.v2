@@ -17,6 +17,8 @@ class Setting extends Model
 
     public const GUIDED_SETUP_BUTTON_ENABLED = 'guided_setup_button_enabled';
 
+    public const CHAT_SETUP_BUTTON_ENABLED = 'chat_setup_button_enabled';
+
     protected $fillable = [
         'key',
         'value',
