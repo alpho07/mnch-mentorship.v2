@@ -21,6 +21,7 @@ class ListMentorshipTrainings extends ListRecords
     {
         $newMentorshipEnabled = Setting::getBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED);
         $guidedSetupEnabled = Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED);
+        $chatSetupEnabled = Setting::getBool(Setting::CHAT_SETUP_BUTTON_ENABLED);
 
         return [
             Actions\CreateAction::make()
@@ -36,6 +37,13 @@ class ListMentorshipTrainings extends ListRecords
                 ->url(fn () => MentorshipTrainingResource::getUrl('guided-setup'))
                 ->disabled(! $guidedSetupEnabled)
                 ->tooltip($guidedSetupEnabled ? null : 'Turned off in Mentorship Settings'),
+            Actions\Action::make('chat_setup')
+                ->label('Chat Setup')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->color('gray')
+                ->url(fn () => MentorshipTrainingResource::getUrl('chat-setup'))
+                ->disabled(! $chatSetupEnabled)
+                ->tooltip($chatSetupEnabled ? null : 'Turned off in Mentorship Settings'),
         ];
     }
 

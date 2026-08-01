@@ -258,4 +258,39 @@ class ChatMentorshipSetupTest extends TestCase
         $this->assertSame(0, $component->instance()->answers['is_pilot']);
         $this->assertSame($facility->subcounty->county_id, $component->instance()->answers['county_id']);
     }
+
+    public function test_list_page_shows_chat_setup_button(): void
+    {
+        $this->actingAsCoordinator();
+
+        Livewire::test(\App\Filament\Resources\MentorshipResource\Pages\ListMentorshipTrainings::class)
+            ->assertSeeHtml('Chat Setup');
+    }
+
+    public function test_chat_setup_button_disabled_when_setting_off(): void
+    {
+        $this->actingAsCoordinator();
+        \App\Models\Setting::setBool(\App\Models\Setting::CHAT_SETUP_BUTTON_ENABLED, false);
+
+        $response = $this->get(\App\Filament\Resources\MentorshipTrainingResource::getUrl('chat-setup'));
+
+        $response->assertForbidden();
+    }
+
+    public function test_pending_setup_banner_routes_chat_drafts_to_chat_setup(): void
+    {
+        $mentor = $this->actingAsCoordinator();
+        \App\Models\Training::factory()->facilityMentorship()->create([
+            'mentor_id' => $mentor->id,
+            'guided_setup_completed_at' => null,
+            'guided_setup_method' => 'chat',
+        ]);
+
+        $widget = new \App\Filament\Widgets\PendingGuidedSetupNotice;
+        $reflection = new \ReflectionMethod($widget, 'getViewData');
+        $reflection->setAccessible(true);
+        $viewData = $reflection->invoke($widget);
+
+        $this->assertStringContainsString('chat-setup', $viewData['continueUrl']);
+    }
 }
