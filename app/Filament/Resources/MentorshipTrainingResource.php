@@ -391,7 +391,8 @@ class MentorshipTrainingResource extends Resource
                 Tables\Filters\SelectFilter::make('program_id')
                     ->label('Program Area')
                     ->options(fn () => Program::withCount([
-                        'trainings' => fn (Builder $q) => $q->where('type', 'facility_mentorship'),
+                        'trainings' => fn (Builder $q) => $q->where('type', 'facility_mentorship')
+                            ->where('is_pilot', false),
                     ])
                         ->orderBy('name')
                         ->get()
