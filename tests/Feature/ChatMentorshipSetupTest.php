@@ -105,4 +105,30 @@ class ChatMentorshipSetupTest extends TestCase
         $this->assertNotNull($component->instance()->training);
         $this->assertNull($component->instance()->training->start_date);
     }
+
+    public function test_completing_the_first_class_stage_creates_the_class(): void
+    {
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = \App\Models\Facility::factory()->create();
+
+        $component = Livewire::test(ChatMentorshipSetup::class);
+        $component->call('answer', 'is_pilot', 0);
+        $component->call('answer', 'county_id', $facility->subcounty->county_id);
+        $component->call('answer', 'facility_id', $facility->id);
+        $component->call('answer', 'program_id', $program->id);
+        $component->call('answer', 'start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'end_date', now()->addMonth()->toDateString());
+        $component->call('answer', 'max_participants', 8);
+        $component->call('answer', 'class_name', 'January 2027 Cohort');
+        $component->call('answer', 'class_start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'class_end_date', now()->addMonth()->toDateString());
+        $component->call('answer', 'class_description', 'Gap identified: newborn resuscitation.');
+
+        $this->assertDatabaseHas('mentorship_classes', [
+            'name' => 'January 2027 Cohort',
+            'training_id' => $component->instance()->training->id,
+        ]);
+        $this->assertNotNull($component->instance()->class);
+    }
 }

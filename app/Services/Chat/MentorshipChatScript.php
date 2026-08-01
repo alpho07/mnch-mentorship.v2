@@ -105,6 +105,39 @@ class MentorshipChatScript
 
                     return null;
                 }),
+
+            Slot::make('class_name')
+                ->stage('first_class')
+                ->render(Render::FREE_TEXT)
+                ->question(fn () => "Let's create your first class or cohort — what should we call it?")
+                ->rule(fn ($value) => (is_string($value) && strlen($value) > 255) ? 'Keep it under 255 characters.' : null),
+
+            Slot::make('class_start_date')
+                ->stage('first_class')
+                ->render(Render::WIDGET)
+                ->visibleWhen(fn ($a) => ! app(MentorshipWizardService::class)->isEmoncProgram($a['program_id'] ?? null))
+                ->question(fn () => 'When does this class start?')
+                ->echoUsing(fn ($v) => Carbon::parse($v)->format('M j, Y')),
+
+            Slot::make('class_end_date')
+                ->stage('first_class')
+                ->render(Render::WIDGET)
+                ->visibleWhen(fn ($a) => ! app(MentorshipWizardService::class)->isEmoncProgram($a['program_id'] ?? null))
+                ->question(fn () => 'And when does it end?')
+                ->echoUsing(fn ($v) => Carbon::parse($v)->format('M j, Y'))
+                ->rule(function ($value, $a) {
+                    if (! empty($a['class_start_date']) && Carbon::parse($value)->lt(Carbon::parse($a['class_start_date']))) {
+                        return 'End date must be on or after the start date.';
+                    }
+
+                    return null;
+                }),
+
+            Slot::make('class_description')
+                ->stage('first_class')
+                ->render(Render::FREE_TEXT)
+                ->required(false)
+                ->question(fn () => 'Want to describe the gap identified and how this class will be delivered? (optional — just say "skip")'),
         ];
     }
 }

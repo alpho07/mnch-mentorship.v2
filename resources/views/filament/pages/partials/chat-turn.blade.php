@@ -25,6 +25,13 @@
             </form>
         @endif
 
+        @if ($slot->renderKind() === \App\Services\Chat\Render::FREE_TEXT)
+            <form wire:submit.prevent="answer('{{ $slot->id }}', $refs.textInput.value)" class="flex gap-2">
+                <input type="text" x-ref="textInput" class="fi-input flex-1 rounded-lg border-gray-300 dark:border-gray-600 text-sm" {{ $slot->isRequired() ? 'required' : '' }}>
+                <x-filament::button type="submit">Send</x-filament::button>
+            </form>
+        @endif
+
         @error('value')
             <p class="text-sm text-danger-600 dark:text-danger-400">{{ $message }}</p>
         @enderror

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\MentorshipResource\Pages;
 
 use App\Filament\Resources\MentorshipTrainingResource;
+use App\Models\MentorshipClass;
 use App\Models\Setting;
 use App\Models\Training;
 use App\Services\Chat\MentorshipChatScript;
@@ -40,6 +41,8 @@ class ChatMentorshipSetup extends Page implements HasForms
     public array $answers = [];
 
     public ?Training $training = null;
+
+    public ?MentorshipClass $class = null;
 
     public bool $completed = false;
 
@@ -129,6 +132,15 @@ class ChatMentorshipSetup extends Page implements HasForms
             ], $this->training);
 
             $this->training->update(['guided_setup_method' => 'chat']);
+        });
+
+        $this->maybeCompleteStage($slotId, 'first_class', function () {
+            $this->class = app(MentorshipWizardService::class)->createFirstClass([
+                'name' => $this->answers['class_name'],
+                'start_date' => $this->answers['class_start_date'] ?? null,
+                'end_date' => $this->answers['class_end_date'] ?? null,
+                'description' => ($this->answers['class_description'] ?? null) === 'skip' ? null : ($this->answers['class_description'] ?? null),
+            ], $this->training, $this->class);
         });
     }
 
