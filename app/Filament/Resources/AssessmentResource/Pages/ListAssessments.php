@@ -181,7 +181,7 @@ class ListAssessments extends ListRecords
                     ->label('View')
                     ->icon('heroicon-o-eye')
                     ->color('info')
-                    ->url(fn ($record) => AssessmentResource::getUrl('view', ['record' => $record])),
+                    ->url(fn ($record) => AssessmentResource::getUrl('summary', ['record' => $record])),
                 // Dashboard Action
                 Tables\Actions\Action::make('dashboard')
                     ->label('Continue')
