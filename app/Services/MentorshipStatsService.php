@@ -92,4 +92,44 @@ class MentorshipStatsService
             'program' => $program,
         ];
     }
+
+    /**
+     * @return array<int, array{period: string, mentorships: int, mentees: int}>
+     */
+    public function trends(User $user, string $period = 'monthly', int $periodsBack = 6): array
+    {
+        $unit = $period === 'quarterly' ? 'quarter' : 'month';
+
+        $start = now()->sub($unit, $periodsBack - 1)->startOf($unit);
+
+        $mentorshipsByPeriod = $this->baseTrainingQuery($user)
+            ->where('created_at', '>=', $start)
+            ->get(['created_at'])
+            ->groupBy(fn ($t) => $period === 'quarterly'
+                ? $t->created_at->format('Y').'-Q'.$t->created_at->quarter
+                : $t->created_at->format('Y-m'))
+            ->map->count();
+
+        $menteesByPeriod = $this->menteesQuery($user)
+            ->where('class_participants.created_at', '>=', $start)
+            ->get(['class_participants.created_at'])
+            ->groupBy(fn ($p) => $period === 'quarterly'
+                ? $p->created_at->format('Y').'-Q'.$p->created_at->quarter
+                : $p->created_at->format('Y-m'))
+            ->map->count();
+
+        $result = [];
+        for ($i = $periodsBack - 1; $i >= 0; $i--) {
+            $bucket = now()->sub($unit, $i);
+            $key = $period === 'quarterly' ? $bucket->format('Y').'-Q'.$bucket->quarter : $bucket->format('Y-m');
+
+            $result[] = [
+                'period' => $key,
+                'mentorships' => $mentorshipsByPeriod[$key] ?? 0,
+                'mentees' => $menteesByPeriod[$key] ?? 0,
+            ];
+        }
+
+        return $result;
+    }
 }

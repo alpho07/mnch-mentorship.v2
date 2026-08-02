@@ -32,4 +32,18 @@ class MentorshipStatsToolProviderTest extends TestCase
         $this->assertSame(1, $result['overall']['mentorships']);
         $this->assertNotNull($result['program']);
     }
+
+    public function test_get_mentorship_trends_returns_a_period_series(): void
+    {
+        $user = User::factory()->create();
+
+        $tool = MentorshipStatsToolProvider::trendsTool();
+
+        $result = $tool->execute(['period' => 'monthly', 'periods_back' => 3], $user);
+
+        $this->assertCount(3, $result['trends']);
+        $this->assertArrayHasKey('period', $result['trends'][0]);
+        $this->assertArrayHasKey('mentorships', $result['trends'][0]);
+        $this->assertArrayHasKey('mentees', $result['trends'][0]);
+    }
 }

@@ -53,4 +53,27 @@ class MentorshipStatsServiceTest extends TestCase
 
         $this->assertSame(1, $result['overall']['mentorships']);
     }
+
+    public function test_trends_groups_mentorships_and_mentees_by_month(): void
+    {
+        $user = User::factory()->create();
+        Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $user->assignRole('super_admin');
+
+        \Illuminate\Support\Carbon::setTestNow('2026-08-15');
+
+        Training::factory()->facilityMentorship()->create(['is_pilot' => false, 'created_at' => now()]);
+        Training::factory()->facilityMentorship()->create(['is_pilot' => false, 'created_at' => now()->subMonth()]);
+
+        $service = new MentorshipStatsService;
+        $trends = $service->trends($user, 'monthly', 2);
+
+        $this->assertCount(2, $trends);
+        $this->assertSame(now()->subMonth()->format('Y-m'), $trends[0]['period']);
+        $this->assertSame(now()->format('Y-m'), $trends[1]['period']);
+        $this->assertSame(1, $trends[0]['mentorships']);
+        $this->assertSame(1, $trends[1]['mentorships']);
+
+        \Illuminate\Support\Carbon::setTestNow();
+    }
 }
