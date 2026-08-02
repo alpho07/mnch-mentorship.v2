@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Forms\Components\ProgramPicker;
 use App\Filament\Resources\MentorshipResource\Pages;
 use App\Models\ClassParticipant;
+use App\Models\County;
 use App\Models\Facility;
 use App\Models\Program;
 use App\Models\Training;
@@ -388,13 +389,30 @@ class MentorshipTrainingResource extends Resource
                     }),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'draft' => 'Draft',
-                        'active' => 'Active',
-                        'completed' => 'Completed',
-                        'cancelled' => 'Cancelled',
-                    ]),
+                Tables\Filters\SelectFilter::make('county_id')
+                    ->label('County')
+                    ->searchable()
+                    ->options(fn () => County::orderBy('name')->pluck('name', 'id')),
+                Tables\Filters\Filter::make('facility_id')
+                    ->label('Facility')
+                    ->form([
+                        Select::make('facility_id')
+                            ->label('Facility')
+                            ->searchable()
+                            ->getSearchResultsUsing(fn (string $search) => Facility::where('name', 'like', "%{$search}%")
+                                ->orWhere('mfl_code', 'like', "%{$search}%")
+                                ->limit(50)
+                                ->get()
+                                ->mapWithKeys(fn (Facility $f) => [$f->id => "{$f->mfl_code} — {$f->name}"]))
+                            ->getOptionLabelUsing(fn ($value): ?string => Facility::find($value)?->name),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query->when(
+                        $data['facility_id'] ?? null,
+                        fn (Builder $q, $facilityId) => $q->where('facility_id', $facilityId)
+                    ))
+                    ->indicateUsing(fn (array $data): ?string => filled($data['facility_id'] ?? null)
+                        ? 'Facility: '.Facility::find($data['facility_id'])?->name
+                        : null),
                 Tables\Filters\SelectFilter::make('program_id')
                     ->label('Program Area')
                     ->options(fn () => Program::withCount([
@@ -406,6 +424,13 @@ class MentorshipTrainingResource extends Resource
                         ->mapWithKeys(fn (Program $program) => [
                             $program->id => "{$program->name} ({$program->trainings_count})",
                         ])),
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'draft' => 'Draft',
+                        'active' => 'Active',
+                        'completed' => 'Completed',
+                        'cancelled' => 'Cancelled',
+                    ]),
             ], layout: Tables\Enums\FiltersLayout::AboveContent)
             ->actions([
                 Tables\Actions\ActionGroup::make([
