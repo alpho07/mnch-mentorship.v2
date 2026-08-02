@@ -94,7 +94,7 @@ class ReviewModuleMentee extends Page implements HasForms
             'mentorCourseIntro' => $contents->where('type', 'mentor_course_intro')->first(),
             'mentorMaterials' => $contents->where('type', 'mentor_materials')->first(),
             'conductAssessmentUrl' => $this->moduleRubric
-                ? RubricAssessmentResource::getUrl('create').'?rubric_id='.$this->moduleRubric->id.'&mentee_id='.$this->participant->user_id
+                ? RubricAssessmentResource::getUrl('create').'?rubric_id='.$this->moduleRubric->id.'&mentee_id='.$this->participant->user_id.'&class_module_id='.$this->module->id
                 : RubricAssessmentResource::getUrl('create'),
         ];
     }
@@ -334,8 +334,12 @@ class ReviewModuleMentee extends Page implements HasForms
             ->first();
 
         if ($this->moduleRubric && $this->participant->user_id) {
+            // Scoped to this class_module_id — otherwise a mentee retaking
+            // the same program module in a different cohort/class would
+            // surface the previous class's rubric result here.
             $this->latestRubricAssessment = RubricAssessment::where('module_rubric_id', $this->moduleRubric->id)
                 ->where('mentee_id', $this->participant->user_id)
+                ->where('class_module_id', $this->module->id)
                 ->with(['mentor'])
                 ->latest('assessed_at')
                 ->first();

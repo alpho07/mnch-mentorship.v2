@@ -3,13 +3,18 @@
 namespace App\Filament\Resources\RubricAssessmentResource\Pages;
 
 use App\Filament\Resources\RubricAssessmentResource;
+use App\Models\ClassModule;
+use App\Models\ClassParticipant;
+use App\Models\MenteeModuleProgress;
 use App\Models\ModuleRubric;
 use App\Models\RubricAssessment;
 use App\Models\RubricItemResponse;
 use App\Models\User;
+use App\Services\EmoncNotificationService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Url;
 
 class ConductRubricAssessment extends Page
 {
@@ -20,14 +25,31 @@ class ConductRubricAssessment extends Page
     protected static ?string $title = 'Conduct Practical Assessment';
 
     // Step 1: selection
+    #[Url(as: 'rubric_id')]
     public ?int $module_rubric_id = null;
+
+    #[Url]
     public ?int $mentee_id = null;
+
     public ?int $mentor_id = null;
+
+    // Which ClassModule this assessment is being conducted for — arrives
+    // from ReviewModuleMentee's "Conduct Practical Assessment" link so the
+    // resulting RubricAssessment (and the MenteeModuleProgress it drives,
+    // see submitAssessment()) are scoped to the right class/cohort instead
+    // of only to mentee+rubric globally (a mentee retaking the same
+    // program module in a different class would otherwise see/affect the
+    // wrong class's result).
+    #[Url]
+    public ?int $class_module_id = null;
+
     public string $assessed_at = '';
+
     public string $notes = '';
 
     // Step 2: scoring
     public int $step = 1;
+
     public array $responses = [];   // [rubric_item_id => bool]
 
     // Computed
@@ -37,13 +59,6 @@ class ConductRubricAssessment extends Page
     {
         $this->mentor_id = auth()->id();
         $this->assessed_at = now()->format('Y-m-d\TH:i');
-
-        if ($rubricId = request()->query('rubric_id')) {
-            $this->module_rubric_id = (int) $rubricId;
-        }
-        if ($menteeId = request()->query('mentee_id')) {
-            $this->mentee_id = (int) $menteeId;
-        }
     }
 
     public function loadRubric(): void
@@ -66,9 +81,9 @@ class ConductRubricAssessment extends Page
     {
         $this->validate([
             'module_rubric_id' => 'required|exists:module_rubrics,id',
-            'mentee_id'        => 'required|exists:users,id',
-            'mentor_id'        => 'required|exists:users,id',
-            'assessed_at'      => 'required',
+            'mentee_id' => 'required|exists:users,id',
+            'mentor_id' => 'required|exists:users,id',
+            'assessed_at' => 'required',
         ]);
 
         $this->loadRubric();
@@ -92,21 +107,24 @@ class ConductRubricAssessment extends Page
         DB::transaction(function () use ($score, $passed) {
             $assessment = RubricAssessment::create([
                 'module_rubric_id' => $this->module_rubric_id,
-                'mentee_id'        => $this->mentee_id,
-                'mentor_id'        => $this->mentor_id,
-                'score'            => $score,
-                'passed'           => $passed,
-                'notes'            => $this->notes ?: null,
-                'assessed_at'      => $this->assessed_at,
+                'class_module_id' => $this->class_module_id,
+                'mentee_id' => $this->mentee_id,
+                'mentor_id' => $this->mentor_id,
+                'score' => $score,
+                'passed' => $passed,
+                'notes' => $this->notes ?: null,
+                'assessed_at' => $this->assessed_at,
             ]);
 
             foreach ($this->responses as $itemId => $performed) {
                 RubricItemResponse::create([
                     'rubric_assessment_id' => $assessment->id,
-                    'rubric_item_id'       => $itemId,
-                    'performed'            => $performed,
+                    'rubric_item_id' => $itemId,
+                    'performed' => $performed,
                 ]);
             }
+
+            $this->syncVideoReviewStatus($passed);
         });
 
         $label = $passed ? 'PASS' : 'FAIL';
@@ -122,6 +140,47 @@ class ConductRubricAssessment extends Page
             ->send();
 
         $this->redirect(RubricAssessmentResource::getUrl('index'));
+    }
+
+    /**
+     * The rubric score is the single source of truth for the hands-on
+     * pass/fail outcome (per EmONC meeting item 4) — mirror it onto
+     * MenteeModuleProgress so the mentor review page's Video Review badge
+     * and hasCompletedAllModules() gating both reflect it automatically,
+     * with no separate manual entry.
+     */
+    private function syncVideoReviewStatus(bool $passed): void
+    {
+        if (! $this->class_module_id) {
+            return;
+        }
+
+        $classModule = ClassModule::find($this->class_module_id);
+        if (! $classModule) {
+            return;
+        }
+
+        $participant = ClassParticipant::where('mentorship_class_id', $classModule->mentorship_class_id)
+            ->where('user_id', $this->mentee_id)
+            ->first();
+
+        if (! $participant) {
+            return;
+        }
+
+        $progress = MenteeModuleProgress::firstOrNew([
+            'class_participant_id' => $participant->id,
+            'class_module_id' => $this->class_module_id,
+        ]);
+        $progress->save();
+
+        $progress->recordVideoReview(
+            $passed ? 'passed' : 'failed',
+            'Derived from practical (rubric) assessment.',
+            $this->mentor_id
+        );
+
+        app(EmoncNotificationService::class)->videoReviewed($progress->fresh());
     }
 
     public function backToStep1(): void
@@ -140,8 +199,8 @@ class ConductRubricAssessment extends Page
             ->where('is_active', true)
             ->get()
             ->map(fn ($r) => [
-                'id'    => $r->id,
-                'label' => $r->programModule->name . ' — ' . $r->title,
+                'id' => $r->id,
+                'label' => $r->programModule->name.' — '.$r->title,
             ]);
     }
 
@@ -150,7 +209,7 @@ class ConductRubricAssessment extends Page
         return User::role('mentee')
             ->orderBy('first_name')
             ->get()
-            ->map(fn ($u) => ['id' => $u->id, 'label' => $u->full_name . ' (' . $u->email . ')']);
+            ->map(fn ($u) => ['id' => $u->id, 'label' => $u->full_name.' ('.$u->email.')']);
     }
 
     public function getMentors(): \Illuminate\Support\Collection
