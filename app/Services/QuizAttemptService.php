@@ -46,18 +46,29 @@ class QuizAttemptService
         $quiz = $attempt->quiz;
         $questions = $quiz->questions()->where('is_active', true)->with('options')->get();
 
-        if (count($responses) !== $questions->count()) {
+        // A timed-out attempt is allowed to submit whatever was answered so
+        // far — unanswered questions just score as incorrect (no response
+        // row is written for them; every existing reader already treats a
+        // missing response as unanswered via optional chaining). A normal,
+        // still-in-time submission keeps the original strict requirement.
+        $isExpired = $this->isExpired($attempt);
+
+        if (! $isExpired && count($responses) !== $questions->count()) {
             throw new InvalidArgumentException('All questions must be answered.');
         }
 
         $correctAnswers = 0;
         $responsesToInsert = [];
 
-        DB::transaction(function () use ($attempt, $questions, $responses, &$correctAnswers, &$responsesToInsert) {
+        DB::transaction(function () use ($attempt, $questions, $responses, $isExpired, &$correctAnswers, &$responsesToInsert) {
             foreach ($questions as $question) {
                 $selectedOptionId = $responses[$question->id] ?? null;
 
                 if ($selectedOptionId === null) {
+                    if ($isExpired) {
+                        continue;
+                    }
+
                     throw new InvalidArgumentException("Question {$question->id} has no selected answer.");
                 }
 
@@ -83,7 +94,9 @@ class QuizAttemptService
                 ];
             }
 
-            QuizResponse::insert($responsesToInsert);
+            if (! empty($responsesToInsert)) {
+                QuizResponse::insert($responsesToInsert);
+            }
 
             $totalQuestions = $questions->count();
             $score = $totalQuestions > 0
@@ -182,6 +195,21 @@ class QuizAttemptService
                 ->latest('completed_at')
                 ->first(),
         ];
+    }
+
+    /**
+     * Whether this attempt's quiz has a time limit and it has already
+     * passed, based on when the attempt was started.
+     */
+    private function isExpired(QuizAttempt $attempt): bool
+    {
+        $quiz = $attempt->quiz;
+
+        if (! $quiz || $quiz->time_limit_minutes === null || $attempt->started_at === null) {
+            return false;
+        }
+
+        return now()->greaterThan($attempt->started_at->clone()->addMinutes($quiz->time_limit_minutes));
     }
 
     /**
