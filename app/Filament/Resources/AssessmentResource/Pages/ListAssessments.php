@@ -230,6 +230,81 @@ class ListAssessments extends ListRecords
                             echo $pdf->output();
                         }, $filename);
                     }),
+                // Executive Dashboard Action
+                Tables\Actions\Action::make('executive_dashboard')
+                    ->label('Executive Dashboard')
+                    ->icon('heroicon-o-chart-pie')
+                    ->color('warning')
+                    ->url(fn ($record) => route('assessment.executive', $record))
+                    ->openUrlInNewTab()
+                    ->visible(fn ($record) => $record->status === 'completed'),
+                // Mark Feedback Given Action
+                Tables\Actions\Action::make('markFeedbackGiven')
+                    ->label(fn ($record) => $record->feedback_given ? 'Update Feedback' : 'Mark Feedback Given')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('success')
+                    ->visible(fn ($record) => $record->status === 'completed')
+                    ->form([
+                        \Filament\Forms\Components\Textarea::make('feedback_notes')
+                            ->label('Feedback notes (optional)')
+                            ->default(fn ($record) => $record->feedback_notes)
+                            ->rows(3),
+                    ])
+                    ->modalHeading(fn ($record) => $record->feedback_given
+                        ? 'Update Feedback Record'
+                        : 'Mark Feedback as Given')
+                    ->modalDescription(fn ($record) => $record->feedback_given
+                        ? 'Update the feedback notes for this assessment.'
+                        : 'Confirm that feedback has been given to the facility for this assessment.')
+                    ->action(function ($record, array $data): void {
+                        $record->update([
+                            'feedback_given' => true,
+                            'feedback_given_by' => auth()->id(),
+                            'feedback_given_at' => now(),
+                            'feedback_notes' => $data['feedback_notes'] ?? null,
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Feedback marked as given')
+                            ->success()
+                            ->send();
+                    }),
+                // Mark Trained Before Mentorship Action
+                Tables\Actions\Action::make('markTrained')
+                    ->label(fn ($record) => match ($record->trained_before_mentorship) {
+                        true => 'Has Been Trained (Yes)',
+                        false => 'Has Been Trained (No)',
+                        default => 'Mark Has Been Trained',
+                    })
+                    ->icon('heroicon-o-academic-cap')
+                    ->color('warning')
+                    ->visible(fn ($record) => $record->status === 'completed' && $record->feedback_given)
+                    ->form([
+                        \Filament\Forms\Components\Select::make('trained_before_mentorship')
+                            ->label('Has this facility been trained?')
+                            ->options([
+                                '1' => 'Yes — facility has been trained',
+                                '0' => 'No — facility has not been trained',
+                            ])
+                            ->default(fn ($record) => $record->trained_before_mentorship === null
+                                ? null
+                                : (string) (int) $record->trained_before_mentorship)
+                            ->required(),
+                    ])
+                    ->modalHeading('Mark Has Been Trained')
+                    ->modalDescription('Record whether this facility has been trained. This overrides the auto-computed value.')
+                    ->action(function ($record, array $data): void {
+                        $record->update([
+                            'trained_before_mentorship' => (bool) $data['trained_before_mentorship'],
+                            'trained_marked_by' => auth()->id(),
+                            'trained_marked_at' => now(),
+                        ]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Training status updated')
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
