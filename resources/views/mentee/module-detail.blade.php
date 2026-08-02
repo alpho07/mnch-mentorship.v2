@@ -1050,54 +1050,7 @@
 </main>
 
 {{-- ── Quiz modal ─────────────────────────────────────────────────────────── --}}
-@if(session('quiz_attempt_id'))
-    @php $attempt = App\Models\QuizAttempt::with(['quiz.questions.options'])->find(session('quiz_attempt_id')); @endphp
-    @if($attempt)
-        <div x-data="{ open: true }" x-show="open"
-             class="quiz-guard fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
-             @copy.prevent @cut.prevent @paste.prevent @contextmenu.prevent @selectstart.prevent @dragstart.prevent
-             @keydown="const k=$event.key.toLowerCase();const mod=$event.ctrlKey||$event.metaKey;if((mod&&['c','x','v','a','s','p','u'].includes(k))||k==='f12'||(mod&&$event.shiftKey&&['i','j','c'].includes(k))){$event.preventDefault()}"
-             x-cloak>
-            <div @click.away="open = false"
-                 class="bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl border-t sm:border border-slate-200 dark:border-slate-800 shadow-2xl w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto">
-                <div class="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-5 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl">
-                    <div>
-                        <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ $attempt->quiz->title }}</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">{{ $attempt->quiz->questions->count() }} question{{ $attempt->quiz->questions->count() === 1 ? '' : 's' }}</p>
-                    </div>
-                    <button @click="open = false" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-                <div class="p-5">
-                    <form action="{{ route('mentee.class.quiz.submit', [$class->id, $classModule->id, $attempt->id]) }}" method="POST" class="space-y-4">
-                        @csrf
-                        @foreach($attempt->quiz->questions as $index => $question)
-                            <div class="rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 p-4">
-                                <p class="font-semibold text-slate-900 dark:text-white mb-3 text-sm leading-relaxed">
-                                    <span class="inline-flex w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 items-center justify-center text-[11px] font-bold mr-2 shrink-0 align-text-bottom">{{ $index + 1 }}</span>
-                                    {!! $question->question_text !!}
-                                </p>
-                                <div class="space-y-2">
-                                    @foreach($question->options as $option)
-                                        <label class="flex items-start gap-3 p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-brand-300 transition-colors has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 dark:has-[:checked]:bg-brand-950/30">
-                                            <input type="radio" name="responses[{{ $question->id }}]" value="{{ $option->id }}" required class="mt-0.5 text-brand-600 focus:ring-brand-500 shrink-0">
-                                            <span class="text-sm text-slate-700 dark:text-slate-300">{{ $option->option_text }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endforeach
-                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold transition-colors shadow-sm">
-                            Submit Quiz
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
-@endif
+@include('mentee.partials.quiz-modal', ['class' => $class, 'classModule' => $classModule])
 
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script>
