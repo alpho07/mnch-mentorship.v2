@@ -89,7 +89,7 @@ Use `Resource::accessibleTo($user)` scope in queries rather than filtering after
 ### Service Layer
 Complex business logic lives in `app/Services/`. Key services:
 - `TrainingAnalyticsService` — insights and trends
-- `AssessmentScoringService` — singleton, registered in AppServiceProvider
+- `AssessmentPdfReportService` / `AssessmentExportService` — facility assessment PDF/CSV report generation (used by `ViewAssessmentSummary` and the assessments table's Download action)
 - `EnrollmentService` — mentee class enrollment
 - `BulkParticipantImportService` — CSV participant imports
 - `MonthlyReportService` — auto-generated monthly reports (via `GenerateMonthlyReports` command)

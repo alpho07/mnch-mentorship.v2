@@ -5,7 +5,6 @@ use App\Http\Controllers\Analytics\KenyaHeatmapController;
 use App\Http\Controllers\Analytics\ProgressiveDashboardController;
 use App\Http\Controllers\Analytics\TrainingExplorerController;
 use App\Http\Controllers\AnalyticsDashboardController;
-use App\Http\Controllers\AssessmentReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Frontend\CategoryController;
 use App\Http\Controllers\Frontend\CommentController;
@@ -132,12 +131,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/assessments/{assessment}/report', [AssessmentReportController::class, 'show'])
-        ->name('assessment.report');
-
-    Route::get('/assessments/{assessment}/download', [AssessmentReportController::class, 'download'])
-        ->name('assessment.download');
-
     Route::get('/assessments/{assessment}/executive', [\App\Http\Controllers\AssessmentExecutiveDashboardController::class, 'show'])
         ->name('assessment.executive');
 
