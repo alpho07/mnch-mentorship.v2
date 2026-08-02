@@ -55,10 +55,24 @@ class ConductRubricAssessment extends Page
     // Computed
     public ?ModuleRubric $rubric = null;
 
+    public ?User $menteeUser = null;
+
     public function mount(): void
     {
         $this->mentor_id = auth()->id();
         $this->assessed_at = now()->format('Y-m-d\TH:i');
+
+        // Arrived from ReviewModuleMentee's "Conduct Practical Assessment"
+        // link with rubric + mentee already known — skip the manual
+        // picker in Step 1 and go straight to scoring. "Back" still lets
+        // the mentor reach the picker if they need to correct something.
+        if ($this->module_rubric_id && $this->mentee_id) {
+            $this->loadRubric();
+
+            if ($this->rubric) {
+                $this->step = 2;
+            }
+        }
     }
 
     public function loadRubric(): void
@@ -68,6 +82,7 @@ class ConductRubricAssessment extends Page
         }
 
         $this->rubric = ModuleRubric::with('items')->find($this->module_rubric_id);
+        $this->menteeUser = $this->mentee_id ? User::find($this->mentee_id) : null;
 
         if ($this->rubric) {
             // Pre-populate all items as false

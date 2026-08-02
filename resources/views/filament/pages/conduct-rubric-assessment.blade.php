@@ -138,6 +138,9 @@ select.ra-select{
             <div style="font-size:12px;color:rgba(255,255,255,.65);">
                 {{ $rubric->programModule->name }} &nbsp;·&nbsp;
                 Pass: {{ $rubric->pass_marks }}/{{ $rubric->total_marks }} (≥ {{ $rubric->pass_percentage }}%)
+                @if($menteeUser)
+                    &nbsp;·&nbsp; Assessing: {{ $menteeUser->full_name }}
+                @endif
             </div>
         </div>
     </div>
