@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notifiable;
@@ -262,7 +262,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function scopedCountyIds()
     {
-        return $this->isAboveSite() ? County::pluck('id') : $this->counties()->pluck('id');
+        return $this->isAboveSite() ? County::pluck('id') : $this->counties()->pluck('counties.id');
     }
 
     public function scopedSubcountyIds()
@@ -705,4 +705,3 @@ class User extends Authenticatable implements FilamentUser
         return $this->status !== 'blocked';
     }
 }
-
