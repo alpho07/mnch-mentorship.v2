@@ -413,4 +413,79 @@ class ChatMentorshipSetupTest extends TestCase
             'program_module_id' => $track2->id,
         ]);
     }
+
+    public function test_check_and_submit_mentees_blocks_more_than_max_participants(): void
+    {
+        // advanceThroughFirstClass() sets max_participants to 8.
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = \App\Models\Facility::factory()->create();
+        $mentees = User::factory()->count(9)->create();
+
+        $component = Livewire::test(ChatMentorshipSetup::class);
+        $this->advanceThroughFirstClass($component, $program, $facility);
+        $component->call('submitModules', []);
+
+        $component->call('checkAndSubmitMentees', $mentees->pluck('id')->all(), null);
+
+        $component->assertHasErrors('value');
+        $this->assertSame(0, $component->instance()->class->participants()->count());
+    }
+
+    public function test_check_and_submit_mentees_pauses_for_a_mentee_without_an_email(): void
+    {
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = \App\Models\Facility::factory()->create();
+        $withEmail = User::factory()->create(['email' => 'has-email@example.com']);
+        $withoutEmail = User::factory()->create(['email' => null]);
+
+        $component = Livewire::test(ChatMentorshipSetup::class);
+        $this->advanceThroughFirstClass($component, $program, $facility);
+        $component->call('submitModules', []);
+
+        $component->call('checkAndSubmitMentees', [$withEmail->id, $withoutEmail->id], null);
+
+        // Paused — nobody enrolled yet, and the modal's data is populated
+        // with exactly the mentee missing an email.
+        $this->assertSame(0, $component->instance()->class->participants()->count());
+        $this->assertCount(1, $component->instance()->menteesNeedingEmail);
+        $this->assertSame($withoutEmail->id, $component->instance()->menteesNeedingEmail[0]['id']);
+
+        $component->set("pendingEmails.{$withoutEmail->id}", 'now-has-email@example.com');
+        $component->call('saveMenteeEmailsAndContinue');
+
+        $this->assertSame('now-has-email@example.com', $withoutEmail->fresh()->email);
+        $this->assertEmpty($component->instance()->menteesNeedingEmail);
+        $this->assertDatabaseHas('class_participants', [
+            'mentorship_class_id' => $component->instance()->class->id,
+            'user_id' => $withEmail->id,
+        ]);
+        $this->assertDatabaseHas('class_participants', [
+            'mentorship_class_id' => $component->instance()->class->id,
+            'user_id' => $withoutEmail->id,
+        ]);
+    }
+
+    public function test_cancel_mentee_email_prompt_discards_the_pending_selection(): void
+    {
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = \App\Models\Facility::factory()->create();
+        $withoutEmail = User::factory()->create(['email' => null]);
+
+        $component = Livewire::test(ChatMentorshipSetup::class);
+        $this->advanceThroughFirstClass($component, $program, $facility);
+        $component->call('submitModules', []);
+        $component->call('checkAndSubmitMentees', [$withoutEmail->id], null);
+
+        $this->assertNotEmpty($component->instance()->menteesNeedingEmail);
+
+        $component->call('cancelMenteeEmailPrompt');
+
+        $this->assertEmpty($component->instance()->menteesNeedingEmail);
+        $this->assertSame(0, $component->instance()->class->participants()->count());
+        // The modules/mentees turn is still active — nothing was submitted.
+        $this->assertArrayNotHasKey('selected_users', $component->instance()->answers);
+    }
 }

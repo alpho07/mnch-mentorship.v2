@@ -6,6 +6,7 @@ use App\Filament\Resources\MentorshipTrainingResource;
 use App\Models\MentorshipClass;
 use App\Models\Setting;
 use App\Models\Training;
+use App\Models\User;
 use App\Services\Chat\MentorshipChatScript;
 use App\Services\Chat\Slot;
 use App\Services\MentorshipWizardService;
@@ -170,12 +171,84 @@ class ChatMentorshipSetup extends Page implements HasForms
         );
     }
 
+    /** @var array<int, array{id: int, name: string}> mentees pending an email before they can be invited */
+    public array $menteesNeedingEmail = [];
+
+    /** @var array<int, string> keyed by user id, bound live to the email-prompt modal's inputs */
+    public array $pendingEmails = [];
+
+    public array $pendingMenteeSelection = [];
+
+    public ?array $pendingNewMentee = null;
+
+    /**
+     * Gate in front of submitMentees(): enforces the max_participants cap
+     * (mirrors CardCheckboxList::maxSelections() in the wizard — same rule,
+     * same "already-checked can still be unchecked past the cap" client
+     * behavior in chat-mentees-turn.blade.php, this is the server-side
+     * backstop), then checks whether any selected *existing* user has no
+     * email on file. sendInvitations() silently skips anyone without an
+     * email — rather than let that happen invisibly, pause here and let
+     * the coordinator add one (or explicitly leave it blank to skip that
+     * mentee) before actually enrolling anyone.
+     */
+    public function checkAndSubmitMentees(array $selectedUserIds, ?array $newMentee = null): void
+    {
+        $max = $this->training->max_participants;
+
+        if ($max && count($selectedUserIds) > $max) {
+            $this->addError('value', "You can select at most {$max} mentees.");
+
+            return;
+        }
+
+        $missing = User::whereIn('id', $selectedUserIds)
+            ->where(fn ($q) => $q->whereNull('email')->orWhere('email', ''))
+            ->get(['id', 'name']);
+
+        if ($missing->isNotEmpty()) {
+            $this->menteesNeedingEmail = $missing->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])->all();
+            $this->pendingEmails = [];
+            $this->pendingMenteeSelection = $selectedUserIds;
+            $this->pendingNewMentee = $newMentee;
+
+            return;
+        }
+
+        $this->submitMentees($selectedUserIds, $newMentee);
+    }
+
+    public function saveMenteeEmailsAndContinue(): void
+    {
+        foreach ($this->menteesNeedingEmail as $mentee) {
+            $email = trim($this->pendingEmails[$mentee['id']] ?? '');
+
+            if ($email !== '') {
+                User::where('id', $mentee['id'])->update(['email' => $email]);
+            }
+        }
+
+        $selectedUserIds = $this->pendingMenteeSelection;
+        $newMentee = $this->pendingNewMentee;
+        $this->cancelMenteeEmailPrompt();
+
+        $this->submitMentees($selectedUserIds, $newMentee);
+    }
+
+    public function cancelMenteeEmailPrompt(): void
+    {
+        $this->menteesNeedingEmail = [];
+        $this->pendingEmails = [];
+        $this->pendingMenteeSelection = [];
+        $this->pendingNewMentee = null;
+    }
+
     public function submitMentees(array $selectedUserIds, ?array $newMentee = null): void
     {
         $echo = empty($selectedUserIds) && empty($newMentee['email'] ?? null)
             ? 'Skip for now'
             : trim(implode(', ', array_filter([
-                ! empty($selectedUserIds) ? \App\Models\User::whereIn('id', $selectedUserIds)->pluck('name')->implode(', ') : null,
+                ! empty($selectedUserIds) ? User::whereIn('id', $selectedUserIds)->pluck('name')->implode(', ') : null,
                 ! empty($newMentee['email'] ?? null) ? trim(($newMentee['first_name'] ?? '').' '.($newMentee['last_name'] ?? '')) : null,
             ])));
 
