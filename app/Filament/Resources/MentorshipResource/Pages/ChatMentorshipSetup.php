@@ -82,15 +82,28 @@ class ChatMentorshipSetup extends Page implements HasForms
         return 'slot';
     }
 
+    public function isModulesStageEmonc(): bool
+    {
+        return app(MentorshipWizardService::class)->isEmoncProgram($this->training->program_id);
+    }
+
+    /**
+     * Parent modules with their tracks attached (as ->availableChildren),
+     * exactly what EmoncModulePicker::getModules() already returns for the
+     * wizard — reused as-is so the chat picker shows the same tracks (e.g.
+     * PPH's 11) instead of collapsing each parent+tracks down to just the
+     * parent, which is what a flat pluck('name', 'id') would do.
+     */
+    public function getEmoncModuleTree(): \Illuminate\Support\Collection
+    {
+        $picker = new \App\Filament\Forms\Components\EmoncModulePicker('module_ids');
+        $picker->training($this->training)->class($this->class)->includeAssigned();
+
+        return $picker->getModules();
+    }
+
     public function getModuleFieldOptions(): array
     {
-        if (app(MentorshipWizardService::class)->isEmoncProgram($this->training->program_id)) {
-            $picker = new \App\Filament\Forms\Components\EmoncModulePicker('module_ids');
-            $picker->training($this->training)->class($this->class)->includeAssigned();
-
-            return $picker->getModules()->pluck('name', 'id')->all();
-        }
-
         return \App\Models\ProgramModule::where('program_id', $this->training->program_id)
             ->where('is_active', true)
             ->whereNull('parent_id')
@@ -101,7 +114,7 @@ class ChatMentorshipSetup extends Page implements HasForms
 
     public function submitModules(array $moduleIds): void
     {
-        if (app(MentorshipWizardService::class)->isEmoncProgram($this->training->program_id)) {
+        if ($this->isModulesStageEmonc()) {
             if ($error = app(MentorshipWizardService::class)->validateModuleDates($moduleIds, $this->moduleDates)) {
                 $this->addError('value', $error);
 
