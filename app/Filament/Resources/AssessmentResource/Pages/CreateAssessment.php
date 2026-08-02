@@ -90,6 +90,7 @@ class CreateAssessment extends CreateRecord
                                 modifyQueryUsing: fn ($query) => $query->where('is_active', true)->orderBy('name'),
                             )
                             ->searchable()
+                            ->preload()
                             ->required(),
                         Forms\Components\DatePicker::make('assessment_date')
                             ->label('Assessment Date')
