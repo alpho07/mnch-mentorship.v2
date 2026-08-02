@@ -114,4 +114,64 @@ class AssessmentDownloadActionTest extends TestCase
         $this->assertTrue($assessment->trained_before_mentorship);
         $this->assertNotNull($assessment->trained_marked_at);
     }
+
+    public function test_actions_have_the_renamed_labels(): void
+    {
+        $this->actingAsAdmin();
+        $assessment = $this->createCompletedAssessment();
+
+        Livewire::test(ListAssessments::class)
+            ->assertTableActionHasLabel('view_summary', 'View Summary', $assessment)
+            ->assertTableActionHasLabel('download_pdf', 'Download Report', $assessment);
+
+        $assessment->update(['status' => 'in_progress']);
+
+        Livewire::test(ListAssessments::class)
+            ->assertTableActionHasLabel('dashboard', 'Continue Summary', $assessment);
+    }
+
+    public function test_only_an_admin_can_delete_a_completed_assessment(): void
+    {
+        Role::firstOrCreate(['name' => 'assessor', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'view_any_assessment', 'guard_name' => 'web']);
+        $assessor = User::factory()->create(['name' => 'Plain Assessor']);
+        $assessor->assignRole('assessor');
+        $assessor->givePermissionTo('view_any_assessment');
+        $this->actingAs($assessor);
+
+        $assessment = $this->createCompletedAssessment();
+
+        Livewire::test(ListAssessments::class)
+            ->assertTableActionHidden('delete', $assessment);
+
+        $this->actingAsAdmin();
+
+        Livewire::test(ListAssessments::class)
+            ->assertTableActionVisible('delete', $assessment);
+    }
+
+    public function test_delete_is_visible_for_non_completed_assessments_regardless_of_role(): void
+    {
+        Role::firstOrCreate(['name' => 'assessor', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'view_any_assessment', 'guard_name' => 'web']);
+        $assessor = User::factory()->create(['name' => 'Plain Assessor']);
+        $assessor->assignRole('assessor');
+        $assessor->givePermissionTo('view_any_assessment');
+        $this->actingAs($assessor);
+
+        $assessment = $this->createCompletedAssessment();
+        $assessment->update(['status' => 'in_progress']);
+
+        Livewire::test(ListAssessments::class)
+            ->assertTableActionVisible('delete', $assessment);
+    }
+
+    public function test_assessor_column_is_visible_without_toggling(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $this->createCompletedAssessment();
+
+        Livewire::test(ListAssessments::class)
+            ->assertSee($admin->name);
+    }
 }

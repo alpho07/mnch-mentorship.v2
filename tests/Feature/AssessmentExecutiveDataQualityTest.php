@@ -181,4 +181,41 @@ class AssessmentExecutiveDataQualityTest extends TestCase
         $response->assertOk();
         $response->assertSee('Infrastructure ↔ Skills Lab');
     }
+
+    public function test_completeness_ratio_shows_a_percentage_alongside_the_count(): void
+    {
+        $assessor = $this->actingAsAssessor();
+        $assessment = $this->buildScenario($assessor);
+
+        $response = $this->get(route('assessment.executive', $assessment));
+
+        $response->assertOk();
+        // Infrastructure: 3/3 answered.
+        $response->assertSee('3/3 (100%)', false);
+    }
+
+    /**
+     * 1111 is a known junk sentinel from bad data entry, not a real
+     * question count — a section score row carrying it should render as
+     * "N/A" rather than a misleading ratio, and should not skew the
+     * overall completeness percentage.
+     */
+    public function test_a_junk_1111_count_is_displayed_as_na_and_excluded_from_the_overall_percentage(): void
+    {
+        $assessor = $this->actingAsAssessor();
+        $assessment = $this->buildScenario($assessor);
+
+        AssessmentSectionScore::where('assessment_id', $assessment->id)
+            ->whereHas('section', fn ($q) => $q->where('code', 'infrastructure'))
+            ->update(['total_questions' => 1111]);
+
+        $response = $this->get(route('assessment.executive', $assessment));
+
+        $response->assertOk();
+        $response->assertSee('N/A');
+        $response->assertDontSee('1111');
+        // Only Skills Lab (0/3) remains in the overall figure once the
+        // junk Infrastructure row is excluded — not skewed by "1111".
+        $response->assertSee('0% complete');
+    }
 }

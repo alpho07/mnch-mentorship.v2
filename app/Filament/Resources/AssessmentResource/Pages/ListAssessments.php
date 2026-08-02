@@ -146,8 +146,7 @@ class ListAssessments extends ListRecords
                     }),
                 Tables\Columns\TextColumn::make('assessor.name')
                     ->label('Assessor')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -179,13 +178,13 @@ class ListAssessments extends ListRecords
                 Tables\Actions\ActionGroup::make([
                     // View Summary Action
                     Tables\Actions\Action::make('view_summary')
-                        ->label('View')
+                        ->label('View Summary')
                         ->icon('heroicon-o-eye')
                         ->color('info')
                         ->url(fn ($record) => AssessmentResource::getUrl('summary', ['record' => $record])),
                     // Dashboard Action
                     Tables\Actions\Action::make('dashboard')
-                        ->label('Continue')
+                        ->label('Continue Summary')
                         ->icon('heroicon-o-clipboard-document-list')
                         ->color('primary')
                         ->visible(fn ($record) => $record->status !== 'completed')
@@ -213,7 +212,7 @@ class ListAssessments extends ListRecords
                         }),
                     // Download PDF Action
                     Tables\Actions\Action::make('download_pdf')
-                        ->label('PDF')
+                        ->label('Download Report')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('warning')
                         ->visible(fn ($record) => $record->status === 'completed')
@@ -307,7 +306,12 @@ class ListAssessments extends ListRecords
                                 ->send();
                         }),
                     Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make(),
+                    // Once an assessment is completed, only an admin can delete it —
+                    // draft/in-progress assessments can still be deleted by anyone
+                    // with the base delete permission.
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn ($record) => $record->status !== 'completed'
+                            || auth()->user()?->hasRole(['admin', 'super_admin'])),
                 ])
                     ->label('Actions')
                     ->icon('heroicon-m-ellipsis-vertical')

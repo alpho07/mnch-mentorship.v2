@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\DB;
 
 class AssessmentExecutiveDashboardController extends Controller
 {
+    /**
+     * A total/answered count of exactly this value is a known junk
+     * sentinel from bad data entry, not a real question count.
+     */
+    private const JUNK_COUNT_SENTINEL = 1111;
+
     public function show(Assessment $assessment)
     {
         $data = $this->buildDashboardData($assessment);
@@ -58,7 +64,21 @@ class AssessmentExecutiveDashboardController extends Controller
                 'assessment_section_scores.answered_questions',
             )
             ->get()
-            ->keyBy('code');
+            ->keyBy('code')
+            ->map(function ($ss) {
+                // 1111 is a known junk sentinel from bad data entry, not a
+                // real question count — scrubbed here so every downstream
+                // consumer (score-strip, per-section "X/Y" boxes, the Data
+                // Quality completeness bars) sees null instead of a
+                // misleading number, rather than sanitizing it separately
+                // in each place it's displayed.
+                if ($ss->total_questions === self::JUNK_COUNT_SENTINEL || $ss->answered_questions === self::JUNK_COUNT_SENTINEL) {
+                    $ss->total_questions = null;
+                    $ss->answered_questions = null;
+                }
+
+                return $ss;
+            });
 
         // ── Infrastructure responses ──────────────────────────────────────────
         $infraResponses = DB::table('assessment_questions')
@@ -208,7 +228,7 @@ class AssessmentExecutiveDashboardController extends Controller
 
         // ── Data Quality ─────────────────────────────────────────────────────
         $sectionCompleteness = $this->buildSectionCompleteness($sectionScores);
-        $overallCompleteness = $this->overallCompleteness($sectionScores);
+        $overallCompleteness = $this->overallCompleteness($sectionCompleteness);
         $straightLiningFlags = $this->detectStraightLining($infraResponses, $skillsResponses, $infoResponses, $qocAll);
         $dataQualityInsights = $this->generateDataQualityInsights(
             $sectionScores, $hrCoverage, $overallCommodityPct, $deptScores
@@ -242,30 +262,39 @@ class AssessmentExecutiveDashboardController extends Controller
 
     /**
      * Per-section response-completeness percentages, driven by the same
-     * assessment_section_scores rows the score strip already uses.
+     * assessment_section_scores rows the score strip already uses. The
+     * 1111 junk sentinel (see the $sectionScores map() above) has already
+     * been scrubbed to null by this point — a section carrying it is
+     * marked invalid and displayed as "N/A" rather than a misleading
+     * ratio, and is excluded from the overall completeness figure.
      *
-     * @return \Illuminate\Support\Collection<int, array{code: string, name: string, answered: int, total: int, percentage: float}>
+     * @return \Illuminate\Support\Collection<int, array{code: string, name: string, answered: int, total: int, percentage: float, valid: bool, display: string}>
      */
     private function buildSectionCompleteness($sectionScores): \Illuminate\Support\Collection
     {
         return $sectionScores->map(function ($ss) {
+            $valid = $ss->total_questions !== null && $ss->answered_questions !== null;
             $total = (int) $ss->total_questions;
             $answered = (int) $ss->answered_questions;
+            $percentage = $valid && $total > 0 ? round(($answered / $total) * 100, 1) : 0.0;
 
             return [
                 'code' => $ss->code,
                 'name' => $ss->name,
                 'answered' => $answered,
                 'total' => $total,
-                'percentage' => $total > 0 ? round(($answered / $total) * 100, 1) : 0.0,
+                'percentage' => $percentage,
+                'valid' => $valid,
+                'display' => $valid ? "{$answered}/{$total} ({$percentage}%)" : 'N/A',
             ];
         })->values();
     }
 
-    private function overallCompleteness($sectionScores): float
+    private function overallCompleteness($sectionCompleteness): float
     {
-        $total = $sectionScores->sum('total_questions');
-        $answered = $sectionScores->sum('answered_questions');
+        $valid = $sectionCompleteness->where('valid', true);
+        $total = $valid->sum('total');
+        $answered = $valid->sum('answered');
 
         return $total > 0 ? round(($answered / $total) * 100, 1) : 0.0;
     }

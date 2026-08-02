@@ -373,14 +373,14 @@ body {
                 @foreach($sectionCompleteness as $sc)
                 @php
                     $scPct = (float) $sc['percentage'];
-                    $scColor = $scPct >= 90 ? '#10b981' : ($scPct >= 70 ? '#f59e0b' : '#ef4444');
+                    $scColor = ! $sc['valid'] ? '#94a3b8' : ($scPct >= 90 ? '#10b981' : ($scPct >= 70 ? '#f59e0b' : '#ef4444'));
                 @endphp
                 <div class="dept-bar-row">
                     <div class="dept-name">{{ Str::limit($sc['name'], 28) }}</div>
                     <div class="dept-bar-wrap">
-                        <div class="dept-bar-fill" style="width:{{ $scPct }}%;background:{{ $scColor }};"></div>
+                        <div class="dept-bar-fill" style="width:{{ $sc['valid'] ? $scPct : 0 }}%;background:{{ $scColor }};"></div>
                     </div>
-                    <div class="dept-pct" style="color:{{ $scColor }};">{{ $sc['answered'] }}/{{ $sc['total'] }}</div>
+                    <div class="dept-pct" style="color:{{ $scColor }};">{{ $sc['display'] }}</div>
                 </div>
                 @endforeach
             </div>
@@ -480,7 +480,7 @@ body {
         @if($sectionScores->has('infrastructure'))
         @php $ss = $sectionScores->get('infrastructure'); @endphp
         <div style="margin-top:1rem;padding:.75rem 1rem;background:#f8fafc;border-radius:9px;font-size:.78rem;color:#475569;">
-            <strong>{{ $ss->answered_questions }}/{{ $ss->total_questions }}</strong> indicators met &nbsp;&bull;&nbsp;
+            <strong>{{ $ss->total_questions !== null ? "{$ss->answered_questions}/{$ss->total_questions}" : 'N/A' }}</strong> indicators met &nbsp;&bull;&nbsp;
             Score: <strong>{{ number_format($ss->total_score,0) }}/{{ $ss->max_score }}</strong>
         </div>
         @endif
@@ -744,7 +744,7 @@ body {
         @if($sectionScores->has('information_systems'))
         @php $ss = $sectionScores->get('information_systems'); @endphp
         <div style="margin-top:1rem;padding:.75rem 1rem;background:#f8fafc;border-radius:9px;font-size:.78rem;color:#475569;">
-            <strong>{{ $ss->answered_questions }}/{{ $ss->total_questions }}</strong> records/registers in place &nbsp;&bull;&nbsp;
+            <strong>{{ $ss->total_questions !== null ? "{$ss->answered_questions}/{$ss->total_questions}" : 'N/A' }}</strong> records/registers in place &nbsp;&bull;&nbsp;
             Score: <strong>{{ number_format($ss->total_score,0) }}/{{ $ss->max_score }}</strong>
         </div>
         @endif
