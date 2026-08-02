@@ -70,6 +70,10 @@ class MnchGptSetup extends Page implements HasForms
         $registry = new ChatToolRegistry;
         $registry->register(MentorshipSetupToolProvider::tool($this));
 
+        foreach (\App\Services\Chat\Tools\MentorshipStatsToolProvider::tools() as $tool) {
+            $registry->register($tool);
+        }
+
         return $registry;
     }
 
