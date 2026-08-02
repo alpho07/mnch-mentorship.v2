@@ -27,7 +27,6 @@ $isApproved  = (bool) $mentorApprovedAt;
 $isReady     = $isReadyForMentorApproval;
 $canApprove  = $canMentorApprove;
 $canRevert   = $isApproved && !$headApprovedAt && $canApprove;
-$mentorLocked = $isApproved;
 
 // Hero overall status
 if ($isEmonc && $headApprovedAt)   { $overallStatus = 'certified'; }
@@ -532,49 +531,6 @@ else                               { $vidC='#f59e0b'; $vidBg='#fffbeb'; $vidBdr=
                     @else
                         <p style="font-size:13px;color:#9ca3af;margin:0;font-style:italic;">This module does not have a post-test.</p>
                     @endif
-                </div>
-            </div>
-
-            {{-- Video Evaluation Form --}}
-            <div class="rv-card rv-animate" style="animation-delay:0.26s;background:#fff;border:1.5px solid {{ $mentorLocked ? '#fde68a' : '#e5e7eb' }};border-radius:18px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05);{{ $mentorLocked ? 'opacity:0.7;' : '' }}">
-                <div style="padding:18px 24px 15px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:36px;height:36px;border-radius:10px;background:{{ $mentorLocked ? '#fef3c7' : '#f0f9ff' }};display:flex;align-items:center;justify-content:center;">
-                            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="{{ $mentorLocked ? '#f59e0b' : '#0ea5e9' }}" style="width:18px;height:18px;">
-                                @if($mentorLocked)
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
-                                @else
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
-                                @endif
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 style="font-size:15px;font-weight:700;color:#111827;margin:0;">Video Evaluation</h3>
-                            <p style="font-size:11px;color:{{ $mentorLocked ? '#d97706' : '#9ca3af' }};margin:2px 0 0;">{{ $mentorLocked ? 'Locked — revert approval to edit' : 'Mentor records outcome and feedback' }}</p>
-                        </div>
-                    </div>
-                    @if($mentorLocked)
-                        <span style="display:inline-flex;align-items:center;gap:5px;background:#fef3c7;color:#92400e;border-radius:9999px;padding:4px 12px;font-size:12px;font-weight:700;">
-                            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:12px;height:12px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
-                            Locked
-                        </span>
-                    @endif
-                </div>
-                <div style="padding:24px;{{ $mentorLocked ? 'pointer-events:none;user-select:none;' : '' }}">
-                    <form wire:submit="saveReview">
-                        {{ $this->form }}
-                        <div style="margin-top:20px;padding-top:18px;border-top:1px solid #f3f4f6;display:flex;align-items:center;gap:12px;">
-                            <button type="submit"
-                                    @if($mentorLocked) disabled @endif
-                                    style="{{ $mentorLocked
-                                        ? 'display:inline-flex;align-items:center;gap:7px;background:#f3f4f6;color:#9ca3af;border:none;border-radius:10px;padding:10px 22px;font-size:14px;font-weight:600;cursor:not-allowed;'
-                                        : 'display:inline-flex;align-items:center;gap:7px;background:#2563eb;color:#fff;border:none;border-radius:10px;padding:10px 22px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(37,99,235,.3);' }}">
-                                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                Save Review
-                            </button>
-                            <span style="font-size:12px;color:#9ca3af;">{{ $mentorLocked ? 'Locked after mentor approval.' : 'Saves outcome and notifies the mentee.' }}</span>
-                        </div>
-                    </form>
                 </div>
             </div>
 

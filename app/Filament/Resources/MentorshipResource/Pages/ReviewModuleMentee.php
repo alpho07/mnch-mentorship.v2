@@ -15,17 +15,12 @@ use App\Models\Training;
 use App\Services\EmoncNotificationService;
 use App\Services\QuizAttemptService;
 use Filament\Actions;
-use Filament\Forms;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Collection;
 
-class ReviewModuleMentee extends Page implements HasForms
+class ReviewModuleMentee extends Page
 {
-    use InteractsWithForms;
-
     protected static string $resource = MentorshipTrainingResource::class;
 
     protected static string $view = 'filament.pages.review-module-mentee';
@@ -54,9 +49,6 @@ class ReviewModuleMentee extends Page implements HasForms
 
     public ?RubricAssessment $latestRubricAssessment = null;
 
-    // Form data property required by InteractsWithForms / statePath('data')
-    public ?array $data = [];
-
     public function mount(Training $training, MentorshipClass $class, ClassModule $module, ClassParticipant $participant): void
     {
         $this->training = $training->load(['facility', 'program', 'mentor']);
@@ -74,11 +66,6 @@ class ReviewModuleMentee extends Page implements HasForms
         $this->loadQuizStatuses();
         $this->loadActivities();
         $this->loadRubricData();
-
-        $this->form->fill([
-            'video_review_status' => $this->progress?->video_review_status ?? 'pending',
-            'video_review_notes' => $this->progress?->video_review_notes ?? '',
-        ]);
     }
 
     protected function getViewData(): array
@@ -122,28 +109,6 @@ class ReviewModuleMentee extends Page implements HasForms
                     'module' => $this->module->id,
                 ])),
         ];
-    }
-
-    public function form(Forms\Form $form): Forms\Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('video_review_status')
-                    ->label('Video Review Outcome')
-                    ->options([
-                        'pending' => 'Pending',
-                        'passed' => 'Passed',
-                        'failed' => 'Failed',
-                    ])
-                    ->required()
-                    ->native(true),
-                Forms\Components\Textarea::make('video_review_notes')
-                    ->label('Review Notes')
-                    ->rows(4)
-                    ->maxLength(2000)
-                    ->placeholder('Feedback for the mentee...'),
-            ])
-            ->statePath('data');
     }
 
     public function mentorApprove(): void
@@ -218,38 +183,6 @@ class ReviewModuleMentee extends Page implements HasForms
 
         Notification::make()->warning()->title('Approval Reverted')
             ->body("Mentor approval for {$this->participant->user?->full_name} has been reverted.")
-            ->send();
-    }
-
-    public function saveReview(): void
-    {
-        $data = $this->form->getState();
-
-        $progress = MenteeModuleProgress::updateOrCreate(
-            [
-                'class_participant_id' => $this->participant->id,
-                'class_module_id' => $this->module->id,
-            ],
-            [
-                'status' => $this->progress?->status ?? 'in_progress',
-                'started_at' => $this->progress?->started_at ?? now(),
-            ]
-        );
-
-        $progress->recordVideoReview(
-            $data['video_review_status'],
-            $data['video_review_notes'],
-            auth()->id()
-        );
-
-        app(EmoncNotificationService::class)->videoReviewed($progress->fresh());
-
-        $this->progress = $progress->fresh(['preTestAttempt.responses.option', 'postTestAttempt.responses.option']);
-
-        Notification::make()
-            ->success()
-            ->title('Review Saved')
-            ->body("Evaluation saved for {$this->participant->user?->full_name}.")
             ->send();
     }
 
