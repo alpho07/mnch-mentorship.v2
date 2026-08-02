@@ -3,8 +3,11 @@
 namespace App\Filament\Resources\AssessmentResource\Pages;
 
 use App\Filament\Resources\AssessmentResource;
+use App\Models\County;
+use App\Models\Facility;
 use App\Services\AssessmentExportService;
 use Filament\Actions;
+use Filament\Forms;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables;
@@ -153,13 +156,55 @@ class ListAssessments extends ListRecords
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('county_id')
+                    ->label('County')
+                    ->searchable()
+                    ->options(fn () => County::orderBy('name')->pluck('name', 'id'))
+                    ->query(fn (Builder $query, array $data): Builder => $query->when(
+                        $data['value'] ?? null,
+                        fn (Builder $q, $countyId) => $q->whereHas(
+                            'facility.subcounty',
+                            fn ($sq) => $sq->where('county_id', $countyId)
+                        )
+                    )),
+                Tables\Filters\Filter::make('facility_id')
+                    ->label('Facility')
+                    ->form([
+                        Forms\Components\Select::make('facility_id')
+                            ->label('Facility')
+                            ->searchable()
+                            ->getSearchResultsUsing(fn (string $search) => Facility::where('name', 'like', "%{$search}%")
+                                ->orWhere('mfl_code', 'like', "%{$search}%")
+                                ->limit(50)
+                                ->get()
+                                ->mapWithKeys(fn (Facility $f) => [$f->id => "{$f->mfl_code} — {$f->name}"]))
+                            ->getOptionLabelUsing(fn ($value): ?string => Facility::find($value)?->name),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query->when(
+                        $data['facility_id'] ?? null,
+                        fn (Builder $q, $facilityId) => $q->where('facility_id', $facilityId)
+                    ))
+                    ->indicateUsing(fn (array $data): ?string => filled($data['facility_id'] ?? null)
+                        ? 'Facility: '.Facility::find($data['facility_id'])?->name
+                        : null),
+                Tables\Filters\SelectFilter::make('assessment_type_id')
+                    ->label('Assessment Template')
+                    ->relationship('assessmentType', 'name')
+                    ->searchable()
+                    ->preload(),
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'draft' => 'Draft',
                         'in_progress' => 'In Progress',
                         'completed' => 'Completed',
                     ]),
+                Tables\Filters\SelectFilter::make('assessor_id')
+                    ->label('Assessor')
+                    ->relationship('assessor', 'name')
+                    ->searchable()
+                    ->preload(),
                 Tables\Filters\SelectFilter::make('assessment_type')
+                    ->label('Assessment Round')
                     ->options([
                         'baseline' => 'Baseline',
                         'midline' => 'Midline',
