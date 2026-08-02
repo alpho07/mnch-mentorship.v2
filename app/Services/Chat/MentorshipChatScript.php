@@ -2,11 +2,12 @@
 
 namespace App\Services\Chat;
 
-use App\Filament\Resources\MentorshipResource\Pages\ChatMentorshipSetup;
+use App\Filament\Resources\MentorshipResource\Pages\Concerns\HasMentorshipChatSlots;
 use App\Models\County;
 use App\Models\Facility;
 use App\Models\Program;
 use App\Services\MentorshipWizardService;
+use Filament\Resources\Pages\Page;
 use Illuminate\Support\Carbon;
 
 /**
@@ -14,16 +15,21 @@ use Illuminate\Support\Carbon;
  * same five persistence stages the guided wizard already uses (see
  * docs/GUIDED-MENTORSHIP-SETUP-REFERENCE.md §6). Built fresh per request
  * from the live page instance so closures can read $page->training /
- * $page->class once those exist.
+ * $page->class once those exist. $page is any Filament Page using the
+ * HasMentorshipChatSlots trait (ChatMentorshipSetup or MnchGptSetup) —
+ * typed against the common Page base since PHP traits can't be used as
+ * type hints; the trait is what actually guarantees the properties/methods
+ * these closures rely on.
  */
 class MentorshipChatScript
 {
     public const STAGES = ['training_details', 'first_class', 'modules', 'enroll_mentees', 'send_invitations'];
 
     /**
+     * @param  Page&HasMentorshipChatSlots  $page
      * @return Slot[]
      */
-    public static function build(ChatMentorshipSetup $page): array
+    public static function build(Page $page): array
     {
         return [
             Slot::make('is_pilot')

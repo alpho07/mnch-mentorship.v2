@@ -590,6 +590,7 @@ class MentorshipTrainingResource extends Resource
             'create' => Pages\CreateMentorshipTraining::route('/create'),
             'guided-setup' => Pages\GuidedMentorshipSetup::route('/guided-setup'),
             'chat-setup' => Pages\ChatMentorshipSetup::route('/chat-setup'),
+            'mnchgpt-setup' => Pages\MnchGptSetup::route('/mnchgpt-setup'),
             'view' => Pages\ViewMentorshipTraining::route('/{record}'),
             'edit' => Pages\EditMentorshipTraining::route('/{record}/edit'),
             'classes' => Pages\ManageMentorshipClasses::route('/{record}/classes'),
