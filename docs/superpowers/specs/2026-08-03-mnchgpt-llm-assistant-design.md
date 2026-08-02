@@ -33,6 +33,11 @@ pattern as the three existing creation methods.
   see by clicking to the real page.
 - A failed extraction never blocks progress — it silently falls back to the
   real card/button picker for that one slot.
+- After every turn, the assistant is explicit and strict about everything
+  still outstanding — not just the next single question — so a user typing
+  a partial description up front always knows the full remaining checklist,
+  including stages beyond the current one (module selection, mentee
+  enrollment, sending invitations).
 
 ## Non-goals (out of scope for this spec)
 
@@ -104,6 +109,35 @@ Both `ChatMentorshipSetup` and the new `MnchGptSetup` use it. Verified via
 the existing `ChatMentorshipSetupTest.php` suite passing unmodified after
 the extraction (the same verification approach used for the original
 Guided Setup → Chat Setup extraction earlier this project).
+
+The trait also gains **`remainingRequirements(): array`** — a deterministic,
+non-LLM checklist of everything not yet done, spanning the *whole* creation
+process, not just the current stage. Walks `MentorshipChatScript::STAGES` in
+order and, for each, lists required `Slot`s not yet answered (skipping
+optional ones like `class_description` and any hidden by `visibleWhen()`);
+after the last declared `Slot` stage, appends the two composite stages not
+modeled as `Slot`s (module selection, mentee enrollment) as fixed checklist
+entries whenever the flow hasn't reached them yet, and `send_invitations` as
+the final entry. Returns e.g.:
+
+```php
+[
+    ['stage' => 'training_details', 'label' => 'Maximum number of mentees', 'filled' => false],
+    ['stage' => 'first_class', 'label' => 'Class name', 'filled' => false],
+    ['stage' => 'modules', 'label' => 'Select training modules', 'filled' => false],
+    ['stage' => 'enroll_mentees', 'label' => 'Enroll mentees', 'filled' => false],
+    ['stage' => 'send_invitations', 'label' => 'Send invitation emails', 'filled' => false],
+]
+```
+
+This is the same list both `ChatMentorshipSetup` *could* use (out of scope
+to wire up there — it has no chat-reply surface to show it in) and
+`MnchGptSetup` does use, in two places: rendered as a small persistent
+progress checklist in the page itself (always accurate regardless of what
+the LLM says), and passed as context into every
+`LlmMentorshipAssistantService::respond()` call so the model's natural-
+language reply can reference it accurately instead of guessing or relying
+on its own memory of the conversation. See Data Flow below.
 
 ### New page
 
@@ -213,13 +247,24 @@ thin **`App\Services\AssessmentSummaryQueryService`**.
      shared `answer()` logic, triggers the same stage-completion side
      effects (creating Training/Class records) as today.
    - Query: runs the scoped read-only lookup, returns structured data.
-5. Tool results are sent back to DeepSeek; the model's final natural-language
+5. After tool execution, `remainingRequirements()` is recomputed against the
+   *post-tool-call* state and included alongside the tool results sent back
+   to DeepSeek — the model is instructed (system prompt) to always mention
+   every outstanding item by name in its reply when the list is non-empty,
+   not just the single next question. This is a prompting instruction, not
+   a hard guarantee the model complies every time — the persistent
+   checklist rendered in the page (next step) is what makes the reminder
+   actually strict/reliable, the spoken reply is the natural-language
+   reinforcement on top.
+6. Tool results are sent back to DeepSeek; the model's final natural-language
    reply is appended to the transcript as the assistant's turn.
-6. If any setup slots remain unfilled, the normal question + card/button UI
-   renders below the transcript for the next one — exactly as
-   `ChatMentorshipSetup` does today. The user can keep typing free text
-   (filling more slots at once) or click the card — both paths converge on
-   the same `answer()` method.
+7. `remainingRequirements()` also renders as a small, always-visible
+   checklist in the page itself (independent of what the model said) —
+   this is the strict, non-negotiable reminder. If any setup slots remain
+   unfilled, the normal question + card/button UI renders below the
+   transcript for the next one — exactly as `ChatMentorshipSetup` does
+   today. The user can keep typing free text (filling more slots at once)
+   or click the card — both paths converge on the same `answer()` method.
 
 ## Guardrails
 
@@ -299,6 +344,12 @@ thin **`App\Services\AssessmentSummaryQueryService`**.
   extraction is dropped and falls back to the card UI; a query-only message
   doesn't touch `$this->answers` at all; stage-completion side effects
   (Training/Class creation) fire identically to the click-driven path.
+- `remainingRequirements()`: unit tests covering every stage transition —
+  empty answers returns the full checklist including both composite stages;
+  each slot filled removes exactly its own entry; reaching the modules/
+  enroll_mentees stages removes their placeholder entries once
+  `module_ids`/`selected_users` are actually set; an empty array once
+  everything (including invitations) is done.
 - Regression: full suite must stay green, matching the standard established
   throughout this project (pre-existing `ExampleTest`/`LookupApiTest`
   failures are the only acceptable exceptions).
