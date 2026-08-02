@@ -353,6 +353,80 @@ body {
     </div>
 </div>
 
+{{-- ── Data Quality ─────────────────────────────────────────────────── --}}
+<div class="section-wrap">
+    <div class="section-header">
+        <div class="section-icon" style="background:#f5f3ff;color:#7c3aed;"><i class="fas fa-magnifying-glass-chart"></i></div>
+        <div style="flex:1;">
+            <div class="section-title">Data Quality</div>
+            <div class="section-sub">Response completeness and cross-section relationships in this assessment</div>
+        </div>
+        <span class="score-pill {{ $pillClass($overallCompleteness >= 90 ? 'green' : ($overallCompleteness >= 70 ? 'yellow' : 'red')) }}">{{ $overallCompleteness }}% complete</span>
+    </div>
+    <div class="section-body">
+
+        {{-- Completeness by section --}}
+        @if($sectionCompleteness->isNotEmpty())
+        <div style="margin-bottom:1.2rem;">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:.75rem;">Response Completeness by Section</div>
+            <div class="dept-bars">
+                @foreach($sectionCompleteness as $sc)
+                @php
+                    $scPct = (float) $sc['percentage'];
+                    $scColor = $scPct >= 90 ? '#10b981' : ($scPct >= 70 ? '#f59e0b' : '#ef4444');
+                @endphp
+                <div class="dept-bar-row">
+                    <div class="dept-name">{{ Str::limit($sc['name'], 28) }}</div>
+                    <div class="dept-bar-wrap">
+                        <div class="dept-bar-fill" style="width:{{ $scPct }}%;background:{{ $scColor }};"></div>
+                    </div>
+                    <div class="dept-pct" style="color:{{ $scColor }};">{{ $sc['answered'] }}/{{ $sc['total'] }}</div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- Straight-lining flags --}}
+        @if(!empty($straightLiningFlags))
+        <div style="margin-bottom:1.2rem;">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:.75rem;">Response Pattern Flags</div>
+            @foreach($straightLiningFlags as $flag)
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;padding:.7rem 1rem;border-radius:9px;background:#fffbeb;border:1px solid #fde68a;">
+                <i class="fas fa-triangle-exclamation" style="color:#d97706;font-size:1rem;"></i>
+                <div style="font-size:.78rem;color:#92400e;">
+                    <strong>{{ $flag['section'] }}</strong> — all {{ $flag['count'] }} answered items marked "{{ $flag['value'] }}". Worth a spot-check that each item was assessed individually rather than answered uniformly.
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
+
+        {{-- Cross-section relationship insights --}}
+        @if(!empty($dataQualityInsights))
+        <div>
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:.75rem;">Relationships Across Sections</div>
+            <div class="insights-wrap">
+                @foreach($dataQualityInsights as $insight)
+                <div class="insight-card {{ $insight['type'] }}">
+                    <div class="insight-icon"><i class="fas fa-{{ $insight['icon'] }}"></i></div>
+                    <div>
+                        <div class="insight-area">{{ $insight['area'] }}</div>
+                        <div class="insight-text">{{ $insight['text'] }}</div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        @if(empty($straightLiningFlags) && empty($dataQualityInsights) && $sectionCompleteness->isEmpty())
+        <p style="font-size:.8rem;color:#94a3b8;font-style:italic;">Not enough scored data yet to compute data-quality insights.</p>
+        @endif
+
+    </div>
+</div>
+
 {{-- ── Charts Row ───────────────────────────────────────────────────── --}}
 @if(!$isPdf && $sectionScores->isNotEmpty())
 <div class="charts-row">
