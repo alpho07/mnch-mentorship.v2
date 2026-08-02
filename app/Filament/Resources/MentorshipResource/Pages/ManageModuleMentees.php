@@ -5,7 +5,6 @@ namespace App\Filament\Resources\MentorshipResource\Pages;
 use App\Filament\Resources\MentorshipTrainingResource;
 use App\Models\ClassAttendance;
 use App\Models\ClassModule;
-use App\Models\ClassModuleActivityParticipant;
 use App\Models\ClassParticipant;
 use App\Models\MenteeModuleProgress;
 use App\Models\MentorshipClass;
@@ -560,42 +559,6 @@ class ManageModuleMentees extends Page implements HasTable
                             $q->where('class_module_id', $this->module->id)
                                 ->where('status', $data['value']);
                         });
-                    }),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkAction::make('bulk_pass_video')
-                    ->label('Pass Video Review for Selected')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('Pass Video Review for Selected Mentees')
-                    ->modalDescription('This will mark the hands-on video review as PASSED for all selected mentees who have submitted a video.')
-                    ->action(function ($records) {
-                        $notificationService = app(EmoncNotificationService::class);
-                        $passed = 0;
-                        $skipped = 0;
-
-                        foreach ($records as $record) {
-                            $progress = MenteeModuleProgress::where('class_participant_id', $record->id)
-                                ->where('class_module_id', $this->module->id)
-                                ->first();
-
-                            if (! $progress || ! $progress->hasSubmittedVideo() || $progress->video_review_status === 'passed') {
-                                $skipped++;
-
-                                continue;
-                            }
-
-                            $progress->recordVideoReview('passed', 'Reviewed in bulk by mentor.', auth()->id());
-                            $notificationService->videoReviewed($progress->fresh());
-                            $passed++;
-                        }
-
-                        Notification::make()
-                            ->success()
-                            ->title('Bulk Video Review Complete')
-                            ->body("{$passed} passed · {$skipped} skipped")
-                            ->send();
                     }),
             ])
             ->emptyStateHeading('No Mentees Enrolled')
