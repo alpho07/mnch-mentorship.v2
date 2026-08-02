@@ -324,9 +324,11 @@ $initials = strtoupper(substr($mentee?->first_name ?? 'M', 0, 1) . substr($mente
                         @foreach([['pre_test','Pre-Test'], ['post_test','Post-Test']] as [$key, $label])
                         @php $t = $mod[$key]; @endphp
                         <div x-data="{ open: false }"
-                             style="border:1.5px solid {{ $t['exists'] ? ($t['passed'] ? '#86efac' : '#fca5a5') : '#e5e7eb' }};border-radius:12px;overflow:hidden;background:{{ $t['exists'] ? ($t['passed'] ? '#f0fdf4' : '#fef2f2') : '#f9fafb' }};">
+                             style="border:1.5px solid {{ $t['exists'] ? '#bfdbfe' : '#e5e7eb' }};border-radius:12px;overflow:hidden;background:{{ $t['exists'] ? '#eff6ff' : '#f9fafb' }};">
 
-                            {{-- Score row (always visible, click to expand) --}}
+                            {{-- Score row (always visible, click to expand) — score only, no
+                                 pass/fail language: that stays exclusive to the practical/
+                                 rubric assessment below (team decision 2026-07-24). --}}
                             <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;{{ $t['exists'] && count($t['questions']) > 0 ? 'cursor:pointer;' : '' }}"
                                  @if($t['exists'] && count($t['questions']) > 0) x-on:click="open = !open" @endif>
                                 <div style="display:flex;align-items:center;gap:14px;">
@@ -334,22 +336,13 @@ $initials = strtoupper(substr($mentee?->first_name ?? 'M', 0, 1) . substr($mente
                                         <p style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 4px;">{{ $label }}</p>
                                         @if($t['exists'])
                                             <div style="display:flex;align-items:baseline;gap:4px;">
-                                                <p style="font-size:28px;font-weight:800;color:{{ $t['passed'] ? '#15803d' : '#dc2626' }};margin:0;line-height:1;">{{ number_format($t['score'] ?? 0, 0) }}</p>
-                                                <p style="font-size:14px;font-weight:700;color:{{ $t['passed'] ? '#15803d' : '#dc2626' }};margin:0;">%</p>
+                                                <p style="font-size:28px;font-weight:800;color:#2563eb;margin:0;line-height:1;">{{ number_format($t['score'] ?? 0, 0) }}</p>
+                                                <p style="font-size:14px;font-weight:700;color:#2563eb;margin:0;">%</p>
                                             </div>
                                         @else
                                             <p style="font-size:13px;color:#9ca3af;margin:0;font-weight:500;">Not taken</p>
                                         @endif
                                     </div>
-                                    @if($t['exists'])
-                                    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:9999px;font-size:11px;font-weight:700;background:{{ $t['passed'] ? '#dcfce7' : '#fee2e2' }};color:{{ $t['passed'] ? '#15803d' : '#dc2626' }};">
-                                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width:10px;height:10px;">
-                                            @if($t['passed'])<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-                                            @else<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>@endif
-                                        </svg>
-                                        {{ $t['passed'] ? 'Passed' : 'Failed' }}
-                                    </span>
-                                    @endif
                                 </div>
                                 @if($t['exists'] && count($t['questions']) > 0)
                                 <div style="display:flex;align-items:center;gap:6px;">

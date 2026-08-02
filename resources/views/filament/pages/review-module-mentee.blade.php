@@ -13,10 +13,8 @@ $initials  = implode('', array_map(fn($w) => strtoupper($w[0]), array_slice($nam
 // Quiz helpers
 $preHas    = $preTestStatus['exists']     ?? false;
 $preDone   = $preTestStatus['completed']  ?? false;
-$prePassed = $preTestStatus['passed']     ?? false;
 $postHas   = $postTestStatus['exists']    ?? false;
 $postDone  = $postTestStatus['completed'] ?? false;
-$postPassed= $postTestStatus['passed']    ?? false;
 
 // Video
 $videoStatus   = $progress?->video_review_status ?? 'pending';
@@ -39,17 +37,24 @@ elseif ($isPresent)                { $overallStatus = 'in_progress'; }
 else                               { $overallStatus = 'pending'; }
 
 // Quick-stat helpers ─────────────────────────────────────────────────────────
-// Pre-test
+// Pre-test — score only, no pass/fail language (team decision 2026-07-24:
+// pass/fail stays exclusive to the practical/rubric assessment; pre/post
+// tests just show the score and, implicitly via pre-vs-post, improvement).
+$preScoreLabel = ($preTestStatus['attempt'] ?? null)
+    ? "{$preTestStatus['attempt']->correct_answers}/{$preTestStatus['attempt']->total_questions}"
+    : 'Done';
+$postScoreLabel = ($postTestStatus['attempt'] ?? null)
+    ? "{$postTestStatus['attempt']->correct_answers}/{$postTestStatus['attempt']->total_questions}"
+    : 'Done';
+
 if (!$preHas)        { $ptC='#9ca3af'; $ptBg='#f9fafb'; $ptBdr='#e5e7eb'; $ptIco='#f3f4f6'; $ptLabel='No Pre-Test';    $ptPath='<path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>'; }
 elseif (!$preDone)   { $ptC='#f59e0b'; $ptBg='#fffbeb'; $ptBdr='#fde68a'; $ptIco='#fef3c7'; $ptLabel='Not Taken';      $ptPath='<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>'; }
-elseif ($prePassed)  { $ptC='#10b981'; $ptBg='#f0fdf4'; $ptBdr='#6ee7b7'; $ptIco='#d1fae5'; $ptLabel='Passed';         $ptPath='<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'; }
-else                 { $ptC='#ef4444'; $ptBg='#fef2f2'; $ptBdr='#fca5a5'; $ptIco='#fee2e2'; $ptLabel='Did Not Pass';   $ptPath='<path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'; }
+else                 { $ptC='#2563eb'; $ptBg='#eff6ff'; $ptBdr='#bfdbfe'; $ptIco='#dbeafe'; $ptLabel=$preScoreLabel;  $ptPath='<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'; }
 
-// Post-test
+// Post-test — same treatment as pre-test.
 if (!$postHas)       { $pstC='#9ca3af'; $pstBg='#f9fafb'; $pstBdr='#e5e7eb'; $pstIco='#f3f4f6'; $pstLabel='No Post-Test';  $pstPath='<path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>'; }
 elseif (!$postDone)  { $pstC='#f59e0b'; $pstBg='#fffbeb'; $pstBdr='#fde68a'; $pstIco='#fef3c7'; $pstLabel='Not Taken';    $pstPath='<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>'; }
-elseif ($postPassed) { $pstC='#10b981'; $pstBg='#f0fdf4'; $pstBdr='#6ee7b7'; $pstIco='#d1fae5'; $pstLabel='Passed';       $pstPath='<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'; }
-else                 { $pstC='#ef4444'; $pstBg='#fef2f2'; $pstBdr='#fca5a5'; $pstIco='#fee2e2'; $pstLabel='Did Not Pass'; $pstPath='<path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'; }
+else                 { $pstC='#2563eb'; $pstBg='#eff6ff'; $pstBdr='#bfdbfe'; $pstIco='#dbeafe'; $pstLabel=$postScoreLabel; $pstPath='<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'; }
 
 // Video review
 if ($videoStatus === 'passed')     { $vidC='#10b981'; $vidBg='#f0fdf4'; $vidBdr='#6ee7b7'; $vidIco='#d1fae5'; $vidLabel='Passed';  $vidPath='<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'; }
