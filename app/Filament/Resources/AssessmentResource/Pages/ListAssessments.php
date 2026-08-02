@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\AssessmentResource\Pages;
 
 use App\Filament\Resources\AssessmentResource;
+use App\Models\Assessment;
 use App\Models\County;
 use App\Models\Facility;
+use App\Models\User;
 use App\Services\AssessmentExportService;
 use Filament\Actions;
 use Filament\Forms;
@@ -159,7 +161,11 @@ class ListAssessments extends ListRecords
                 Tables\Filters\SelectFilter::make('county_id')
                     ->label('County')
                     ->searchable()
-                    ->options(fn () => County::orderBy('name')->pluck('name', 'id'))
+                    // whereNotNull guards against the same crash class as
+                    // the Assessor filter below — `name` is nullable at
+                    // the schema level here too, and a null option label
+                    // breaks Filament's Select rendering for every option.
+                    ->options(fn () => County::whereNotNull('name')->orderBy('name')->pluck('name', 'id'))
                     ->query(fn (Builder $query, array $data): Builder => $query->when(
                         $data['value'] ?? null,
                         fn (Builder $q, $countyId) => $q->whereHas(
@@ -200,9 +206,17 @@ class ListAssessments extends ListRecords
                     ]),
                 Tables\Filters\SelectFilter::make('assessor_id')
                     ->label('Assessor')
-                    ->relationship('assessor', 'name')
-                    ->searchable()
-                    ->preload(),
+                    // Scoped to users who've actually assessed something
+                    // (not every user in the system), and labelled via
+                    // full_name rather than the raw `name` column — some
+                    // users only have first_name/last_name populated and
+                    // a null `name`, which crashes Filament's Select when
+                    // used directly as an option label via relationship().
+                    ->options(fn () => User::whereIn(
+                        'id',
+                        Assessment::query()->whereNotNull('assessor_id')->distinct()->pluck('assessor_id')
+                    )->get()->mapWithKeys(fn (User $u) => [$u->id => $u->full_name]))
+                    ->searchable(),
                 Tables\Filters\SelectFilter::make('assessment_type')
                     ->label('Assessment Round')
                     ->options([

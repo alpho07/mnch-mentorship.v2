@@ -138,4 +138,32 @@ class AssessmentTableFiltersTest extends TestCase
             ->assertCanSeeTableRecords([$b])
             ->assertCanNotSeeTableRecords([$a]);
     }
+
+    /**
+     * The Assessor and County filters build their option lists eagerly
+     * (options()), and Filament's Select crashes with a TypeError
+     * ("$label must be of type string, null given") the moment ANY
+     * option in that list has a null label — not just the affected one.
+     * Both `users.name` and `counties.name` are nullable at the schema
+     * level even though the columns are usually populated. Reproduces
+     * with a user who has a null `name` (only first_name/last_name set,
+     * as several real users in production do) — the Assessor filter must
+     * not blow up just because such a user exists somewhere in the
+     * system, whether or not they've ever assessed anything.
+     */
+    public function test_page_renders_when_a_user_with_a_null_name_exists_in_the_system(): void
+    {
+        $this->actingAsAdmin();
+        $this->buildTwoDistinctAssessments();
+
+        User::factory()->create([
+            'name' => null,
+            'first_name' => 'Null',
+            'last_name' => 'Name',
+        ]);
+
+        $response = $this->get(\App\Filament\Resources\AssessmentResource::getUrl());
+
+        $response->assertOk();
+    }
 }
