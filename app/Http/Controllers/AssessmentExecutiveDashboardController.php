@@ -159,11 +159,16 @@ class AssessmentExecutiveDashboardController extends Controller
             ->keyBy('question_code');
 
         // ── Human Resources ───────────────────────────────────────────────────
+        // human_resource_responses.cadre_id references assessment_cadres
+        // (the MainCadre model), not the unrelated `cadres` table — that
+        // table only has a single "Assessor" row, so joining against it
+        // silently dropped every response whose cadre_id didn't happen to
+        // be 1.
         $hrRows = DB::table('human_resource_responses')
-            ->join('cadres', 'cadres.id', '=', 'human_resource_responses.cadre_id')
+            ->join('assessment_cadres', 'assessment_cadres.id', '=', 'human_resource_responses.cadre_id')
             ->where('human_resource_responses.assessment_id', $aId)
             ->select(
-                'cadres.name as cadre',
+                'assessment_cadres.name as cadre',
                 'human_resource_responses.total_in_facility',
                 'human_resource_responses.etat_plus',
                 'human_resource_responses.comprehensive_newborn_care',
