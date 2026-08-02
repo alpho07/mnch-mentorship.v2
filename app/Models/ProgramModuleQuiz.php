@@ -17,15 +17,22 @@ class ProgramModuleQuiz extends Model
         'title',
         'description',
         'pass_mark_percentage',
+        'time_limit_minutes',
         'order_sequence',
         'is_active',
     ];
 
     protected $casts = [
         'pass_mark_percentage' => 'decimal:2',
+        'time_limit_minutes' => 'integer',
         'order_sequence' => 'integer',
         'is_active' => 'boolean',
     ];
+
+    public function hasTimeLimit(): bool
+    {
+        return $this->time_limit_minutes !== null;
+    }
 
     public function programModule(): BelongsTo
     {

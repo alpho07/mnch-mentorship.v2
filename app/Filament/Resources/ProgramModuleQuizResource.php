@@ -27,7 +27,8 @@ class ProgramModuleQuizResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check() && auth()->user()->can('view_any_program::module::quiz');}
+        return auth()->check() && auth()->user()->can('view_any_program::module::quiz');
+    }
 
     public static function form(Form $form): Form
     {
@@ -75,6 +76,15 @@ class ProgramModuleQuizResource extends Resource
                         ->maxValue(100)
                         ->suffix('%')
                         ->required(),
+
+                    Forms\Components\TextInput::make('time_limit_minutes')
+                        ->label('Time Limit')
+                        ->numeric()
+                        ->nullable()
+                        ->minValue(1)
+                        ->maxValue(180)
+                        ->suffix('minutes')
+                        ->helperText('Leave blank for no time limit.'),
 
                     Forms\Components\TextInput::make('order_sequence')
                         ->label('Order Sequence')
@@ -126,6 +136,12 @@ class ProgramModuleQuizResource extends Resource
                     ->suffix('%')
                     ->badge()
                     ->color('primary'),
+
+                Tables\Columns\TextColumn::make('time_limit_minutes')
+                    ->label('Time Limit')
+                    ->formatStateUsing(fn (?int $state): string => $state ? "{$state} min" : 'No limit')
+                    ->badge()
+                    ->color(fn (?int $state): string => $state ? 'warning' : 'gray'),
 
                 Tables\Columns\TextColumn::make('questions_count')
                     ->label('Questions')
