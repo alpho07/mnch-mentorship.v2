@@ -116,6 +116,16 @@ class MentorshipSettingsTest extends TestCase
         $this->assertFalse(Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED));
     }
 
+    public function test_mnchgpt_toggle_persists_to_the_setting_model(): void
+    {
+        $this->actingAsAdmin();
+
+        Livewire::test(MentorshipSettings::class)
+            ->set('data.mnchgpt_button_enabled', false);
+
+        $this->assertFalse(Setting::getBool(Setting::MNCHGPT_BUTTON_ENABLED));
+    }
+
     public function test_mentorships_list_header_actions_are_disabled_when_their_setting_is_off(): void
     {
         $user = User::factory()->create(['name' => 'List Viewer']);

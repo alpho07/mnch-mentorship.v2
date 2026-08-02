@@ -62,6 +62,7 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
             'new_mentorship_button_enabled' => Setting::getBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED),
             'guided_setup_button_enabled' => Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED),
             'chat_setup_button_enabled' => Setting::getBool(Setting::CHAT_SETUP_BUTTON_ENABLED),
+            'mnchgpt_button_enabled' => Setting::getBool(Setting::MNCHGPT_BUTTON_ENABLED),
         ]);
     }
 
@@ -112,8 +113,21 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
                                     ->success()
                                     ->send();
                             }),
+                        Forms\Components\Toggle::make('mnchgpt_button_enabled')
+                            ->label('"MNCHGPT" button')
+                            ->helperText('The free-text, LLM-powered assistant.')
+                            ->onColor('success')
+                            ->offColor('danger')
+                            ->live()
+                            ->afterStateUpdated(function (bool $state): void {
+                                Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, $state);
+                                Notification::make()
+                                    ->title($state ? 'MNCHGPT enabled' : 'MNCHGPT disabled')
+                                    ->success()
+                                    ->send();
+                            }),
                     ])
-                    ->columns(3),
+                    ->columns(4),
             ])
             ->statePath('data');
     }
