@@ -171,4 +171,34 @@ class MentorshipMenteesToolProviderTest extends TestCase
         $this->assertArrayNotHasKey('selected_users', $page->answers);
         $this->assertSame(0, $page->class->participants()->count());
     }
+
+    /**
+     * A real, matched existing mentee with no email on file pauses instead
+     * of enrolling — chat-mentees-turn.blade.php's missing-email modal is
+     * the only way to supply one (its inputs are bound to Livewire
+     * properties, not reachable through a tool call), so the result must
+     * steer the model toward pointing the user at that modal rather than
+     * asking for a full "registration" (role, department, etc.) that this
+     * app never actually collects.
+     */
+    public function test_execute_pauses_and_hints_at_the_modal_when_a_matched_mentee_has_no_email(): void
+    {
+        $user = $this->actingAsCoordinator();
+        $program = Program::factory()->create(['is_active' => true]);
+        $facility = Facility::factory()->create();
+        $mentee = User::factory()->create(['name' => 'Betty Njoroge', 'first_name' => 'Betty', 'last_name' => 'Njoroge', 'status' => 'active', 'email' => null]);
+        $page = new ChatMentorshipSetup;
+        $page->mount();
+        $this->advanceToEnrollMenteesStage($page, $program, $facility);
+
+        $tool = MentorshipMenteesToolProvider::tool($page);
+        $result = $tool->execute(['existing_mentee_queries' => ['Betty']], $user);
+
+        $this->assertTrue($result['awaiting_email']);
+        $this->assertSame(['Betty Njoroge'], $result['mentees_needing_email']);
+        $this->assertArrayHasKey('message', $result);
+        $this->assertArrayNotHasKey('enrolled', $result);
+        $this->assertSame(0, $page->class->participants()->count());
+        $this->assertSame([['id' => $mentee->id, 'name' => 'Betty Njoroge']], $page->menteesNeedingEmail);
+    }
 }

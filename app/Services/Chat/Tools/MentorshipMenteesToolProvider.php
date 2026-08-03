@@ -25,18 +25,27 @@ class MentorshipMenteesToolProvider
     {
         return new SimpleChatTool(
             name: 'fill_mentorship_mentees',
-            description: 'Search for and enroll mentees by name, email, or phone — or add a brand new mentee, or skip for now.',
+            description: 'Search for and enroll mentees using whatever the user gave you — call this for ANY '.
+                'mentee they mention, even a bare first name or a name copied from a list you already showed '.
+                'them, and even if you are not sure that person exists yet. The system searches real records '.
+                'and tells you what matched. Do NOT ask the user for role, title, department, or any other '.
+                'registration detail — this app never collects those during enrollment, only a name/email/phone '.
+                'to search with, or (for someone genuinely new) just an email plus first/last name.',
             schema: [
                 'type' => 'object',
                 'properties' => [
                     'existing_mentee_queries' => [
                         'type' => 'array',
                         'items' => ['type' => 'string'],
-                        'description' => 'Names, emails, or phone numbers the user gave to look up existing mentees.',
+                        'description' => 'Every name, email, or phone number the user gave for enrollment — pass '.
+                            'each exactly as given. Use this first, always, before ever considering new_mentee.',
                     ],
                     'new_mentee' => [
                         'type' => 'object',
-                        'description' => 'A brand new mentee to create and enroll, not already in the system.',
+                        'description' => 'Only for someone confirmed NOT already in the system (an '.
+                            'existing_mentee_queries search came back unresolved) whom the user explicitly wants '.
+                            'added as brand new. Needs only email, first_name, last_name — nothing else. One '.
+                            'new mentee per call.',
                         'properties' => [
                             'email' => ['type' => 'string'],
                             'first_name' => ['type' => 'string'],
@@ -113,6 +122,9 @@ class MentorshipMenteesToolProvider
                     return [
                         'awaiting_email' => true,
                         'mentees_needing_email' => collect($page->menteesNeedingEmail)->pluck('name')->all(),
+                        'message' => 'These matched mentees have no email on file. A form has appeared on the '.
+                            'page for the user to enter one for each — tell them to use it; there is no way to '.
+                            'supply an email through chat text for this. Do not ask for any other detail.',
                     ];
                 }
 
