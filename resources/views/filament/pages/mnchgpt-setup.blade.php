@@ -37,11 +37,26 @@
                         @include('filament.pages.partials.mnchgpt-input')
                     @endunless
 
-                    @include('filament.pages.partials.chat-modules-turn')
+                    {{-- The module/mentee picker below has no height cap of
+                         its own — with a full 25-row mentee page or a long
+                         module list, it was observed forcing the flex-1
+                         scrollArea above down to near-zero height (a
+                         shrink-0 sibling with unbounded content forces
+                         everything shrinkable to compress instead), leaving
+                         the transcript unreadable and cutting the picker's
+                         own Continue button off below the visible,
+                         overflow-hidden card. Capping this section's own
+                         height and giving it its own scroll keeps both
+                         independently usable within the fixed-height card. --}}
+                    <div style="max-height: 45vh; overflow-y: auto;">
+                        @include('filament.pages.partials.chat-modules-turn')
+                    </div>
                 @elseif ($this->activeStage() === 'enroll_mentees')
                     @include('filament.pages.partials.mnchgpt-input')
 
-                    @include('filament.pages.partials.chat-mentees-turn')
+                    <div style="max-height: 45vh; overflow-y: auto;">
+                        @include('filament.pages.partials.chat-mentees-turn')
+                    </div>
                 @else
                     @include('filament.pages.partials.mnchgpt-input')
                 @endif
