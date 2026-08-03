@@ -532,6 +532,7 @@ class MnchGptSetupTest extends TestCase
 
         $program = Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
         $facility = Facility::factory()->create();
+        $module = ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true, 'name' => 'Neonatal Resuscitation']);
 
         $component = Livewire::test(MnchGptSetup::class);
         $component->call('answer', 'is_pilot', 0);
@@ -554,5 +555,73 @@ class MnchGptSetupTest extends TestCase
         $lastMessage = collect($component->get('messages'))->last();
         $this->assertSame('bot', $lastMessage['role']);
         $this->assertStringContainsString('module', strtolower($lastMessage['text']));
+        // The real module names must be listed right away — the model has
+        // no other reliable way to know them, and was observed telling the
+        // user it had "no access to a list of available training modules".
+        $this->assertStringContainsString($module->name, $lastMessage['text']);
+        $this->assertSame('module_ids', $component->get('pendingOptions')['slot']);
+    }
+
+    public function test_a_bare_number_reply_at_the_modules_stage_falls_through_to_the_llm_instead_of_silently_no_opping(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $program = Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = Facility::factory()->create();
+        ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true, 'name' => 'Neonatal Resuscitation']);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('answer', 'is_pilot', 0);
+        $component->call('answer', 'county_id', $facility->subcounty->county_id);
+        $component->call('answer', 'facility_id', $facility->id);
+        $component->call('answer', 'program_id', $program->id);
+        $component->call('answer', 'start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'end_date', now()->addMonth()->toDateString());
+        $component->call('answer', 'max_participants', 8);
+        $component->call('answer', 'class_name', 'Cohort A');
+        $component->call('answer', 'class_start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'class_end_date', now()->addMonth()->toDateString());
+
+        $this->assertSame('module_ids', $component->get('pendingOptions')['slot']);
+
+        // module_ids isn't a generic Slot — routing a bare "1" through
+        // $this->answer('module_ids', ...) (what the ordinary CARDS-slot
+        // fast path does) would silently no-op, since that method only
+        // recognizes slots declared in slots(). This must go to the normal
+        // LLM flow instead, which can resolve "1" against the module list
+        // still visible in conversation history.
+        $this->fakeDeepSeekToolCall('fill_mentorship_modules', [
+            'module_names' => ['Neonatal Resuscitation'],
+        ], 'Added Neonatal Resuscitation.');
+
+        $component->call('sendMessage', '1');
+
+        Http::assertSentCount(2);
+        // The LLM correctly resolved "1" against the module list still
+        // visible in conversation history and submitted it — proving the
+        // message wasn't silently swallowed by a broken fast-path no-op.
+        $this->assertSame('enroll_mentees', $component->instance()->activeStage());
+    }
+
+    public function test_the_modules_list_is_not_shown_for_emonc_programs(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $program = Program::factory()->create(['name' => 'Maternal Health (EmONC)', 'is_active' => true]);
+        $facility = Facility::factory()->create();
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('answer', 'is_pilot', 0);
+        $component->call('answer', 'county_id', $facility->subcounty->county_id);
+        $component->call('answer', 'facility_id', $facility->id);
+        $component->call('answer', 'program_id', $program->id);
+        $component->call('answer', 'max_participants', 8);
+        $component->call('answer', 'class_name', 'Cohort A');
+
+        $this->assertSame('modules', $component->instance()->activeStage());
+        $this->assertTrue($component->instance()->isModulesStageEmonc());
+        $this->assertNull($component->get('pendingOptions'));
     }
 }

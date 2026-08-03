@@ -29,6 +29,17 @@ class MnchGptSetup extends Page implements HasForms
 
     private const MAX_PROACTIVE_OPTIONS = 10;
 
+    /**
+     * module_ids/selected_users aren't generic Slot objects (see
+     * HasMentorshipChatSlots::answer()'s comment on this), so they can't be
+     * resolved through the bare-number/letter fast path below — that path
+     * calls $this->answer($slot, ...), which silently no-ops for any slot
+     * id that isn't declared in slots(). A numbered list is still shown for
+     * these stages (see determineNextStep()); replies just always go
+     * through the normal LLM flow instead of the instant-resolve shortcut.
+     */
+    private const COMPOSITE_STAGE_SLOTS = ['module_ids', 'selected_users'];
+
     public ?array $pendingOptions = null;
 
     public static function canAccess(array $parameters = []): bool
@@ -109,12 +120,17 @@ class MnchGptSetup extends Page implements HasForms
         $this->autoSkipOptionalClassDescriptionIfReady();
 
         if (! $wasModulesStage && $this->activeStage() === 'modules') {
-            $this->messages[] = [
-                'role' => 'bot',
-                'text' => "Great, the class details are set! Now let's pick training modules — ".
-                    'tell me the names, or say "skip" to add them later.',
-                'timestamp' => now()->toIso8601String(),
-            ];
+            $text = "Great, the class details are set! Now let's pick training modules — ".
+                'tell me the names or numbers, or say "skip" to add them later.';
+
+            $step = $this->determineNextStep();
+            $this->pendingOptions = $step;
+
+            if ($step) {
+                $text .= "\n\n".$this->renderOptionList($step['options']);
+            }
+
+            $this->messages[] = ['role' => 'bot', 'text' => $text, 'timestamp' => now()->toIso8601String()];
             $this->syncTranscript();
         }
     }
@@ -147,7 +163,7 @@ class MnchGptSetup extends Page implements HasForms
             return;
         }
 
-        if ($this->pendingOptions) {
+        if ($this->pendingOptions && ! in_array($this->pendingOptions['slot'], self::COMPOSITE_STAGE_SLOTS, true)) {
             $index = $this->matchPendingOptionIndex($text);
 
             if ($index !== null) {
@@ -291,12 +307,43 @@ class MnchGptSetup extends Page implements HasForms
             ];
         }
 
-        // module_ids/selected_users aren't generic Slot objects, so once
-        // the modules/enroll_mentees stages begin, nextUnfilledSlot() would
-        // otherwise skip straight past them to 'recipients' (send_
-        // invitations) — the exact premature-exposure bug already fixed in
+        // module_ids isn't a generic Slot, so it's not reachable via
+        // nextUnfilledSlot() below — without this, the model has no way to
+        // know the real module names short of guessing from the tool
+        // schema alone, and was observed telling the user it had "no
+        // access to a list of available training modules" instead. The
+        // options come straight from getModuleFieldOptions() (the same
+        // source chat-modules-turn.blade.php's checkbox picker uses), never
+        // from the model. Not capped by MAX_PROACTIVE_OPTIONS like the
+        // slots below — module counts are curated curriculum content, not
+        // an unbounded table like facilities.
+        if ($this->activeStage() === 'modules') {
+            if ($this->isModulesStageEmonc()) {
+                return null;
+            }
+
+            $options = $this->getModuleFieldOptions();
+
+            if (empty($options)) {
+                return null;
+            }
+
+            return [
+                'slot' => 'module_ids',
+                'options' => self::numberOptions(
+                    collect($options)->map(fn ($label, $id) => ['id' => $id, 'label' => $label])->values()->all()
+                ),
+            ];
+        }
+
+        // selected_users isn't a generic Slot object either, so once the
+        // enroll_mentees stage begins, nextUnfilledSlot() would otherwise
+        // skip straight past it to 'recipients' (send_invitations) — the
+        // exact premature-exposure bug already fixed in
         // MentorshipSetupToolProvider::schemaFor()/execute(). Same guard,
-        // same reason.
+        // same reason. Unlike modules, the mentee table is unbounded, so
+        // there's no curated list to proactively show here — search
+        // results come from MentorshipMenteesToolProvider instead.
         if ($this->activeStage() !== 'slot') {
             return null;
         }
