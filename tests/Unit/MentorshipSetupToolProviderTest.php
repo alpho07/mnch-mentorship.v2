@@ -42,6 +42,41 @@ class MentorshipSetupToolProviderTest extends TestCase
         $this->assertNotContains('class_name', $properties);
     }
 
+    /**
+     * A single free-text message can resolve several slots from the same
+     * stage in one execute() call — before this fix, each individually
+     * called $page->answer(), and answer()'s own trailing "next question"
+     * message reflected whatever nextUnfilledSlot() returned *at that
+     * point*, which changes after every slot filled. That produced one
+     * stale "next question" bot message per slot resolved (observed live
+     * as e.g. "Which facility?" repeated several times, each followed by
+     * an unrelated answer to something else entirely). Only the initial
+     * mount() greeting should remain — MnchGptSetup's own final reply is
+     * the single source of "what's next" for a batched turn.
+     */
+    public function test_execute_does_not_append_a_stale_next_question_per_slot_in_a_batch(): void
+    {
+        $user = $this->actingAsCoordinator();
+        $county = County::factory()->create();
+        $page = new ChatMentorshipSetup;
+        $page->mount();
+        $botMessagesBefore = collect($page->messages)->where('role', 'bot')->count();
+
+        $tool = MentorshipSetupToolProvider::tool($page);
+        // None of these complete the training_details stage (facility_id/
+        // program_id are still missing), so the only question mark is
+        // whether the per-slot loop leaked its own intermediate messages.
+        $tool->execute([
+            'is_pilot' => 0,
+            'county_id' => (string) $county->id,
+            'max_participants' => 8,
+        ], $user);
+
+        $botMessagesAfter = collect($page->messages)->where('role', 'bot')->count();
+
+        $this->assertSame($botMessagesBefore, $botMessagesAfter);
+    }
+
     public function test_execute_fills_valid_slots_and_reports_rejected_ones(): void
     {
         $user = $this->actingAsCoordinator();

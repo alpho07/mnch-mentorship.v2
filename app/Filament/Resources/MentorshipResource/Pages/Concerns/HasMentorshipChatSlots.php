@@ -414,7 +414,23 @@ trait HasMentorshipChatSlots
         return $requirements;
     }
 
-    public function answer(string $slotId, mixed $value): void
+    /**
+     * $announceNext controls the trailing "here's the next question" bot
+     * message below — true is correct for a single click/reply answering
+     * exactly one slot (the only way ChatMentorshipSetup ever calls this),
+     * but MentorshipSetupToolProvider::execute() calls this in a loop, once
+     * per slot resolved from a single free-text message that named several
+     * at once. With $announceNext always true, each intermediate call saw
+     * whatever was *still* unfilled at that point mid-loop and appended its
+     * own "next question" — since slot resolution order rarely matches
+     * declaration order, this produced several stale, mismatched questions
+     * per batch (e.g. "Which facility?" repeated after every other slot in
+     * the same message resolved, each followed by an unrelated answer).
+     * MnchGptSetup's own reply text plus its proactively-rendered option
+     * list already cover "what's next" once per turn — passing false here
+     * suppresses the redundant/misleading per-slot version.
+     */
+    public function answer(string $slotId, mixed $value, bool $announceNext = true): void
     {
         $slot = collect($this->slots())->firstWhere('id', $slotId);
 
@@ -487,7 +503,7 @@ trait HasMentorshipChatSlots
         // announcing "Who should receive the email?" before the mentorship
         // even has modules or mentees. submitModules()/submitMentees()
         // each append their own transition message once *they* complete.
-        if ($this->activeStage() === 'slot') {
+        if ($announceNext && $this->activeStage() === 'slot') {
             $next = $this->nextUnfilledSlot();
 
             if ($next) {

@@ -196,6 +196,43 @@ class MnchGptSetupTest extends TestCase
         $this->assertEquals($facility->id, $component->get('answers')['facility_id']);
     }
 
+    public function test_filling_several_slots_in_one_message_does_not_leak_stale_intermediate_questions(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $county = County::factory()->create(['name' => 'Tharaka Nithi']);
+
+        // A single round resolving 3 training_details slots at once —
+        // before the fix, each of these called $page->answer() in a loop,
+        // and each call appended its own "next question" reflecting
+        // whatever was still unfilled *at that point*, mid-loop. Observed
+        // live as the same question ("Which facility?") repeated several
+        // times, each followed by an unrelated slot's echo.
+        $this->fakeDeepSeekToolCall('fill_mentorship_setup_slots', [
+            'is_pilot' => 0,
+            'county_id' => (string) $county->id,
+            'max_participants' => 8,
+        ], 'Got it — live mentorship in Tharaka Nithi, up to 8 mentees. Which facility?');
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $botMessagesBefore = collect($component->get('messages'))->where('role', 'bot')->count();
+
+        $component->call('sendMessage', 'Live mentorship in Tharaka Nithi, up to 8 mentees');
+
+        // Each filled slot still gets its own echoed "You: ..." bubble
+        // (role user) — that's intentional, mirroring the click-driven
+        // UI's per-slot bubbles, and unaffected by this fix. What must NOT
+        // happen is more than one *bot* message: the model's single final
+        // reply is now the only source of "what's next" for this turn.
+        $botMessagesAfter = collect($component->get('messages'))->where('role', 'bot')->count();
+        $this->assertSame($botMessagesBefore + 1, $botMessagesAfter);
+
+        $lastMessage = collect($component->get('messages'))->last();
+        $this->assertSame('bot', $lastMessage['role']);
+        $this->assertStringContainsString('Which facility?', $lastMessage['text']);
+    }
+
     public function test_naming_a_module_at_the_modules_stage_assigns_it_via_the_chat(): void
     {
         $this->actingAsCoordinator();

@@ -86,8 +86,17 @@ class MentorshipSetupToolProvider
                         continue;
                     }
 
+                    // announceNext: false — this loop can resolve several
+                    // slots from one free-text message, and each of
+                    // answer()'s own per-call "next question" messages would
+                    // reflect only what was still unfilled *at that point*
+                    // mid-loop, not the final state — producing several
+                    // stale, mismatched questions per batch. The final reply
+                    // built from this tool's overall result (in
+                    // MnchGptSetup::sendMessage()) is the single source of
+                    // "what's next" for a batched turn.
                     $before = $page->answers;
-                    $page->answer($slotId, $resolution['value']);
+                    $page->answer($slotId, $resolution['value'], false);
 
                     if (array_key_exists($slotId, $page->answers) && $page->answers !== $before) {
                         $filled[] = $slotId;

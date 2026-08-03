@@ -123,13 +123,18 @@ class MnchGptSetup extends Page implements HasForms
      *    card-driven ChatMentorshipSetup page (left untouched, still calling
      *    the trait's version directly), but jarring once everything else
      *    here is conversational.
+     *
+     * $announceNext is threaded straight through to traitAnswer() — see its
+     * doc comment on HasMentorshipChatSlots::answer() for why
+     * MentorshipSetupToolProvider passes false when resolving several slots
+     * from one message.
      */
-    public function answer(string $slotId, mixed $value): void
+    public function answer(string $slotId, mixed $value, bool $announceNext = true): void
     {
         $wasModulesStage = $this->activeStage() === 'modules';
 
-        $this->traitAnswer($slotId, $value);
-        $this->autoSkipOptionalClassDescriptionIfReady();
+        $this->traitAnswer($slotId, $value, $announceNext);
+        $this->autoSkipOptionalClassDescriptionIfReady($announceNext);
 
         if (! $wasModulesStage && $this->activeStage() === 'modules') {
             $text = "Great, the class details are set! Now let's pick training modules — ".
@@ -179,7 +184,7 @@ class MnchGptSetup extends Page implements HasForms
         }
     }
 
-    private function autoSkipOptionalClassDescriptionIfReady(): void
+    private function autoSkipOptionalClassDescriptionIfReady(bool $announceNext = true): void
     {
         if ($this->class || array_key_exists('class_description', $this->answers)) {
             return;
@@ -195,7 +200,7 @@ class MnchGptSetup extends Page implements HasForms
         );
 
         if ($allOthersFilled) {
-            $this->traitAnswer('class_description', 'skip');
+            $this->traitAnswer('class_description', 'skip', $announceNext);
         }
     }
 
