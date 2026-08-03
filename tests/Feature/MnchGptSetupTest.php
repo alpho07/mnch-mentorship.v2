@@ -556,6 +556,43 @@ class MnchGptSetupTest extends TestCase
         ]);
     }
 
+    public function test_entering_the_enroll_mentees_stage_shows_a_real_browsable_sample(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $program = Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = Facility::factory()->create();
+        $mentee = User::factory()->create(['name' => 'Beatrice Wanjiru', 'first_name' => 'Beatrice', 'last_name' => 'Wanjiru', 'status' => 'active']);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('answer', 'is_pilot', 0);
+        $component->call('answer', 'county_id', $facility->subcounty->county_id);
+        $component->call('answer', 'facility_id', $facility->id);
+        $component->call('answer', 'program_id', $program->id);
+        $component->call('answer', 'start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'end_date', now()->addMonth()->toDateString());
+        $component->call('answer', 'max_participants', 8);
+        $component->call('answer', 'class_name', 'Cohort A');
+        $component->call('answer', 'class_start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'class_end_date', now()->addMonth()->toDateString());
+
+        // module_ids never gets an explicit value here — submitModules([])
+        // is the "skip" path, and the entry into enroll_mentees is the
+        // thing under test.
+        $component->call('submitModules', []);
+
+        $this->assertSame('enroll_mentees', $component->instance()->activeStage());
+
+        $lastMessage = collect($component->get('messages'))->last();
+        $this->assertSame('bot', $lastMessage['role']);
+        // Real name from the database, never invented — this is exactly
+        // what was missing when the model was observed saying it had no
+        // way to retrieve a mentee roster at all.
+        $this->assertStringContainsString('Beatrice Wanjiru', $lastMessage['text']);
+        $this->assertSame('selected_users', $component->get('pendingOptions')['slot']);
+    }
+
     public function test_class_description_is_auto_skipped_so_modules_stage_is_reached_without_it(): void
     {
         $this->actingAsCoordinator();

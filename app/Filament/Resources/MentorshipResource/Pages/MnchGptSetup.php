@@ -10,6 +10,7 @@ use App\Services\Chat\LlmMentorshipAssistantService;
 use App\Services\Chat\Tools\MentorshipMenteesToolProvider;
 use App\Services\Chat\Tools\MentorshipModulesToolProvider;
 use App\Services\Chat\Tools\MentorshipSetupToolProvider;
+use App\Services\MentorshipWizardService;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Resources\Pages\Page;
@@ -18,6 +19,7 @@ class MnchGptSetup extends Page implements HasForms
 {
     use HasMentorshipChatSlots {
         answer as protected traitAnswer;
+        submitModules as protected traitSubmitModules;
     }
     use InteractsWithForms;
 
@@ -28,6 +30,16 @@ class MnchGptSetup extends Page implements HasForms
     protected static bool $shouldRegisterNavigation = false;
 
     private const MAX_PROACTIVE_OPTIONS = 10;
+
+    /**
+     * Unlike modules (curated curriculum content, always shown in full),
+     * the mentee table is unbounded — proactively listing "everyone" isn't
+     * meaningful. This caps the initial browsable sample shown the moment
+     * the enroll_mentees stage begins to the same size as any other
+     * proactive list; a real search still returns its own (uncapped)
+     * candidate shortlist via MentorshipMenteesToolProvider.
+     */
+    private const MAX_PROACTIVE_MENTEE_SAMPLE = 10;
 
     /**
      * module_ids/selected_users aren't generic Slot objects (see
@@ -132,6 +144,38 @@ class MnchGptSetup extends Page implements HasForms
 
             $this->messages[] = ['role' => 'bot', 'text' => $text, 'timestamp' => now()->toIso8601String()];
             $this->syncTranscript();
+        }
+    }
+
+    /**
+     * Wraps HasMentorshipChatSlots::submitModules() (aliased as
+     * traitSubmitModules() above) purely to append the initial mentee
+     * sample list the moment enroll_mentees begins — the trait's own
+     * transition message ("Who will be mentored in this class?...") has no
+     * real data attached, mirroring exactly why answer() above appends the
+     * module list once the modules stage begins. Reached via normal
+     * polymorphism whenever anything calls $page->submitModules() —
+     * MentorshipModulesToolProvider's tool included — so no other call site
+     * needs to change.
+     */
+    public function submitModules(array $moduleIds): void
+    {
+        $wasEnrollMenteesStage = $this->activeStage() === 'enroll_mentees';
+
+        $this->traitSubmitModules($moduleIds);
+
+        if (! $wasEnrollMenteesStage && $this->activeStage() === 'enroll_mentees') {
+            $step = $this->determineNextStep();
+            $this->pendingOptions = $step;
+
+            if ($step) {
+                $lastIndex = array_key_last($this->messages);
+
+                if ($this->messages[$lastIndex]['role'] === 'bot') {
+                    $this->messages[$lastIndex]['text'] .= "\n\n".$this->renderOptionList($step['options']);
+                    $this->syncTranscript();
+                }
+            }
         }
     }
 
@@ -359,8 +403,33 @@ class MnchGptSetup extends Page implements HasForms
         // exact premature-exposure bug already fixed in
         // MentorshipSetupToolProvider::schemaFor()/execute(). Same guard,
         // same reason. Unlike modules, the mentee table is unbounded, so
-        // there's no curated list to proactively show here — search
-        // results come from MentorshipMenteesToolProvider instead.
+        // this shows a capped initial browsable sample (the same
+        // menteeOptions() source chat-mentees-turn.blade.php's own default,
+        // no-search view uses) rather than everyone — without this, the
+        // model had nothing but aggregate count tools to answer "who can I
+        // enroll?" with, and was observed saying it had no way to retrieve
+        // a mentee roster at all. A real search still returns its own,
+        // uncapped shortlist via MentorshipMenteesToolProvider.
+        if ($this->activeStage() === 'enroll_mentees') {
+            $options = array_slice(
+                app(MentorshipWizardService::class)->menteeOptions(null, 1, []),
+                0,
+                self::MAX_PROACTIVE_MENTEE_SAMPLE,
+                true
+            );
+
+            if (empty($options)) {
+                return null;
+            }
+
+            return [
+                'slot' => 'selected_users',
+                'options' => self::numberOptions(
+                    collect($options)->map(fn ($label, $id) => ['id' => $id, 'label' => $label])->values()->all()
+                ),
+            ];
+        }
+
         if ($this->activeStage() !== 'slot') {
             return null;
         }
