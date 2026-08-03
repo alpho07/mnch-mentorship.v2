@@ -1,8 +1,20 @@
+{{-- animate-bounce isn't in this panel's compiled theme CSS (it only scans
+     Filament's own package views, not this app's custom pages), so the
+     "thinking" dots below define the animation inline instead of relying
+     on the Tailwind utility class. --}}
+<style>
+    @keyframes mnchgpt-bounce {
+        0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+        50% { transform: none; animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+    }
+    .mnchgpt-bounce-dot { animation: mnchgpt-bounce 1s infinite; }
+</style>
+
 <div class="space-y-4">
     @foreach ($messages as $index => $message)
         <div wire:key="mnchgpt-msg-{{ $index }}" class="flex items-end gap-2 {{ $message['role'] === 'user' ? 'justify-end' : 'justify-start' }}">
             @unless ($message['role'] === 'user')
-                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-[10px] font-bold text-white">
+                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">
                     AI
                 </div>
             @endunless
@@ -53,7 +65,7 @@
                             }"
                             x-on:mnchgpt-reply.window="if ($el.dataset.last === '1') type()"
                             data-last="{{ $loop->last ? '1' : '0' }}"
-                            class="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1"
+                            class="prose prose-sm dark:prose-invert max-w-none"
                         >{!! Str::markdown($message['text'] ?? '', ['html_input' => 'escape', 'allow_unsafe_links' => false]) !!}</div>
                     @endif
                 </div>
@@ -61,14 +73,14 @@
         </div>
     @endforeach
 
-    <div wire:loading wire:target="sendMessage" class="flex items-end gap-2 justify-start">
-        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-[10px] font-bold text-white">
+    <div wire:loading.flex wire:target="sendMessage" class="hidden items-end gap-2 justify-start">
+        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">
             AI
         </div>
         <div class="flex items-center gap-1 rounded-xl bg-gray-100 px-4 py-3 dark:bg-gray-800">
-            <span class="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s] dark:bg-gray-500"></span>
-            <span class="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s] dark:bg-gray-500"></span>
-            <span class="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"></span>
+            <span class="mnchgpt-bounce-dot h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500" style="animation-delay: -0.3s"></span>
+            <span class="mnchgpt-bounce-dot h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500" style="animation-delay: -0.15s"></span>
+            <span class="mnchgpt-bounce-dot h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500"></span>
         </div>
     </div>
 </div>
