@@ -197,4 +197,46 @@ class MentorshipSetupToolProviderTest extends TestCase
         $this->assertContains('county_id', $result['filled']);
         $this->assertSame($county->id, $page->answers['county_id']);
     }
+
+    /**
+     * module_ids/selected_users aren't generic Slot objects (see
+     * HasMentorshipChatSlots::answer()'s comment on this exact point), so
+     * nextUnfilledSlot() skips straight past the modules/enroll_mentees
+     * stages to 'recipients' (send_invitations). Without this guard, the
+     * schema would offer 'recipients' as fillable the moment first_class
+     * completes — and answering it fires sendInvitations() immediately,
+     * marking the class complete with no modules and no mentees enrolled.
+     */
+    public function test_schema_excludes_later_stage_slots_while_in_the_modules_or_mentees_stage(): void
+    {
+        $user = $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['is_active' => true]);
+        $facility = Facility::factory()->create();
+        $page = new ChatMentorshipSetup;
+        $page->mount();
+
+        $page->answer('is_pilot', 0);
+        $page->answer('county_id', $facility->subcounty->county_id);
+        $page->answer('facility_id', $facility->id);
+        $page->answer('program_id', $program->id);
+        $page->answer('start_date', now()->addDay()->toDateString());
+        $page->answer('end_date', now()->addMonth()->toDateString());
+        $page->answer('max_participants', 8);
+        $page->answer('class_name', 'Cohort A');
+        $page->answer('class_start_date', now()->addDay()->toDateString());
+        $page->answer('class_end_date', now()->addMonth()->toDateString());
+        $page->answer('class_description', 'skip');
+
+        $this->assertSame('modules', $page->activeStage());
+
+        $tool = MentorshipSetupToolProvider::tool($page);
+        $this->assertSame([], $tool->schema()['properties']);
+
+        // And even if the model called it anyway, execute() must not act —
+        // sending invitations this early would complete the class with
+        // nothing in it.
+        $result = $tool->execute(['recipients' => 'all'], $user);
+        $this->assertArrayNotHasKey('recipients', $page->answers);
+        $this->assertFalse($page->completed);
+    }
 }

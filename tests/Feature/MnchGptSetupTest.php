@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Filament\Resources\MentorshipResource\Pages\MnchGptSetup;
 use App\Models\County;
 use App\Models\Facility;
+use App\Models\Program;
+use App\Models\ProgramModule;
 use App\Models\Setting;
 use App\Models\Subcounty;
 use App\Models\User;
@@ -192,5 +194,41 @@ class MnchGptSetupTest extends TestCase
 
         $this->assertEquals($county->id, $component->get('answers')['county_id']);
         $this->assertEquals($facility->id, $component->get('answers')['facility_id']);
+    }
+
+    public function test_naming_a_module_at_the_modules_stage_assigns_it_via_the_chat(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $program = Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = Facility::factory()->create();
+        $module = ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true, 'name' => 'Neonatal Resuscitation']);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('answer', 'is_pilot', 0);
+        $component->call('answer', 'county_id', $facility->subcounty->county_id);
+        $component->call('answer', 'facility_id', $facility->id);
+        $component->call('answer', 'program_id', $program->id);
+        $component->call('answer', 'start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'end_date', now()->addMonth()->toDateString());
+        $component->call('answer', 'max_participants', 8);
+        $component->call('answer', 'class_name', 'Cohort A');
+        $component->call('answer', 'class_start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'class_end_date', now()->addMonth()->toDateString());
+        $component->call('answer', 'class_description', 'skip');
+
+        $this->assertSame('modules', $component->instance()->activeStage());
+
+        $this->fakeDeepSeekToolCall('fill_mentorship_modules', [
+            'module_names' => ['Neonatal Resuscitation'],
+        ], 'Added Neonatal Resuscitation. Who should be mentored in this class?');
+
+        $component->call('sendMessage', 'Neonatal Resuscitation please');
+
+        $this->assertDatabaseHas('class_modules', [
+            'mentorship_class_id' => $component->instance()->class->id,
+            'program_module_id' => $module->id,
+        ]);
     }
 }

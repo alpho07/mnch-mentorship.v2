@@ -34,6 +34,17 @@ class MentorshipSetupToolProvider
                 $filled = [];
                 $rejected = [];
 
+                // module_ids/selected_users aren't generic Slot objects, so
+                // nextUnfilledSlot() skips straight past the modules/
+                // enroll_mentees stages to 'recipients' — answering it early
+                // fires sendInvitations() immediately, completing the class
+                // with nothing in it. This mirrors the same guard schemaFor()
+                // applies, checked again here in case a value for a
+                // not-currently-offered slot arrives anyway.
+                if ($page->activeStage() !== 'slot') {
+                    return ['filled' => [], 'rejected' => array_keys($args)];
+                }
+
                 foreach ($args as $slotId => $value) {
                     $slot = collect($page->slots())->firstWhere('id', $slotId);
 
@@ -79,7 +90,13 @@ class MentorshipSetupToolProvider
     {
         $next = $page->nextUnfilledSlot();
 
-        if (! $next) {
+        // module_ids/selected_users aren't generic Slot objects (see
+        // HasMentorshipChatSlots::answer()'s comment on this same point) —
+        // nextUnfilledSlot() would otherwise skip straight past the
+        // modules/enroll_mentees stages to 'recipients' (send_invitations),
+        // offering it as fillable before the class has any modules or
+        // mentees.
+        if (! $next || $page->activeStage() !== 'slot') {
             return ['type' => 'object', 'properties' => []];
         }
 

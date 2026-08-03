@@ -7,6 +7,7 @@ use App\Filament\Resources\MentorshipTrainingResource;
 use App\Models\Setting;
 use App\Services\Chat\ChatToolRegistry;
 use App\Services\Chat\LlmMentorshipAssistantService;
+use App\Services\Chat\Tools\MentorshipModulesToolProvider;
 use App\Services\Chat\Tools\MentorshipSetupToolProvider;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -63,6 +64,14 @@ class MnchGptSetup extends Page implements HasForms
     {
         $registry = new ChatToolRegistry;
         $registry->register(MentorshipSetupToolProvider::tool($this));
+
+        // module_ids isn't a generic Slot, so it needs its own tool — only
+        // offered once the modules stage is actually reached, and only for
+        // standard programs (EmONC needs per-track dates the chat can't
+        // collect yet — see chat-emonc-modules-turn.blade.php).
+        if ($this->activeStage() === 'modules' && ! $this->isModulesStageEmonc()) {
+            $registry->register(MentorshipModulesToolProvider::tool($this));
+        }
 
         foreach (\App\Services\Chat\Tools\MentorshipStatsToolProvider::tools() as $tool) {
             $registry->register($tool);

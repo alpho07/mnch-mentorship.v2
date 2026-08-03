@@ -6,6 +6,10 @@
 
         @unless ($completed)
             @if ($this->activeStage() === 'modules')
+                @unless ($this->isModulesStageEmonc())
+                    @include('filament.pages.partials.mnchgpt-input')
+                @endunless
+
                 @include('filament.pages.partials.chat-modules-turn')
             @elseif ($this->activeStage() === 'enroll_mentees')
                 @include('filament.pages.partials.chat-mentees-turn')
