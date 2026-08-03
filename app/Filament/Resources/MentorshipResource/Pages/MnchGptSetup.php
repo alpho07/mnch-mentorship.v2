@@ -296,6 +296,10 @@ class MnchGptSetup extends Page implements HasForms
             $registry->register($tool);
         }
 
+        foreach (\App\Services\Chat\Tools\ProgramModulesQueryToolProvider::tools() as $tool) {
+            $registry->register($tool);
+        }
+
         return $registry;
     }
 

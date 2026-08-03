@@ -666,6 +666,37 @@ class MnchGptSetupTest extends TestCase
         $this->assertSame('enroll_mentees', $component->instance()->activeStage());
     }
 
+    public function test_asking_what_modules_a_program_has_uses_the_real_list_not_a_guess(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $program = Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true, 'name' => 'Module 6: Newborn Resuscitation']);
+
+        // Asked as a plain, standalone question — no active class/cohort in
+        // progress at all, unlike the modules-stage list which only shows
+        // once a class already exists. The model has no other grounded way
+        // to answer this without list_program_modules.
+        $this->fakeDeepSeekToolCall('list_program_modules', [
+            'program_name' => 'Newborn Care',
+        ], 'Newborn Care includes: Module 6: Newborn Resuscitation.');
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('sendMessage', 'what modules does Newborn Care have?');
+
+        // Assert on the *actual* tool-result payload sent back to the model
+        // in round 2 — this is what proves list_program_modules is really
+        // registered and returning real data, not just that the (separately
+        // pre-scripted) final reply happened to get displayed.
+        Http::assertSent(function ($request) {
+            $messages = $request->data()['messages'] ?? [];
+            $toolResult = collect($messages)->firstWhere('role', 'tool');
+
+            return $toolResult && str_contains($toolResult['content'], 'Module 6: Newborn Resuscitation');
+        });
+    }
+
     public function test_the_modules_list_is_not_shown_for_emonc_programs(): void
     {
         $this->actingAsCoordinator();
