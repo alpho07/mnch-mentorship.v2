@@ -23,8 +23,6 @@ class MnchGptSetup extends Page implements HasForms
 
     protected static bool $shouldRegisterNavigation = false;
 
-    public bool $thinking = false;
-
     public static function canAccess(array $parameters = []): bool
     {
         if (! parent::canAccess($parameters)) {
@@ -47,22 +45,18 @@ class MnchGptSetup extends Page implements HasForms
         }
 
         $this->messages[] = ['role' => 'user', 'text' => $text, 'timestamp' => now()->toIso8601String()];
-        $this->thinking = true;
-
-        $registry = $this->buildToolRegistry();
 
         $result = app(LlmMentorshipAssistantService::class)->respond(
             userMessage: $text,
             history: $this->historyForLlm(),
-            registry: $registry,
+            registryFactory: fn () => $this->buildToolRegistry(),
             user: auth()->user(),
             context: ['remaining_requirements' => $this->remainingRequirements()],
         );
 
-        $this->thinking = false;
-
         $this->messages[] = ['role' => 'bot', 'text' => $result['reply'], 'timestamp' => now()->toIso8601String()];
         $this->syncTranscript();
+        $this->dispatch('mnchgpt-reply');
     }
 
     protected function buildToolRegistry(): ChatToolRegistry

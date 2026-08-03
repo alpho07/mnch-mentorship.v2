@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\MentorshipResource\Pages\MnchGptSetup;
 use App\Models\County;
+use App\Models\Facility;
 use App\Models\Setting;
+use App\Models\Subcounty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -112,5 +114,83 @@ class MnchGptSetupTest extends TestCase
         $component->call('sendMessage', 'how many live mentorships are there?');
 
         $this->assertSame($answersBefore, $component->get('answers'));
+    }
+
+    public function test_bot_reply_is_rendered_as_markdown_and_dispatches_a_reply_event(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        Http::fake([
+            'api.deepseek.com/*' => Http::response([
+                'choices' => [['message' => ['role' => 'assistant', 'content' => "Here's what's **missing**:\n\n- County\n- Facility"]]],
+            ]),
+        ]);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('sendMessage', 'what is still needed?');
+
+        $component->assertDispatched('mnchgpt-reply');
+        $component->assertSeeHtml('<strong>missing</strong>');
+        $component->assertSeeHtml('<li>County</li>');
+    }
+
+    public function test_naming_county_and_facility_in_one_message_fills_both_across_tool_rounds(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $county = County::factory()->create(['name' => 'Tharaka Nithi']);
+        $subcounty = Subcounty::create(['name' => 'Chuka', 'county_id' => $county->id]);
+        $facility = Facility::factory()->create(['subcounty_id' => $subcounty->id, 'name' => 'Chuka County Referral Hospital']);
+
+        // facility_id's options depend on county_id, so on round 1 (before
+        // county_id is answered) the model can only offer county_id —
+        // facility_id isn't in that round's schema at all (see
+        // MentorshipSetupToolProviderTest::test_a_slot_with_an_unmet_dependency_is_excluded_from_the_schema).
+        // The registry gets rebuilt for round 2, where it's now available.
+        Http::fake([
+            'api.deepseek.com/*' => Http::sequence()
+                ->push([
+                    'choices' => [[
+                        'message' => [
+                            'role' => 'assistant',
+                            'content' => null,
+                            'tool_calls' => [[
+                                'id' => 'call_1',
+                                'type' => 'function',
+                                'function' => ['name' => 'fill_mentorship_setup_slots', 'arguments' => json_encode([
+                                    'is_pilot' => 0,
+                                    'county_id' => (string) $county->id,
+                                ])],
+                            ]],
+                        ],
+                    ]],
+                ])
+                ->push([
+                    'choices' => [[
+                        'message' => [
+                            'role' => 'assistant',
+                            'content' => null,
+                            'tool_calls' => [[
+                                'id' => 'call_2',
+                                'type' => 'function',
+                                'function' => ['name' => 'fill_mentorship_setup_slots', 'arguments' => json_encode([
+                                    'facility_id' => (string) $facility->id,
+                                ])],
+                            ]],
+                        ],
+                    ]],
+                ])
+                ->push([
+                    'choices' => [['message' => ['role' => 'assistant', 'content' => 'Got it — Chuka County Referral Hospital in Tharaka Nithi. What program is being mentored?']]],
+                ]),
+        ]);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('sendMessage', 'Tharaka Nithi county, Chuka County Referral Hospital');
+
+        $this->assertEquals($county->id, $component->get('answers')['county_id']);
+        $this->assertEquals($facility->id, $component->get('answers')['facility_id']);
     }
 }

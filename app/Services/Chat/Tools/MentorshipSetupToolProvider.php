@@ -17,6 +17,12 @@ use App\Services\Chat\SimpleChatTool;
  */
 class MentorshipSetupToolProvider
 {
+    /**
+     * Sentinel distinguishing "no match" from every legitimate resolved
+     * value, including falsy ones like 0 (is_pilot's "Live Mentorship").
+     */
+    private const UNRESOLVED = '__mnchgpt_unresolved__';
+
     public static function tool($page): ChatTool
     {
         return new SimpleChatTool(
@@ -29,7 +35,9 @@ class MentorshipSetupToolProvider
                 $rejected = [];
 
                 foreach ($args as $slotId => $value) {
-                    if (! collect($page->slots())->contains('id', $slotId)) {
+                    $slot = collect($page->slots())->firstWhere('id', $slotId);
+
+                    if (! $slot) {
                         continue;
                     }
 
@@ -37,8 +45,16 @@ class MentorshipSetupToolProvider
                         continue;
                     }
 
+                    $resolved = self::resolveValue($slot, $value, $page->answers);
+
+                    if ($resolved === self::UNRESOLVED) {
+                        $rejected[] = $slotId;
+
+                        continue;
+                    }
+
                     $before = $page->answers;
-                    $page->answer($slotId, $value);
+                    $page->answer($slotId, $resolved);
 
                     if (array_key_exists($slotId, $page->answers) && $page->answers !== $before) {
                         $filled[] = $slotId;
@@ -78,6 +94,16 @@ class MentorshipSetupToolProvider
                 continue;
             }
 
+            // A dependent slot's options are computed *from* the answers it
+            // depends on (e.g. facility_id's options are scoped to the
+            // chosen county). Before that dependency is answered there's no
+            // sane subset to offer — showing it anyway means either an
+            // empty enum (the model then wrongly claims a real facility
+            // "isn't available") or every facility system-wide, unscoped.
+            if (collect($slot->dependencies())->contains(fn ($dep) => ! array_key_exists($dep, $page->answers))) {
+                continue;
+            }
+
             $properties[$slot->id] = self::propertyFor($slot, $page->answers);
         }
 
@@ -87,6 +113,16 @@ class MentorshipSetupToolProvider
         ];
     }
 
+    /**
+     * CARDS slots' real ids are opaque database surrogate keys (e.g. a
+     * county id like 56427) with no relationship to what a user would ever
+     * say — a model given those as the enum has no way to resolve "Tharaka
+     * Nithi" to the right one and can only guess, which for a slot like
+     * facility_id (10,000+ rows) is indistinguishable from never matching.
+     * Exposing the option *labels* instead gives the model something it can
+     * actually match against the user's words; resolveValue() below
+     * translates the chosen label back to the real id server-side.
+     */
     private static function propertyFor($slot, array $answers): array
     {
         if ($slot->renderKind() === Render::CARDS) {
@@ -94,8 +130,8 @@ class MentorshipSetupToolProvider
 
             return [
                 'type' => 'string',
-                'description' => $slot->getQuestion($answers),
-                'enum' => array_map('strval', array_keys($options)),
+                'description' => $slot->getQuestion($answers).' Respond with the option text exactly as listed.',
+                'enum' => array_values(array_map('strval', $options)),
             ];
         }
 
@@ -103,5 +139,49 @@ class MentorshipSetupToolProvider
             'type' => 'string',
             'description' => $slot->getQuestion($answers),
         ];
+    }
+
+    /**
+     * Resolves a CARDS slot's model-supplied value (expected to be one of
+     * the label strings from propertyFor()'s enum) back to the option's
+     * real id. Also accepts a raw id directly, for backward compatibility
+     * with click-driven re-submissions and models that echo the id anyway.
+     * Non-CARDS (free-text) slots pass through unchanged. Anything matching
+     * neither a label nor a real id is rejected outright rather than
+     * guessed at — a hallucinated value must never silently attach the
+     * wrong county/facility/program to a mentorship.
+     */
+    private static function resolveValue($slot, mixed $value, array $answers): mixed
+    {
+        if ($slot->renderKind() !== Render::CARDS) {
+            return $value;
+        }
+
+        $options = $slot->getOptions($answers);
+        $needle = trim((string) $value);
+
+        foreach ($options as $id => $label) {
+            if ((string) $id === (string) $value || strcasecmp((string) $label, $needle) === 0) {
+                return $id;
+            }
+        }
+
+        // Labels like facility_id's "MFL012 — Chuka County Referral
+        // Hospital" carry a code prefix a user would never actually say —
+        // if the model relayed just the name, match it as long as it
+        // identifies exactly one option; multiple matches are as
+        // unresolvable as none, since guessing between them risks
+        // attaching the wrong record.
+        if ($needle !== '') {
+            $partial = collect($options)->filter(
+                fn ($label) => stripos((string) $label, $needle) !== false
+            );
+
+            if ($partial->count() === 1) {
+                return $partial->keys()->first();
+            }
+        }
+
+        return self::UNRESOLVED;
     }
 }

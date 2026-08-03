@@ -3,6 +3,7 @@
 namespace App\Services\Chat;
 
 use App\Models\User;
+use Closure;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -18,10 +19,23 @@ class LlmMentorshipAssistantService
     private const FALLBACK_REPLY = "Sorry, I couldn't process that — try again or use the buttons below.";
 
     /**
+     * Some tools only become available once another tool has just run in
+     * this same message — e.g. facility_id's options depend on county_id,
+     * so if a user names both county and facility in one message, the
+     * facility tool isn't offered on the first round (see
+     * MentorshipSetupToolProvider::schemaFor()). Looping here, rebuilding
+     * the schema from the now-updated page state after each round, lets the
+     * model pick it up on a second round without the user repeating
+     * themselves.
+     */
+    private const MAX_TOOL_ROUNDS = 4;
+
+    /**
      * @param  array<int, array{role: string, content: string}>  $history
+     * @param  Closure(): ChatToolRegistry  $registryFactory  called fresh at the start of every round, so a tool unlocked by the previous round's execution is offered on the next one
      * @return array{reply: string, tool_calls: array<int, array{name: string, arguments: array, result: array}>}
      */
-    public function respond(string $userMessage, array $history, ChatToolRegistry $registry, User $user, array $context = []): array
+    public function respond(string $userMessage, array $history, Closure $registryFactory, User $user, array $context = []): array
     {
         $messages = array_merge(
             [['role' => 'system', 'content' => $this->systemPrompt($context)]],
@@ -29,49 +43,51 @@ class LlmMentorshipAssistantService
             [['role' => 'user', 'content' => $userMessage]],
         );
 
-        $tools = $registry->schemasFor($user);
-
-        $first = $this->complete($messages, $tools);
-
-        if ($first === null) {
-            return ['reply' => self::FALLBACK_REPLY, 'tool_calls' => []];
-        }
-
-        $toolCalls = $first['tool_calls'] ?? [];
-
-        if (empty($toolCalls)) {
-            return ['reply' => $first['content'] ?? self::FALLBACK_REPLY, 'tool_calls' => []];
-        }
-
         $executed = [];
-        $messages[] = ['role' => 'assistant', 'content' => $first['content'], 'tool_calls' => $toolCalls];
 
-        foreach ($toolCalls as $call) {
-            $name = $call['function']['name'];
-            $args = json_decode($call['function']['arguments'] ?? '{}', true) ?? [];
+        for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
+            $registry = $registryFactory();
+            $response = $this->complete($messages, $registry->schemasFor($user));
 
-            try {
-                $result = $registry->execute($name, $args, $user);
-            } catch (\Throwable $e) {
-                Log::warning('Chat tool execution failed', ['tool' => $name, 'error' => $e->getMessage()]);
-                $result = ['error' => 'That could not be completed.'];
+            if ($response === null) {
+                return ['reply' => self::FALLBACK_REPLY, 'tool_calls' => $executed];
             }
 
-            $executed[] = ['name' => $name, 'arguments' => $args, 'result' => $result];
+            $toolCalls = $response['tool_calls'] ?? [];
 
-            $messages[] = [
-                'role' => 'tool',
-                'tool_call_id' => $call['id'],
-                'content' => json_encode($result),
-            ];
+            if (empty($toolCalls)) {
+                return ['reply' => $response['content'] ?? self::FALLBACK_REPLY, 'tool_calls' => $executed];
+            }
+
+            $messages[] = ['role' => 'assistant', 'content' => $response['content'], 'tool_calls' => $toolCalls];
+
+            foreach ($toolCalls as $call) {
+                $name = $call['function']['name'];
+                $args = json_decode($call['function']['arguments'] ?? '{}', true) ?? [];
+
+                try {
+                    $result = $registry->execute($name, $args, $user);
+                } catch (\Throwable $e) {
+                    Log::warning('Chat tool execution failed', ['tool' => $name, 'error' => $e->getMessage()]);
+                    $result = ['error' => 'That could not be completed.'];
+                }
+
+                $executed[] = ['name' => $name, 'arguments' => $args, 'result' => $result];
+
+                $messages[] = [
+                    'role' => 'tool',
+                    'tool_call_id' => $call['id'],
+                    'content' => json_encode($result),
+                ];
+            }
         }
 
-        $second = $this->complete($messages, $tools);
+        // Round cap hit while the model still wanted to call tools — ask
+        // once more for a final reply, with no tools offered, rather than
+        // leaving the user with no response at all.
+        $final = $this->complete($messages, []);
 
-        return [
-            'reply' => $second['content'] ?? self::FALLBACK_REPLY,
-            'tool_calls' => $executed,
-        ];
+        return ['reply' => $final['content'] ?? self::FALLBACK_REPLY, 'tool_calls' => $executed];
     }
 
     /**
@@ -118,7 +134,12 @@ class LlmMentorshipAssistantService
             'programs and answers questions about mentorship and assessment data. '.
             'Use the available tools to fill in mentorship details from what the '.
             'user tells you, or to look up data they ask about. Never invent facility, '.
-            'program, or county names — only use the exact options a tool schema offers.';
+            'program, or county names — only use the exact options a tool schema offers. '.
+            "If the user's message mentions a detail (like a facility) whose options ".
+            "aren't offered yet because they depend on something else you just set ".
+            '(like a county), call the setup tool again once it becomes available — '.
+            "don't tell the user it isn't available just because it wasn't offered on ".
+            'the first attempt.';
 
         if (! empty($context['remaining_requirements'])) {
             $outstanding = collect($context['remaining_requirements'])
