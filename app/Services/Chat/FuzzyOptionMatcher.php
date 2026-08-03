@@ -26,11 +26,14 @@ class FuzzyOptionMatcher
         $ids = array_keys($options);
         $labels = array_values($options);
 
-        // ignoreLocation: facility labels carry a variable-length MFL code
-        // prefix ("MFL012 — Name"), so the real name doesn't start at a
-        // fixed position — without this, Fuse's default location-scoring
-        // would unfairly penalize matches later in the string.
-        $fuse = new \Fuse\Fuse($labels, ['ignoreLocation' => true]);
+        // Fuse's defaults (location=0, distance=100, threshold=0.6) are
+        // used as-is: distance=100 is already generous enough to find a
+        // match past a facility label's MFL-code prefix (verified: "Chuka"
+        // still matches "12345 — Chuka County Referral Hospital" at a good
+        // score). Setting ignoreLocation(true) was tried and rejected — it
+        // makes matching too lenient, e.g. "Nairobi" spuriously matching
+        // "Tharaka Nithi".
+        $fuse = new \Fuse\Fuse($labels);
 
         return collect($fuse->search($query))
             ->take(self::MAX_CANDIDATES)

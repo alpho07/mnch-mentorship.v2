@@ -162,10 +162,11 @@ class MentorshipSetupToolProviderTest extends TestCase
         $result = $tool->execute(['county_id' => 'Nairobi'], $user);
 
         $this->assertContains('county_id', $result['rejected']);
+        $this->assertArrayNotHasKey('county_id', $result['candidates']);
         $this->assertArrayNotHasKey('county_id', $page->answers);
     }
 
-    public function test_execute_rejects_an_ambiguous_partial_match_instead_of_guessing(): void
+    public function test_execute_returns_a_candidate_shortlist_for_an_ambiguous_partial_match(): void
     {
         $user = $this->actingAsCoordinator();
         $county = County::factory()->create(['name' => 'Tharaka Nithi']);
@@ -177,11 +178,36 @@ class MentorshipSetupToolProviderTest extends TestCase
 
         MentorshipSetupToolProvider::tool($page)->execute(['county_id' => (string) $county->id], $user);
 
-        // "Chuka" alone matches both facilities' labels — must not guess.
+        // "Chuka" alone matches both facilities' labels — instead of a dead
+        // end, this now surfaces both as a shortlist for the user to pick
+        // from (see FuzzyOptionMatcher).
         $result = MentorshipSetupToolProvider::tool($page)->execute(['facility_id' => 'Chuka'], $user);
 
-        $this->assertContains('facility_id', $result['rejected']);
         $this->assertArrayNotHasKey('facility_id', $page->answers);
+        $this->assertArrayHasKey('facility_id', $result['candidates']);
+        // Labels carry an MFL-code prefix ("12345 — Name"), so check
+        // containment rather than an exact match against the bare name.
+        $labelsText = implode(' | ', array_column($result['candidates']['facility_id'], 'label'));
+        $this->assertStringContainsString('Chuka County Referral Hospital', $labelsText);
+        $this->assertStringContainsString('Chuka Sub-District Hospital', $labelsText);
+    }
+
+    public function test_execute_returns_a_shortlist_for_a_near_miss_typo(): void
+    {
+        $user = $this->actingAsCoordinator();
+        $county = County::factory()->create(['id' => 56427, 'name' => 'Tharaka Nithi']);
+        $page = new ChatMentorshipSetup;
+        $page->mount();
+
+        // "Tharaja Nithi" (one letter swapped, "k" -> "j") isn't a prefix or
+        // substring of the real name in either direction, so it can't
+        // resolve via the exact/substring tiers — only fuzzy matching gets
+        // this, exactly the plausible-typo case those tiers can't cover.
+        $result = MentorshipSetupToolProvider::tool($page)->execute(['county_id' => 'Tharaja Nithi'], $user);
+
+        $this->assertArrayNotHasKey('county_id', $page->answers);
+        $this->assertArrayHasKey('county_id', $result['candidates']);
+        $this->assertSame($county->id, $result['candidates']['county_id'][0]['id']);
     }
 
     public function test_execute_still_accepts_a_raw_id_for_backward_compatibility(): void

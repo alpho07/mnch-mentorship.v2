@@ -4,6 +4,7 @@ namespace App\Services\Chat\Tools;
 
 use App\Models\User;
 use App\Services\Chat\ChatTool;
+use App\Services\Chat\FuzzyOptionMatcher;
 use App\Services\Chat\Render;
 use App\Services\Chat\SimpleChatTool;
 
@@ -17,12 +18,6 @@ use App\Services\Chat\SimpleChatTool;
  */
 class MentorshipSetupToolProvider
 {
-    /**
-     * Sentinel distinguishing "no match" from every legitimate resolved
-     * value, including falsy ones like 0 (is_pilot's "Live Mentorship").
-     */
-    private const UNRESOLVED = '__mnchgpt_unresolved__';
-
     public static function tool($page): ChatTool
     {
         return new SimpleChatTool(
@@ -33,6 +28,7 @@ class MentorshipSetupToolProvider
             execute: function (array $args, User $user) use ($page) {
                 $filled = [];
                 $rejected = [];
+                $candidates = [];
 
                 // module_ids/selected_users aren't generic Slot objects, so
                 // nextUnfilledSlot() skips straight past the modules/
@@ -42,7 +38,7 @@ class MentorshipSetupToolProvider
                 // applies, checked again here in case a value for a
                 // not-currently-offered slot arrives anyway.
                 if ($page->activeStage() !== 'slot') {
-                    return ['filled' => [], 'rejected' => array_keys($args)];
+                    return ['filled' => [], 'rejected' => array_keys($args), 'candidates' => []];
                 }
 
                 foreach ($args as $slotId => $value) {
@@ -56,16 +52,22 @@ class MentorshipSetupToolProvider
                         continue;
                     }
 
-                    $resolved = self::resolveValue($slot, $value, $page->answers);
+                    $resolution = self::resolveValue($slot, $value, $page->answers);
 
-                    if ($resolved === self::UNRESOLVED) {
+                    if ($resolution['status'] === 'ambiguous') {
+                        $candidates[$slotId] = $resolution['candidates'];
+
+                        continue;
+                    }
+
+                    if ($resolution['status'] === 'unresolved') {
                         $rejected[] = $slotId;
 
                         continue;
                     }
 
                     $before = $page->answers;
-                    $page->answer($slotId, $resolved);
+                    $page->answer($slotId, $resolution['value']);
 
                     if (array_key_exists($slotId, $page->answers) && $page->answers !== $before) {
                         $filled[] = $slotId;
@@ -74,7 +76,7 @@ class MentorshipSetupToolProvider
                     }
                 }
 
-                return ['filled' => $filled, 'rejected' => $rejected];
+                return ['filled' => $filled, 'rejected' => $rejected, 'candidates' => $candidates];
             },
         );
     }
@@ -159,19 +161,20 @@ class MentorshipSetupToolProvider
     }
 
     /**
-     * Resolves a CARDS slot's model-supplied value (expected to be one of
-     * the label strings from propertyFor()'s enum) back to the option's
-     * real id. Also accepts a raw id directly, for backward compatibility
-     * with click-driven re-submissions and models that echo the id anyway.
-     * Non-CARDS (free-text) slots pass through unchanged. Anything matching
-     * neither a label nor a real id is rejected outright rather than
-     * guessed at — a hallucinated value must never silently attach the
-     * wrong county/facility/program to a mentorship.
+     * Resolves a CARDS slot's model-supplied value against its real
+     * options, in three tiers — exact match, unique substring match, then
+     * a fuzzy shortlist (FuzzyOptionMatcher) — returning one of:
+     * - ['status' => 'resolved', 'value' => $id]
+     * - ['status' => 'ambiguous', 'candidates' => [['id' => ..., 'label' => ...], ...]]
+     * - ['status' => 'unresolved']
+     * Non-CARDS (free-text) slots always resolve immediately. Fuzzy never
+     * auto-picks a winner, even a clearly-best one — ambiguous always means
+     * "show the shortlist", never "guess".
      */
-    private static function resolveValue($slot, mixed $value, array $answers): mixed
+    private static function resolveValue($slot, mixed $value, array $answers): array
     {
         if ($slot->renderKind() !== Render::CARDS) {
-            return $value;
+            return ['status' => 'resolved', 'value' => $value];
         }
 
         $options = $slot->getOptions($answers);
@@ -179,26 +182,33 @@ class MentorshipSetupToolProvider
 
         foreach ($options as $id => $label) {
             if ((string) $id === (string) $value || strcasecmp((string) $label, $needle) === 0) {
-                return $id;
+                return ['status' => 'resolved', 'value' => $id];
             }
         }
 
         // Labels like facility_id's "MFL012 — Chuka County Referral
         // Hospital" carry a code prefix a user would never actually say —
         // if the model relayed just the name, match it as long as it
-        // identifies exactly one option; multiple matches are as
-        // unresolvable as none, since guessing between them risks
-        // attaching the wrong record.
+        // identifies exactly one option; multiple matches fall through to
+        // the fuzzy tier below rather than being guessed between.
         if ($needle !== '') {
             $partial = collect($options)->filter(
                 fn ($label) => stripos((string) $label, $needle) !== false
             );
 
             if ($partial->count() === 1) {
-                return $partial->keys()->first();
+                return ['status' => 'resolved', 'value' => $partial->keys()->first()];
             }
         }
 
-        return self::UNRESOLVED;
+        if ($needle !== '') {
+            $candidates = FuzzyOptionMatcher::search($options, $needle);
+
+            if (! empty($candidates)) {
+                return ['status' => 'ambiguous', 'candidates' => $candidates];
+            }
+        }
+
+        return ['status' => 'unresolved'];
     }
 }
