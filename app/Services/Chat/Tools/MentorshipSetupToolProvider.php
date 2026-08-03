@@ -41,6 +41,25 @@ class MentorshipSetupToolProvider
                     return ['filled' => [], 'rejected' => array_keys($args), 'candidates' => []];
                 }
 
+                // A single dense message can legitimately name both the
+                // rest of the current stage's slots AND the next stage's
+                // (e.g. the last training_details field plus the whole
+                // first_class stage) — the per-iteration stage check below
+                // is designed to let that resolve within one call, once the
+                // earlier stage completes partway through. But json_decode
+                // preserves whatever key order the model wrote, not slot
+                // declaration order — a later-stage key landing earlier in
+                // the object would hit that check before its prerequisite
+                // stage had actually completed *yet*, and get permanently
+                // rejected even though the rest of the same call would have
+                // unlocked it moments later. Sorting into script order
+                // first makes the outcome independent of how the model
+                // happened to order its JSON.
+                $slotOrder = array_column($page->slots(), 'id');
+                $args = collect($args)
+                    ->sortBy(fn ($value, $slotId) => array_search($slotId, $slotOrder, true) ?? PHP_INT_MAX)
+                    ->all();
+
                 foreach ($args as $slotId => $value) {
                     $slot = collect($page->slots())->firstWhere('id', $slotId);
 
@@ -127,8 +146,20 @@ class MentorshipSetupToolProvider
         // modules/enroll_mentees stages to 'recipients' (send_invitations),
         // offering it as fillable before the class has any modules or
         // mentees.
+        //
+        // properties is cast to (object) in both returns below — PHP has no
+        // way to distinguish an empty associative array from an empty
+        // indexed one, so json_encode(['properties' => []]) always produces
+        // the JSON array `[]`, not `{}`. That's invalid per JSON Schema
+        // (properties must be an object) and was confirmed live to make
+        // DeepSeek reject the *entire* request with a 400 — since every
+        // registered tool's schema ships in the same request, this single
+        // malformed one (hit constantly, since it's exactly what happens
+        // whenever nothing is left to fill via this tool, e.g. during the
+        // modules/enroll_mentees stages) broke every other tool call
+        // alongside it, surfacing as "Sorry, I couldn't process that."
         if (! $next || $page->activeStage() !== 'slot') {
-            return ['type' => 'object', 'properties' => []];
+            return ['type' => 'object', 'properties' => (object) []];
         }
 
         $properties = [];
@@ -155,9 +186,14 @@ class MentorshipSetupToolProvider
             $properties[$slot->id] = self::propertyFor($slot, $page->answers);
         }
 
+        // Only cast when genuinely empty (see the comment above on the
+        // other return path) — a non-empty associative array with string
+        // keys already serializes to a correct JSON object on its own,
+        // and staying a plain PHP array here keeps schema()['properties']
+        // usable with array_keys()/etc. everywhere else it's inspected.
         return [
             'type' => 'object',
-            'properties' => $properties,
+            'properties' => empty($properties) ? (object) [] : $properties,
         ];
     }
 

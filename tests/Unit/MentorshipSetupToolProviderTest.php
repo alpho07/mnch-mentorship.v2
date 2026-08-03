@@ -27,6 +27,49 @@ class MentorshipSetupToolProviderTest extends TestCase
         return $user;
     }
 
+    /**
+     * PHP can't distinguish an empty associative array from an empty
+     * indexed one, so json_encode(['properties' => []]) always produces the
+     * JSON array `[]` — invalid per JSON Schema, which requires an object.
+     * Confirmed live: this made DeepSeek reject the *entire* chat
+     * completion request with a 400, since every registered tool's schema
+     * ships together in one request — hitting this constantly (it's
+     * exactly what schemaFor() returns whenever nothing is left to offer,
+     * e.g. throughout the modules/enroll_mentees stages) broke every other
+     * tool call alongside it, surfacing as "Sorry, I couldn't process
+     * that." json_encode()'ing the real schema output is the only way to
+     * actually prove this stays fixed — asserting on the PHP shape alone
+     * previously would have passed even with the bug present.
+     */
+    public function test_schema_serializes_to_valid_json_schema_even_when_theres_nothing_to_offer(): void
+    {
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['is_active' => true]);
+        $facility = Facility::factory()->create();
+        $page = new ChatMentorshipSetup;
+        $page->mount();
+
+        $page->answer('is_pilot', 0);
+        $page->answer('county_id', $facility->subcounty->county_id);
+        $page->answer('facility_id', $facility->id);
+        $page->answer('program_id', $program->id);
+        $page->answer('start_date', now()->addDay()->toDateString());
+        $page->answer('end_date', now()->addMonth()->toDateString());
+        $page->answer('max_participants', 8);
+        $page->answer('class_name', 'Cohort A');
+        $page->answer('class_start_date', now()->addDay()->toDateString());
+        $page->answer('class_end_date', now()->addMonth()->toDateString());
+        $page->answer('class_description', 'skip');
+
+        $this->assertSame('modules', $page->activeStage());
+
+        $tool = MentorshipSetupToolProvider::tool($page);
+        $json = json_encode($tool->schema());
+
+        $this->assertStringContainsString('"properties":{}', $json);
+        $this->assertStringNotContainsString('"properties":[]', $json);
+    }
+
     public function test_schema_only_lists_currently_eligible_unfilled_slots(): void
     {
         $this->actingAsCoordinator();
@@ -295,6 +338,53 @@ class MentorshipSetupToolProviderTest extends TestCase
     }
 
     /**
+     * A single free-text message naming both the remaining training_details
+     * fields AND the first_class fields in one breath is exactly the kind
+     * of dense paragraph MNCHGPT is meant to parse in one round — the model
+     * puts everything into one fill_mentorship_setup_slots call, and
+     * training_details genuinely does complete by the end of processing
+     * that call. But json_decode(...)'s key order follows however the
+     * model happened to write the JSON, not slot declaration order — if a
+     * later-stage key like class_name lands *before* the training_details
+     * keys in that same object, the per-iteration stage check (comparing
+     * against nextUnfilledSlot() at that exact moment) would wrongly reject
+     * it, since training_details hadn't completed yet *when that key was
+     * evaluated* — even though it does complete moments later in the same
+     * loop. Live symptom: a message giving the class name/dates alongside
+     * the rest got them silently dropped, $this->class was never created,
+     * and a later "add these modules" request had no legitimate stage to
+     * act from at all — yet the model still claimed success on both.
+     */
+    public function test_execute_resolves_a_later_stage_slot_regardless_of_its_position_in_the_args(): void
+    {
+        $user = $this->actingAsCoordinator();
+        $county = County::factory()->create();
+        $subcounty = Subcounty::create(['name' => 'Chuka', 'county_id' => $county->id]);
+        $facility = Facility::factory()->create(['subcounty_id' => $subcounty->id]);
+        $program = \App\Models\Program::factory()->create(['is_active' => true]);
+        $page = new ChatMentorshipSetup;
+        $page->mount();
+
+        $tool = MentorshipSetupToolProvider::tool($page);
+        // class_name deliberately listed first — before any of the
+        // training_details keys that must resolve first to unlock it.
+        $result = $tool->execute([
+            'class_name' => 'August Cohort 2026',
+            'is_pilot' => 0,
+            'county_id' => (string) $county->id,
+            'facility_id' => (string) $facility->id,
+            'program_id' => (string) $program->id,
+            'start_date' => now()->addDay()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
+            'max_participants' => 8,
+        ], $user);
+
+        $this->assertContains('class_name', $result['filled']);
+        $this->assertSame('August Cohort 2026', $page->answers['class_name']);
+        $this->assertNotNull($page->training);
+    }
+
+    /**
      * module_ids/selected_users aren't generic Slot objects (see
      * HasMentorshipChatSlots::answer()'s comment on this exact point), so
      * nextUnfilledSlot() skips straight past the modules/enroll_mentees
@@ -326,7 +416,11 @@ class MentorshipSetupToolProviderTest extends TestCase
         $this->assertSame('modules', $page->activeStage());
 
         $tool = MentorshipSetupToolProvider::tool($page);
-        $this->assertSame([], $tool->schema()['properties']);
+        // Cast to (object), never a plain empty array — json_encode(['properties'
+        // => []]) produces the invalid JSON Schema `"properties": []`
+        // instead of `{}`, which was confirmed to make DeepSeek reject the
+        // whole request with a 400 (see schemaFor()'s comment on this).
+        $this->assertEquals((object) [], $tool->schema()['properties']);
 
         // And even if the model called it anyway, execute() must not act —
         // sending invitations this early would complete the class with
