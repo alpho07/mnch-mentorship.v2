@@ -26,6 +26,8 @@ class MnchGptSetup extends Page implements HasForms
 
     private const MAX_PROACTIVE_OPTIONS = 10;
 
+    public ?array $pendingOptions = null;
+
     public static function canAccess(array $parameters = []): bool
     {
         if (! parent::canAccess($parameters)) {
@@ -49,17 +51,47 @@ class MnchGptSetup extends Page implements HasForms
 
         $this->messages[] = ['role' => 'user', 'text' => $text, 'timestamp' => now()->toIso8601String()];
 
+        $step = $this->determineNextStep([]);
+
         $result = app(LlmMentorshipAssistantService::class)->respond(
             userMessage: $text,
             history: $this->historyForLlm(),
             registryFactory: fn () => $this->buildToolRegistry(),
             user: auth()->user(),
-            context: ['remaining_requirements' => $this->remainingRequirements()],
+            context: [
+                'remaining_requirements' => $this->remainingRequirements(),
+                'next_options' => $step,
+            ],
         );
 
-        $this->messages[] = ['role' => 'bot', 'text' => $result['reply'], 'timestamp' => now()->toIso8601String()];
+        $candidatesFromThisTurn = collect($result['tool_calls'])
+            ->pluck('result.candidates')
+            ->filter()
+            ->collapse()
+            ->all();
+
+        $step = $this->determineNextStep($candidatesFromThisTurn);
+        $this->pendingOptions = $step;
+
+        $reply = $result['reply'];
+
+        if ($step) {
+            $reply .= "\n\n".$this->renderOptionList($step['options']);
+        }
+
+        $this->messages[] = ['role' => 'bot', 'text' => $reply, 'timestamp' => now()->toIso8601String()];
         $this->syncTranscript();
         $this->dispatch('mnchgpt-reply');
+    }
+
+    /**
+     * @param  array<int, array{id: mixed, label: string}>  $numberedOptions
+     */
+    private function renderOptionList(array $numberedOptions): string
+    {
+        return collect($numberedOptions)
+            ->map(fn (array $option, int $number) => "{$number}. {$option['label']}")
+            ->implode("\n");
     }
 
     protected function buildToolRegistry(): ChatToolRegistry
@@ -129,7 +161,10 @@ class MnchGptSetup extends Page implements HasForms
 
         $options = $next->getOptions($this->answers);
 
-        if (count($options) > self::MAX_PROACTIVE_OPTIONS) {
+        // No options at all (e.g. a county with no facilities registered
+        // yet) is as unhelpful to proactively list as too many — nothing
+        // to show, so fall back to the plain open question.
+        if (empty($options) || count($options) > self::MAX_PROACTIVE_OPTIONS) {
             return null;
         }
 

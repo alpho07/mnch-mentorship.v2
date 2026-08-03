@@ -231,4 +231,70 @@ class MnchGptSetupTest extends TestCase
             'program_module_id' => $module->id,
         ]);
     }
+
+    public function test_a_reply_gets_a_proactively_rendered_option_list_appended(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        // No tool call at all this turn — the model just chats — but
+        // is_pilot is still the next slot and has only 2 options, so the
+        // backend appends its list regardless of what the model said.
+        Http::fake([
+            'api.deepseek.com/*' => Http::response([
+                'choices' => [['message' => ['role' => 'assistant', 'content' => 'Sure — is this a real mentorship or a pilot run?']]],
+            ]),
+        ]);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('sendMessage', 'I want to set up a mentorship');
+
+        $lastMessage = collect($component->get('messages'))->last();
+        $this->assertStringContainsString('Live Mentorship', $lastMessage['text']);
+        $this->assertStringContainsString('Pilot Run', $lastMessage['text']);
+        $this->assertSame('is_pilot', $component->get('pendingOptions')['slot']);
+    }
+
+    public function test_an_ambiguous_facility_name_appends_a_candidate_shortlist(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $county = County::factory()->create(['name' => 'Tharaka Nithi']);
+        $subcounty = Subcounty::create(['name' => 'Chuka', 'county_id' => $county->id]);
+        Facility::factory()->create(['subcounty_id' => $subcounty->id, 'name' => 'Chuka County Referral Hospital']);
+        Facility::factory()->create(['subcounty_id' => $subcounty->id, 'name' => 'Chuka Sub-District Hospital']);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('answer', 'is_pilot', 0);
+        $component->call('answer', 'county_id', $county->id);
+
+        Http::fake([
+            'api.deepseek.com/*' => Http::sequence()
+                ->push([
+                    'choices' => [[
+                        'message' => [
+                            'role' => 'assistant',
+                            'content' => null,
+                            'tool_calls' => [[
+                                'id' => 'call_1',
+                                'type' => 'function',
+                                'function' => ['name' => 'fill_mentorship_setup_slots', 'arguments' => json_encode(['facility_id' => 'Chuka'])],
+                            ]],
+                        ],
+                    ]],
+                ])
+                ->push([
+                    'choices' => [['message' => ['role' => 'assistant', 'content' => 'A couple of facilities match "Chuka" — which one did you mean?']]],
+                ]),
+        ]);
+
+        $component->call('sendMessage', 'Chuka hospital');
+
+        $lastMessage = collect($component->get('messages'))->last();
+        $this->assertStringContainsString('Chuka County Referral Hospital', $lastMessage['text']);
+        $this->assertStringContainsString('Chuka Sub-District Hospital', $lastMessage['text']);
+        $this->assertSame('facility_id', $component->get('pendingOptions')['slot']);
+        $this->assertArrayNotHasKey('facility_id', $component->get('answers'));
+    }
 }

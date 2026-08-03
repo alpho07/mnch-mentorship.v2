@@ -153,6 +153,13 @@ class LlmMentorshipAssistantService
             }
         }
 
+        if (! empty($context['next_options'])) {
+            $labels = collect($context['next_options']['options'])->pluck('label')->implode(', ');
+            $prompt .= " A list of options ({$labels}) will be shown to the user directly below your reply — ".
+                'write a short, warm sentence asking the question, but do NOT list the options yourself; '.
+                'the app already displays them.';
+        }
+
         return $prompt;
     }
 }

@@ -72,6 +72,23 @@ class MnchGptSetupDetermineNextStepTest extends TestCase
         $this->assertNull($step);
     }
 
+    public function test_a_slot_with_zero_options_is_not_shown_proactively(): void
+    {
+        $this->actingAsCoordinator();
+        $county = County::factory()->create();
+        $page = new MnchGptSetup;
+        $page->mount();
+        $page->answer('is_pilot', 0);
+        $page->answer('county_id', $county->id);
+
+        // facility_id is next, but this county has no facilities at all —
+        // as unhelpful to proactively list as too many, not as helpful as
+        // "nothing to show" being treated the same as "an open question."
+        $step = $page->determineNextStep([]);
+
+        $this->assertNull($step);
+    }
+
     public function test_no_list_once_past_the_generic_slot_flow(): void
     {
         $this->actingAsCoordinator();
