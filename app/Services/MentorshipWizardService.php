@@ -351,7 +351,7 @@ class MentorshipWizardService
             ->toArray();
     }
 
-    private function formatMenteeLabel(User $u): string
+    public function formatMenteeLabel(User $u): string
     {
         return implode(' · ', array_filter([
             $u->name,
