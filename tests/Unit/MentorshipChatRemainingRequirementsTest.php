@@ -118,4 +118,47 @@ class MentorshipChatRemainingRequirementsTest extends TestCase
 
         $this->assertSame([], array_values($remaining));
     }
+
+    /**
+     * MentorshipChatScript::STAGES orders these as training_details,
+     * first_class, modules, enroll_mentees, send_invitations — but
+     * modules/enroll_mentees aren't real Slot objects, so a naive
+     * implementation that walks slots() and only appends them at the very
+     * end puts "Who should receive the email?" (a real, always-unfilled
+     * Slot) *before* them in the list. MNCHGPT was observed literally
+     * following that wrong order — asking about email recipients before
+     * modules or mentees were ever touched. The checklist order must match
+     * the real stage order the app itself enforces.
+     */
+    public function test_modules_and_enroll_mentees_are_listed_before_recipients_not_after(): void
+    {
+        $this->actingAsCoordinator();
+        $training = Training::factory()->facilityMentorship()->create();
+        $class = MentorshipClass::factory()->create(['training_id' => $training->id]);
+
+        $page = new ChatMentorshipSetup;
+        $page->training = $training;
+        $page->class = $class;
+        $page->answers = [
+            'is_pilot' => 0,
+            'county_id' => 1,
+            'facility_id' => 1,
+            'program_id' => 1,
+            'start_date' => '2026-09-01',
+            'end_date' => '2026-09-30',
+            'max_participants' => 5,
+            'class_name' => 'Cohort 1',
+            'class_start_date' => '2026-09-01',
+            'class_end_date' => '2026-09-30',
+            'class_description' => 'skip',
+        ];
+
+        $labels = array_column($page->remainingRequirements(), 'label');
+        $modulesIndex = array_search('Select training modules', $labels);
+        $menteesIndex = array_search('Enroll mentees', $labels);
+        $recipientsIndex = array_search('Who should receive the email?', $labels);
+
+        $this->assertLessThan($recipientsIndex, $modulesIndex);
+        $this->assertLessThan($recipientsIndex, $menteesIndex);
+    }
 }

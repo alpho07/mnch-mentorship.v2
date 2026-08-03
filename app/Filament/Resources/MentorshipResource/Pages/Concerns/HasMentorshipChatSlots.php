@@ -358,12 +358,18 @@ trait HasMentorshipChatSlots
     /**
      * Deterministic, non-LLM checklist of everything not yet done, spanning
      * the whole creation process — not just the current stage. Walks every
-     * declared Slot in script order, then appends the two composite stages
-     * (modules, mentee enrollment) as fixed entries once the flow has
-     * reached them (module_ids/selected_users aren't Slot objects — see
-     * activeStage()). Used by MnchGptSetup to render a persistent progress
-     * checklist and to give the LLM accurate context instead of letting it
-     * guess or rely on its own memory of the conversation.
+     * declared Slot, interleaved with the two composite stages (modules,
+     * mentee enrollment) in MentorshipChatScript::STAGES order — module_ids/
+     * selected_users aren't Slot objects (see activeStage()), so they can't
+     * come from slots() itself, but they still belong *between* first_class
+     * and send_invitations, not tacked on at the end. Getting this order
+     * wrong is exactly what caused MNCHGPT to ask "who should receive the
+     * email?" before modules/mentees: recipients is a real, always-unfilled
+     * Slot that would otherwise sort before them in this list, and the
+     * model — told to "mention everything still outstanding" — followed
+     * that order literally. Used by MnchGptSetup to render a persistent
+     * progress checklist and to give the LLM accurate context instead of
+     * letting it guess or rely on its own memory of the conversation.
      *
      * @return array<int, array{stage: string, label: string, filled: bool}>
      */
@@ -371,32 +377,39 @@ trait HasMentorshipChatSlots
     {
         $requirements = [];
 
-        foreach ($this->slots() as $slot) {
-            if (! $slot->isRequired() || ! $slot->isVisible($this->answers)) {
+        foreach (MentorshipChatScript::STAGES as $stage) {
+            if ($stage === 'modules') {
+                $requirements[] = [
+                    'stage' => 'modules',
+                    'label' => 'Select training modules',
+                    'filled' => array_key_exists('module_ids', $this->answers),
+                ];
+
                 continue;
             }
 
-            $requirements[] = [
-                'stage' => $slot->stage,
-                'label' => $slot->getQuestion($this->answers),
-                'filled' => array_key_exists($slot->id, $this->answers),
-            ];
-        }
+            if ($stage === 'enroll_mentees') {
+                $requirements[] = [
+                    'stage' => 'enroll_mentees',
+                    'label' => 'Enroll mentees',
+                    'filled' => array_key_exists('selected_users', $this->answers),
+                ];
 
-        // Always listed from the very start (not only once $this->class
-        // exists) — the checklist is meant to be the full, strict picture
-        // of everything needed for the whole creation process, not just
-        // what's reachable right now.
-        $requirements[] = [
-            'stage' => 'modules',
-            'label' => 'Select training modules',
-            'filled' => array_key_exists('module_ids', $this->answers),
-        ];
-        $requirements[] = [
-            'stage' => 'enroll_mentees',
-            'label' => 'Enroll mentees',
-            'filled' => array_key_exists('selected_users', $this->answers),
-        ];
+                continue;
+            }
+
+            foreach ($this->slots() as $slot) {
+                if ($slot->stage !== $stage || ! $slot->isRequired() || ! $slot->isVisible($this->answers)) {
+                    continue;
+                }
+
+                $requirements[] = [
+                    'stage' => $slot->stage,
+                    'label' => $slot->getQuestion($this->answers),
+                    'filled' => array_key_exists($slot->id, $this->answers),
+                ];
+            }
+        }
 
         return $requirements;
     }
