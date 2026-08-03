@@ -408,4 +408,52 @@ class MnchGptSetupTest extends TestCase
         // rather than resolving against the old (irrelevant) county list.
         $this->assertNotSame('county_id', $component->get('pendingOptions')['slot'] ?? null);
     }
+
+    public function test_the_greeting_asks_what_the_user_wants_to_do_instead_of_jumping_into_slots(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $component = Livewire::test(MnchGptSetup::class);
+
+        $greeting = collect($component->get('messages'))->first()['text'];
+        $this->assertStringContainsString('Coordinator', $greeting);
+        $this->assertStringContainsString('MNCHGPT', $greeting);
+        $this->assertStringNotContainsString('Is this a real live mentorship', $greeting);
+    }
+
+    public function test_an_analytics_question_works_before_any_mentorship_intent_is_expressed(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        // Realistically, a "how many" question gets answered via the
+        // get_mentorship_counts tool (it exists for exactly this) — not a
+        // bare content reply, so this also exercises that a query-only
+        // turn doesn't get is_pilot's options nudged onto the end of it.
+        Http::fake([
+            'api.deepseek.com/*' => Http::sequence()
+                ->push([
+                    'choices' => [[
+                        'message' => [
+                            'role' => 'assistant',
+                            'content' => null,
+                            'tool_calls' => [[
+                                'id' => 'call_1',
+                                'type' => 'function',
+                                'function' => ['name' => 'get_mentorship_counts', 'arguments' => '{}'],
+                            ]],
+                        ],
+                    ]],
+                ])
+                ->push(['choices' => [['message' => ['role' => 'assistant', 'content' => 'There are 3 live mentorships.']]]]),
+        ]);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('sendMessage', 'how many live mentorships are there?');
+
+        $this->assertSame([], $component->get('answers'));
+        $lastMessage = collect($component->get('messages'))->last();
+        $this->assertSame('There are 3 live mentorships.', $lastMessage['text']);
+    }
 }

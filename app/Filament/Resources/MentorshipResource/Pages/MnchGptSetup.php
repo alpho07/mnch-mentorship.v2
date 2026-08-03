@@ -41,6 +41,40 @@ class MnchGptSetup extends Page implements HasForms
         return Setting::getBool(Setting::MNCHGPT_BUTTON_ENABLED);
     }
 
+    /**
+     * Overrides HasMentorshipChatSlots::mount() for this page only —
+     * ChatMentorshipSetup keeps using the trait's version untouched. Opens
+     * with an open question instead of jumping straight into is_pilot, so
+     * the user can ask an unrelated analytics question first if that's
+     * what they actually want.
+     */
+    public function mount(): void
+    {
+        if ($this->trainingId) {
+            $this->training = \App\Models\Training::find($this->trainingId);
+        }
+
+        if ($this->classId) {
+            $this->class = \App\Models\MentorshipClass::find($this->classId);
+        }
+
+        if ($this->training && ! empty($this->training->chat_setup_transcript)) {
+            $this->messages = $this->training->chat_setup_transcript;
+            $this->answers = $this->rebuildAnswersFromTraining();
+
+            return;
+        }
+
+        $firstName = explode(' ', auth()->user()->name)[0];
+
+        $this->messages[] = [
+            'role' => 'bot',
+            'text' => "Hello {$firstName}, welcome back! I'm MNCHGPT. How can I help today — would you like to ".
+                'start creating a mentorship, or is there something else I can help with?',
+            'timestamp' => now()->toIso8601String(),
+        ];
+    }
+
     public function sendMessage(string $text): void
     {
         $text = trim($text);
@@ -103,7 +137,16 @@ class MnchGptSetup extends Page implements HasForms
             ->collapse()
             ->all();
 
-        $step = $this->determineNextStep($candidatesFromThisTurn);
+        // A turn spent entirely on a query tool (get_mentorship_counts and
+        // friends) isn't the user engaging with setup — no tool call at
+        // all (plain chat) is treated as setup-related, since that's
+        // exactly what happens the first time someone says "let's set up
+        // a mentorship" before any slot has been filled yet.
+        $toolNames = collect($result['tool_calls'])->pluck('name');
+        $wasSetupRelated = $toolNames->isEmpty()
+            || $toolNames->contains(fn ($name) => in_array($name, ['fill_mentorship_setup_slots', 'fill_mentorship_modules'], true));
+
+        $step = $wasSetupRelated ? $this->determineNextStep($candidatesFromThisTurn) : null;
         $this->pendingOptions = $step;
 
         $reply = $result['reply'];
