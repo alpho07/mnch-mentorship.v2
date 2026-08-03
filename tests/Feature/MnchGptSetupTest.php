@@ -457,6 +457,43 @@ class MnchGptSetupTest extends TestCase
         $this->assertSame('There are 3 live mentorships.', $lastMessage['text']);
     }
 
+    public function test_naming_a_mentee_at_the_enroll_mentees_stage_assigns_them_via_the_chat(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $program = Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = Facility::factory()->create();
+        $mentee = User::factory()->create(['first_name' => 'Alphonce', 'last_name' => 'Ochieng', 'status' => 'active', 'email' => 'alphonce@example.com']);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('answer', 'is_pilot', 0);
+        $component->call('answer', 'county_id', $facility->subcounty->county_id);
+        $component->call('answer', 'facility_id', $facility->id);
+        $component->call('answer', 'program_id', $program->id);
+        $component->call('answer', 'start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'end_date', now()->addMonth()->toDateString());
+        $component->call('answer', 'max_participants', 8);
+        $component->call('answer', 'class_name', 'Cohort A');
+        $component->call('answer', 'class_start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'class_end_date', now()->addMonth()->toDateString());
+        $component->call('answer', 'class_description', 'skip');
+        $component->call('submitModules', []);
+
+        $this->assertSame('enroll_mentees', $component->instance()->activeStage());
+
+        $this->fakeDeepSeekToolCall('fill_mentorship_mentees', [
+            'existing_mentee_queries' => ['Alphonce'],
+        ], 'Enrolled Alphonce Ochieng. Ready to send invitations?');
+
+        $component->call('sendMessage', 'Alphonce Ochieng please');
+
+        $this->assertDatabaseHas('class_participants', [
+            'mentorship_class_id' => $component->instance()->class->id,
+            'user_id' => $mentee->id,
+        ]);
+    }
+
     public function test_entering_the_modules_stage_gets_an_announcement_message(): void
     {
         $this->actingAsCoordinator();

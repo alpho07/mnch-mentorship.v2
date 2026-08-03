@@ -39,6 +39,8 @@
 
                     @include('filament.pages.partials.chat-modules-turn')
                 @elseif ($this->activeStage() === 'enroll_mentees')
+                    @include('filament.pages.partials.mnchgpt-input')
+
                     @include('filament.pages.partials.chat-mentees-turn')
                 @else
                     @include('filament.pages.partials.mnchgpt-input')

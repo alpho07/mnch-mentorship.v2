@@ -7,6 +7,7 @@ use App\Filament\Resources\MentorshipTrainingResource;
 use App\Models\Setting;
 use App\Services\Chat\ChatToolRegistry;
 use App\Services\Chat\LlmMentorshipAssistantService;
+use App\Services\Chat\Tools\MentorshipMenteesToolProvider;
 use App\Services\Chat\Tools\MentorshipModulesToolProvider;
 use App\Services\Chat\Tools\MentorshipSetupToolProvider;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -209,6 +210,14 @@ class MnchGptSetup extends Page implements HasForms
         // collect yet — see chat-emonc-modules-turn.blade.php).
         if ($this->activeStage() === 'modules' && ! $this->isModulesStageEmonc()) {
             $registry->register(MentorshipModulesToolProvider::tool($this));
+        }
+
+        // selected_users isn't a generic Slot either — only offered once
+        // the enroll_mentees stage is actually reached (see
+        // MentorshipMenteesToolProvider's own guard against being called
+        // outside that stage).
+        if ($this->activeStage() === 'enroll_mentees') {
+            $registry->register(MentorshipMenteesToolProvider::tool($this));
         }
 
         foreach (\App\Services\Chat\Tools\MentorshipStatsToolProvider::tools() as $tool) {
