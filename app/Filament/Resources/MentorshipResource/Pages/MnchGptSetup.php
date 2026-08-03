@@ -80,18 +80,33 @@ class MnchGptSetup extends Page implements HasForms
 
     /**
      * Wraps HasMentorshipChatSlots::answer() (aliased as traitAnswer() above)
-     * to add one thing the trait doesn't: an acknowledgment message the
-     * moment the modules stage begins. The trait silently falls straight
-     * into chat-modules-turn.blade.php's picker with no transition text —
-     * fine for the older, fully card-driven ChatMentorshipSetup page (left
-     * untouched, still calling the trait's version directly), but jarring
-     * once everything else here is conversational.
+     * to add two things the trait doesn't:
+     *
+     * 1. class_description is the one first_class slot marked optional
+     *    (isRequired() === false) — remainingRequirements() correctly
+     *    leaves it off the checklist the model sees, but maybeCompleteStage()
+     *    still won't create the class until *every* slot in the stage has
+     *    an answer, optional or not (same rule the click-driven
+     *    ChatMentorshipSetup relies on to show its own turn for it). With
+     *    nothing telling the model this slot still needs a value, it was
+     *    observed moving on to talk about later steps (recipients, modules)
+     *    without ever filling it — leaving the class permanently stuck one
+     *    slot short of created, and the modules stage never reached. Once
+     *    every other first_class slot is answered, this auto-supplies
+     *    "skip" for it — identical to what clicking "Skip" would send.
+     * 2. An acknowledgment message the moment the modules stage begins. The
+     *    trait silently falls straight into chat-modules-turn.blade.php's
+     *    picker with no transition text — fine for the older, fully
+     *    card-driven ChatMentorshipSetup page (left untouched, still calling
+     *    the trait's version directly), but jarring once everything else
+     *    here is conversational.
      */
     public function answer(string $slotId, mixed $value): void
     {
         $wasModulesStage = $this->activeStage() === 'modules';
 
         $this->traitAnswer($slotId, $value);
+        $this->autoSkipOptionalClassDescriptionIfReady();
 
         if (! $wasModulesStage && $this->activeStage() === 'modules') {
             $this->messages[] = [
@@ -101,6 +116,26 @@ class MnchGptSetup extends Page implements HasForms
                 'timestamp' => now()->toIso8601String(),
             ];
             $this->syncTranscript();
+        }
+    }
+
+    private function autoSkipOptionalClassDescriptionIfReady(): void
+    {
+        if ($this->class || array_key_exists('class_description', $this->answers)) {
+            return;
+        }
+
+        $otherFirstClassSlots = array_filter(
+            $this->slots(),
+            fn ($slot) => $slot->stage === 'first_class' && $slot->id !== 'class_description'
+        );
+
+        $allOthersFilled = collect($otherFirstClassSlots)->every(
+            fn ($slot) => ! $slot->isVisible($this->answers) || array_key_exists($slot->id, $this->answers)
+        );
+
+        if ($allOthersFilled) {
+            $this->traitAnswer('class_description', 'skip');
         }
     }
 

@@ -494,6 +494,37 @@ class MnchGptSetupTest extends TestCase
         ]);
     }
 
+    public function test_class_description_is_auto_skipped_so_modules_stage_is_reached_without_it(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $program = Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = Facility::factory()->create();
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('answer', 'is_pilot', 0);
+        $component->call('answer', 'county_id', $facility->subcounty->county_id);
+        $component->call('answer', 'facility_id', $facility->id);
+        $component->call('answer', 'program_id', $program->id);
+        $component->call('answer', 'start_date', now()->addDay()->toDateString());
+        $component->call('answer', 'end_date', now()->addMonth()->toDateString());
+        $component->call('answer', 'max_participants', 8);
+        $component->call('answer', 'class_name', 'Cohort A');
+        $component->call('answer', 'class_start_date', now()->addDay()->toDateString());
+
+        // class_description is never explicitly answered — real MNCHGPT
+        // usage showed the model moving on to talk about later steps
+        // instead of supplying it, leaving the class permanently stuck one
+        // slot short of created (see MnchGptSetup::
+        // autoSkipOptionalClassDescriptionIfReady()).
+        $component->call('answer', 'class_end_date', now()->addMonth()->toDateString());
+
+        $this->assertSame('modules', $component->instance()->activeStage());
+        $this->assertNotNull($component->instance()->class);
+        $this->assertSame('skip', $component->get('answers')['class_description']);
+    }
+
     public function test_entering_the_modules_stage_gets_an_announcement_message(): void
     {
         $this->actingAsCoordinator();
@@ -512,8 +543,11 @@ class MnchGptSetupTest extends TestCase
         $component->call('answer', 'max_participants', 8);
         $component->call('answer', 'class_name', 'Cohort A');
         $component->call('answer', 'class_start_date', now()->addDay()->toDateString());
+        // class_description is intentionally left unanswered — it's the one
+        // optional first_class slot, auto-skipped the moment every other
+        // slot in the stage is filled (see
+        // MnchGptSetup::autoSkipOptionalClassDescriptionIfReady()).
         $component->call('answer', 'class_end_date', now()->addMonth()->toDateString());
-        $component->call('answer', 'class_description', 'skip');
 
         $this->assertSame('modules', $component->instance()->activeStage());
 

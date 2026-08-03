@@ -52,6 +52,26 @@ class MentorshipSetupToolProvider
                         continue;
                     }
 
+                    // schemaFor() only ever offers slots from the *current*
+                    // stage, but a tool schema is guidance, not an enforced
+                    // contract — nothing stops the model from naming a
+                    // later-stage slot anyway (e.g. class_name while
+                    // facility_id is still unresolved). Accepting it would
+                    // leave an earlier required stage permanently
+                    // incomplete (training/class never get created) while
+                    // the checklist shows later items as done, so anything
+                    // outside the live next-unfilled-slot's stage is
+                    // rejected outright — recomputed every iteration since
+                    // answering one slot can complete a stage and advance
+                    // this mid-loop.
+                    $currentStage = $page->nextUnfilledSlot()?->stage;
+
+                    if ($slot->stage !== $currentStage) {
+                        $rejected[] = $slotId;
+
+                        continue;
+                    }
+
                     $resolution = self::resolveValue($slot, $value, $page->answers);
 
                     if ($resolution['status'] === 'ambiguous') {

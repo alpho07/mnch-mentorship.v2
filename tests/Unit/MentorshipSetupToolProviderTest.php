@@ -225,6 +225,41 @@ class MentorshipSetupToolProviderTest extends TestCase
     }
 
     /**
+     * schemaFor() only ever offers slots from the *current* stage (see
+     * test_schema_only_lists_currently_eligible_unfilled_slots above), but
+     * nothing stops the model from calling the tool with an argument name
+     * outside that schema anyway — DeepSeek's tool schema is guidance, not
+     * an enforced contract. Before this fix, execute() would happily accept
+     * it anyway (it only checked "does this slot exist at all" and "is it
+     * already answered"), letting a first_class-stage slot like class_name
+     * get filled while facility_id — an earlier, still-required
+     * training_details slot — was never resolved. That leaves $this
+     * ->training permanently null (training_details never completes) while
+     * the checklist shows first_class items as done, and the user gets
+     * stuck being re-asked for the facility forever.
+     */
+    public function test_execute_rejects_a_slot_from_a_later_stage_than_the_current_one(): void
+    {
+        $user = $this->actingAsCoordinator();
+        $county = County::factory()->create();
+        $page = new ChatMentorshipSetup;
+        $page->mount();
+
+        $tool = MentorshipSetupToolProvider::tool($page);
+        $tool->execute(['is_pilot' => 0, 'county_id' => (string) $county->id], $user);
+
+        // facility_id (training_details) is still unresolved — class_name
+        // belongs to the later first_class stage and must not be accepted
+        // yet, even though the slot itself exists and isn't already
+        // answered.
+        $tool = MentorshipSetupToolProvider::tool($page);
+        $result = $tool->execute(['class_name' => 'Cohort A'], $user);
+
+        $this->assertContains('class_name', $result['rejected']);
+        $this->assertArrayNotHasKey('class_name', $page->answers);
+    }
+
+    /**
      * module_ids/selected_users aren't generic Slot objects (see
      * HasMentorshipChatSlots::answer()'s comment on this exact point), so
      * nextUnfilledSlot() skips straight past the modules/enroll_mentees
