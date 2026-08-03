@@ -211,10 +211,23 @@ class MnchGptSetup extends Page implements HasForms
             ],
         );
 
+        // Collected across *every* round of this exchange (result.tool_calls
+        // is the full accumulated log from LlmMentorshipAssistantService::
+        // respond()'s tool loop), not just the last one — if an earlier
+        // round left a slot ambiguous but a later round in the same
+        // exchange then resolved it (e.g. the model retried facility_id
+        // with a more specific name), the first round's now-stale
+        // candidates would otherwise still surface here even though that
+        // slot is already answered. Observed live: the bot's own reply text
+        // correctly moved on to ask about program_id, but the attached
+        // option list was still the earlier, already-resolved facility
+        // shortlist. Rejecting anything already in $this->answers keeps
+        // only candidates for slots still genuinely unresolved.
         $candidatesFromThisTurn = collect($result['tool_calls'])
             ->pluck('result.candidates')
             ->filter()
             ->collapse()
+            ->reject(fn ($candidates, $slotId) => array_key_exists($slotId, $this->answers))
             ->all();
 
         // A turn spent entirely on a query tool (get_mentorship_counts and

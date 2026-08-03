@@ -298,6 +298,68 @@ class MnchGptSetupTest extends TestCase
         $this->assertArrayNotHasKey('facility_id', $component->get('answers'));
     }
 
+    public function test_a_facility_resolved_in_a_later_round_does_not_leave_stale_candidates_for_the_next_question(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $county = County::factory()->create(['name' => 'Tharaka Nithi']);
+        $subcounty = Subcounty::create(['name' => 'Chuka', 'county_id' => $county->id]);
+        $facility = Facility::factory()->create(['subcounty_id' => $subcounty->id, 'name' => 'Chuka County Referral Hospital']);
+        Facility::factory()->create(['subcounty_id' => $subcounty->id, 'name' => 'Chuka Sub-District Hospital']);
+        Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->call('answer', 'is_pilot', 0);
+        $component->call('answer', 'county_id', $county->id);
+
+        // Round 1: "Chuka" is ambiguous — result carries a candidate
+        // shortlist for facility_id. Round 2 (same exchange): the model
+        // retries with the exact name and resolves it. The final reply
+        // moves on to ask about the program — the round-1 facility
+        // candidates must not still be attached to that reply.
+        Http::fake([
+            'api.deepseek.com/*' => Http::sequence()
+                ->push([
+                    'choices' => [[
+                        'message' => [
+                            'role' => 'assistant',
+                            'content' => null,
+                            'tool_calls' => [[
+                                'id' => 'call_1',
+                                'type' => 'function',
+                                'function' => ['name' => 'fill_mentorship_setup_slots', 'arguments' => json_encode(['facility_id' => 'Chuka'])],
+                            ]],
+                        ],
+                    ]],
+                ])
+                ->push([
+                    'choices' => [[
+                        'message' => [
+                            'role' => 'assistant',
+                            'content' => null,
+                            'tool_calls' => [[
+                                'id' => 'call_2',
+                                'type' => 'function',
+                                'function' => ['name' => 'fill_mentorship_setup_slots', 'arguments' => json_encode(['facility_id' => 'Chuka County Referral Hospital'])],
+                            ]],
+                        ],
+                    ]],
+                ])
+                ->push([
+                    'choices' => [['message' => ['role' => 'assistant', 'content' => 'Let\'s start with the program — which program is being mentored?']]],
+                ]),
+        ]);
+
+        $component->call('sendMessage', 'Chuka County Referral Hospital');
+
+        $this->assertSame($facility->id, $component->get('answers')['facility_id']);
+
+        $lastMessage = collect($component->get('messages'))->last();
+        $this->assertStringNotContainsString('Chuka Sub-District Hospital', $lastMessage['text']);
+        $this->assertNotSame('facility_id', $component->get('pendingOptions')['slot'] ?? null);
+    }
+
     public function test_a_bare_number_reply_resolves_instantly_without_calling_the_llm(): void
     {
         $this->actingAsCoordinator();
