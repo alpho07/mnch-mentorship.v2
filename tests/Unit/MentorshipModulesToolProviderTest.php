@@ -120,4 +120,24 @@ class MentorshipModulesToolProviderTest extends TestCase
             'program_module_id' => $module->id,
         ]);
     }
+
+    public function test_execute_suggests_close_matches_for_an_unresolved_name(): void
+    {
+        $user = $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $facility = Facility::factory()->create();
+        ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true, 'name' => 'Neonatal Resuscitation']);
+        $page = new ChatMentorshipSetup;
+        $page->mount();
+        $this->advanceToModulesStage($page, $program, $facility);
+
+        $tool = MentorshipModulesToolProvider::tool($page);
+        // "Resusitation" — a real, plausible typo.
+        $result = $tool->execute(['module_names' => ['Neonatal Resusitation']], $user);
+
+        $this->assertArrayNotHasKey('submitted', $result);
+        $this->assertArrayHasKey('suggestions', $result);
+        $labels = array_column($result['suggestions']['Neonatal Resusitation'], 'label');
+        $this->assertContains('Neonatal Resuscitation', $labels);
+    }
 }

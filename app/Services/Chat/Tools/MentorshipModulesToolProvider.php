@@ -4,6 +4,7 @@ namespace App\Services\Chat\Tools;
 
 use App\Models\User;
 use App\Services\Chat\ChatTool;
+use App\Services\Chat\FuzzyOptionMatcher;
 use App\Services\Chat\SimpleChatTool;
 
 /**
@@ -60,12 +61,18 @@ class MentorshipModulesToolProvider
 
                 $resolvedIds = [];
                 $unresolved = [];
+                $suggestions = [];
 
                 foreach ($names as $name) {
                     $id = self::resolveModuleId($options, $name);
 
                     if ($id === null) {
                         $unresolved[] = $name;
+                        $shortlist = FuzzyOptionMatcher::search($options, $name);
+
+                        if (! empty($shortlist)) {
+                            $suggestions[$name] = $shortlist;
+                        }
                     } else {
                         $resolvedIds[] = $id;
                     }
@@ -77,7 +84,10 @@ class MentorshipModulesToolProvider
                 // user actually asked for, so nothing is assigned unless
                 // every name resolved.
                 if (! empty($unresolved)) {
-                    return ['unresolved' => $unresolved];
+                    return array_filter([
+                        'unresolved' => $unresolved,
+                        'suggestions' => $suggestions,
+                    ]);
                 }
 
                 $page->submitModules($resolvedIds);
