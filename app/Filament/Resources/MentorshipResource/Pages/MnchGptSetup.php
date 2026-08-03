@@ -15,7 +15,9 @@ use Filament\Resources\Pages\Page;
 
 class MnchGptSetup extends Page implements HasForms
 {
-    use HasMentorshipChatSlots;
+    use HasMentorshipChatSlots {
+        answer as protected traitAnswer;
+    }
     use InteractsWithForms;
 
     protected static string $resource = MentorshipTrainingResource::class;
@@ -73,6 +75,32 @@ class MnchGptSetup extends Page implements HasForms
                 'start creating a mentorship, or is there something else I can help with?',
             'timestamp' => now()->toIso8601String(),
         ];
+    }
+
+    /**
+     * Wraps HasMentorshipChatSlots::answer() (aliased as traitAnswer() above)
+     * to add one thing the trait doesn't: an acknowledgment message the
+     * moment the modules stage begins. The trait silently falls straight
+     * into chat-modules-turn.blade.php's picker with no transition text —
+     * fine for the older, fully card-driven ChatMentorshipSetup page (left
+     * untouched, still calling the trait's version directly), but jarring
+     * once everything else here is conversational.
+     */
+    public function answer(string $slotId, mixed $value): void
+    {
+        $wasModulesStage = $this->activeStage() === 'modules';
+
+        $this->traitAnswer($slotId, $value);
+
+        if (! $wasModulesStage && $this->activeStage() === 'modules') {
+            $this->messages[] = [
+                'role' => 'bot',
+                'text' => "Great, the class details are set! Now let's pick training modules — ".
+                    'tell me the names, or say "skip" to add them later.',
+                'timestamp' => now()->toIso8601String(),
+            ];
+            $this->syncTranscript();
+        }
     }
 
     public function sendMessage(string $text): void
