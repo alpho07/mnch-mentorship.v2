@@ -15,10 +15,6 @@
                 @include('filament.pages.partials.chat-mentees-turn')
             @else
                 @include('filament.pages.partials.mnchgpt-input')
-
-                @if ($this->nextUnfilledSlot())
-                    @include('filament.pages.partials.chat-turn', ['slot' => $this->nextUnfilledSlot(), 'answers' => $answers])
-                @endif
             @endif
         @else
             <div class="flex gap-3 pt-2">
