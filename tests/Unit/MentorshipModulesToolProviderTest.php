@@ -121,6 +121,25 @@ class MentorshipModulesToolProviderTest extends TestCase
         ]);
     }
 
+    public function test_schema_excludes_modules_from_a_different_program(): void
+    {
+        $this->actingAsCoordinator();
+        $program = Program::factory()->create(['name' => 'Newborn Care', 'is_active' => true]);
+        $otherProgram = Program::factory()->create(['name' => 'Adolescent Health', 'is_active' => true]);
+        $facility = Facility::factory()->create();
+        ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true, 'name' => 'Neonatal Resuscitation']);
+        ProgramModule::factory()->create(['program_id' => $otherProgram->id, 'is_active' => true, 'name' => 'Peer Counseling Basics']);
+        $page = new ChatMentorshipSetup;
+        $page->mount();
+        $this->advanceToModulesStage($page, $program, $facility);
+
+        $tool = MentorshipModulesToolProvider::tool($page);
+        $enum = $tool->schema()['properties']['module_names']['items']['enum'];
+
+        $this->assertContains('Neonatal Resuscitation', $enum);
+        $this->assertNotContains('Peer Counseling Basics', $enum);
+    }
+
     public function test_execute_suggests_close_matches_for_an_unresolved_name(): void
     {
         $user = $this->actingAsCoordinator();
