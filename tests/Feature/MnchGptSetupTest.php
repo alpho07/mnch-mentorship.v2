@@ -297,4 +297,115 @@ class MnchGptSetupTest extends TestCase
         $this->assertSame('facility_id', $component->get('pendingOptions')['slot']);
         $this->assertArrayNotHasKey('facility_id', $component->get('answers'));
     }
+
+    public function test_a_bare_number_reply_resolves_instantly_without_calling_the_llm(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $messagesBefore = count($component->get('messages'));
+        $component->set('pendingOptions', [
+            'slot' => 'is_pilot',
+            'options' => [
+                1 => ['id' => 0, 'label' => 'Live Mentorship'],
+                2 => ['id' => 1, 'label' => 'Pilot Run'],
+            ],
+        ]);
+
+        Http::fake(); // no request should be made at all
+
+        $component->call('sendMessage', '1');
+
+        Http::assertNothingSent();
+        $this->assertSame(0, $component->get('answers')['is_pilot']);
+        // Exactly one user message (the echoed choice, via answer()'s own
+        // getEcho()) and one bot message (the next question) got added —
+        // guards against double-posting from both answer()'s own
+        // message-appending and this fast path's.
+        $this->assertCount($messagesBefore + 2, $component->get('messages'));
+    }
+
+    public function test_a_letter_reply_maps_to_the_matching_position(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->set('pendingOptions', [
+            'slot' => 'is_pilot',
+            'options' => [
+                1 => ['id' => 0, 'label' => 'Live Mentorship'],
+                2 => ['id' => 1, 'label' => 'Pilot Run'],
+            ],
+        ]);
+
+        Http::fake();
+
+        $component->call('sendMessage', 'b');
+
+        Http::assertNothingSent();
+        $this->assertSame(1, $component->get('answers')['is_pilot']);
+    }
+
+    public function test_an_out_of_range_number_falls_through_to_the_normal_llm_flow(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->set('pendingOptions', [
+            'slot' => 'is_pilot',
+            'options' => [
+                1 => ['id' => 0, 'label' => 'Live Mentorship'],
+                2 => ['id' => 1, 'label' => 'Pilot Run'],
+            ],
+        ]);
+
+        Http::fake([
+            'api.deepseek.com/*' => Http::response([
+                'choices' => [['message' => ['role' => 'assistant', 'content' => 'I only have options 1 and 2 — which did you mean?']]],
+            ]),
+        ]);
+
+        $component->call('sendMessage', '99');
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_pending_options_are_cleared_once_a_different_step_is_computed(): void
+    {
+        $this->actingAsCoordinator();
+        Setting::setBool(Setting::MNCHGPT_BUTTON_ENABLED, true);
+
+        $component = Livewire::test(MnchGptSetup::class);
+        $component->set('pendingOptions', [
+            'slot' => 'county_id',
+            'options' => [1 => ['id' => 999, 'label' => 'Stale County']],
+        ]);
+
+        Http::fake([
+            'api.deepseek.com/*' => Http::sequence()
+                ->push([
+                    'choices' => [[
+                        'message' => [
+                            'role' => 'assistant',
+                            'content' => null,
+                            'tool_calls' => [[
+                                'id' => 'call_1',
+                                'type' => 'function',
+                                'function' => ['name' => 'fill_mentorship_setup_slots', 'arguments' => json_encode(['is_pilot' => 0])],
+                            ]],
+                        ],
+                    ]],
+                ])
+                ->push(['choices' => [['message' => ['role' => 'assistant', 'content' => 'Got it.']]]]),
+        ]);
+
+        $component->call('sendMessage', 'live mentorship');
+
+        // The stale list is gone — a bare "1" now falls through to the LLM
+        // rather than resolving against the old (irrelevant) county list.
+        $this->assertNotSame('county_id', $component->get('pendingOptions')['slot'] ?? null);
+    }
 }

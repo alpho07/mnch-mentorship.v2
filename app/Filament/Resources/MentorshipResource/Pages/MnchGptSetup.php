@@ -49,6 +49,39 @@ class MnchGptSetup extends Page implements HasForms
             return;
         }
 
+        if ($this->pendingOptions) {
+            $index = $this->matchPendingOptionIndex($text);
+
+            if ($index !== null) {
+                $option = $this->pendingOptions['options'][$index];
+
+                // answer() already appends both the user's echoed choice
+                // (via the slot's getEcho(), e.g. "Live Mentorship" rather
+                // than a bare "1") and the plain next-slot question as its
+                // own bot message — reusing it here avoids re-implementing
+                // that echo/validation/stage-completion logic. This method
+                // only adds the numbered list on top, by appending to
+                // whichever bot message answer() just pushed.
+                $this->answer($this->pendingOptions['slot'], $option['id']);
+
+                $step = $this->determineNextStep([]);
+                $this->pendingOptions = $step;
+
+                if ($step) {
+                    $lastIndex = array_key_last($this->messages);
+
+                    if ($this->messages[$lastIndex]['role'] === 'bot') {
+                        $this->messages[$lastIndex]['text'] .= "\n\n".$this->renderOptionList($step['options']);
+                    }
+                }
+
+                $this->syncTranscript();
+                $this->dispatch('mnchgpt-reply');
+
+                return;
+            }
+        }
+
         $this->messages[] = ['role' => 'user', 'text' => $text, 'timestamp' => now()->toIso8601String()];
 
         $step = $this->determineNextStep([]);
@@ -189,6 +222,25 @@ class MnchGptSetup extends Page implements HasForms
         }
 
         return $numbered;
+    }
+
+    /**
+     * Bare "2" or single-letter "B" (case-insensitive, A=1, B=2, ...)
+     * against the currently pending option list. Anything else (a longer
+     * reply, an out-of-range number) returns null so the caller falls
+     * through to the normal LLM flow.
+     */
+    private function matchPendingOptionIndex(string $text): ?int
+    {
+        if (preg_match('/^\d+$/', $text)) {
+            $index = (int) $text;
+        } elseif (preg_match('/^[a-zA-Z]$/', $text)) {
+            $index = ord(strtoupper($text)) - ord('A') + 1;
+        } else {
+            return null;
+        }
+
+        return array_key_exists($index, $this->pendingOptions['options']) ? $index : null;
     }
 
     /**
