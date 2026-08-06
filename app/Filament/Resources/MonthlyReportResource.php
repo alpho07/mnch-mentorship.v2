@@ -387,14 +387,10 @@ class MonthlyReportResource extends Resource {
 
     public static function getEloquentQuery(): Builder {
         return parent::getEloquentQuery()
-                        ->with(['facility', 'reportTemplate', 'createdBy']);
-        /* ->when(
-          !auth()->user()->isAboveSite(),
-          fn (Builder $query) => $query->whereIn('facility_id', auth()->user()->scopedFacilityIds())
-          ); */
-    }
-
-    public static function canViewAny(): bool {
-        return true;
+                        ->with(['facility', 'reportTemplate', 'createdBy'])
+                        ->when(
+                            !auth()->user()->isAboveSite(),
+                            fn (Builder $query) => $query->whereIn('facility_id', auth()->user()->scopedFacilityIds())
+                        );
     }
 }

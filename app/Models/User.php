@@ -303,7 +303,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessFacility(int $facilityId): bool
     {
-        return true; // $this->isAboveSite() || $this->scopedFacilityIds()->contains($facilityId);
+        return $this->isAboveSite() || in_array($facilityId, $this->scopedFacilityIds(), true);
     }
 
     // Resource-specific methods (simplified with trait)
