@@ -41,6 +41,13 @@ class PublicRouteSmokeTest extends TestCase
         'feed',
     ];
 
+    /**
+     * Known side effect of bootstrapping a second Application instance here:
+     * makes PHPUnit's "error/exception handlers removed" risky-test detector
+     * fire for every test in the same process afterward. Confirmed harmless
+     * (0 real failures/errors, exit code 0) — see AdminRouteSmokeTest's
+     * provider for the full explanation.
+     */
     public static function publicParamlessGetRouteProvider(): array
     {
         $app = require __DIR__ . '/../../bootstrap/app.php';

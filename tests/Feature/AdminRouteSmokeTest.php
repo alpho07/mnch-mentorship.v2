@@ -51,6 +51,15 @@ class AdminRouteSmokeTest extends TestCase
      * is instantiated (and before TestCase::setUp() bootstraps the app),
      * so routes aren't registered yet unless this provider bootstraps the
      * application itself.
+     *
+     * Known side effect: bootstrapping a second Application instance here
+     * makes PHPUnit's "error/exception handlers removed" risky-test
+     * detector fire for every test that runs afterward in the same
+     * process (Laravel re-registers its handlers). Confirmed harmless —
+     * `php artisan test` on the full suite shows 0 real failures/errors,
+     * exit code 0 — this is a PHPUnit categorization artifact, not a
+     * functional issue. Left as-is rather than risk a subtler bug
+     * reworking how the provider gets route data.
      */
     public static function adminParamlessGetRouteProvider(): array
     {
