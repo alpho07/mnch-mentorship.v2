@@ -66,21 +66,7 @@ class MentorAnalyticsDashboardService
         $mentorIds = $trainings->pluck('mentor_id')->filter()->unique()->values()->toArray();
         $mentors   = $trainings->pluck('mentor')->filter()->unique('id')->keyBy('id');
 
-        // CPD: 1 pt per completed module (any class status) — computed from already-loaded data
-        $trainingMentor = $trainings->pluck('mentor_id', 'id'); // training_id => mentor_id
-        $cpdCounts = [];
-        foreach ($allClasses as $cls) {
-            $mentorId = $trainingMentor->get($cls->training_id);
-            if (! $mentorId) continue;
-            $cpdCounts[$mentorId] = ($cpdCounts[$mentorId] ?? 0)
-                + $cls->classModules->where('status', 'completed')->count();
-        }
-        $cpdService = app(CpdPointsService::class);
-        $cpdData = [];
-        foreach ($mentorIds as $mid) {
-            $count = $cpdCounts[$mid] ?? 0;
-            $cpdData[$mid] = ['total' => $count, 'level' => $cpdService->level($count), 'completed_modules' => $count];
-        }
+        $cpdData = app(CpdPointsService::class)->batchForMentors($mentorIds);
 
         // Matrix: one row per live class
         $matrix = $this->buildMatrix($liveClasses, $trainings, $mentors, $participants, $cpdData);
