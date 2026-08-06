@@ -44,6 +44,11 @@ class MonthlyReportResource extends Resource {
                                 ->preload()
                                 ->required()
                                 ->disabled(fn(string $operation): bool => $operation === 'edit')
+                                ->helperText(fn (): ?\Illuminate\Support\HtmlString => \App\Models\ReportTemplate::active()->count() > 0
+                                    ? null
+                                    : new \Illuminate\Support\HtmlString(
+                                        'No report templates yet — <a href="' . \App\Filament\Resources\ReportTemplateResource::getUrl('create') . '" class="underline">create one first</a>.'
+                                    ))
                                 ->live()
                                 ->afterStateUpdated(function (Forms\Set $set, $state, string $operation) {
                                     if ($operation === 'create' && $state) {
