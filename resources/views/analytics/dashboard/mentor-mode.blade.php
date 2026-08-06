@@ -134,7 +134,7 @@
             {{ count($mentorExceptions) }} exception{{ count($mentorExceptions) !== 1 ? 's' : '' }} need attention
         </h6>
     </div>
-    @foreach($mentorExceptions as $item)
+    @foreach(array_slice($mentorExceptions, 0, 5) as $item)
         @php
             $tierColor = match($item['tier']) {
                 1 => '#EF4444',
@@ -155,6 +155,67 @@
             </a>
         </div>
     @endforeach
+    @if(count($mentorExceptions) > 5)
+        <div style="padding:.75rem 1.1rem;text-align:center;border-top:1px solid var(--gray-100);">
+            <button type="button" class="btn btn-link" style="font-size:.82rem;font-weight:700;text-decoration:none;" data-bs-toggle="modal" data-bs-target="#exceptionsModal">
+                See all {{ count($mentorExceptions) }} exceptions →
+            </button>
+        </div>
+    @endif
+</div>
+
+{{-- ── EXCEPTIONS MODAL (all items) ─────────────────────────────────────────── --}}
+<div class="modal fade" id="exceptionsModal" tabindex="-1" aria-labelledby="exceptionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exceptionsModalLabel">All {{ count($mentorExceptions) }} Exceptions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tier</th>
+                            <th>Item</th>
+                            <th>Detail</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($mentorExceptions as $item)
+                            @php
+                                $tierColor = match($item['tier']) {
+                                    1 => '#EF4444',
+                                    2 => '#F59E0B',
+                                    default => '#3B82F6',
+                                };
+                                $detail = match($item['tier']) {
+                                    1 => ($item['meta']['completion_pct'] ?? '—') . '% completion, ' . ($item['meta']['attendance_pct'] ?? '—') . '% attendance',
+                                    2 => ($item['meta']['days_inactive'] ?? '—') . ' days inactive',
+                                    3 => ($item['meta']['classes_led'] ?? '—') . ' class(es) led, 0 CPD',
+                                    default => '—',
+                                };
+                            @endphp
+                            <tr>
+                                <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{{ $tierColor }};"></span></td>
+                                <td>
+                                    <div style="font-size:.85rem;font-weight:700;color:var(--gray-800);">{{ $item['headline'] }}</div>
+                                    <div style="font-size:.76rem;color:var(--gray-500);">{{ $item['subtext'] }}</div>
+                                </td>
+                                <td style="font-size:.82rem;color:var(--gray-600);">{{ $detail }}</td>
+                                <td>
+                                    <a href="{{ $item['url'] }}" style="padding:.35rem .8rem;border-radius:8px;background:{{ $tierColor }};color:#fff;font-size:.76rem;font-weight:700;text-decoration:none;white-space:nowrap;">
+                                        {{ $item['label'] }}
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 @else
 <div class="dash-section" data-aos="fade-up" style="margin-bottom:1.25rem;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:.9rem 1.1rem;">
