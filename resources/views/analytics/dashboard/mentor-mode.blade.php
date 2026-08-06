@@ -201,6 +201,45 @@
             <div class="kpi-value">{{ $mentorKpis['avg_cpd_per_mentor'] }}</div>
             <div class="kpi-label">Avg CPD / Mentor</div>
         </div>
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-balance-scale"></i></div>
+            <div class="kpi-value">{{ $mentorKpis['mentor_to_mentee_ratio'] }}</div>
+            <div class="kpi-label">Mentees per Mentor</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-clipboard-question"></i></div>
+            <div class="kpi-value">
+                {{ $mentorKpis['avg_assessment_score'] !== null ? $mentorKpis['avg_assessment_score'] . '%' : 'No data yet' }}
+            </div>
+            <div class="kpi-label">Avg Assessment Score</div>
+            @if($mentorKpis['assessment_pass_rate'] !== null)
+                <span class="kpi-trend {{ $mentorKpis['assessment_pass_rate'] >= 70 ? 'up' : 'down' }}">
+                    {{ $mentorKpis['assessment_pass_rate'] }}% pass rate
+                </span>
+            @endif
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-hand-holding-medical"></i></div>
+            <div class="kpi-value">
+                {{ $mentorKpis['avg_rubric_score'] !== null ? $mentorKpis['avg_rubric_score'] : 'No data yet' }}
+            </div>
+            <div class="kpi-label">Avg Practical Skills Score</div>
+            @if($mentorKpis['rubric_pass_rate'] !== null)
+                <span class="kpi-trend {{ $mentorKpis['rubric_pass_rate'] >= 70 ? 'up' : 'down' }}">
+                    {{ $mentorKpis['rubric_pass_rate'] }}% pass rate
+                </span>
+            @endif
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-user-clock"></i></div>
+            <div class="kpi-value counter-animate" data-counter="{{ $mentorKpis['inactive_mentors'] }}">{{ $mentorKpis['inactive_mentors'] }}</div>
+            <div class="kpi-label">Inactive Mentors</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon"><i class="fas fa-user-slash"></i></div>
+            <div class="kpi-value counter-animate" data-counter="{{ $mentorKpis['dropped_mentees'] }}">{{ $mentorKpis['dropped_mentees'] }}</div>
+            <div class="kpi-label">Dropped Mentees</div>
+        </div>
     </div>
 </div>
 
