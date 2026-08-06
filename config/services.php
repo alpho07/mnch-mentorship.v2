@@ -40,4 +40,7 @@ return [
         'base_url' => env('DEEPSEEK_BASE_URL', 'https://api.deepseek.com'),
         'model' => env('DEEPSEEK_MODEL', 'deepseek-chat'),
     ],
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+    ],
 ];
