@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\ClassParticipant;
+use App\Models\MenteeModuleProgress;
 use App\Models\MentorshipClass;
 use App\Models\MentorshipCoMentor;
+use App\Models\RubricAssessment;
 use App\Models\Training;
 use App\Models\User;
 use Carbon\Carbon;
@@ -71,10 +73,26 @@ class MentorAnalyticsDashboardService
         // Matrix: one row per live class
         $matrix = $this->buildMatrix($liveClasses, $trainings, $mentors, $participants, $cpdData);
 
-        $kpis      = $this->buildKpis($mentors, $allClasses, $liveClasses, $participants, $cpdData);
+        $exceptions = app(CoordinatorExceptionResolver::class)->resolve($trainings, $liveClasses, $participants, $cpdData);
+
+        $participantIds = $participants->pluck('id');
+        $assessmentStats = MenteeModuleProgress::whereIn('class_participant_id', $participantIds)
+            ->whereNotNull('assessment_score')
+            ->selectRaw('AVG(assessment_score) as avg_score, SUM(assessment_status = "passed") as passed, COUNT(*) as total')
+            ->first();
+
+        $liveClassModuleIds = $liveClasses->pluck('classModules')->flatten()->pluck('id');
+        $rubricStats = RubricAssessment::whereIn('class_module_id', $liveClassModuleIds)
+            ->selectRaw('AVG(score) as avg_score, SUM(passed) as passed, COUNT(*) as total')
+            ->first();
+
+        $droppedMentees = ClassParticipant::whereIn('mentorship_class_id', $liveClassIds)
+            ->where('status', 'dropped')
+            ->count();
+
+        $kpis      = $this->buildKpis($mentors, $allClasses, $liveClasses, $participants, $cpdData, $assessmentStats, $rubricStats, $droppedMentees, $exceptions);
         $chartData = $this->buildChartData($matrix, $allClasses, $mentors, $trainings, $cpdData);
         $insights  = $this->buildInsights($kpis, $matrix);
-        $exceptions = app(CoordinatorExceptionResolver::class)->resolve($trainings, $liveClasses, $participants, $cpdData);
 
         return compact('kpis', 'matrix', 'chartData', 'insights', 'exceptions');
     }
@@ -131,21 +149,30 @@ class MentorAnalyticsDashboardService
 
     // ── KPIs ─────────────────────────────────────────────────────────────────
 
-    private function buildKpis($mentors, $allClasses, $liveClasses, $participants, array $cpdData): array
+    private function buildKpis($mentors, $allClasses, $liveClasses, $participants, array $cpdData, $assessmentStats, $rubricStats, int $droppedMentees, array $exceptions): array
     {
         $totalCpd          = array_sum(array_column($cpdData, 'total'));
         $avgCpd            = count($cpdData) > 0 ? round($totalCpd / count($cpdData), 1) : 0;
         $modulesFacilitated = $liveClasses->sum(fn ($c) => $c->classModules->count());
+        $totalMentors      = $mentors->count();
+        $totalMentees      = $participants->pluck('user_id')->unique()->count();
 
         return [
-            'total_mentors'       => $mentors->count(),
+            'total_mentors'       => $totalMentors,
             'active_classes'      => $liveClasses->count(),
             'completed_classes'   => $allClasses->where('status', 'completed')->count(),
             'modules_facilitated' => $modulesFacilitated,
-            'total_mentees'       => $participants->pluck('user_id')->unique()->count(),
+            'total_mentees'       => $totalMentees,
             'certified_mentees'      => $participants->whereNotNull('head_drmh_approved_at')->count(),
             'total_cpd_awarded'   => $totalCpd,
             'avg_cpd_per_mentor'  => $avgCpd,
+            'mentor_to_mentee_ratio' => $totalMentors > 0 ? round($totalMentees / $totalMentors, 1) : 0,
+            'avg_assessment_score' => $assessmentStats && $assessmentStats->total > 0 ? round((float) $assessmentStats->avg_score, 1) : null,
+            'assessment_pass_rate' => $assessmentStats && $assessmentStats->total > 0 ? round(($assessmentStats->passed / $assessmentStats->total) * 100, 1) : null,
+            'avg_rubric_score' => $rubricStats && $rubricStats->total > 0 ? round((float) $rubricStats->avg_score, 1) : null,
+            'rubric_pass_rate' => $rubricStats && $rubricStats->total > 0 ? round(($rubricStats->passed / $rubricStats->total) * 100, 1) : null,
+            'inactive_mentors' => collect($exceptions)->where('tier', 2)->count(),
+            'dropped_mentees' => $droppedMentees,
         ];
     }
 
