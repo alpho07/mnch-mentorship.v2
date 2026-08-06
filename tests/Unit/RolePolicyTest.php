@@ -13,7 +13,7 @@ class RolePolicyTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_restore_currently_always_denies_even_with_every_real_permission_granted(): void
+    public function test_restore_grants_when_the_real_permission_is_held(): void
     {
         $user = User::factory()->create();
         Permission::firstOrCreate(['name' => 'restore_role', 'guard_name' => 'web']);
@@ -22,17 +22,24 @@ class RolePolicyTest extends TestCase
 
         $policy = new RolePolicy();
 
-        $this->assertFalse(
+        $this->assertTrue(
             $policy->restore($user, $role),
-            'RolePolicy::restore() checks the literal permission name "{{ Restore }}", an un-replaced Shield '
-            . 'stub token that can never exist as a real permission (see docs/PHASE1-DISCOVERY-BASELINE.md '
-            . '§9.2). This test locks in the current fail-closed (always-deny) behavior. Once the stub is '
-            . 'replaced with a real slug (e.g. restore_role), update this test to assertTrue given the '
-            . 'restore_role grant above.'
+            'RolePolicy::restore() used to check the literal, un-replaced Shield stub token "{{ Restore }}" '
+            . '(Phase 1 risk 9.2, now fixed) — it checks the real restore_role permission now.'
         );
     }
 
-    public function test_force_delete_any_currently_always_denies_for_the_same_reason(): void
+    public function test_restore_still_denies_without_the_permission(): void
+    {
+        $user = User::factory()->create();
+        $role = Role::create(['name' => 'some_role', 'guard_name' => 'web']);
+
+        $policy = new RolePolicy();
+
+        $this->assertFalse($policy->restore($user, $role));
+    }
+
+    public function test_force_delete_any_grants_when_the_real_permission_is_held(): void
     {
         $user = User::factory()->create();
         Permission::firstOrCreate(['name' => 'force_delete_any_role', 'guard_name' => 'web']);
@@ -40,14 +47,10 @@ class RolePolicyTest extends TestCase
 
         $policy = new RolePolicy();
 
-        $this->assertFalse(
-            $policy->forceDeleteAny($user),
-            'Same defect as restore() — forceDeleteAny() checks "{{ ForceDeleteAny }}". '
-            . 'See docs/PHASE1-DISCOVERY-BASELINE.md §9.2.'
-        );
+        $this->assertTrue($policy->forceDeleteAny($user));
     }
 
-    public function test_replicate_currently_always_denies_for_the_same_reason(): void
+    public function test_replicate_grants_when_the_real_permission_is_held(): void
     {
         $user = User::factory()->create();
         Permission::firstOrCreate(['name' => 'replicate_role', 'guard_name' => 'web']);
@@ -56,10 +59,30 @@ class RolePolicyTest extends TestCase
 
         $policy = new RolePolicy();
 
-        $this->assertFalse(
-            $policy->replicate($user, $role),
-            'Same defect — replicate() checks "{{ Replicate }}". See docs/PHASE1-DISCOVERY-BASELINE.md §9.2.'
-        );
+        $this->assertTrue($policy->replicate($user, $role));
+    }
+
+    public function test_reorder_grants_when_the_real_permission_is_held(): void
+    {
+        $user = User::factory()->create();
+        Permission::firstOrCreate(['name' => 'reorder_role', 'guard_name' => 'web']);
+        $user->givePermissionTo('reorder_role');
+
+        $policy = new RolePolicy();
+
+        $this->assertTrue($policy->reorder($user));
+    }
+
+    public function test_force_delete_grants_when_the_real_permission_is_held(): void
+    {
+        $user = User::factory()->create();
+        Permission::firstOrCreate(['name' => 'force_delete_role', 'guard_name' => 'web']);
+        $user->givePermissionTo('force_delete_role');
+        $role = Role::create(['name' => 'yet_another_role', 'guard_name' => 'web']);
+
+        $policy = new RolePolicy();
+
+        $this->assertTrue($policy->forceDelete($user, $role));
     }
 
     public function test_view_any_correctly_grants_when_the_real_permission_slug_is_held(): void
@@ -70,11 +93,6 @@ class RolePolicyTest extends TestCase
 
         $policy = new RolePolicy();
 
-        $this->assertTrue(
-            $policy->viewAny($user),
-            'viewAny() uses a real permission slug (view_any_role) and works correctly — included as a '
-            . 'control case to prove the denials above are specifically about the stub tokens, not about '
-            . 'RolePolicy or Spatie permissions being broken in general.'
-        );
+        $this->assertTrue($policy->viewAny($user));
     }
 }
