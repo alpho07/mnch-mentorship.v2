@@ -7,6 +7,7 @@ use App\Models\ClassParticipant;
 use App\Models\Facility;
 use App\Models\MenteeModuleProgress;
 use App\Models\MentorshipClass;
+use App\Models\ModuleRubric;
 use App\Models\Program;
 use App\Models\ProgramModule;
 use App\Models\Training;
@@ -34,6 +35,19 @@ class ClassParticipantSyncCompletionStatusTest extends TestCase
             'mentorship_class_id' => $class->id,
             'program_module_id' => $programModule->id,
             'status' => 'in_progress',
+        ]);
+        // Every real EmONC module has an active rubric — without one here,
+        // hasCompletedAllModules() correctly treats this module as having
+        // nothing to video-review, which would make these fixtures
+        // unrepresentative of the real EmONC scenario they're testing.
+        ModuleRubric::create([
+            'program_module_id' => $programModule->id,
+            'title' => 'Rubric',
+            'total_marks' => 1,
+            'pass_marks' => 1,
+            'pass_percentage' => 100,
+            'order_sequence' => 1,
+            'is_active' => true,
         ]);
 
         $mentee = User::factory()->create();

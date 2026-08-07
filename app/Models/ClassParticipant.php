@@ -206,8 +206,11 @@ class ClassParticipant extends Model
     }
 
     /**
-     * Every module in the class has mentee progress that is completed/exempted, with a
-     * passed video review — the gate for mentor approval and, transitively, certification.
+     * Every module in the class has mentee progress that is completed/exempted.
+     * Modules with an active rubric additionally require a passed video review;
+     * modules with no rubric (non-EmONC programs never have one) are judged on
+     * progress status alone. The gate for mentor approval and, transitively,
+     * certification.
      */
     public function hasCompletedAllModules(): bool
     {
@@ -217,24 +220,33 @@ class ClassParticipant extends Model
             return false;
         }
 
-        $moduleIds = $class->classModules()->pluck('id');
+        $classModules = $class->classModules()->get();
 
-        if ($moduleIds->isEmpty()) {
+        if ($classModules->isEmpty()) {
             return false;
         }
 
-        $progressRecords = $this->moduleProgress()->whereIn('class_module_id', $moduleIds)->get();
+        $progressRecords = $this->moduleProgress()
+            ->whereIn('class_module_id', $classModules->pluck('id'))
+            ->get()
+            ->keyBy('class_module_id');
 
-        if ($progressRecords->count() !== $moduleIds->count()) {
+        if ($progressRecords->count() !== $classModules->count()) {
             return false;
         }
 
-        foreach ($progressRecords as $progress) {
+        foreach ($classModules as $classModule) {
+            $progress = $progressRecords->get($classModule->id);
+
             if (! in_array($progress->status, ['completed', 'exempted'])) {
                 return false;
             }
 
-            if (! $progress->isVideoPassed()) {
+            $hasRubric = ModuleRubric::where('program_module_id', $classModule->program_module_id)
+                ->where('is_active', true)
+                ->exists();
+
+            if ($hasRubric && ! $progress->isVideoPassed()) {
                 return false;
             }
         }
