@@ -58,4 +58,41 @@ class QuickMentorshipSetupTest extends TestCase
 
         $this->assertTrue(QuickMentorshipSetup::canAccess());
     }
+
+    public function test_basics_continue_action_creates_training_and_reveals_first_class_section(): void
+    {
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care']);
+        $facility = \App\Models\Facility::factory()->create(['name' => 'Test Facility']);
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+        $component->fillForm([
+            'is_pilot' => 0,
+            'county_id' => $facility->subcounty->county_id,
+            'facility_id' => $facility->id,
+            'program_id' => $program->id,
+            'start_date' => now()->addDay()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
+            'max_participants' => 10,
+        ]);
+        $component->call('saveBasics');
+
+        $this->assertTrue($component->instance()->basicsSaved);
+        $this->assertDatabaseHas('trainings', [
+            'program_id' => $program->id,
+            'facility_id' => $facility->id,
+        ]);
+        $this->assertSame('quick', \App\Models\Training::where('program_id', $program->id)->first()->guided_setup_method);
+    }
+
+    public function test_basics_continue_action_fails_validation_without_required_fields(): void
+    {
+        $this->actingAsCoordinator();
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+        $component->call('saveBasics');
+
+        $component->assertHasFormErrors(['program_id']);
+        $this->assertFalse($component->instance()->basicsSaved);
+    }
 }
