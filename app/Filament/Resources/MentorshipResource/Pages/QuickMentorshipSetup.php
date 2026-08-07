@@ -66,6 +66,8 @@ class QuickMentorshipSetup extends Page implements HasForms
 
     public bool $basicsSaved = false;
 
+    public bool $firstClassSaved = false;
+
     public function mount(): void
     {
         $this->form->fill([]);
@@ -171,8 +173,67 @@ class QuickMentorshipSetup extends Page implements HasForms
                                 ->action('saveBasics'),
                         ])->visible(fn () => ! $this->basicsSaved),
                     ]),
+                Forms\Components\Section::make('First Class')
+                    ->description("Let's create your first class or cohort.")
+                    ->icon('heroicon-o-user-group')
+                    ->visible(fn () => $this->basicsSaved)
+                    ->schema([
+                        Forms\Components\TextInput::make('class_name')
+                            ->label('Class/Cohort Name')
+                            ->required(fn () => $this->basicsSaved)
+                            ->placeholder('e.g., January 2027 Cohort')
+                            ->maxLength(255),
+                        Forms\Components\Grid::make(2)->schema([
+                            Forms\Components\DatePicker::make('class_start_date')
+                                ->label('Start Date')
+                                ->required(fn () => $this->basicsSaved && ! $this->isEmoncProgram($this->training?->program_id))
+                                ->visible(fn () => ! $this->isEmoncProgram($this->training?->program_id))
+                                ->native(false)
+                                ->minDate(fn () => $this->training?->start_date)
+                                ->maxDate(fn () => $this->training?->end_date),
+                            Forms\Components\DatePicker::make('class_end_date')
+                                ->label('End Date')
+                                ->required(fn () => $this->basicsSaved && ! $this->isEmoncProgram($this->training?->program_id))
+                                ->visible(fn () => ! $this->isEmoncProgram($this->training?->program_id))
+                                ->native(false)
+                                ->minDate(fn (Get $get) => $get('class_start_date') ?: $this->training?->start_date)
+                                ->maxDate(fn () => $this->training?->end_date)
+                                ->afterOrEqual('class_start_date'),
+                        ]),
+                        Forms\Components\Textarea::make('class_description')
+                            ->label('Description')
+                            ->rows(3)
+                            ->placeholder('Describe the gap identified and how this class will be delivered.'),
+                        Forms\Components\Actions::make([
+                            Forms\Components\Actions\Action::make('continue_first_class')
+                                ->label('Continue')
+                                ->action('saveFirstClass'),
+                        ])->visible(fn () => ! $this->firstClassSaved),
+                    ]),
             ])
             ->statePath('data');
+    }
+
+    public function saveFirstClass(): void
+    {
+        $state = $this->form->getState();
+
+        $this->createFirstClass([
+            'name' => $state['class_name'],
+            'start_date' => $state['class_start_date'] ?? null,
+            'end_date' => $state['class_end_date'] ?? null,
+            'description' => $state['class_description'] ?? null,
+        ]);
+
+        $this->firstClassSaved = true;
+    }
+
+    public function createFirstClass(array $data): MentorshipClass
+    {
+        $this->class = app(MentorshipWizardService::class)->createFirstClass($data, $this->training, $this->class);
+        $this->classId = $this->class->id;
+
+        return $this->class;
     }
 
     public function saveBasics(): void

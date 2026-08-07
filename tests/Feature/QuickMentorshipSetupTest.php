@@ -95,4 +95,43 @@ class QuickMentorshipSetupTest extends TestCase
         $component->assertHasFormErrors(['program_id']);
         $this->assertFalse($component->instance()->basicsSaved);
     }
+
+    public function test_first_class_continue_action_creates_class_and_reveals_modules_section(): void
+    {
+        // Chained through the real flow (fillForm/call, not direct ->instance()
+        // property pokes) — a manually-set property doesn't survive a
+        // subsequent fillForm()/call() cycle, since Livewire's testing harness
+        // rehydrates from a real snapshot between requests, same caveat
+        // GuidedMentorshipSetupTest documents for its own moduleDates tests.
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care']);
+        $facility = \App\Models\Facility::factory()->create();
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+        $component->fillForm([
+            'is_pilot' => 0,
+            'county_id' => $facility->subcounty->county_id,
+            'facility_id' => $facility->id,
+            'program_id' => $program->id,
+            'start_date' => now()->addDay()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
+            'max_participants' => 10,
+        ]);
+        $component->call('saveBasics');
+        $this->assertTrue($component->instance()->basicsSaved);
+
+        $component->fillForm([
+            'class_name' => 'January 2027 Cohort',
+            'class_start_date' => now()->addDay()->toDateString(),
+            'class_end_date' => now()->addMonth()->toDateString(),
+        ]);
+        $component->call('saveFirstClass');
+
+        $this->assertTrue($component->instance()->firstClassSaved);
+        $training = \App\Models\Training::where('program_id', $program->id)->first();
+        $this->assertDatabaseHas('mentorship_classes', [
+            'training_id' => $training->id,
+            'name' => 'January 2027 Cohort',
+        ]);
+    }
 }
