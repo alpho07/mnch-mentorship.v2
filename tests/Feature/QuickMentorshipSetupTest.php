@@ -134,4 +134,64 @@ class QuickMentorshipSetupTest extends TestCase
             'name' => 'January 2027 Cohort',
         ]);
     }
+
+    public function test_modules_continue_action_assigns_modules(): void
+    {
+        // Isolated unit test for the wrapper method itself — same pattern
+        // GuidedMentorshipSetupTest uses for assignModules(): call it
+        // directly on the live instance rather than through fillForm()+
+        // call(), since a manually-poked property (training/class here)
+        // doesn't survive the hydrate cycle a real call() triggers.
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care']);
+        $training = \App\Models\Training::factory()->facilityMentorship()->create(['program_id' => $program->id]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $programModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $created = $component->instance()->assignModules([
+            'module_ids' => [$programModule->id],
+            'auto_create_sessions' => false,
+        ]);
+        $component->instance()->modulesSaved = true;
+
+        $this->assertSame(1, $created);
+        $this->assertTrue($component->instance()->modulesSaved);
+        $this->assertDatabaseHas('class_modules', [
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $programModule->id,
+        ]);
+    }
+
+    public function test_validate_module_dates_delegates_to_the_shared_service(): void
+    {
+        $this->actingAsCoordinator();
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+        $component->instance()->moduleDates = [];
+
+        $error = $component->instance()->validateModuleDates([56]);
+
+        $this->assertNotNull($error);
+        $this->assertStringContainsString('Set a start and end date', $error);
+    }
+
+    public function test_updated_module_dates_hook_persists_to_the_draft(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->moduleDates = [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']];
+        $component->instance()->updatedModuleDates();
+
+        $this->assertSame(
+            [56 => ['start' => '2027-03-01', 'end' => '2027-03-10']],
+            $training->fresh()->guided_setup_draft['moduleDates']
+        );
+    }
 }

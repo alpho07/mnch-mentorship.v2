@@ -68,6 +68,15 @@ class QuickMentorshipSetup extends Page implements HasForms
 
     public bool $firstClassSaved = false;
 
+    public bool $modulesSaved = false;
+
+    public array $moduleDates = [];
+
+    public function updatedModuleDates(): void
+    {
+        $this->saveWizardDraft('moduleDates', $this->moduleDates);
+    }
+
     public function mount(): void
     {
         $this->form->fill([]);
@@ -210,8 +219,106 @@ class QuickMentorshipSetup extends Page implements HasForms
                                 ->action('saveFirstClass'),
                         ])->visible(fn () => ! $this->firstClassSaved),
                     ]),
+                Forms\Components\Section::make('Modules')
+                    ->description('Pick as many or as few modules as you like — you can add more later.')
+                    ->icon('heroicon-o-book-open')
+                    ->visible(fn () => $this->firstClassSaved)
+                    ->schema(function () {
+                        if (! $this->training || ! $this->class) {
+                            return [];
+                        }
+
+                        if ($this->isEmoncProgram($this->training->program_id)) {
+                            $picker = \App\Filament\Forms\Components\EmoncModulePicker::make('module_ids')
+                                ->label('Available Program Modules')
+                                ->training($this->training)
+                                ->class($this->class)
+                                ->includeAssigned()
+                                ->live()
+                                ->afterStateUpdated(fn ($state) => $this->saveWizardDraft('module_ids', $state))
+                                ->helperText('Already-added modules/tracks are pre-checked — uncheck one to remove it.')
+                                ->rule(fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if ($error = $this->validateModuleDates($value ?? [])) {
+                                        $fail($error);
+                                    }
+                                });
+                        } else {
+                            $allModules = ProgramModule::where('program_id', $this->training->program_id)
+                                ->where('is_active', true)
+                                ->whereNull('parent_id')
+                                ->orderBy('order_sequence')
+                                ->pluck('name', 'id')
+                                ->toArray();
+
+                            $picker = \App\Filament\Forms\Components\CardCheckboxList::make('module_ids')
+                                ->label('Available Program Modules')
+                                ->options($allModules)
+                                ->default([])
+                                ->live()
+                                ->afterStateUpdated(fn ($state) => $this->saveWizardDraft('module_ids', $state))
+                                ->helperText('Already-added modules are pre-checked — uncheck one to remove it.');
+                        }
+
+                        return [
+                            $picker,
+                            Forms\Components\Toggle::make('auto_create_sessions')
+                                ->label('Auto-populate sessions from program template')
+                                ->default(true)
+                                ->disabled()
+                                ->dehydrated(true),
+                            Forms\Components\Actions::make([
+                                Forms\Components\Actions\Action::make('continue_modules')
+                                    ->label('Continue')
+                                    ->action('saveModules'),
+                            ])->visible(fn () => ! $this->modulesSaved),
+                        ];
+                    }),
             ])
             ->statePath('data');
+    }
+
+    public function saveModules(): void
+    {
+        $state = $this->form->getState();
+
+        $this->assignModules([
+            'module_ids' => $state['module_ids'] ?? [],
+            'auto_create_sessions' => $state['auto_create_sessions'] ?? true,
+            'module_dates' => $this->moduleDates,
+        ]);
+
+        $this->modulesSaved = true;
+    }
+
+    public function assignModules(array $data): int
+    {
+        $created = app(MentorshipWizardService::class)->assignModules($data, $this->training, $this->class);
+        $this->moduleDates = [];
+
+        return $created;
+    }
+
+    public function validateModuleDates(array $moduleIds): ?string
+    {
+        return app(MentorshipWizardService::class)->validateModuleDates($moduleIds, $this->moduleDates);
+    }
+
+    private function saveWizardDraft(string $key, mixed $state): void
+    {
+        if (! $this->training) {
+            return;
+        }
+
+        app(MentorshipWizardService::class)->saveWizardDraft($this->training, $key, $state);
+    }
+
+    private function clearWizardDraft(string $key): void
+    {
+        if (! $this->training) {
+            return;
+        }
+
+        app(MentorshipWizardService::class)->clearWizardDraft($this->training, $key);
     }
 
     public function saveFirstClass(): void
