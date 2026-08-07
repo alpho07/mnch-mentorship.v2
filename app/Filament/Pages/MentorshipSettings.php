@@ -63,6 +63,7 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
             'guided_setup_button_enabled' => Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED),
             'chat_setup_button_enabled' => Setting::getBool(Setting::CHAT_SETUP_BUTTON_ENABLED),
             'mnchgpt_button_enabled' => Setting::getBool(Setting::MNCHGPT_BUTTON_ENABLED),
+            'quick_setup_button_enabled' => Setting::getBool(Setting::QUICK_SETUP_BUTTON_ENABLED),
         ]);
     }
 
@@ -126,8 +127,21 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
                                     ->success()
                                     ->send();
                             }),
+                        Forms\Components\Toggle::make('quick_setup_button_enabled')
+                            ->label('"Quick Setup" button')
+                            ->helperText('The single-page, all-in-one form.')
+                            ->onColor('success')
+                            ->offColor('danger')
+                            ->live()
+                            ->afterStateUpdated(function (bool $state): void {
+                                Setting::setBool(Setting::QUICK_SETUP_BUTTON_ENABLED, $state);
+                                Notification::make()
+                                    ->title($state ? 'Quick Setup enabled' : 'Quick Setup disabled')
+                                    ->success()
+                                    ->send();
+                            }),
                     ])
-                    ->columns(4),
+                    ->columns(5),
             ])
             ->statePath('data');
     }

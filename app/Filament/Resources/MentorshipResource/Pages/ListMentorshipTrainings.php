@@ -23,6 +23,7 @@ class ListMentorshipTrainings extends ListRecords
         $guidedSetupEnabled = Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED);
         $chatSetupEnabled = Setting::getBool(Setting::CHAT_SETUP_BUTTON_ENABLED);
         $mnchgptEnabled = Setting::getBool(Setting::MNCHGPT_BUTTON_ENABLED);
+        $quickSetupEnabled = Setting::getBool(Setting::QUICK_SETUP_BUTTON_ENABLED);
 
         return [
             Actions\CreateAction::make()
@@ -52,6 +53,13 @@ class ListMentorshipTrainings extends ListRecords
                 ->url(fn () => MentorshipTrainingResource::getUrl('mnchgpt-setup'))
                 ->disabled(! $mnchgptEnabled)
                 ->tooltip($mnchgptEnabled ? null : 'Turned off in Mentorship Settings'),
+            Actions\Action::make('quick_setup')
+                ->label('Quick Setup')
+                ->icon('heroicon-o-bolt')
+                ->color('gray')
+                ->url(fn () => MentorshipTrainingResource::getUrl('quick-setup'))
+                ->disabled(! $quickSetupEnabled)
+                ->tooltip($quickSetupEnabled ? null : 'Turned off in Mentorship Settings'),
         ];
     }
 

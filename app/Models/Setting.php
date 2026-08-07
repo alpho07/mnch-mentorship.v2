@@ -21,6 +21,8 @@ class Setting extends Model
 
     public const MNCHGPT_BUTTON_ENABLED = 'mnchgpt_button_enabled';
 
+    public const QUICK_SETUP_BUTTON_ENABLED = 'quick_setup_button_enabled';
+
     protected $fillable = [
         'key',
         'value',
