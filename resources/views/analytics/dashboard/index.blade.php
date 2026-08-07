@@ -13,9 +13,6 @@
 
 @section('content')
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/introjs.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/intro.min.js"></script>
-
 <!-- AOS scroll animations -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
@@ -66,19 +63,10 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
 .dash-hero-left h1 { font-size: 1.9rem; font-weight: 800; color: #fff; margin: 0 0 .25rem; letter-spacing: -0.02em; }
 .dash-hero-left p  { color: rgba(255,255,255,.8); margin: 0; font-size: .95rem; }
 .hero-badge { display: inline-flex; align-items: center; gap: .4rem; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 20px; padding: .3rem .85rem; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-bottom: .6rem; backdrop-filter: blur(4px); }
-.dash-hero-right { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
 
-/* Mode toggle */
-.mode-toggle { display: flex; background: rgba(0,0,0,.25); border-radius: 10px; padding: 4px; border: 1px solid rgba(255,255,255,.15); }
-.mode-btn { padding: .55rem 1.25rem; border-radius: 7px; border: none; background: transparent; color: rgba(255,255,255,.75); font-weight: 600; font-size: .875rem; cursor: pointer; transition: all .2s; white-space: nowrap; }
-.mode-btn.active { background: rgba(255,255,255,.22); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
-.mode-btn:hover:not(.active) { background: rgba(255,255,255,.1); color: #fff; }
-
-/* Hero action buttons */
-.btn-hero { border-radius: 8px; padding: .55rem 1rem; font-size: .85rem; font-weight: 600; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.12); color: #fff; cursor: pointer; transition: all .2s; }
-.btn-hero:hover { background: rgba(255,255,255,.22); color: #fff; }
-.btn-hero.btn-hero-white { background: #fff; color: var(--teal-dark); border-color: #fff; }
-.btn-hero.btn-hero-white:hover { background: var(--teal-50); color: var(--teal-dark); }
+/* Mode toggle + Admin link now render in the shared top bar's
+   @yield('topbar-extra') slot (see layouts/dashboard.blade.php) — the hero
+   itself carries no buttons/links. */
 
 /* ── KPI cards pulled up over hero ── */
 .kpi-strip-wrap {
@@ -277,49 +265,39 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                 @if($selectedYear) — <strong>{{ $selectedYear }}</strong>@endif
             </p>
         </div>
-        <div class="dash-hero-right">
-            <!-- Guided Tour -->
-            <button class="btn-hero" id="startTourBtn" title="Take a guided tour">
-                <i class="fas fa-question-circle me-1"></i> Tour
-            </button>
-
-            <!-- Filters toggle -->
-            <button class="btn-hero" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse">
-                <i class="fas fa-sliders-h me-1"></i> Filters
-            </button>
-
-            <!-- Mode toggle -->
-            <div class="mode-toggle" data-intro="Switch between Mentorship, EmONC, Mentor, Assessment and Training analytics modes." data-step="2">
-                <button type="button" class="mode-btn {{ $mode === 'mentorship' ? 'active' : '' }}" data-mode="mentorship"
-                    title="Infant, Child &amp; Newborn Care Dashboard — facility-based mentorship progress, modules &amp; mentee outcomes">
-                    <i class="fas fa-user-friends me-1"></i> Mentorships
-                </button>
-
-                <button type="button" class="mode-btn {{ $mode === 'emonc' ? 'active' : '' }}" data-mode="emonc"
-                    title="EmONC Analytics — Emergency Obstetric &amp; Newborn Care mentee progress, competency assessments &amp; certification">
-                    <i class="fas fa-heart-pulse me-1"></i> EmONC
-                </button>
-
-                <button type="button" class="mode-btn {{ $mode === 'mentor' ? 'active' : '' }}" data-mode="mentor"
-                    title="Mentor Analytics — mentor CPD points, active classes, mentee reach and leaderboards">
-                    <i class="fas fa-user-tie me-1"></i> Mentors
-                </button>
-                <button type="button" class="mode-btn {{ $mode === 'assessment' ? 'active' : '' }}" data-mode="assessment"
-                    title="Assessment Analytics — facility readiness assessments across counties and subcounties">
-                    <i class="fas fa-clipboard-check me-1"></i> Assessments
-                </button>
-                <button type="button" class="mode-btn {{ $mode === 'training' ? 'active' : '' }}" data-mode="training"
-                    title="Training Analytics — comprehensive insights across Kenya healthcare training programs">
-                    <i class="fas fa-chalkboard-teacher me-1"></i> Trainings
-                </button>
-            </div>
-
-            <a href="{{ url('/admin') }}" class="btn-hero btn-hero-white">
-                <i class="fas fa-tachometer-alt me-1"></i> Admin
-            </a>
-        </div>
     </div>
 </div>
+
+@section('topbar-extra')
+    <div class="mode-toggle" data-intro="Switch between Mentorship, EmONC, Mentor, Assessment and Training analytics modes." data-step="2">
+        <button type="button" class="mode-btn {{ $mode === 'mentorship' ? 'active' : '' }}" data-mode="mentorship"
+            title="Infant, Child &amp; Newborn Care Dashboard — facility-based mentorship progress, modules &amp; mentee outcomes">
+            <i class="fas fa-user-friends me-1"></i> Newborn &amp; Child
+        </button>
+
+        <button type="button" class="mode-btn {{ $mode === 'emonc' ? 'active' : '' }}" data-mode="emonc"
+            title="EmONC Analytics — Emergency Obstetric &amp; Newborn Care mentee progress, competency assessments &amp; certification">
+            <i class="fas fa-heart-pulse me-1"></i> EmONC
+        </button>
+
+        <button type="button" class="mode-btn {{ $mode === 'mentor' ? 'active' : '' }}" data-mode="mentor"
+            title="Mentor Analytics — mentor CPD points, active classes, mentee reach and leaderboards">
+            <i class="fas fa-user-tie me-1"></i> Mentors
+        </button>
+        <button type="button" class="mode-btn {{ $mode === 'assessment' ? 'active' : '' }}" data-mode="assessment"
+            title="Assessment Analytics — facility readiness assessments across counties and subcounties">
+            <i class="fas fa-clipboard-check me-1"></i> Assessments
+        </button>
+        <button type="button" class="mode-btn {{ $mode === 'training' ? 'active' : '' }}" data-mode="training"
+            title="Training Analytics — comprehensive insights across Kenya healthcare training programs">
+            <i class="fas fa-chalkboard-teacher me-1"></i> Trainings
+        </button>
+    </div>
+
+    <a href="{{ url('/admin') }}" class="mnch-topbar-admin">
+        <i class="fas fa-tachometer-alt"></i> Admin
+    </a>
+@endsection
 
 @if($mode === 'assessment')
     @include('analytics.dashboard.assessment-mode')
@@ -328,6 +306,43 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
 @elseif($mode === 'emonc')
     @include('analytics.dashboard.emonc-mode')
 @else
+<!-- ████████ FILTERS (always visible, below the title) ████████ -->
+<div class="dash-section" data-aos="fade-up" data-aos-delay="50">
+    <div id="filtersCollapse" data-intro="Filter by year, program, or search to narrow your analysis." data-step="3">
+        <div class="filter-card">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label">Program</label>
+                    <select class="form-select" id="program-filter">
+                        <option value="">All Programs</option>
+                        @foreach($trainingsList as $training)
+                            <option value="{{ $training->id }}">{{ $training->title }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label">Year</label>
+                    <select class="form-select" id="year-filter">
+                        <option value="" {{ empty($selectedYear) ? 'selected' : '' }}>All Years</option>
+                        @foreach($availableYears ?? [] as $year)
+                            <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search-filter" placeholder="Search programs…">
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <button class="btn btn-outline-secondary w-100" id="clear-filters">
+                        <i class="fas fa-times me-1"></i>Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ████████ KPI STRIP ████████ -->
 <div class="kpi-strip-wrap" data-intro="Key performance metrics for the selected mode and filters." data-step="4">
             @php
@@ -394,43 +409,6 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
             @endif
         </div>
         @endif
-    </div>
-</div>
-
-<!-- ████████ FILTERS (collapsible) ████████ -->
-<div class="dash-section" data-aos="fade-up" data-aos-delay="50">
-    <div class="collapse" id="filtersCollapse" data-intro="Filter by year, program, or search to narrow your analysis." data-step="3">
-        <div class="filter-card">
-            <div class="row g-3 align-items-end">
-                <div class="col-lg-4 col-md-6">
-                    <label class="form-label">Program</label>
-                    <select class="form-select" id="program-filter">
-                        <option value="">All Programs</option>
-                        @foreach($trainingsList as $training)
-                            <option value="{{ $training->id }}">{{ $training->title }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <label class="form-label">Year</label>
-                    <select class="form-select" id="year-filter">
-                        <option value="" {{ empty($selectedYear) ? 'selected' : '' }}>All Years</option>
-                        @foreach($availableYears ?? [] as $year)
-                            <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <label class="form-label">Search</label>
-                    <input type="text" class="form-control" id="search-filter" placeholder="Search programs…">
-                </div>
-                <div class="col-lg-2 col-md-6">
-                    <button class="btn btn-outline-secondary w-100" id="clear-filters">
-                        <i class="fas fa-times me-1"></i>Clear
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -1506,30 +1484,6 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
             }
         },
 
-        // ── Guided Tour ──
-        Tour: {
-            init() {
-                const btn = document.getElementById('startTourBtn');
-                if (!btn) return;
-                btn.addEventListener('click', () => {
-                    introJs().setOptions({
-                        steps: [
-                            { title:'👋 Welcome!', intro:'Welcome to the MNCH Analytics Dashboard — let\'s take a quick tour of the key features.' },
-                            { element: document.querySelector('.mode-toggle'), title:'Mode Toggle', intro:'Switch between Training Programs and Mentorship analytics.' },
-                            { element: document.getElementById('filtersCollapse'), title:'Filters', intro:'Filter by year, program, or search to narrow your analysis.' },
-                            { element: document.querySelector('.kpi-strip'), title:'KPI Cards', intro:'Key metrics: programs, participants, facilities covered, and year-on-year trend.' },
-                            { element: document.getElementById('trendChart')?.closest('.chart-card'), title:'Trend Chart', intro:'12-month enrollment or activity trend.' },
-                            { element: document.getElementById('departmentChart')?.closest('.chart-card'), title:'Department Chart', intro:'Participation breakdown by department.' },
-                            { element: document.getElementById('topCountiesChart')?.closest('.chart-card'), title:'Top Counties', intro:'Leading counties by participation volume.' },
-                            { element: document.getElementById('kenyaMap'), title:'Kenya Map', intro:'Interactive map — click any county to drill down into facilities and participants.' },
-                        ].filter(s => !s.element || document.body.contains(s.element)),
-                        nextLabel: 'Next →', prevLabel: '← Back', doneLabel: 'Done',
-                        showProgress: true, scrollToElement: true, disableInteraction: false
-                    }).start();
-                });
-            }
-        },
-
         // ── Bootstrap ──
         init() {
             // Initialize scroll animations
@@ -1548,7 +1502,6 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
             // Each module is isolated — a failure in one doesn't block the others
             try { Dashboard.Counters.init(); } catch(e) { console.error('Counters init failed:', e); }
             try { Dashboard.Filters.init(); } catch(e) { console.error('Filters init failed:', e); }
-            try { Dashboard.Tour.init();    } catch(e) { console.error('Tour init failed:', e); }
             try { Dashboard.Charts.init(); } catch(e) { console.error('Charts init failed:', e); }
             try { Dashboard.TrainingList.init(); } catch(e) { console.error('TrainingList init failed:', e); }
             try { Dashboard.Map.init();    } catch(e) { console.error('Map init failed:', e); }

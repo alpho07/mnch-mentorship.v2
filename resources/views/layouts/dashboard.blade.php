@@ -57,6 +57,147 @@
                 line-height: 1.6;
             }
 
+            /* ── Site navigation strip ── links back to the main MNCH Kenya
+               site (Home / Resources / Categories) so this dashboard never
+               becomes a dead end. */
+            .mnch-topbar {
+                background: #ffffff;
+                border-bottom: 1px solid var(--gray-200);
+                position: sticky;
+                top: 0;
+                z-index: 1050;
+            }
+
+            .mnch-topbar-inner {
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 0.6rem 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .mnch-topbar-brand {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-weight: 700;
+                font-size: 1rem;
+                color: var(--gray-900, #0F172A);
+                text-decoration: none;
+            }
+
+            .mnch-topbar-brand:hover {
+                color: var(--gray-900, #0F172A);
+                text-decoration: none;
+            }
+
+            .mnch-topbar-logo {
+                width: 2rem;
+                height: 2rem;
+                border-radius: 0.6rem;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);
+                color: #fff;
+                font-size: 0.8rem;
+                flex-shrink: 0;
+            }
+
+            .mnch-topbar-brand-accent {
+                color: #1D6FB8;
+            }
+
+            .mnch-topbar-nav {
+                display: flex;
+                align-items: center;
+                gap: 0.25rem;
+            }
+
+            .mnch-topbar-nav a {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.4rem;
+                padding: 0.45rem 0.85rem;
+                border-radius: 0.6rem;
+                font-size: 0.875rem;
+                font-weight: 600;
+                color: var(--gray-700);
+                text-decoration: none;
+                transition: all 0.15s ease;
+            }
+
+            .mnch-topbar-nav a:hover,
+            .mnch-topbar-nav a.active {
+                background: #EAF7FE;
+                color: #1D6FB8;
+            }
+
+            .mnch-topbar-left {
+                display: flex;
+                align-items: center;
+                gap: 1.25rem;
+                flex-wrap: wrap;
+            }
+
+            .mnch-topbar-extra {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            /* Mode toggle, light-topbar variant */
+            .mode-toggle {
+                display: flex;
+                background: var(--gray-100, #F1F5F9);
+                border-radius: 10px;
+                padding: 4px;
+                border: 1px solid var(--gray-200, #E2E8F0);
+            }
+            .mode-btn {
+                padding: .5rem 1rem;
+                border-radius: 7px;
+                border: none;
+                background: transparent;
+                color: var(--gray-700, #334155);
+                font-weight: 600;
+                font-size: .8rem;
+                cursor: pointer;
+                transition: all .2s;
+                white-space: nowrap;
+            }
+            .mode-btn.active {
+                background: #1D6FB8;
+                color: #fff;
+                box-shadow: 0 2px 8px rgba(29,111,184,.3);
+            }
+            .mode-btn:hover:not(.active) {
+                background: var(--gray-200, #E2E8F0);
+                color: var(--gray-900, #0F172A);
+            }
+
+            .mnch-topbar-admin {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.4rem;
+                padding: 0.5rem 0.9rem;
+                border-radius: 0.6rem;
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: #fff;
+                background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);
+                text-decoration: none;
+                white-space: nowrap;
+            }
+            .mnch-topbar-admin:hover {
+                color: #fff;
+                opacity: 0.9;
+            }
+
             .container-fluid {
                 max-width: 1400px;
                 margin: 0 auto;
@@ -514,6 +655,32 @@
         </style>
     </head>
     <body>
+    <div class="mnch-topbar">
+        <div class="mnch-topbar-inner">
+            <div class="mnch-topbar-left">
+                <a href="{{ route('home') }}" class="mnch-topbar-brand">
+                    <span class="mnch-topbar-logo"><i class="fas fa-stethoscope"></i></span>
+                    <span><span class="mnch-topbar-brand-accent">MNCH</span> Kenya</span>
+                </a>
+                <nav class="mnch-topbar-nav">
+                    <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">
+                        <i class="fas fa-home"></i> Home
+                    </a>
+                    <a href="{{ route('resources.index') }}" class="{{ request()->routeIs('resources.*') ? 'active' : '' }}">
+                        <i class="fas fa-book-open"></i> Resources
+                    </a>
+                    <a href="{{ route('categories.index') }}" class="{{ request()->routeIs('categories.*') ? 'active' : '' }}">
+                        <i class="fas fa-th-large"></i> Categories
+                    </a>
+                </nav>
+            </div>
+
+            <div class="mnch-topbar-extra">
+                @yield('topbar-extra')
+            </div>
+        </div>
+    </div>
+
     @if(isset($breadcrumbs) && count($breadcrumbs) > 1)
         <!-- Breadcrumb -->
         <div class="container-fluid px-4 py-3">
