@@ -158,6 +158,27 @@ class ClassParticipant extends Model
         ]);
     }
 
+    /**
+     * Sets status to 'completed' the moment a mentee genuinely finishes
+     * every module (all progress completed/exempted, every video review
+     * passed) — see docs/PHASE1-DISCOVERY-BASELINE.md for why this needed
+     * adding: markCompleted() previously had zero callers anywhere, so
+     * mentor_approve/head_drmh_certify's status==='completed' visibility
+     * gate on ManageClassMentees.php could never become true.
+     */
+    public function syncCompletionStatus(): bool
+    {
+        if ($this->status === 'completed') {
+            return false;
+        }
+
+        if (! $this->hasCompletedAllModules()) {
+            return false;
+        }
+
+        return $this->markCompleted();
+    }
+
     public function drop(?string $reason = null): bool
     {
         return $this->update([
