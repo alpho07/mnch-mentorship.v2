@@ -74,6 +74,10 @@ class QuickMentorshipSetup extends Page implements HasForms
 
     public int $enrolledCount = 0;
 
+    public int $invitedCount = 0;
+
+    public bool $classStarted = false;
+
     public array $moduleDates = [];
 
     public function updatedModuleDates(): void
@@ -379,8 +383,57 @@ class QuickMentorshipSetup extends Page implements HasForms
                                 ->action('saveMentees'),
                         ])->visible(fn () => ! $this->menteesSaved),
                     ]),
+                Forms\Components\Section::make('Invite')
+                    ->description('Time to invite your mentees!')
+                    ->icon('heroicon-o-paper-airplane')
+                    ->visible(fn () => $this->menteesSaved)
+                    ->schema([
+                        Forms\Components\Radio::make('recipients')
+                            ->label('Who should receive the email?')
+                            ->options([
+                                'all' => 'All mentees with email addresses',
+                                'not_sent' => 'Only those not yet invited',
+                            ])
+                            ->default('all')
+                            ->required(fn () => $this->menteesSaved),
+                        Forms\Components\Actions::make([
+                            Forms\Components\Actions\Action::make('submit')
+                                ->label('Create Mentorship')
+                                ->color('primary')
+                                ->action('submit'),
+                        ]),
+                    ]),
             ])
             ->statePath('data');
+    }
+
+    public function submit(): void
+    {
+        $state = $this->form->getState();
+
+        try {
+            $this->sendInvitations(['recipients' => $state['recipients'] ?? 'all']);
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->danger()
+                ->title('Something Went Wrong')
+                ->body($e->getMessage())
+                ->send();
+        }
+    }
+
+    public function sendInvitations(array $data): array
+    {
+        $result = app(MentorshipWizardService::class)->sendInvitations($data, $this->training, $this->class);
+
+        $this->invitedCount = $result['sent'] + $result['resent'];
+        $this->completed = true;
+
+        if ($this->class->fresh()->status === 'active') {
+            $this->classStarted = true;
+        }
+
+        return $result;
     }
 
     public function saveMentees(): void

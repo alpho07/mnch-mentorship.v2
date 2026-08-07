@@ -220,4 +220,30 @@ class QuickMentorshipSetupTest extends TestCase
             'user_id' => $mentee->id,
         ]);
     }
+
+    public function test_submit_sends_invitations_and_marks_completed(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $mentee = User::factory()->create(['email' => 'mentee@example.com']);
+        \App\Models\ClassParticipant::factory()->create([
+            'mentorship_class_id' => $class->id,
+            'user_id' => $mentee->id,
+            'status' => 'enrolled',
+        ]);
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $result = $component->instance()->sendInvitations(['recipients' => 'all']);
+
+        $this->assertTrue($component->instance()->completed);
+        $this->assertSame(1, $component->instance()->invitedCount);
+        $this->assertSame(1, $result['sent']);
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
+        $this->assertNotNull($training->fresh()->guided_setup_completed_at);
+    }
 }
