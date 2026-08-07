@@ -313,4 +313,76 @@ class QuickMentorshipSetupTest extends TestCase
 
         $this->assertStringContainsString('quick-setup', $viewData['continueUrl']);
     }
+
+    public function test_end_to_end_quick_setup_creates_a_fully_configured_mentorship(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care']);
+        $facility = \App\Models\Facility::factory()->create();
+        $programModule = \App\Models\ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
+        $mentee = User::factory()->create(['email' => 'endtoend@example.com']);
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+
+        $component->fillForm([
+            'is_pilot' => 0,
+            'county_id' => $facility->subcounty->county_id,
+            'facility_id' => $facility->id,
+            'program_id' => $program->id,
+            'start_date' => now()->addDay()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
+            'max_participants' => 10,
+        ]);
+        $component->call('saveBasics');
+        $component->assertHasNoFormErrors();
+        $this->assertTrue($component->instance()->basicsSaved, 'basicsSaved should be true after saveBasics');
+        $this->assertSame(1, \App\Models\Training::count(), 'exactly one Training should exist after saveBasics: got '.\App\Models\Training::count());
+        $this->assertNotNull($component->instance()->training, 'training property should be set');
+        $this->assertSame($program->id, $component->instance()->training->program_id, 'training program_id mismatch: got '.$component->instance()->training->program_id);
+
+        $component->fillForm([
+            'class_name' => 'End to End Cohort',
+            'class_start_date' => now()->addDay()->toDateString(),
+            'class_end_date' => now()->addMonth()->toDateString(),
+        ]);
+        $component->call('saveFirstClass');
+
+        $component->assertHasNoFormErrors();
+        $this->assertTrue($component->instance()->firstClassSaved, 'firstClassSaved false after saveFirstClass');
+
+        $component->fillForm(['module_ids' => [$programModule->id]]);
+        $component->call('saveModules');
+        $component->assertHasNoFormErrors();
+        $this->assertTrue($component->instance()->modulesSaved, 'modulesSaved false after saveModules');
+
+        $component->fillForm(['selected_users' => [$mentee->id]]);
+        $component->call('saveMentees');
+        $component->assertHasNoFormErrors();
+        $this->assertTrue($component->instance()->menteesSaved, 'menteesSaved false after saveMentees');
+
+        $component->fillForm(['recipients' => 'all']);
+        $component->call('submit');
+        $this->assertTrue($component->instance()->completed, 'completed false after submit');
+
+        $training = \App\Models\Training::where('program_id', $program->id)->first();
+        $this->assertNotNull($training);
+        $this->assertSame('quick', $training->guided_setup_method);
+        $this->assertNotNull($training->guided_setup_completed_at);
+        $this->assertNull($training->guided_setup_draft);
+
+        $class = \App\Models\MentorshipClass::where('training_id', $training->id)->first();
+        $this->assertSame('End to End Cohort', $class->name);
+        $this->assertSame('active', $class->status);
+
+        $this->assertDatabaseHas('class_modules', [
+            'mentorship_class_id' => $class->id,
+            'program_module_id' => $programModule->id,
+        ]);
+        $this->assertDatabaseHas('class_participants', [
+            'mentorship_class_id' => $class->id,
+            'user_id' => $mentee->id,
+        ]);
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
+    }
 }
