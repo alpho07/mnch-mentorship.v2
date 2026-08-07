@@ -6,6 +6,84 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Lexend', 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    /* MoH Kenya clinical blue — sampled from the official EmONC manual cover
+       (sky blue to navy gradient). */
+    --color-primary-50: #EAF7FE;
+    --color-primary-100: #CFEEFC;
+    --color-primary-200: #9EDDFA;
+    --color-primary-300: #6FC4EF;
+    --color-primary-400: #4FB3E8;
+    --color-primary-500: #2E93D6;
+    --color-primary-600: #1D6FB8;
+    --color-primary-700: #17579A;
+    --color-primary-800: #2C478D;
+    --color-primary-900: #1B2E5E;
+
+    /* Programme pillar accents, sampled/derived from the real mentorship
+       manual covers. */
+    --color-pillar-maternal: #C81E70;
+    --color-pillar-newborn: #A855C8;
+    --color-pillar-child: #7DB83A;
+}
+
+/* ── Public frontend (resources/views/layouts/app.blade.php) ──────────── */
+@layer components {
+    .nav-link {
+        @apply relative text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200;
+    }
+    .nav-link::after {
+        content: '';
+        @apply absolute bottom-1 left-1/2 w-0 h-0.5 bg-primary-500 rounded-full transition-all duration-200;
+        transform: translateX(-50%);
+    }
+    .nav-link:hover,
+    .nav-link:focus-visible {
+        @apply text-primary-600 -translate-y-0.5 outline-none;
+    }
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after {
+        @apply w-4/5;
+    }
+    .nav-link.active {
+        @apply text-primary-600 bg-primary-50 font-semibold;
+    }
+    .nav-link.active::after {
+        @apply w-4/5;
+    }
+    .mobile-nav-link {
+        @apply flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl text-base font-medium transition-all duration-200;
+    }
+    .mobile-nav-link:hover,
+    .mobile-nav-link:focus-visible {
+        @apply translate-x-1 outline-none;
+    }
+    .mobile-nav-link.active {
+        @apply bg-primary-50 text-primary-700 font-semibold;
+    }
+    .mobile-nav-animate {
+        @apply transition-transform duration-200;
+    }
+    .mobile-nav-animate:hover,
+    .mobile-nav-animate:focus-visible {
+        @apply translate-x-1 outline-none;
+    }
+    /* Footer links subtle lift */
+    footer ul a {
+        @apply inline-block transition-all duration-200;
+    }
+    footer ul a:hover,
+    footer ul a:focus-visible {
+        @apply translate-x-0.5 text-primary-400 outline-none;
+    }
+    /* iOS safe area */
+    .safe-area-inset-top {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+    .safe-area-inset-bottom {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
 }
