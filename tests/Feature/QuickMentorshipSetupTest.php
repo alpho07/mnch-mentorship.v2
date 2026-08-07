@@ -246,4 +246,56 @@ class QuickMentorshipSetupTest extends TestCase
         \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
         $this->assertNotNull($training->fresh()->guided_setup_completed_at);
     }
+
+    public function test_mount_resumes_a_training_in_progress_and_reveals_the_right_sections(): void
+    {
+        $this->actingAsCoordinator();
+        $program = \App\Models\Program::factory()->create(['name' => 'Newborn Care']);
+        $training = \App\Models\Training::factory()->facilityMentorship()->create(['program_id' => $program->id]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+        $component->instance()->trainingId = $training->id;
+        $component->instance()->classId = $class->id;
+        $component->instance()->mount();
+
+        $this->assertTrue($component->instance()->basicsSaved);
+        $this->assertTrue($component->instance()->firstClassSaved);
+        $component->assertFormSet([
+            'program_id' => $program->id,
+            'class_name' => $class->name,
+        ]);
+    }
+
+    public function test_mount_restores_module_and_mentee_picks_from_the_training_draft(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create([
+            'guided_setup_draft' => [
+                'module_ids' => [39, 41],
+                'selected_users' => [100],
+            ],
+        ]);
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+        $component->instance()->trainingId = $training->id;
+        $component->instance()->classId = $class->id;
+        $component->instance()->mount();
+
+        $component->assertFormSet([
+            'module_ids' => [39, 41],
+            'selected_users' => [100],
+        ]);
+    }
+
+    public function test_mount_with_no_training_id_leaves_only_basics_visible(): void
+    {
+        $this->actingAsCoordinator();
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+
+        $this->assertFalse($component->instance()->basicsSaved);
+        $this->assertFalse($component->instance()->firstClassSaved);
+    }
 }

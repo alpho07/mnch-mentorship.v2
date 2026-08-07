@@ -87,7 +87,57 @@ class QuickMentorshipSetup extends Page implements HasForms
 
     public function mount(): void
     {
-        $this->form->fill([]);
+        $fill = [
+            'module_ids' => [],
+            'selected_users' => [],
+            'auto_create_sessions' => true,
+        ];
+
+        if ($this->trainingId) {
+            $this->training = Training::find($this->trainingId);
+
+            if ($this->training) {
+                $this->basicsSaved = true;
+                $fill['is_pilot'] = (int) $this->training->is_pilot;
+                $fill['county_id'] = $this->training->county_id;
+                $fill['facility_id'] = $this->training->facility_id;
+                $fill['program_id'] = $this->training->program_id;
+                $fill['start_date'] = $this->training->start_date;
+                $fill['end_date'] = $this->training->end_date;
+                $fill['max_participants'] = $this->training->max_participants;
+
+                $this->moduleDates = $this->training->guided_setup_draft['moduleDates'] ?? [];
+            }
+        }
+
+        if ($this->classId) {
+            $this->class = MentorshipClass::find($this->classId);
+
+            if ($this->class) {
+                $this->firstClassSaved = true;
+                $fill['class_name'] = $this->class->name;
+                $fill['class_start_date'] = $this->class->start_date;
+                $fill['class_end_date'] = $this->class->end_date;
+                $fill['class_description'] = $this->class->description;
+
+                $draft = $this->training->guided_setup_draft ?? [];
+
+                $fill['module_ids'] = array_key_exists('module_ids', $draft)
+                    ? $draft['module_ids']
+                    : $this->class->classModules()->pluck('program_module_id')->toArray();
+
+                $fill['selected_users'] = array_key_exists('selected_users', $draft)
+                    ? $draft['selected_users']
+                    : $this->class->participants()->pluck('user_id')->toArray();
+
+                $this->modulesSaved = $this->class->classModules()->exists()
+                    || array_key_exists('module_ids', $draft);
+                $this->menteesSaved = $this->class->participants()->exists()
+                    || array_key_exists('selected_users', $draft);
+            }
+        }
+
+        $this->form->fill($fill);
     }
 
     public function getTitle(): string
