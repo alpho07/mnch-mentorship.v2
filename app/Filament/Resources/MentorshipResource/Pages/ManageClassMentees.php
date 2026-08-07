@@ -1162,9 +1162,7 @@ class ManageClassMentees extends Page implements HasTable
     {
         $program = Program::find($this->training->program_id);
 
-        return $program
-            && str_contains(strtolower($program->name), 'maternal')
-            && str_contains(strtolower($program->name), 'emonc');
+        return $program?->isEmonc() ?? false;
     }
 
     /**

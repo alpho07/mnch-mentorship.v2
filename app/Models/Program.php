@@ -49,6 +49,12 @@ class Program extends Model
         return $this->hasMany(Training::class);
     }
 
+    public function isEmonc(): bool
+    {
+        return str_contains(strtolower($this->name), 'maternal')
+            && str_contains(strtolower($this->name), 'emonc');
+    }
+
     // Query Scopes
     public function scopeByName($query, string $name)
     {
