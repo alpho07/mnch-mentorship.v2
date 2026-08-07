@@ -999,6 +999,12 @@ class ManageClassModules extends Page implements HasTable
             if ($totalParticipants > 0 && $completedParticipants === $totalParticipants && $classModule->status === 'in_progress') {
                 $classModule->complete();
             }
+
+            // A mentee's overall readiness for mentor approval can flip to
+            // true here if this was their last remaining module.
+            foreach ($participantIds as $participantId) {
+                ClassParticipant::find($participantId)?->syncCompletionStatus();
+            }
         });
 
         // ── Notify mentees whose module progress was auto-completed ─────────
