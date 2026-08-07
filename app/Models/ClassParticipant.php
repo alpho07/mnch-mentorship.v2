@@ -277,6 +277,28 @@ class ClassParticipant extends Model
         return $this->isMentorApproved() && $this->isHeadDrmhApproved();
     }
 
+    /**
+     * The shared readiness gate for Head DRMH certification, used by both
+     * the class roster page's Certify button and the Head DRMH Dashboard —
+     * EmONC mentees still require mentor approval first; non-EmONC mentees
+     * (which never go through mentor_approve — see ManageClassMentees.php)
+     * are ready the moment they've completed every module.
+     */
+    public function isReadyForHeadDrmhCertification(): bool
+    {
+        $training = $this->relationLoaded('mentorshipClass')
+            ? $this->mentorshipClass?->training
+            : $this->mentorshipClass()->first()?->training;
+
+        $program = $training ? Program::find($training->program_id) : null;
+
+        if ($program?->isEmonc()) {
+            return $this->isMentorApproved();
+        }
+
+        return $this->hasCompletedAllModules();
+    }
+
     public function hasAttendedSession(int $sessionId): bool
     {
         return $this->sessionAttendance()
