@@ -298,4 +298,19 @@ class QuickMentorshipSetupTest extends TestCase
         $this->assertFalse($component->instance()->basicsSaved);
         $this->assertFalse($component->instance()->firstClassSaved);
     }
+
+    public function test_abandoned_quick_setup_draft_continue_link_points_to_quick_setup(): void
+    {
+        $mentor = $this->actingAsCoordinator();
+        \App\Models\Training::factory()->facilityMentorship()->create([
+            'mentor_id' => $mentor->id,
+            'guided_setup_completed_at' => null,
+            'guided_setup_method' => 'quick',
+        ]);
+
+        $viewData = (new \ReflectionMethod(\App\Filament\Widgets\PendingGuidedSetupNotice::class, 'getViewData'))
+            ->invoke(new \App\Filament\Widgets\PendingGuidedSetupNotice);
+
+        $this->assertStringContainsString('quick-setup', $viewData['continueUrl']);
+    }
 }

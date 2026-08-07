@@ -67,7 +67,11 @@ class PendingGuidedSetupNotice extends Widget
 
         $class = MentorshipClass::where('training_id', $training->id)->latest()->first();
 
-        $routeKey = $training->guided_setup_method === 'chat' ? 'chat-setup' : 'guided-setup';
+        $routeKey = match ($training->guided_setup_method) {
+            'chat' => 'chat-setup',
+            'quick' => 'quick-setup',
+            default => 'guided-setup',
+        };
 
         return [
             'training' => $training,
