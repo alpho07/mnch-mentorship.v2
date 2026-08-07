@@ -60,13 +60,31 @@ class HeadDrmhDashboard extends Page
             'moduleProgress',
         ];
 
-        $pending = ClassParticipant::query()
+        $mentorApprovedPending = ClassParticipant::query()
             ->whereNotNull('mentor_approved_at')
             ->whereNull('head_drmh_approved_at')
             ->whereHas('mentorshipClass.training', fn ($q) => $q->where('type', 'facility_mentorship'))
             ->with($with)
-            ->orderByDesc('mentor_approved_at')
             ->get();
+
+        // Non-EmONC mentees never go through mentor_approve (see
+        // ManageClassMentees.php) — they're pending the moment they've
+        // completed every module, per ClassParticipant::isReadyForHeadDrmhCertification().
+        $nonEmoncPending = ClassParticipant::query()
+            ->whereNull('mentor_approved_at')
+            ->whereNull('head_drmh_approved_at')
+            ->where('status', 'completed')
+            ->whereHas('mentorshipClass.training', function ($q) {
+                $q->where('type', 'facility_mentorship')
+                    ->whereHas('program', fn ($pq) => $pq->whereRaw('LOWER(name) NOT LIKE ?', ['%maternal%'])
+                        ->orWhereRaw('LOWER(name) NOT LIKE ?', ['%emonc%']));
+            })
+            ->with($with)
+            ->get();
+
+        $pending = $mentorApprovedPending->concat($nonEmoncPending)
+            ->sortByDesc(fn (ClassParticipant $p) => $p->mentor_approved_at ?? $p->updated_at)
+            ->values();
 
         $certified = ClassParticipant::query()
             ->whereNotNull('head_drmh_approved_at')

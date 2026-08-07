@@ -278,7 +278,7 @@ class ManageClassMentees extends Page implements HasTable
                     ->icon('heroicon-o-shield-check')
                     ->color('primary')
                     ->visible(fn (ClassParticipant $record) => $this->canHeadDrmhCertify() &&
-                        $record->mentor_approved_at &&
+                        $record->isReadyForHeadDrmhCertification() &&
                         ! $record->head_drmh_approved_at &&
                         $record->status === 'completed'
                     )

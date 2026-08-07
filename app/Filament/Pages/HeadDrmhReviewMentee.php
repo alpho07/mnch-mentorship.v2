@@ -54,7 +54,7 @@ class HeadDrmhReviewMentee extends Page
         abort_if(! auth()->user()->can('page_HeadDrmhReviewMentee'), 403);
 
         $this->isCertified = $this->participant->isHeadDrmhApproved();
-        $this->canCertify  = $this->participant->isMentorApproved() && ! $this->isCertified;
+        $this->canCertify  = $this->participant->isReadyForHeadDrmhCertification() && ! $this->isCertified;
 
         $this->loadModules();
     }
@@ -179,10 +179,10 @@ class HeadDrmhReviewMentee extends Page
             return;
         }
 
-        if (! $this->participant->isMentorApproved()) {
+        if (! $this->participant->isReadyForHeadDrmhCertification()) {
             Notification::make()->danger()
-                ->title('Mentor approval required')
-                ->body('The mentor must approve this mentee before Head DRMH can certify.')
+                ->title('Not Ready for Certification')
+                ->body('This mentee has not yet met the requirements for certification.')
                 ->send();
 
             return;
