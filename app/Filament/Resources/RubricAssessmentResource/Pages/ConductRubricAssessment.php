@@ -195,6 +195,8 @@ class ConductRubricAssessment extends Page
             $this->mentor_id
         );
 
+        $participant->syncCompletionStatus();
+
         app(EmoncNotificationService::class)->videoReviewed($progress->fresh());
     }
 
