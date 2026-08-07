@@ -194,4 +194,30 @@ class QuickMentorshipSetupTest extends TestCase
             $training->fresh()->guided_setup_draft['moduleDates']
         );
     }
+
+    public function test_mentees_continue_action_enrolls_selected_users(): void
+    {
+        $this->actingAsCoordinator();
+        $training = \App\Models\Training::factory()->facilityMentorship()->create();
+        $class = \App\Models\MentorshipClass::factory()->create(['training_id' => $training->id]);
+        $mentee = User::factory()->create();
+
+        $component = Livewire::test(QuickMentorshipSetup::class);
+        $component->instance()->training = $training;
+        $component->instance()->class = $class;
+
+        $count = $component->instance()->enrollMentees([
+            'selected_users' => [$mentee->id],
+            'new_mentee' => null,
+        ]);
+        $component->instance()->menteesSaved = true;
+
+        $this->assertSame(1, $count);
+        $this->assertTrue($component->instance()->menteesSaved);
+        $this->assertSame(1, $component->instance()->enrolledCount);
+        $this->assertDatabaseHas('class_participants', [
+            'mentorship_class_id' => $class->id,
+            'user_id' => $mentee->id,
+        ]);
+    }
 }

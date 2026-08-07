@@ -70,6 +70,10 @@ class QuickMentorshipSetup extends Page implements HasForms
 
     public bool $modulesSaved = false;
 
+    public bool $menteesSaved = false;
+
+    public int $enrolledCount = 0;
+
     public array $moduleDates = [];
 
     public function updatedModuleDates(): void
@@ -273,8 +277,130 @@ class QuickMentorshipSetup extends Page implements HasForms
                             ])->visible(fn () => ! $this->modulesSaved),
                         ];
                     }),
+                Forms\Components\Section::make('Mentees')
+                    ->description('Who will be mentored in this class? You can skip this and enroll mentees later.')
+                    ->icon('heroicon-o-user-plus')
+                    ->visible(fn () => $this->modulesSaved)
+                    ->schema([
+                        Forms\Components\Hidden::make('mentee_page')->default(1),
+                        Forms\Components\Hidden::make('show_new_mentee_form')->default(false),
+                        Forms\Components\TextInput::make('mentee_search')
+                            ->label('Search')
+                            ->placeholder('Search by name, phone, email, or facility...')
+                            ->live(debounce: 400)
+                            ->afterStateUpdated(fn (Forms\Set $set) => $set('mentee_page', 1))
+                            ->prefixIcon('heroicon-o-magnifying-glass'),
+                        \App\Filament\Forms\Components\CardCheckboxList::make('selected_users')
+                            ->label('Existing Users')
+                            ->options(fn (Get $get) => app(MentorshipWizardService::class)->menteeOptions(
+                                $get('mentee_search'),
+                                (int) ($get('mentee_page') ?? 1),
+                                collect($get('selected_users') ?? [])->map(fn ($id) => (int) $id)->all()
+                            ))
+                            ->maxSelections(fn () => $this->training?->max_participants)
+                            ->default([])
+                            ->live()
+                            ->afterStateUpdated(fn ($state) => $this->saveWizardDraft('selected_users', $state))
+                            ->columnSpanFull()
+                            ->helperText('Search and check existing users to enroll.'),
+                        Forms\Components\Actions::make([
+                            Forms\Components\Actions\Action::make('mentee_previous')
+                                ->label('Previous Page')
+                                ->color('gray')
+                                ->action(fn (Forms\Set $set, Get $get) => $set('mentee_page', max(1, (int) $get('mentee_page') - 1))),
+                            Forms\Components\Actions\Action::make('mentee_next')
+                                ->label('Next Page')
+                                ->color('gray')
+                                ->action(fn (Forms\Set $set, Get $get) => $set('mentee_page', (int) $get('mentee_page') + 1)),
+                        ])->columnSpanFull(),
+                        Forms\Components\Actions::make([
+                            Forms\Components\Actions\Action::make('reveal_new_mentee_form')
+                                ->label(fn (Get $get) => trim((string) $get('mentee_search')) !== ''
+                                    ? "Mentee \"{$get('mentee_search')}\" not found — click here to add"
+                                    : '+ Add a new mentee')
+                                ->icon('heroicon-o-user-plus')
+                                ->color(fn (Get $get) => trim((string) $get('mentee_search')) !== '' ? 'warning' : 'gray')
+                                ->action(function (Forms\Set $set, Get $get) {
+                                    $set('show_new_mentee_form', true);
+
+                                    $search = trim((string) $get('mentee_search'));
+                                    if ($search === '') {
+                                        return;
+                                    }
+
+                                    if (str_contains($search, '@')) {
+                                        $set('new_mentee.email', $search);
+
+                                        return;
+                                    }
+
+                                    $parts = preg_split('/\s+/', $search, 2);
+                                    $set('new_mentee.first_name', $parts[0] ?? null);
+                                    $set('new_mentee.last_name', $parts[1] ?? null);
+                                }),
+                        ])
+                            ->visible(fn (Get $get) => ! $get('show_new_mentee_form'))
+                            ->columnSpanFull(),
+                        Forms\Components\Fieldset::make('Or Add a New Mentee')
+                            ->visible(fn (Get $get) => (bool) $get('show_new_mentee_form'))
+                            ->schema([
+                                Forms\Components\TextInput::make('new_mentee.email')
+                                    ->label('Email Address')
+                                    ->email(),
+                                Forms\Components\Grid::make(2)->schema([
+                                    Forms\Components\TextInput::make('new_mentee.first_name')
+                                        ->label('First Name')
+                                        ->requiredWith('new_mentee.email'),
+                                    Forms\Components\TextInput::make('new_mentee.last_name')
+                                        ->label('Last Name')
+                                        ->requiredWith('new_mentee.email'),
+                                ]),
+                                Forms\Components\TextInput::make('new_mentee.phone')
+                                    ->label('Phone')
+                                    ->tel(),
+                                Forms\Components\Grid::make(2)->schema([
+                                    Forms\Components\Select::make('new_mentee.cadre_id')
+                                        ->label('Cadre')
+                                        ->options(Cadre::orderBy('name')->pluck('name', 'id')),
+                                    Forms\Components\Select::make('new_mentee.department_id')
+                                        ->label('Department')
+                                        ->options(Department::orderBy('name')->pluck('name', 'id')),
+                                ]),
+                                Forms\Components\Select::make('new_mentee.facility_id')
+                                    ->label('Facility')
+                                    ->options(fn () => Facility::orderBy('name')
+                                        ->limit(200)
+                                        ->get()
+                                        ->mapWithKeys(fn ($f) => [$f->id => "{$f->mfl_code} - {$f->name}"])),
+                            ]),
+                        Forms\Components\Actions::make([
+                            Forms\Components\Actions\Action::make('continue_mentees')
+                                ->label('Continue')
+                                ->action('saveMentees'),
+                        ])->visible(fn () => ! $this->menteesSaved),
+                    ]),
             ])
             ->statePath('data');
+    }
+
+    public function saveMentees(): void
+    {
+        $state = $this->form->getState();
+
+        $this->enrollMentees([
+            'selected_users' => $state['selected_users'] ?? [],
+            'new_mentee' => ($state['new_mentee']['email'] ?? null) ? $state['new_mentee'] : null,
+        ]);
+
+        $this->menteesSaved = true;
+    }
+
+    public function enrollMentees(array $data): int
+    {
+        $count = app(MentorshipWizardService::class)->enrollMentees($data, $this->class);
+        $this->enrolledCount = $count;
+
+        return $count;
     }
 
     public function saveModules(): void
