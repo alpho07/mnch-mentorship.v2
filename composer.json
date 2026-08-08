@@ -17,6 +17,7 @@
         "laravel/tinker": "^2.10.1",
         "league/csv": "^9.24",
         "loilo/fuse": "^7.1",
+        "smalot/pdfparser": "^2.12",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-permission": "^6.20"
     },
