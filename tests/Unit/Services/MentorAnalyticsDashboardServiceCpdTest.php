@@ -33,8 +33,9 @@ class MentorAnalyticsDashboardServiceCpdTest extends TestCase
             'mentor_id' => $mentor->id,
             'facility_id' => $facility->id,
         ]);
-        // Class is 'active', not 'completed' — the old inline calc counted this;
-        // CpdPointsService::forMentor() correctly does not.
+        // Class is 'active', not 'completed' — CPD points are now awarded per
+        // module the moment it's completed, independent of the class's
+        // overall status.
         $class = MentorshipClass::factory()->create(['training_id' => $training->id, 'status' => 'active']);
         $programModule = ProgramModule::factory()->create(['program_id' => $program->id]);
         ClassModule::factory()->create([
@@ -49,6 +50,6 @@ class MentorAnalyticsDashboardServiceCpdTest extends TestCase
         $realCpd = app(CpdPointsService::class)->forMentor($mentor)['total'];
 
         $this->assertSame($realCpd, $dashboardCpd);
-        $this->assertSame(0, $dashboardCpd, 'Module is completed but the class is not — CpdPointsService correctly awards 0 points here.');
+        $this->assertSame(1, $dashboardCpd, 'Module is completed, so it earns 1 CPD point even though the class itself is still active.');
     }
 }

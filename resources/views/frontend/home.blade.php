@@ -7,131 +7,50 @@
 <div x-data="homePage">
 
     {{-- ═══════════════════════════════════════════
-         QUICK LINKS STRIP
-    ═══════════════════════════════════════════ --}}
-    <section class="bg-white border-b border-gray-100" data-aos="fade-down" data-aos-delay="50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center gap-2 overflow-x-auto py-3 scrollbar-none" style="-webkit-overflow-scrolling: touch;">
-                @php $quickLinks = [
-                    ['href' => route('resources.index'),                          'icon' => 'fas fa-book-open',   'label' => 'All Resources'],
-                    ['href' => route('categories.index'),                         'icon' => 'fas fa-th-large',    'label' => 'Categories'],
-                    ['href' => url('analytics/dashboard'),                        'icon' => 'fas fa-map',         'label' => 'Training Map'],
-                    ['href' => route('resources.index', ['sort' => 'latest']),    'icon' => 'fas fa-clock',       'label' => 'Recently Added'],
-                    ['href' => route('resources.index', ['sort' => 'popular']),   'icon' => 'fas fa-fire',        'label' => 'Most Popular'],
-                ]; @endphp
-                @foreach($quickLinks as $link)
-                <a href="{{ $link['href'] }}"
-                   class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-primary-50 hover:text-primary-700 transition-all whitespace-nowrap flex-shrink-0 border border-transparent hover:border-primary-100">
-                    <i class="{{ $link['icon'] }} text-xs text-primary-500"></i>
-                    {{ $link['label'] }}
-                </a>
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    {{-- ═══════════════════════════════════════════
          THREE PILLARS OF CARE — MoH clinical hero
     ═══════════════════════════════════════════ --}}
-    <section class="relative overflow-hidden bg-gradient-to-b from-white via-primary-50/40 to-white py-16 md:py-20" data-aos="fade-up" data-aos-delay="80">
-        {{-- Halftone dot watermark, echoing the official manual cover art --}}
-        <div class="pointer-events-none absolute inset-0 opacity-[0.4]"
-             style="background-image: radial-gradient(circle, #9EDDFA 1.2px, transparent 1.2px); background-size: 22px 22px; mask-image: radial-gradient(ellipse 60% 50% at 50% 0%, black 0%, transparent 70%);"></div>
+    <section class="relative overflow-hidden" data-aos="fade-up" data-aos-delay="80">
+        <img src="{{ asset('mnch_hero_wide.png') }}" alt="Strengthening care for mothers, newborns & children — Healthy today, stronger tomorrow"
+             class="w-full h-auto block">
 
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-3xl mx-auto mb-12">
-                <div class="inline-flex items-center gap-2 rounded-full bg-white border border-primary-100 shadow-sm px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary-700 mb-5">
-                    <i class="fas fa-shield-heart text-primary-600"></i>
-                    Ministry of Health &middot; Kenya
+        {{-- Mini pillar cards, overlaid on the left side of the hero image --}}
+        <div class="hidden lg:flex absolute inset-y-0 left-0 flex-col justify-center gap-4 pl-6 xl:pl-12 py-8 pillar-grid">
+            <a href="{{ route('resources.category', 'maternal-health') }}"
+               class="group relative overflow-hidden rounded-2xl p-4 w-48 text-white pillar-card"
+               style="background: linear-gradient(155deg, #C81E70 0%, #8F1152 100%); --pillar-shadow: rgba(200,30,112,.55); --pillar-shadow-soft: rgba(200,30,112,.3);">
+                <div class="pillar-sheen"></div>
+                <div class="relative">
+                    <div class="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2.5 border border-white/25 transition-transform group-hover:scale-110">
+                        <i class="fas fa-heart-pulse text-sm"></i>
+                    </div>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-white/75 mb-0.5">Maternal Health</p>
+                    <h4 class="text-sm font-extrabold leading-tight">EmONC Mentorship</h4>
                 </div>
-                <h1 class="font-display text-3xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight">
-                    Strengthening care for
-                    <span style="color:#C81E70">mothers</span>,
-                    <span style="color:#A855C8">newborns</span>
-                    &amp;
-                    <span style="color:#7DB83A">children</span>
-                </h1>
-                <p class="mt-4 text-base md:text-lg text-gray-600 leading-relaxed">
-                    Structured mentorship and clinical training for Kenya's healthcare workers — from pregnancy
-                    and delivery, through the newborn period, and into early childhood.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {{-- Maternal Health --}}
-                <a href="{{ route('resources.category', 'maternal-health') }}"
-                   class="group relative overflow-hidden rounded-3xl p-7 min-h-[280px] flex flex-col justify-end text-white shadow-lg transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
-                   style="background: linear-gradient(155deg, #C81E70 0%, #8F1152 100%);"
-                   data-aos="fade-up" data-aos-delay="120">
-                    <div class="absolute inset-0 opacity-[0.16]"
-                         style="background-image: radial-gradient(circle, white 1.2px, transparent 1.2px); background-size: 18px 18px;"></div>
-                    <div class="absolute -right-8 -top-8 h-40 w-40 rounded-full opacity-20" style="background: radial-gradient(circle, white 0%, transparent 70%);"></div>
-                    <div class="relative">
-                        <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-5 border border-white/25 transition-transform group-hover:scale-110">
-                            <i class="fas fa-heart-pulse text-2xl"></i>
-                        </div>
-                        <p class="text-xs font-bold uppercase tracking-widest text-white/75 mb-1.5">Maternal Health</p>
-                        <h3 class="text-xl font-extrabold mb-2">EmONC Mentorship</h3>
-                        <p class="text-sm text-white/85 leading-relaxed">
-                            Emergency obstetric &amp; newborn care — labour, delivery, and life-saving
-                            complication management.
-                        </p>
-                        <span class="inline-flex items-center gap-1.5 mt-4 text-sm font-bold text-white/95">
-                            Explore resources
-                            <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
-                        </span>
+            </a>
+            <a href="{{ route('resources.category', 'newborn-care') }}"
+               class="group relative overflow-hidden rounded-2xl p-4 w-48 text-white pillar-card"
+               style="background: linear-gradient(155deg, #A855C8 0%, #6B2E8C 100%); --pillar-shadow: rgba(168,85,200,.55); --pillar-shadow-soft: rgba(168,85,200,.3);">
+                <div class="pillar-sheen"></div>
+                <div class="relative">
+                    <div class="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2.5 border border-white/25 transition-transform group-hover:scale-110">
+                        <i class="fas fa-baby-carriage text-sm"></i>
                     </div>
-                </a>
-
-                {{-- Newborn Care --}}
-                <a href="{{ route('resources.category', 'newborn-care') }}"
-                   class="group relative overflow-hidden rounded-3xl p-7 min-h-[280px] flex flex-col justify-end text-white shadow-lg transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
-                   style="background: linear-gradient(155deg, #A855C8 0%, #6B2E8C 100%);"
-                   data-aos="fade-up" data-aos-delay="200">
-                    <div class="absolute inset-0 opacity-[0.16]"
-                         style="background-image: radial-gradient(circle, white 1.2px, transparent 1.2px); background-size: 18px 18px;"></div>
-                    <div class="absolute -right-8 -top-8 h-40 w-40 rounded-full opacity-20" style="background: radial-gradient(circle, white 0%, transparent 70%);"></div>
-                    <div class="relative">
-                        <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-5 border border-white/25 transition-transform group-hover:scale-110">
-                            <i class="fas fa-baby-carriage text-2xl"></i>
-                        </div>
-                        <p class="text-xs font-bold uppercase tracking-widest text-white/75 mb-1.5">Neonatal Care</p>
-                        <h3 class="text-xl font-extrabold mb-2">Newborn Mentorship</h3>
-                        <p class="text-sm text-white/85 leading-relaxed">
-                            Essential newborn care, resuscitation, and management of the small and sick newborn.
-                        </p>
-                        <span class="inline-flex items-center gap-1.5 mt-4 text-sm font-bold text-white/95">
-                            Explore resources
-                            <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
-                        </span>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-white/75 mb-0.5">Neonatal Care</p>
+                    <h4 class="text-sm font-extrabold leading-tight">Newborn Mentorship</h4>
+                </div>
+            </a>
+            <a href="{{ route('resources.category', 'child-health') }}"
+               class="group relative overflow-hidden rounded-2xl p-4 w-48 text-white pillar-card"
+               style="background: linear-gradient(155deg, #7DB83A 0%, #4B7A1A 100%); --pillar-shadow: rgba(125,184,58,.55); --pillar-shadow-soft: rgba(125,184,58,.3);">
+                <div class="pillar-sheen"></div>
+                <div class="relative">
+                    <div class="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2.5 border border-white/25 transition-transform group-hover:scale-110">
+                        <i class="fas fa-child-reaching text-sm"></i>
                     </div>
-                </a>
-
-                {{-- Infant & Child Care --}}
-                <a href="{{ route('resources.category', 'child-health') }}"
-                   class="group relative overflow-hidden rounded-3xl p-7 min-h-[280px] flex flex-col justify-end text-white shadow-lg transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
-                   style="background: linear-gradient(155deg, #7DB83A 0%, #4B7A1A 100%);"
-                   data-aos="fade-up" data-aos-delay="280">
-                    <div class="absolute inset-0 opacity-[0.16]"
-                         style="background-image: radial-gradient(circle, white 1.2px, transparent 1.2px); background-size: 18px 18px;"></div>
-                    <div class="absolute -right-8 -top-8 h-40 w-40 rounded-full opacity-20" style="background: radial-gradient(circle, white 0%, transparent 70%);"></div>
-                    <div class="relative">
-                        <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-5 border border-white/25 transition-transform group-hover:scale-110">
-                            <i class="fas fa-child-reaching text-2xl"></i>
-                        </div>
-                        <p class="text-xs font-bold uppercase tracking-widest text-white/75 mb-1.5">Paediatric Care</p>
-                        <h3 class="text-xl font-extrabold mb-2">Infant &amp; Child Mentorship</h3>
-                        <p class="text-sm text-white/85 leading-relaxed">
-                            Access to quality paediatric care everywhere — from infancy through early
-                            childhood illness management.
-                        </p>
-                        <span class="inline-flex items-center gap-1.5 mt-4 text-sm font-bold text-white/95">
-                            Explore resources
-                            <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
-                        </span>
-                    </div>
-                </a>
-            </div>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-white/75 mb-0.5">Paediatric Care</p>
+                    <h4 class="text-sm font-extrabold leading-tight">Infant &amp; Child Mentorship</h4>
+                </div>
+            </a>
         </div>
     </section>
 
@@ -509,121 +428,6 @@
     @endif
 
     {{-- ═══════════════════════════════════════════
-         CATEGORIES GRID
-    ═══════════════════════════════════════════ --}}
-    <section class="py-14 bg-white" data-aos="fade-up">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-end justify-between mb-8">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <div class="w-1 h-5 rounded-full" style="background: linear-gradient(180deg, #1D6FB8, #4FB3E8);"></div>
-                        <span class="text-xs font-semibold text-primary-600 uppercase tracking-widest">Browse by Topic</span>
-                    </div>
-                    <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900">Explore Categories</h2>
-                    <p class="text-gray-500 text-sm mt-1">Resources organised by clinical topics and subject areas</p>
-                </div>
-                <a href="{{ route('categories.index') }}"
-                   class="hidden md:inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors">
-                    All categories <i class="fas fa-arrow-right text-xs"></i>
-                </a>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                @foreach($categories as $index => $category)
-                <a href="{{ route('resources.category', $category->slug) }}"
-                   class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-primary-200 hover:shadow-md transition-all duration-200"
-                   data-aos="fade-up" data-aos-delay="{{ $index * 75 }}">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
-                             style="background: linear-gradient(135deg, #EAF7FE 0%, #CFEEFC 100%);">
-                            <i class="{{ $category->icon ?? 'fas fa-folder' }} text-primary-600 text-sm"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-semibold text-gray-900 text-sm group-hover:text-primary-700 transition-colors">{{ $category->name }}</h3>
-                            <p class="text-xs text-gray-400">{{ $category->resources_count }} resources</p>
-                        </div>
-                    </div>
-                    @if($category->description)
-                    <p class="text-gray-500 text-xs line-clamp-2 mb-3">{{ $category->description }}</p>
-                    @endif
-                    @if($category->children->count() > 0)
-                    <div class="flex flex-wrap gap-1.5">
-                        @foreach($category->children->take(3) as $child)
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{{ $child->name }}</span>
-                        @endforeach
-                        @if($category->children->count() > 3)
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">+{{ $category->children->count() - 3 }}</span>
-                        @endif
-                    </div>
-                    @endif
-                </a>
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    {{-- ═══════════════════════════════════════════
-         RECENTLY ADDED
-    ═══════════════════════════════════════════ --}}
-    @if($recentResources->count() > 0)
-    <section class="py-14 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-end justify-between mb-8">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <div class="w-1 h-5 rounded-full bg-emerald-400"></div>
-                        <span class="text-xs font-semibold text-emerald-600 uppercase tracking-widest">New</span>
-                    </div>
-                    <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900">Recently Added</h2>
-                    <p class="text-gray-500 text-sm mt-1">Latest materials added to our clinical library</p>
-                </div>
-                <a href="{{ route('resources.index', ['sort' => 'latest']) }}"
-                   class="hidden md:inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
-                    View all <i class="fas fa-arrow-right text-xs"></i>
-                </a>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                @foreach($recentResources as $index => $resource)
-                    <div data-aos="fade-up" data-aos-delay="{{ $index * 75 }}">
-                        @include('components.resource-card-compact', ['resource' => $resource])
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    @endif
-
-    {{-- ═══════════════════════════════════════════
-         TRENDING
-    ═══════════════════════════════════════════ --}}
-    @if($popularResources->count() > 0)
-    <section class="py-14 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-end justify-between mb-8">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <div class="w-1 h-5 rounded-full bg-orange-400"></div>
-                        <span class="text-xs font-semibold text-orange-500 uppercase tracking-widest">Popular</span>
-                    </div>
-                    <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900">Trending Now</h2>
-                    <p class="text-gray-500 text-sm mt-1">Most accessed resources this month</p>
-                </div>
-                <a href="{{ route('resources.index', ['sort' => 'popular']) }}"
-                   class="hidden md:inline-flex items-center gap-2 text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors">
-                    View all <i class="fas fa-arrow-right text-xs"></i>
-                </a>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach($popularResources as $index => $resource)
-                    <div data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
-                        @include('components.resource-card', ['resource' => $resource])
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    @endif
-
-    {{-- ═══════════════════════════════════════════
          CTA BANNER
     ═══════════════════════════════════════════ --}}
     <section class="py-16 relative overflow-hidden" data-aos="zoom-in" data-aos-duration="800" style="background: linear-gradient(135deg, #1B2E5E 0%, #1D6FB8 100%);">
@@ -631,24 +435,7 @@
             <svg width="100%" height="100%"><pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1.5" fill="white"/></pattern><rect width="100%" height="100%" fill="url(#dots)"/></svg>
         </div>
         <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div class="mb-10">
-                <h2 class="text-2xl md:text-3xl font-extrabold text-white mb-2">Stay Informed</h2>
-                <p class="text-sky-100 text-sm mb-6">Receive updates on new resources, training schedules, and clinical guidelines</p>
-                <form class="max-w-md mx-auto" x-data="{ email: '', subscribed: false }">
-                    <div class="flex gap-2">
-                        <input type="email" x-model="email" placeholder="Your email address"
-                               class="flex-1 px-4 py-3 rounded-xl text-gray-900 text-sm border-0 outline-none focus:ring-2 focus:ring-white/40">
-                        <button type="button" @click.prevent="subscribed = true; email = ''"
-                                class="px-5 py-3 bg-white text-primary-700 rounded-xl text-sm font-bold hover:bg-gray-100 transition-colors flex-shrink-0">
-                            Subscribe
-                        </button>
-                    </div>
-                    <p x-show="subscribed" x-transition class="text-sky-200 text-xs mt-2">
-                        <i class="fas fa-check-circle mr-1"></i>Thank you! You're subscribed.
-                    </p>
-                </form>
-            </div>
-            <div class="border-t border-white/10 pt-10">
+            <div>
                 <h2 class="text-2xl font-extrabold text-white mb-4">Ready to Start Learning?</h2>
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
                     @guest
@@ -685,6 +472,40 @@
     .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* ── 3D Pillar Cards — the three core mentorship pillars ────────────── */
+    .pillar-grid { perspective: 1800px; }
+    .pillar-card {
+        transform-style: preserve-3d;
+        transform: perspective(1200px) rotateX(7deg) translateZ(0);
+        box-shadow:
+            inset 0 1.5px 0 rgba(255,255,255,.35),
+            inset 0 -36px 44px -28px rgba(0,0,0,.4),
+            0 2px 0 rgba(0,0,0,.12),
+            0 16px 20px -10px var(--pillar-shadow, rgba(0,0,0,.35)),
+            0 32px 46px -18px var(--pillar-shadow-soft, rgba(0,0,0,.25));
+        transition: transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .45s cubic-bezier(.2,.8,.2,1);
+        will-change: transform;
+    }
+    .pillar-card:hover {
+        transform: perspective(1200px) rotateX(0deg) translateY(-12px) translateZ(24px) scale(1.015);
+        box-shadow:
+            inset 0 1.5px 0 rgba(255,255,255,.4),
+            inset 0 -36px 44px -28px rgba(0,0,0,.35),
+            0 3px 0 rgba(0,0,0,.12),
+            0 26px 30px -12px var(--pillar-shadow, rgba(0,0,0,.4)),
+            0 48px 64px -20px var(--pillar-shadow-soft, rgba(0,0,0,.3));
+    }
+    .pillar-sheen {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(115deg, rgba(255,255,255,.4) 0%, rgba(255,255,255,.1) 20%, transparent 42%);
+        mix-blend-mode: screen;
+        pointer-events: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .pillar-card, .pillar-card:hover { transition: none; transform: none; }
+    }
 
     /* Analytics CTA pulse highlight */
     .analytics-cta-pulse {

@@ -93,6 +93,12 @@ $initials = strtoupper(substr($mentee?->first_name ?? 'M', 0, 1) . substr($mente
                     <h1 style="font-size:22px;font-weight:800;color:#fff;margin:0;letter-spacing:-0.3px;">{{ $mentee?->full_name ?? '—' }}</h1>
                     @if($isCertified)
                         <span style="background:#d1fae5;color:#065f46;border-radius:9999px;padding:3px 12px;font-size:12px;font-weight:700;">Certified</span>
+                    @elseif(! $isEmonc)
+                        @if($canCertify)
+                            <span style="background:#fef3c7;color:#92400e;border-radius:9999px;padding:3px 12px;font-size:12px;font-weight:700;">All Modules Complete · Pending DRMH</span>
+                        @else
+                            <span style="background:#fee2e2;color:#991b1b;border-radius:9999px;padding:3px 12px;font-size:12px;font-weight:700;">Modules In Progress</span>
+                        @endif
                     @elseif($participant->isMentorApproved())
                         <span style="background:#fef3c7;color:#92400e;border-radius:9999px;padding:3px 12px;font-size:12px;font-weight:700;">Mentor Approved · Pending DRMH</span>
                     @else
@@ -167,8 +173,12 @@ $initials = strtoupper(substr($mentee?->first_name ?? 'M', 0, 1) . substr($mente
             <div>
                 <p style="font-size:15px;font-weight:800;color:#92400e;margin:0;">Ready for Final Certification</p>
                 <p style="font-size:12px;color:#b45309;margin:2px 0 0;">
-                    Mentor approved by {{ $participant->mentorApprovedBy?->full_name ?? '—' }}
-                    on {{ $participant->mentor_approved_at ? \Carbon\Carbon::parse($participant->mentor_approved_at)->format('d M Y') : '' }}
+                    @if($isEmonc)
+                        Mentor approved by {{ $participant->mentorApprovedBy?->full_name ?? '—' }}
+                        on {{ $participant->mentor_approved_at ? \Carbon\Carbon::parse($participant->mentor_approved_at)->format('d M Y') : '' }}
+                    @else
+                        All {{ $training?->program?->name ?? 'program' }} modules are complete.
+                    @endif
                 </p>
             </div>
         </div>
@@ -179,8 +189,8 @@ $initials = strtoupper(substr($mentee?->first_name ?? 'M', 0, 1) . substr($mente
         </button>
     </div>
 
-    @else
-    {{-- Mentor not yet approved --}}
+    @elseif($isEmonc)
+    {{-- Mentor not yet approved (EmONC only) --}}
     <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:14px;">
         <div style="width:44px;height:44px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#dc2626" style="width:22px;height:22px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
@@ -188,6 +198,17 @@ $initials = strtoupper(substr($mentee?->first_name ?? 'M', 0, 1) . substr($mente
         <div>
             <p style="font-size:15px;font-weight:800;color:#991b1b;margin:0;">Mentor Approval Pending</p>
             <p style="font-size:12px;color:#dc2626;margin:2px 0 0;">The assigned mentor has not yet approved this mentee. Head DRMH certification is not available until mentor approval is complete.</p>
+        </div>
+    </div>
+    @else
+    {{-- Non-EmONC: modules not yet complete across the mentee's enrollments in this program --}}
+    <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:14px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#dc2626" style="width:22px;height:22px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+        </div>
+        <div>
+            <p style="font-size:15px;font-weight:800;color:#991b1b;margin:0;">Modules Not Yet Complete</p>
+            <p style="font-size:12px;color:#dc2626;margin:2px 0 0;">This mentee hasn't completed every {{ $training?->program?->name ?? 'program' }} module yet. Head DRMH certification is not available until all modules are done.</p>
         </div>
     </div>
     @endif
@@ -291,6 +312,7 @@ $initials = strtoupper(substr($mentee?->first_name ?? 'M', 0, 1) . substr($mente
                 <span style="background:{{ $statusBg }};color:{{ $statusColor }};border-radius:9999px;padding:2px 10px;font-size:11px;font-weight:700;">{{ ucfirst(str_replace('_',' ',$mod['status'])) }}</span>
             </div>
 
+            @if($isEmonc)
             <div style="padding:16px 18px;display:grid;gap:14px;">
 
                 {{-- Activities --}}
@@ -472,6 +494,7 @@ $initials = strtoupper(substr($mentee?->first_name ?? 'M', 0, 1) . substr($mente
                 </div>
 
             </div>
+            @endif
         </div>
         @endforeach
 

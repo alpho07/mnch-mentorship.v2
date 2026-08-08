@@ -330,7 +330,15 @@ class AssessmentAnalyticsService
                     '(SELECT COUNT(*) FROM trainings t
                       WHERE t.facility_id = assessments.facility_id
                       AND t.type = "facility_mentorship"
-                      AND t.deleted_at IS NULL) as mentorship_count'
+                      AND t.deleted_at IS NULL
+                      AND t.status = "active"
+                      AND t.is_pilot = 0
+                      AND EXISTS (
+                          SELECT 1 FROM mentorship_classes mc
+                          INNER JOIN class_participants cp ON cp.mentorship_class_id = mc.id
+                          WHERE mc.training_id = t.id
+                          AND cp.status IN ("enrolled", "active", "completed")
+                      )) as mentorship_count'
                 ),
             ])
             ->orderBy('assessments.assessment_date', 'desc')

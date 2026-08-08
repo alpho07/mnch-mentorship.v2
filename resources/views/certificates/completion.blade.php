@@ -8,187 +8,184 @@
             size: A4 landscape;
             margin: 0;
         }
+        * { box-sizing: border-box; }
         body {
             margin: 0;
             padding: 0;
             font-family: 'DejaVu Sans', sans-serif;
-            background: #ffffff;
+            background: #e8e0d0;
+        }
+        .page-outer {
+            width: 297mm;
+            @if(!($isPdf ?? false))
+            margin: 10mm auto;
+            box-shadow: 0 8px 40px rgba(0,0,0,.2);
+            @endif
         }
         .wrap {
             width: 297mm;
             height: 210mm;
             position: relative;
             overflow: hidden;
-            background: #ffffff;
+            background: #faf6ed;
         }
+        @if(!($isPdf ?? false))
+        .no-print-bar {
+            width: 297mm;
+            margin: 0 auto 6mm;
+            text-align: center;
+        }
+        .no-print-bar button {
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 10.5pt;
+            font-weight: bold;
+            padding: 9px 26px;
+            border-radius: 999px;
+            border: none;
+            background: #2a1f14;
+            color: #f5f0e8;
+            cursor: pointer;
+        }
+        @media print {
+            .no-print-bar { display: none; }
+            body { background: #fff; }
+            .page-outer { margin: 0; box-shadow: none; }
+        }
+        @endif
     </style>
 </head>
 <body>
+
+@if(!($isPdf ?? false))
+<div class="no-print-bar">
+    <button onclick="window.print()">Print / Save as PDF</button>
+</div>
+@endif
+
+<div class="page-outer">
 <div class="wrap">
 
     {{-- ── Decorative frame ───────────────────────────────────────────────── --}}
-    <div style="position:absolute;top:4mm;left:4mm;right:4mm;bottom:4mm;border:2.5px solid #c9a227;"></div>
-    <div style="position:absolute;top:7mm;left:7mm;right:7mm;bottom:7mm;border:0.75px solid rgba(201,162,39,0.32);"></div>
+    <div style="position:absolute;top:9mm;left:9mm;right:9mm;bottom:9mm;border:2px solid #9a7a50;"></div>
+    <div style="position:absolute;top:12mm;left:12mm;right:12mm;bottom:12mm;border:1px solid #c8a87a;"></div>
 
     {{-- ── Corner ornaments ───────────────────────────────────────────────── --}}
-    <div style="position:absolute;top:1mm;left:1.8mm;font-size:14pt;color:#c9a227;font-family:'DejaVu Serif',serif;line-height:1;">&#10022;</div>
-    <div style="position:absolute;top:1mm;right:1.8mm;font-size:14pt;color:#c9a227;font-family:'DejaVu Serif',serif;line-height:1;">&#10022;</div>
-    <div style="position:absolute;bottom:0.5mm;left:1.8mm;font-size:14pt;color:#c9a227;font-family:'DejaVu Serif',serif;line-height:1;">&#10022;</div>
-    <div style="position:absolute;bottom:0.5mm;right:1.8mm;font-size:14pt;color:#c9a227;font-family:'DejaVu Serif',serif;line-height:1;">&#10022;</div>
-
-    {{-- ── Signature block — pinned to bottom of right panel ─────────────── --}}
     @php
-        $programName = strtolower($class->training?->program?->name ?? '');
-        $isEmonc = str_contains($programName, 'maternal') && str_contains($programName, 'emonc');
-        $headLabel = $isEmonc ? 'Head DRMH, Ministry of Health' : 'Head MNCH, Ministry of Health';
+        $cornerPath = 'M8 8 L8 52 M8 8 L52 8 M8 20 L20 8 M8 32 L32 8 M8 44 L44 8';
     @endphp
-    <div style="position:absolute;bottom:11mm;left:91mm;right:10mm;">
-        <table style="width:100%;border-collapse:collapse;">
-            <tr>
-                <td style="width:40%;vertical-align:bottom;border-top:1.5px solid #4b5563;padding-top:2.5mm;padding-right:8mm;">
-                    <div style="font-size:9pt;font-weight:bold;color:#111827;">
-                        {{ $participant->mentorApprovedBy?->full_name ?? ($class->training?->mentor?->full_name ?? 'Lead Mentor') }}
-                    </div>
-                    <div style="font-size:7.5pt;color:#6b7280;">Facility Mentor</div>
-                    @if($participant->mentor_approved_at)
-                    <div style="font-size:7pt;color:#9ca3af;">{{ \Carbon\Carbon::parse($participant->mentor_approved_at)->format('d M Y') }}</div>
-                    @endif
-                </td>
-                <td style="width:20%;text-align:center;vertical-align:bottom;padding:0 3mm;">
-                    <div style="width:20mm;height:20mm;border:2px solid #c9a227;border-radius:10mm;margin:0 auto 1.5mm;text-align:center;box-sizing:border-box;padding-top:5.5mm;">
-                        <div style="font-size:5pt;color:#c9a227;font-weight:bold;letter-spacing:0.5px;line-height:1.7;">OFFICIAL<br>SEAL</div>
-                    </div>
-                </td>
-                <td style="width:40%;vertical-align:bottom;border-top:1.5px solid #4b5563;padding-top:2.5mm;padding-left:8mm;">
-                    <div style="font-size:9pt;font-weight:bold;color:#111827;">
-                        {{ $participant->headDrmhApprovedBy?->full_name ?? 'Director, MNCH Division' }}
-                    </div>
-                    <div style="font-size:7.5pt;color:#6b7280;">{{ $headLabel }}</div>
-                    @if($participant->head_drmh_approved_at)
-                    <div style="font-size:7pt;color:#9ca3af;">{{ \Carbon\Carbon::parse($participant->head_drmh_approved_at)->format('d M Y') }}</div>
-                    @endif
-                </td>
-            </tr>
-        </table>
+    <div style="position:absolute;top:9mm;left:9mm;width:20mm;height:20mm;">
+        <svg viewBox="0 0 60 60" width="100%" height="100%"><path d="{{ $cornerPath }}" stroke="#9a7a50" stroke-width="1.2" fill="none" opacity="0.6"/><rect x="4" y="4" width="16" height="16" stroke="#9a7a50" stroke-width="1.5" fill="none"/></svg>
+    </div>
+    <div style="position:absolute;top:9mm;right:9mm;width:20mm;height:20mm;">
+        <svg viewBox="0 0 60 60" width="100%" height="100%" style="transform:scaleX(-1);"><path d="{{ $cornerPath }}" stroke="#9a7a50" stroke-width="1.2" fill="none" opacity="0.6"/><rect x="4" y="4" width="16" height="16" stroke="#9a7a50" stroke-width="1.5" fill="none"/></svg>
+    </div>
+    <div style="position:absolute;bottom:9mm;left:9mm;width:20mm;height:20mm;">
+        <svg viewBox="0 0 60 60" width="100%" height="100%" style="transform:scaleY(-1);"><path d="{{ $cornerPath }}" stroke="#9a7a50" stroke-width="1.2" fill="none" opacity="0.6"/><rect x="4" y="4" width="16" height="16" stroke="#9a7a50" stroke-width="1.5" fill="none"/></svg>
+    </div>
+    <div style="position:absolute;bottom:9mm;right:9mm;width:20mm;height:20mm;">
+        <svg viewBox="0 0 60 60" width="100%" height="100%" style="transform:scale(-1);"><path d="{{ $cornerPath }}" stroke="#9a7a50" stroke-width="1.2" fill="none" opacity="0.6"/><rect x="4" y="4" width="16" height="16" stroke="#9a7a50" stroke-width="1.5" fill="none"/></svg>
     </div>
 
-    {{-- ── Main two-column table layout ───────────────────────────────────── --}}
-    <table style="width:297mm;height:210mm;border-collapse:collapse;border-spacing:0;">
+    {{-- ── Vertically centered content ──────────────────────────────────────── --}}
+    <table style="width:297mm;height:210mm;border-collapse:collapse;">
         <tr>
+            <td style="vertical-align:middle;text-align:center;padding:0 30mm;">
 
-            {{-- ===== LEFT SIDEBAR (navy) ===== --}}
-            <td style="width:70mm;background-color:#0c1445;vertical-align:top;padding:18mm 9mm 0 9mm;text-align:center;">
-
-                {{-- Seal circle --}}
-                <div style="width:44mm;height:44mm;border:2.5px solid #c9a227;border-radius:22mm;margin:0 auto 7mm;position:relative;line-height:44mm;font-family:'DejaVu Serif',serif;font-size:20pt;color:#c9a227;text-align:center;overflow:hidden;">
-                    <div style="position:absolute;top:3.5mm;left:3.5mm;right:3.5mm;bottom:3.5mm;border:1px solid rgba(201,162,39,0.3);border-radius:19mm;"></div>
-                    &#10022;
+                <div style="font-family:'DejaVu Sans',sans-serif;font-size:8pt;letter-spacing:4px;text-transform:uppercase;color:#8a6a30;font-weight:bold;margin-bottom:3mm;">
+                    MNCH &bull; Ministry of Health, Kenya
                 </div>
 
-                {{-- Ministry info --}}
-                <div style="color:#c9a227;font-size:6.5pt;letter-spacing:1.5px;margin-bottom:2mm;font-weight:bold;">REPUBLIC OF KENYA</div>
-                <div style="color:#ffffff;font-size:9pt;font-weight:bold;margin-bottom:1.5mm;">Ministry of Health</div>
-                <div style="color:rgba(255,255,255,0.5);font-size:7pt;margin-bottom:9mm;">MNCH Division</div>
-
-                <div style="height:0.5px;background-color:rgba(201,162,39,0.3);margin:0 3mm 9mm;"></div>
-
-                {{-- Certificate number --}}
-                <div style="color:rgba(255,255,255,0.38);font-size:5.5pt;letter-spacing:1px;margin-bottom:2mm;">CERTIFICATE NO.</div>
-                <div style="color:#c9a227;font-size:7.5pt;font-weight:bold;margin-bottom:9mm;word-break:break-all;">
-                    MNCH-{{ str_pad($participant->id, 6, '0', STR_PAD_LEFT) }}-{{ date('Y') }}
+                <div style="font-family:'DejaVu Serif',serif;font-size:34pt;font-weight:bold;color:#2a1f0a;letter-spacing:3px;text-transform:uppercase;line-height:1;margin-bottom:1.5mm;">
+                    Certificate
+                </div>
+                <div style="font-family:'DejaVu Serif',serif;font-style:italic;font-size:13pt;color:#6b5020;margin-bottom:5mm;">
+                    of Completion
                 </div>
 
-                <div style="height:0.5px;background-color:rgba(201,162,39,0.3);margin:0 3mm 9mm;"></div>
-
-                {{-- Date issued --}}
-                <div style="color:rgba(255,255,255,0.38);font-size:5.5pt;letter-spacing:1px;margin-bottom:2mm;">DATE ISSUED</div>
-                <div style="color:#ffffff;font-size:8.5pt;font-weight:bold;margin-bottom:9mm;">
-                    @if($participant->head_drmh_approved_at)
-                        {{ \Carbon\Carbon::parse($participant->head_drmh_approved_at)->format('d M Y') }}
-                    @else
-                        {{ now()->format('d M Y') }}
-                    @endif
+                <div style="display:block;margin:3mm auto;width:70mm;height:1px;background:#9a7a50;position:relative;">
+                    <span style="position:absolute;top:-3.5mm;left:50%;margin-left:-3mm;width:6mm;text-align:center;background:#faf6ed;color:#9a7a50;font-size:12pt;">&#10022;</span>
                 </div>
 
-                <div style="height:0.5px;background-color:rgba(201,162,39,0.3);margin:0 3mm 9mm;"></div>
-
-                {{-- CPD Points --}}
-                @if(isset($cpd) && $cpd['total'] > 0)
-                <div style="color:rgba(255,255,255,0.38);font-size:5.5pt;letter-spacing:1px;margin-bottom:2mm;">CPD POINTS</div>
-                <div style="color:#c9a227;font-size:18pt;font-weight:bold;line-height:1;margin-bottom:1.5mm;">{{ $cpd['total'] }}</div>
-                <div style="color:rgba(255,255,255,0.7);font-size:6.5pt;margin-bottom:2mm;">{{ $cpd['level']['name'] ?? 'Foundation' }}</div>
-                <div style="font-size:5.5pt;color:rgba(255,255,255,0.38);line-height:1.5;">
-                    {{ $cpd['certificates'] ?? 0 }} cert{{ ($cpd['certificates'] ?? 0) === 1 ? '' : 's' }} &times; 3 pts<br>
-                    {{ $cpd['completed_modules'] ?? 0 }} module{{ ($cpd['completed_modules'] ?? 0) === 1 ? '' : 's' }} &times; 1 pt
-                </div>
-                @endif
-
-            </td>
-
-            {{-- Gold accent stripe --}}
-            <td style="width:4mm;background-color:#c9a227;padding:0;"></td>
-
-            {{-- ===== RIGHT CONTENT ===== --}}
-            <td style="vertical-align:top;padding:14mm 10mm 40mm 17mm;background-color:#ffffff;">
-
-                {{-- Organisation tag --}}
-                <div style="font-size:7pt;color:#c9a227;letter-spacing:2.5px;font-weight:bold;margin-bottom:3.5mm;">
-                    MNCH &bull; MATERNAL, NEWBORN &amp; CHILD HEALTH
+                <div style="font-family:'DejaVu Sans',sans-serif;font-size:8pt;letter-spacing:2px;text-transform:uppercase;color:#8a7a60;margin-bottom:3mm;">
+                    This certificate is proudly presented to
                 </div>
 
-                {{-- Certificate title --}}
-                <div style="font-family:'DejaVu Serif',serif;font-size:24pt;font-weight:bold;color:#0c1445;line-height:1.0;margin-bottom:4mm;">
-                    Certificate of Completion
+                <div style="font-family:'DejaVu Serif',serif;font-style:italic;font-size:24pt;color:#1a1005;line-height:1.1;margin-bottom:3mm;display:inline-block;border-bottom:1.5px solid #9a7a50;padding-bottom:1.5mm;">
+                    {{ $participant->user?->full_name ?? trim(($participant->user?->first_name ?? '').' '.($participant->user?->last_name ?? '')) }}
                 </div>
 
-                {{-- Subtitle --}}
-                <div style="font-size:7.5pt;color:#9ca3af;letter-spacing:2px;margin-bottom:4.5mm;">
-                    THIS IS TO CERTIFY THAT
+                <div style="font-family:'DejaVu Sans',sans-serif;font-size:8pt;letter-spacing:2px;text-transform:uppercase;color:#8a7a60;margin-top:3mm;margin-bottom:2mm;">
+                    in recognition of successful completion of
                 </div>
 
-                {{-- Mentee name --}}
-                <div style="font-family:'DejaVu Serif',serif;font-size:21pt;font-weight:bold;color:#0c1445;border-bottom:2px solid #c9a227;padding-bottom:2.5mm;margin-bottom:3mm;line-height:1.15;">
-                    {{ $participant->user?->full_name ?? trim(($participant->user?->first_name ?? '') . ' ' . ($participant->user?->last_name ?? '')) }}
-                </div>
-
-                {{-- Cadre & facility --}}
                 @php
-                    $infoParts = array_filter([
-                        $participant->user?->cadre?->name ?? null,
-                        $participant->user?->facility?->name ?? null,
-                    ]);
+                    $moduleCount = $modules->count();
+                    $year = $participant->head_drmh_approved_at
+                        ? \Carbon\Carbon::parse($participant->head_drmh_approved_at)->format('Y')
+                        : now()->format('Y');
                 @endphp
-                @if(count($infoParts))
-                <div style="font-size:8pt;color:#6b7280;margin-bottom:4mm;">{{ implode(' · ', $infoParts) }}</div>
-                @else
-                <div style="margin-bottom:4mm;"></div>
-                @endif
-
-                {{-- Completion copy --}}
-                <div style="font-size:9pt;color:#4b5563;margin-bottom:2mm;">has successfully completed all requirements of</div>
-
-                {{-- Program name --}}
-                <div style="font-size:13pt;font-weight:bold;color:#0c1445;margin-bottom:1.5mm;">
+                <div style="font-family:'DejaVu Serif',serif;font-size:16pt;font-weight:bold;color:#2a1f0a;margin-bottom:1.5mm;">
                     {{ $class->training?->program?->name ?? 'MNCH Mentorship Program' }}
                 </div>
-
-                {{-- Class & training facility --}}
-                <div style="font-size:8.5pt;color:#374151;margin-bottom:5mm;">
-                    {{ $class->name }}@if($class->training?->facility?->name) &bull; {{ $class->training->facility->name }}@endif
+                <div style="font-family:'DejaVu Sans',sans-serif;font-size:9pt;color:#6b5b45;letter-spacing:0.5px;margin-bottom:5mm;">
+                    {{ $moduleCount }} module{{ $moduleCount === 1 ? '' : 's' }} completed &nbsp;&bull;&nbsp; {{ $year }}
+                    @if($class->training?->facility?->name)&nbsp;&bull;&nbsp; {{ $class->training->facility->name }}@endif
                 </div>
 
-                {{-- Module list --}}
-                @if($modules->count() > 0)
-                <div style="font-size:7.5pt;color:#1e3a5f;line-height:1.8;">
-                    @foreach($modules as $i => $mod)@if($i > 0)<span style="color:#c9a227;"> &bull; </span>@endif{{ $mod->programModule?->name ?? ('Module ' . ($i + 1)) }}@endforeach
+                {{-- QR verification code — centered --}}
+                @if(!empty($qr))
+                <div style="margin:0 auto 5mm;width:22mm;">
+                    <img src="{{ $qr }}" alt="Verify" style="width:22mm;height:22mm;display:block;margin:0 auto;">
+                    <div style="font-family:'DejaVu Sans',sans-serif;font-size:6pt;letter-spacing:1px;text-transform:uppercase;color:#9a8a70;margin-top:1.5mm;">Scan to Verify</div>
                 </div>
                 @endif
 
-            </td>
+                <div style="display:block;margin:2mm auto 6mm;width:70mm;height:1px;background:#9a7a50;position:relative;">
+                    <span style="position:absolute;top:-3.5mm;left:50%;margin-left:-3mm;width:6mm;text-align:center;background:#faf6ed;color:#9a7a50;font-size:12pt;">&#10022;</span>
+                </div>
 
+                {{-- Signatures --}}
+                @php
+                    $programName = strtolower($class->training?->program?->name ?? '');
+                    $isEmonc = str_contains($programName, 'maternal') && str_contains($programName, 'emonc');
+                    $headLabel = $isEmonc ? 'Head DRMH' : 'Head MNCH';
+                @endphp
+                <table style="width:190mm;margin:0 auto;border-collapse:collapse;">
+                    <tr>
+                        <td style="width:33%;text-align:center;">
+                            <div style="width:50mm;height:1px;background:#9a7a50;margin:0 auto 2mm;"></div>
+                            <div style="font-family:'DejaVu Serif',serif;font-style:italic;font-size:11pt;color:#2a1f0a;">{{ $participant->mentorApprovedBy?->full_name ?? ($class->training?->mentor?->full_name ?? 'Lead Mentor') }}</div>
+                            <div style="font-family:'DejaVu Sans',sans-serif;font-size:6.5pt;letter-spacing:1px;text-transform:uppercase;color:#9a8a70;">Facility Mentor</div>
+                        </td>
+                        <td style="width:33%;text-align:center;">
+                            <div style="width:50mm;height:1px;background:#9a7a50;margin:0 auto 2mm;"></div>
+                            <div style="font-family:'DejaVu Serif',serif;font-style:italic;font-size:11pt;color:#2a1f0a;">{{ $participant->headDrmhApprovedBy?->full_name ?? 'Director, MNCH Division' }}</div>
+                            <div style="font-family:'DejaVu Sans',sans-serif;font-size:6.5pt;letter-spacing:1px;text-transform:uppercase;color:#9a8a70;">{{ $headLabel }}</div>
+                        </td>
+                        <td style="width:33%;text-align:center;">
+                            <div style="width:50mm;height:1px;background:#9a7a50;margin:0 auto 2mm;"></div>
+                            <div style="font-family:'DejaVu Serif',serif;font-style:italic;font-size:11pt;color:#2a1f0a;">
+                                {{ $participant->head_drmh_approved_at ? \Carbon\Carbon::parse($participant->head_drmh_approved_at)->format('d M Y') : now()->format('d M Y') }}
+                            </div>
+                            <div style="font-family:'DejaVu Sans',sans-serif;font-size:6.5pt;letter-spacing:1px;text-transform:uppercase;color:#9a8a70;">Date of Issue</div>
+                        </td>
+                    </tr>
+                </table>
+
+            </td>
         </tr>
     </table>
 
+    {{-- ── Certificate number + CPD (bottom-left, subtle) ──────────────────── --}}
+    <div style="position:absolute;bottom:14mm;left:20mm;font-family:'DejaVu Sans',sans-serif;font-size:6.5pt;color:#9a8a70;letter-spacing:0.5px;">
+        CERT NO. MNCH-{{ str_pad($participant->id, 6, '0', STR_PAD_LEFT) }}-{{ $year }}
+        @if(isset($cpd) && $cpd['total'] > 0)
+        &nbsp;&bull;&nbsp; {{ $cpd['total'] }} CPD PTS ({{ $cpd['level']['name'] ?? 'Foundation' }})
+        @endif
+    </div>
+
 </div>
+</div>
+
 </body>
 </html>

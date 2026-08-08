@@ -59,6 +59,7 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
     public function mount(): void
     {
         $this->form->fill([
+            'program_scoping_enabled' => Setting::getBool(Setting::PROGRAM_SCOPING_ENABLED, false),
             'new_mentorship_button_enabled' => Setting::getBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED),
             'guided_setup_button_enabled' => Setting::getBool(Setting::GUIDED_SETUP_BUTTON_ENABLED),
             'chat_setup_button_enabled' => Setting::getBool(Setting::CHAT_SETUP_BUTTON_ENABLED),
@@ -71,6 +72,25 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
     {
         return $form
             ->schema([
+                Forms\Components\Section::make('Program Scoping')
+                    ->description('Master switch for the per-user "Program Scope" field (User Management → All Users). When on, mentor-tier users whose scope is set to EmONC / Newborn Care / Infant & Child Care only see and manage trainings for that program. When off, everyone sees all programs regardless of their individual setting.')
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->schema([
+                        Forms\Components\Toggle::make('program_scoping_enabled')
+                            ->label('Enforce per-user Program Scope')
+                            ->helperText('Off by default — turning this on immediately restricts every scoped mentor to their assigned program(s).')
+                            ->onColor('success')
+                            ->offColor('danger')
+                            ->live()
+                            ->afterStateUpdated(function (bool $state): void {
+                                Setting::setBool(Setting::PROGRAM_SCOPING_ENABLED, $state);
+                                Notification::make()
+                                    ->title($state ? 'Program Scoping enabled' : 'Program Scoping disabled')
+                                    ->success()
+                                    ->send();
+                            }),
+                    ]),
+
                 Forms\Components\Section::make('Mentorship Creation Methods')
                     ->description('Turn a method off to disable its button on the Mentorships page (shown greyed out with a tooltip) and block the page directly. Anyone already partway through a guided setup can still finish it.')
                     ->icon('heroicon-o-cursor-arrow-rays')

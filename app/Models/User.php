@@ -45,6 +45,29 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'email_verified_at',
         'county_id', // Add if missing
+        'program_scope',
+    ];
+
+    /**
+     * Mentor-tier roles eligible for per-user Program Scope. Senior/admin
+     * roles (super_admin, admin, division, national_mentor_lead, etc.) are
+     * deliberately excluded — they always see every program.
+     */
+    public const PROGRAM_SCOPED_ROLES = [
+        'facility_mentor',
+        'facility_mentor_lead',
+        'spoke_mentor',
+        'spoke_mentor_lead',
+        'county_mentor_lead',
+        'subcounty_mentor_lead',
+        'national_mentor',
+    ];
+
+    public const PROGRAM_SCOPE_OPTIONS = [
+        'both' => 'Both (All Programs)',
+        'emonc' => 'EmONC Only',
+        'newborn' => 'Newborn Care Only',
+        'infant_child' => 'Infant & Child Care Only',
     ];
 
     protected $hidden = [
@@ -60,6 +83,49 @@ class User extends Authenticatable implements FilamentUser
             'can_create_mentorships' => 'boolean',
             'supervisor_id' => 'integer',
         ];
+    }
+
+    /**
+     * Program IDs this user is restricted to, or null when unrestricted
+     * (Program Scoping is off in Mentorship Settings, this user is a
+     * super_admin, this user's role isn't in PROGRAM_SCOPED_ROLES, or their
+     * scope is "both"). Callers should treat null as "no filter" rather
+     * than "empty result".
+     *
+     * super_admin is checked explicitly here — not just left to
+     * PROGRAM_SCOPED_ROLES exclusion — so a user holding super_admin
+     * alongside a mentor-tier role (multi-role) is never scoped either.
+     */
+    public function allowedProgramIds(): ?array
+    {
+        if ($this->hasRole('super_admin')) {
+            return null;
+        }
+
+        if (! \App\Models\Setting::getBool(\App\Models\Setting::PROGRAM_SCOPING_ENABLED, false)) {
+            return null;
+        }
+
+        if (! $this->hasRole(self::PROGRAM_SCOPED_ROLES)) {
+            return null;
+        }
+
+        $scope = $this->program_scope ?: 'both';
+
+        if ($scope === 'both') {
+            return null;
+        }
+
+        $query = Program::query();
+
+        $query = match ($scope) {
+            'emonc' => $query->where('name', 'like', '%EmONC%'),
+            'newborn' => $query->where('name', 'Newborn Care'),
+            'infant_child' => $query->where('name', 'Infant and Child Care'),
+            default => $query->whereRaw('1 = 0'),
+        };
+
+        return $query->pluck('id')->toArray();
     }
 
     public function supervisor(): \Illuminate\Database\Eloquent\Relations\BelongsTo

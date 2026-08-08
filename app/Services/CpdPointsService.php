@@ -4,13 +4,13 @@ namespace App\Services;
 
 use App\Models\ClassParticipant;
 use App\Models\MenteeModuleProgress;
-use App\Models\MentorshipClass;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class CpdPointsService
 {
-    const CERT_POINTS   = 3;
+    const CERT_POINTS = 3;
+
     const MODULE_POINTS = 1;
 
     const LEVELS = [
@@ -30,23 +30,22 @@ class CpdPointsService
             ->whereNotNull('head_drmh_approved_at')
             ->count();
 
-        // 1 pt per completed module, only when the class itself is completed
+        // 1 pt per completed module, awarded the moment that module is done —
+        // independent of whether the class as a whole has finished.
         $completedModules = MenteeModuleProgress::where('status', 'completed')
-            ->whereHas('classParticipant', fn ($q) => $q->where('user_id', $user->id)
-                ->whereHas('mentorshipClass', fn ($q2) => $q2->where('status', 'completed'))
-            )
+            ->whereHas('classParticipant', fn ($q) => $q->where('user_id', $user->id))
             ->count();
 
-        $certPoints   = $certs * self::CERT_POINTS;
+        $certPoints = $certs * self::CERT_POINTS;
         $modulePoints = $completedModules * self::MODULE_POINTS;
-        $total        = $certPoints + $modulePoints;
+        $total = $certPoints + $modulePoints;
 
         return [
-            'total'             => $total,
-            'level'             => $this->level($total),
-            'cert_points'       => $certPoints,
-            'module_points'     => $modulePoints,
-            'certificates'      => $certs,
+            'total' => $total,
+            'level' => $this->level($total),
+            'cert_points' => $certPoints,
+            'module_points' => $modulePoints,
+            'certificates' => $certs,
             'completed_modules' => $completedModules,
         ];
     }
@@ -69,13 +68,11 @@ class CpdPointsService
             ->pluck('cnt', 'user_id')
             ->toArray();
 
-        // Completed modules per user, gated on class being completed
+        // Completed modules per user, awarded per module regardless of class status
         $modules = DB::table('mentee_module_progress as mp')
             ->join('class_participants as cp', 'cp.id', '=', 'mp.class_participant_id')
-            ->join('mentorship_classes as mc', 'mc.id', '=', 'cp.mentorship_class_id')
             ->whereIn('cp.user_id', $userIds)
             ->where('mp.status', 'completed')
-            ->where('mc.status', 'completed')
             ->selectRaw('cp.user_id, COUNT(*) as cnt')
             ->groupBy('cp.user_id')
             ->pluck('cnt', 'user_id')
@@ -84,14 +81,14 @@ class CpdPointsService
         $result = [];
         foreach ($userIds as $uid) {
             $certCount = $certs[$uid] ?? 0;
-            $modCount  = $modules[$uid] ?? 0;
-            $total     = ($certCount * self::CERT_POINTS) + ($modCount * self::MODULE_POINTS);
+            $modCount = $modules[$uid] ?? 0;
+            $total = ($certCount * self::CERT_POINTS) + ($modCount * self::MODULE_POINTS);
 
             $result[$uid] = [
-                'total'        => $total,
-                'level'        => $this->level($total),
+                'total' => $total,
+                'level' => $this->level($total),
                 'certificates' => $certCount,
-                'modules'      => $modCount,
+                'modules' => $modCount,
             ];
         }
 
@@ -102,21 +99,22 @@ class CpdPointsService
 
     public function forMentor(User $user): array
     {
-        // 1 pt per completed module, only in completed classes
+        // 1 pt per module the mentor has facilitated to completion, awarded
+        // the moment that module is done — independent of whether the class
+        // as a whole has finished.
         $completedModuleCount = DB::table('class_modules as cm')
             ->join('mentorship_classes as mc', 'mc.id', '=', 'cm.mentorship_class_id')
             ->join('trainings as t', 't.id', '=', 'mc.training_id')
             ->where('t.mentor_id', $user->id)
             ->where('cm.status', 'completed')
-            ->where('mc.status', 'completed')
             ->count();
 
         $total = $completedModuleCount * self::MODULE_POINTS;
 
         return [
-            'total'             => $total,
-            'level'             => $this->level($total),
-            'module_points'     => $total,
+            'total' => $total,
+            'level' => $this->level($total),
+            'module_points' => $total,
             'completed_modules' => $completedModuleCount,
         ];
     }
@@ -130,13 +128,12 @@ class CpdPointsService
             return [];
         }
 
-        // 1 pt per completed module, only in completed classes
+        // 1 pt per completed module, awarded per module regardless of class status
         $modules = DB::table('class_modules as cm')
             ->join('mentorship_classes as mc', 'mc.id', '=', 'cm.mentorship_class_id')
             ->join('trainings as t', 't.id', '=', 'mc.training_id')
             ->whereIn('t.mentor_id', $mentorIds)
             ->where('cm.status', 'completed')
-            ->where('mc.status', 'completed')
             ->selectRaw('t.mentor_id, COUNT(*) as cnt')
             ->groupBy('t.mentor_id')
             ->pluck('cnt', 'mentor_id')
@@ -145,11 +142,11 @@ class CpdPointsService
         $result = [];
         foreach ($mentorIds as $uid) {
             $modCount = $modules[$uid] ?? 0;
-            $total    = $modCount * self::MODULE_POINTS;
+            $total = $modCount * self::MODULE_POINTS;
 
             $result[$uid] = [
-                'total'             => $total,
-                'level'             => $this->level($total),
+                'total' => $total,
+                'level' => $this->level($total),
                 'completed_modules' => $modCount,
             ];
         }
@@ -170,4 +167,3 @@ class CpdPointsService
         return self::LEVELS[0];
     }
 }
-

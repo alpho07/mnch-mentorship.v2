@@ -23,6 +23,14 @@ class Setting extends Model
 
     public const QUICK_SETUP_BUTTON_ENABLED = 'quick_setup_button_enabled';
 
+    /**
+     * Master switch for per-user Program Scope (EmONC / Newborn Care /
+     * Infant & Child Care / Both) — see User::allowedProgramIds(). When off,
+     * no user's program_scope value has any effect regardless of what it's
+     * set to.
+     */
+    public const PROGRAM_SCOPING_ENABLED = 'program_scoping_enabled';
+
     protected $fillable = [
         'key',
         'value',

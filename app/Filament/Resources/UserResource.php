@@ -127,6 +127,14 @@ class UserResource extends Resource
                         ->searchable()
                         ->optionsLimit(50)
                         ->hidden(fn (Get $get) => $get('status') === 'trainee'),
+                    Forms\Components\Select::make('program_scope')
+                        ->label('Program Scope')
+                        ->options(User::PROGRAM_SCOPE_OPTIONS)
+                        ->default('both')
+                        ->required()
+                        ->native(false)
+                        ->helperText('For mentor-tier roles only. Restricts which program\'s trainings this user can see and manage, when Program Scoping is enabled in Mentorship Settings. Everyone else is unaffected regardless of this value.')
+                        ->columnSpanFull(),
                     Forms\Components\Toggle::make('can_create_mentorships')
                         ->label('Can create mentorships')
                         ->helperText('Allow this user to create and manage mentorships in the Mentorship section.')
@@ -351,6 +359,17 @@ class UserResource extends Resource
                         default => 'gray',
                     })
                     ->placeholder('No role'),
+                Tables\Columns\TextColumn::make('program_scope')
+                    ->label('Program Scope')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => User::PROGRAM_SCOPE_OPTIONS[$state ?? 'both'] ?? 'Both (All Programs)')
+                    ->color(fn (?string $state): string => match ($state) {
+                        'emonc' => 'danger',
+                        'newborn' => 'purple',
+                        'infant_child' => 'success',
+                        default => 'gray',
+                    })
+                    ->toggleable(),
                 // ── Status badge ──────────────────────────────────────────
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
@@ -402,6 +421,9 @@ class UserResource extends Resource
                     ->searchable()
                     ->preload()
                     ->multiple(),
+                SelectFilter::make('program_scope')
+                    ->label('Program Scope')
+                    ->options(User::PROGRAM_SCOPE_OPTIONS),
                 SelectFilter::make('facility_id')
                     ->label('Facility')
                     ->searchable()

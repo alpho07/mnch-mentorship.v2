@@ -67,46 +67,9 @@ if (empty($insightCards))
     </div>
 </div>
 
-{{-- ═══ PRIORITY QUEUE ═════════════════════════════════════════════════════ --}}
-@if(!empty($priorityQueue))
-<div class="rv-animate md-card" style="animation-delay:0.05s;margin-bottom:24px;background:#fff;border:1.5px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05);">
-    <div style="padding:16px 22px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <h3 style="font-size:15px;font-weight:700;color:#111827;margin:0;">{{ count($priorityQueue) }} item{{ count($priorityQueue) !== 1 ? 's' : '' }} need your attention</h3>
-    </div>
-    <div>
-        @foreach(array_slice($priorityQueue, 0, 10) as $item)
-            @php
-                $tierColor = match(true) {
-                    $item['tier'] <= 2 => '#f59e0b',
-                    $item['tier'] === 3 => '#ef4444',
-                    default => '#3b82f6',
-                };
-            @endphp
-            <div class="md-row" style="padding:13px 22px;{{ !$loop->last ? 'border-bottom:1px solid #f9fafb;' : '' }}display:flex;align-items:center;justify-content:space-between;gap:16px;">
-                <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-                    <span style="width:8px;height:8px;border-radius:50%;background:{{ $tierColor }};flex-shrink:0;"></span>
-                    <div style="min-width:0;">
-                        <p style="font-size:13px;font-weight:700;color:#111827;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $item['headline'] }}</p>
-                        <p style="font-size:11px;color:#9ca3af;margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $item['subtext'] }}</p>
-                    </div>
-                </div>
-                <a href="{{ $item['url'] }}"
-                   style="display:inline-flex;align-items:center;gap:6px;background:{{ $tierColor }};color:#fff;border:none;border-radius:9px;padding:8px 16px;font-size:12px;font-weight:700;text-decoration:none;flex-shrink:0;">
-                    {{ $item['label'] }}
-                </a>
-            </div>
-        @endforeach
-    </div>
-</div>
-@else
-<div class="rv-animate" style="animation-delay:0.05s;margin-bottom:24px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:18px;padding:18px 22px;">
-    <p style="font-size:13px;font-weight:700;color:#166534;margin:0;">You're all caught up</p>
-    <p style="font-size:12px;color:#15803d;margin:3px 0 0;">Nothing needs your attention right now.</p>
-</div>
-@endif
-
-<details class="md-collapse-section" style="margin-bottom:16px;">
-    <summary class="md-collapse-summary" style="cursor:pointer;font-size:13px;font-weight:700;color:#475569;padding:10px 4px;list-style:none;user-select:none;">📊 Mentorship Overview</summary>
+{{-- ═══ MNCH OVERVIEW ══════════════════════════════════════════════════════ --}}
+<details class="md-collapse-section" open style="margin-bottom:16px;">
+    <summary class="md-collapse-summary" style="cursor:pointer;font-size:13px;font-weight:700;color:#475569;padding:10px 4px;list-style:none;user-select:none;">📊 MNCH Overview</summary>
     <div class="md-collapse-body" style="padding-top:6px;">
 {{-- ═══ KPI STRIP — all stats in one horizontal row ════════════════════════ --}}
 <div class="md-kpi-strip rv-animate" style="animation-delay:0.08s;margin-bottom:24px;">
@@ -508,6 +471,54 @@ $sortArrow = fn(string $f) => $mdSort === $f ? ($mdDir === 'asc' ? ' ↑' : ' �
 @endif
 
 @endif {{-- end isEmpty check --}}
+
+{{-- ═══ PRIORITY QUEUE (needs your attention) ═════════════════════════════ --}}
+@if(!empty($priorityQueue))
+@php $attnTotal = min(count($priorityQueue), 10); @endphp
+<div class="rv-animate md-card" x-data="{ mdAttnExpanded: false }" style="animation-delay:0.32s;margin-bottom:24px;background:#fff;border:1.5px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05);">
+    <div style="padding:16px 22px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <h3 style="font-size:15px;font-weight:700;color:#111827;margin:0;">{{ count($priorityQueue) }} item{{ count($priorityQueue) !== 1 ? 's' : '' }} need your attention</h3>
+    </div>
+    <div>
+        @foreach(array_slice($priorityQueue, 0, 10) as $idx => $item)
+            @php
+                $tierColor = match(true) {
+                    $item['tier'] <= 2 => '#f59e0b',
+                    $item['tier'] === 3 => '#ef4444',
+                    default => '#3b82f6',
+                };
+            @endphp
+            <div class="md-row" @if($idx >= 5) x-show="mdAttnExpanded" x-cloak @endif style="padding:13px 22px;{{ !$loop->last ? 'border-bottom:1px solid #f9fafb;' : '' }}display:flex;align-items:center;justify-content:space-between;gap:16px;">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:{{ $tierColor }};flex-shrink:0;"></span>
+                    <div style="min-width:0;">
+                        <p style="font-size:13px;font-weight:700;color:#111827;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $item['headline'] }}</p>
+                        <p style="font-size:11px;color:#9ca3af;margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $item['subtext'] }}</p>
+                    </div>
+                </div>
+                <a href="{{ $item['url'] }}"
+                   style="display:inline-flex;align-items:center;gap:6px;background:{{ $tierColor }};color:#fff;border:none;border-radius:9px;padding:8px 16px;font-size:12px;font-weight:700;text-decoration:none;flex-shrink:0;">
+                    {{ $item['label'] }}
+                </a>
+            </div>
+        @endforeach
+    </div>
+    @if($attnTotal > 5)
+    <div style="padding:10px 22px;border-top:1px solid #f9fafb;text-align:center;">
+        <button type="button" @click="mdAttnExpanded = !mdAttnExpanded"
+                style="background:none;border:none;color:#3b82f6;font-size:12px;font-weight:700;cursor:pointer;padding:4px 8px;">
+            <span x-show="!mdAttnExpanded">Show {{ $attnTotal - 5 }} more ↓</span>
+            <span x-show="mdAttnExpanded" x-cloak>Show less ↑</span>
+        </button>
+    </div>
+    @endif
+</div>
+@else
+<div class="rv-animate" style="animation-delay:0.32s;margin-bottom:24px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:18px;padding:18px 22px;">
+    <p style="font-size:13px;font-weight:700;color:#166534;margin:0;">You're all caught up</p>
+    <p style="font-size:12px;color:#15803d;margin:3px 0 0;">Nothing needs your attention right now.</p>
+</div>
+@endif
 
 </div>
 </x-filament-panels::page>

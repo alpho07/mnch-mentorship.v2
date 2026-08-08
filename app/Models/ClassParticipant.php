@@ -254,6 +254,61 @@ class ClassParticipant extends Model
         return true;
     }
 
+    /**
+     * Program-wide completion gate for Head DRMH certification. Unlike
+     * hasCompletedAllModules() (scoped to this one class), this checks every
+     * module belonging to the mentee's program — including EmONC's tracks —
+     * aggregated across ALL of the mentee's enrollments in that program,
+     * regardless of which class, facility, or mentor administered them.
+     * A program module counts as done if any one of the mentee's progress
+     * records for it is completed/exempted (and video-passed, where an
+     * active rubric applies).
+     */
+    public function hasCompletedAllProgramModules(): bool
+    {
+        $training = $this->relationLoaded('mentorshipClass')
+            ? $this->mentorshipClass?->training
+            : $this->mentorshipClass()->first()?->training;
+
+        $program = $training ? Program::find($training->program_id) : null;
+
+        if (! $program) {
+            return false;
+        }
+
+        $programModuleIds = $program->programModules()->pluck('id');
+
+        if ($programModuleIds->isEmpty()) {
+            return false;
+        }
+
+        $participantIds = self::where('user_id', $this->user_id)
+            ->whereHas('mentorshipClass.training', fn ($q) => $q->where('program_id', $program->id))
+            ->pluck('id');
+
+        $progressByModule = MenteeModuleProgress::whereIn('class_participant_id', $participantIds)
+            ->with('classModule')
+            ->get()
+            ->groupBy(fn (MenteeModuleProgress $p) => $p->classModule?->program_module_id);
+
+        foreach ($programModuleIds as $programModuleId) {
+            $hasRubric = ModuleRubric::where('program_module_id', $programModuleId)
+                ->where('is_active', true)
+                ->exists();
+
+            $satisfied = $progressByModule->get($programModuleId, collect())->contains(
+                fn (MenteeModuleProgress $p) => in_array($p->status, ['completed', 'exempted'])
+                    && (! $hasRubric || $p->isVideoPassed())
+            );
+
+            if (! $satisfied) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function markHeadDrmhApproved(int $headDrmhUserId): bool
     {
         return $this->update([
@@ -272,20 +327,37 @@ class ClassParticipant extends Model
         return $this->head_drmh_approved_at !== null;
     }
 
+    /**
+     * Head DRMH approval is the final gate — by the time it's granted,
+     * isReadyForHeadDrmhCertification() already enforced mentor approval for
+     * EmONC (and required nothing extra for non-EmONC, which never goes
+     * through mentor_approve). Checking isMentorApproved() again here used
+     * to make this permanently false for non-EmONC participants, breaking
+     * their certificate download even after being certified.
+     */
     public function isCertified(): bool
     {
-        return $this->isMentorApproved() && $this->isHeadDrmhApproved();
+        return $this->isHeadDrmhApproved();
     }
 
     /**
      * The shared readiness gate for Head DRMH certification, used by both
-     * the class roster page's Certify button and the Head DRMH Dashboard —
-     * EmONC mentees still require mentor approval first; non-EmONC mentees
+     * the class roster page's Certify button and the Head DRMH Dashboard.
+     * Each program (EmONC, Newborn Care, Infant & Child Care) certifies
+     * independently — a mentee must have completed every module belonging
+     * to their program (including EmONC's tracks), aggregated across ALL of
+     * their enrollments in that program regardless of class, facility, or
+     * mentor — see hasCompletedAllProgramModules(). EmONC mentees
+     * additionally still require mentor approval first; non-EmONC mentees
      * (which never go through mentor_approve — see ManageClassMentees.php)
-     * are ready the moment they've completed every module.
+     * are ready the moment every program module is done.
      */
     public function isReadyForHeadDrmhCertification(): bool
     {
+        if (! $this->hasCompletedAllProgramModules()) {
+            return false;
+        }
+
         $training = $this->relationLoaded('mentorshipClass')
             ? $this->mentorshipClass?->training
             : $this->mentorshipClass()->first()?->training;
@@ -296,7 +368,7 @@ class ClassParticipant extends Model
             return $this->isMentorApproved();
         }
 
-        return $this->hasCompletedAllModules();
+        return true;
     }
 
     public function hasAttendedSession(int $sessionId): bool

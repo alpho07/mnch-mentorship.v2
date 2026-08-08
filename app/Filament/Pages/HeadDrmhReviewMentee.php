@@ -33,6 +33,8 @@ class HeadDrmhReviewMentee extends Page
 
     public bool $canCertify = false;
 
+    public bool $isEmonc = false;
+
     // ─── Mount ───────────────────────────────────────────────────────────────
     public function mount(): void
     {
@@ -54,14 +56,15 @@ class HeadDrmhReviewMentee extends Page
         abort_if(! auth()->user()->can('page_HeadDrmhReviewMentee'), 403);
 
         $this->isCertified = $this->participant->isHeadDrmhApproved();
-        $this->canCertify  = $this->participant->isReadyForHeadDrmhCertification() && ! $this->isCertified;
+        $this->canCertify = $this->participant->isReadyForHeadDrmhCertification() && ! $this->isCertified;
+        $this->isEmonc = $this->participant->mentorshipClass?->training?->program?->isEmonc() ?? false;
 
         $this->loadModules();
     }
 
     public function getTitle(): string
     {
-        return 'Review — ' . ($this->participant->user?->full_name ?? 'Mentee');
+        return 'Review — '.($this->participant->user?->full_name ?? 'Mentee');
     }
 
     // ─── Module data ─────────────────────────────────────────────────────────
@@ -97,43 +100,43 @@ class HeadDrmhReviewMentee extends Page
                 );
 
                 return [
-                    'name'      => $act->name,
-                    'enrolled'  => (bool) $enrollment,
+                    'name' => $act->name,
+                    'enrolled' => (bool) $enrollment,
                     'completed' => $enrollment && $enrollment->status === 'completed',
                 ];
             })->toArray();
 
-            $preTest  = $prog?->preTestAttempt;
+            $preTest = $prog?->preTestAttempt;
             $postTest = $prog?->postTestAttempt;
 
             return [
-                'id'            => $cm->id,
-                'name'          => $cm->programModule?->name ?? "Module {$cm->id}",
-                'status'        => $prog?->status ?? 'not_started',
-                'activities'    => $activities,
-                'pre_test'      => [
-                    'exists'    => (bool) $preTest,
-                    'score'     => $preTest ? (float) $preTest->score : null,
-                    'passed'    => $preTest?->isPassed() ?? false,
+                'id' => $cm->id,
+                'name' => $cm->programModule?->name ?? "Module {$cm->id}",
+                'status' => $prog?->status ?? 'not_started',
+                'activities' => $activities,
+                'pre_test' => [
+                    'exists' => (bool) $preTest,
+                    'score' => $preTest ? (float) $preTest->score : null,
+                    'passed' => $preTest?->isPassed() ?? false,
                     'completed' => (bool) $preTest,
                     'questions' => $this->buildQuestionPreview($preTest),
                 ],
-                'post_test'     => [
-                    'exists'    => (bool) $postTest,
-                    'score'     => $postTest ? (float) $postTest->score : null,
-                    'passed'    => $postTest?->isPassed() ?? false,
+                'post_test' => [
+                    'exists' => (bool) $postTest,
+                    'score' => $postTest ? (float) $postTest->score : null,
+                    'passed' => $postTest?->isPassed() ?? false,
                     'completed' => (bool) $postTest,
                     'questions' => $this->buildQuestionPreview($postTest),
                 ],
-                'video'         => [
-                    'has_video'       => $prog?->hasSubmittedVideo() ?? false,
-                    'review_status'   => $prog?->video_review_status ?? 'pending',
-                    'review_notes'    => $prog?->video_review_notes,
-                    'reviewed_by'     => $prog?->videoReviewedBy?->full_name,
-                    'video_url'       => $prog?->hands_on_video_url ?? null,
-                    'embed_url'       => $prog?->youtubeEmbedUrl() ?? null,
-                    'is_direct'       => $prog?->isDirectVideoUrl() ?? false,
-                    'passed'          => $prog?->isVideoPassed() ?? false,
+                'video' => [
+                    'has_video' => $prog?->hasSubmittedVideo() ?? false,
+                    'review_status' => $prog?->video_review_status ?? 'pending',
+                    'review_notes' => $prog?->video_review_notes,
+                    'reviewed_by' => $prog?->videoReviewedBy?->full_name,
+                    'video_url' => $prog?->hands_on_video_url ?? null,
+                    'embed_url' => $prog?->youtubeEmbedUrl() ?? null,
+                    'is_direct' => $prog?->isDirectVideoUrl() ?? false,
+                    'passed' => $prog?->isVideoPassed() ?? false,
                 ],
             ];
         })->toArray();
@@ -146,17 +149,17 @@ class HeadDrmhReviewMentee extends Page
         }
 
         return $attempt->responses->map(function ($response) {
-            $question    = $response->question;
+            $question = $response->question;
             $chosenOption = $response->option;
             $correctOption = $question?->options->firstWhere('is_correct', true);
 
             return [
-                'text'           => $question?->question_text ?? '—',
-                'chosen_text'    => $chosenOption?->option_text ?? '—',
-                'correct_text'   => $correctOption?->option_text ?? '—',
-                'is_correct'     => (bool) $response->is_correct,
-                'all_options'    => ($question?->options ?? collect())->map(fn ($o) => [
-                    'text'       => $o->option_text,
+                'text' => $question?->question_text ?? '—',
+                'chosen_text' => $chosenOption?->option_text ?? '—',
+                'correct_text' => $correctOption?->option_text ?? '—',
+                'is_correct' => (bool) $response->is_correct,
+                'all_options' => ($question?->options ?? collect())->map(fn ($o) => [
+                    'text' => $o->option_text,
                     'is_correct' => (bool) $o->is_correct,
                     'was_chosen' => $chosenOption && $o->id === $chosenOption->id,
                 ])->toArray(),
@@ -201,7 +204,7 @@ class HeadDrmhReviewMentee extends Page
             'headDrmhApprovedBy',
         ]);
         $this->isCertified = true;
-        $this->canCertify  = false;
+        $this->canCertify = false;
 
         Notification::make()->success()
             ->title('Certificate Issued')
@@ -229,7 +232,7 @@ class HeadDrmhReviewMentee extends Page
             'headDrmhApprovedBy',
         ]);
         $this->isCertified = false;
-        $this->canCertify  = true;
+        $this->canCertify = true;
 
         Notification::make()->warning()->title('Certification Reverted')->send();
     }

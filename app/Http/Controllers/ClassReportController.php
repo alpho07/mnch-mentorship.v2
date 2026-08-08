@@ -2,11 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ClassModule;
 use App\Models\ClassParticipant;
 use App\Models\MenteeModuleProgress;
 use App\Models\MentorshipClass;
+use App\Models\Program;
+use App\Models\Training;
+use App\Models\User;
 use App\Services\CpdPointsService;
 use App\Services\EmoncReportingService;
+use App\Services\ProgramCertificationService;
+use App\Services\QrCodeService;
 use Illuminate\Support\Facades\Auth;
 
 class ClassReportController extends Controller
@@ -129,10 +135,12 @@ class ClassReportController extends Controller
 
         $this->ensureCanViewCertificate($class, $participant);
 
-        $modules  = $class->classModules()->with('programModule')->orderBy('order_sequence')->get();
-        $cpd      = app(CpdPointsService::class)->forMentee($participant->user);
+        $modules = $class->classModules()->with('programModule')->orderBy('order_sequence')->get();
+        $cpd = app(CpdPointsService::class)->forMentee($participant->user);
+        $qr = app(QrCodeService::class)->dataUri(route('certificates.verify', ['class' => $class->id, 'participant' => $participant->id]));
+        $isPdf = false;
 
-        return view('certificates.completion', compact('class', 'participant', 'modules', 'cpd'));
+        return view('certificates.completion', compact('class', 'participant', 'modules', 'cpd', 'qr', 'isPdf'));
     }
 
     // ── HTML Report (web view) ────────────────────────────────────────────────
@@ -156,8 +164,8 @@ class ClassReportController extends Controller
             ->setPaper('a4', 'landscape')
             ->setOption([
                 'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled'      => false,
-                'defaultFont'          => 'DejaVu Sans',
+                'isRemoteEnabled' => false,
+                'defaultFont' => 'DejaVu Sans',
             ]);
 
         return $pdf->download($filename);
@@ -171,19 +179,21 @@ class ClassReportController extends Controller
         $participant->load(['user', 'mentorApprovedBy', 'headDrmhApprovedBy']);
         $this->ensureCanViewCertificate($class, $participant);
 
-        $modules  = $class->classModules()->with('programModule')->orderBy('order_sequence')->get();
-        $cpd      = app(CpdPointsService::class)->forMentee($participant->user);
+        $modules = $class->classModules()->with('programModule')->orderBy('order_sequence')->get();
+        $cpd = app(CpdPointsService::class)->forMentee($participant->user);
+        $qr = app(QrCodeService::class)->dataUri(route('certificates.verify', ['class' => $class->id, 'participant' => $participant->id]));
+        $isPdf = true;
 
-        $name     = str($participant->user->name ?? 'mentee')->slug();
+        $name = str($participant->user->name ?? 'mentee')->slug();
         $filename = "MNCH-Certificate-{$name}-".now()->format('Y-m-d').'.pdf';
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.completion', compact('class', 'participant', 'modules', 'cpd'))
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.completion', compact('class', 'participant', 'modules', 'cpd', 'qr', 'isPdf'))
             ->setPaper('a4', 'landscape')
             ->setOption([
                 'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled'      => false,
-                'defaultFont'          => 'DejaVu Sans',
-                'fontHeightRatio'      => 1.1,
+                'isRemoteEnabled' => false,
+                'defaultFont' => 'DejaVu Sans',
+                'fontHeightRatio' => 1.1,
             ]);
 
         return $pdf->download($filename);
@@ -195,9 +205,9 @@ class ClassReportController extends Controller
         $class->load(['training.program', 'training.facility', 'training.mentor']);
         abort_unless($class->status === 'completed', 403, 'Class is not yet completed.');
 
-        $modules  = $class->classModules()->with('programModule')->orderBy('order_sequence')->get();
-        $mentor   = $class->training->mentor;
-        $cpd      = $mentor ? app(CpdPointsService::class)->forMentor($mentor) : ['total' => 0, 'level' => ['name' => 'Foundation', 'short' => 'F', 'color' => '#6B7280']];
+        $modules = $class->classModules()->with('programModule')->orderBy('order_sequence')->get();
+        $mentor = $class->training->mentor;
+        $cpd = $mentor ? app(CpdPointsService::class)->forMentor($mentor) : ['total' => 0, 'level' => ['name' => 'Foundation', 'short' => 'F', 'color' => '#6B7280']];
 
         return view('certificates.mentor-completion', compact('class', 'modules', 'mentor', 'cpd'));
     }
@@ -208,23 +218,95 @@ class ClassReportController extends Controller
         $class->load(['training.program', 'training.facility', 'training.mentor']);
         abort_unless($class->status === 'completed', 403, 'Class is not yet completed.');
 
-        $modules  = $class->classModules()->with('programModule')->orderBy('order_sequence')->get();
-        $mentor   = $class->training->mentor;
-        $cpd      = $mentor ? app(CpdPointsService::class)->forMentor($mentor) : ['total' => 0, 'level' => ['name' => 'Foundation', 'short' => 'F', 'color' => '#6B7280']];
+        $modules = $class->classModules()->with('programModule')->orderBy('order_sequence')->get();
+        $mentor = $class->training->mentor;
+        $cpd = $mentor ? app(CpdPointsService::class)->forMentor($mentor) : ['total' => 0, 'level' => ['name' => 'Foundation', 'short' => 'F', 'color' => '#6B7280']];
 
-        $name     = str($mentor?->name ?? 'mentor')->slug();
+        $name = str($mentor?->name ?? 'mentor')->slug();
         $filename = "MNCH-Mentor-Certificate-{$name}-".now()->format('Y-m-d').'.pdf';
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.mentor-completion', compact('class', 'modules', 'mentor', 'cpd'))
             ->setPaper('a4', 'landscape')
             ->setOption([
                 'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled'      => false,
-                'defaultFont'          => 'DejaVu Sans',
-                'fontHeightRatio'      => 1.1,
+                'isRemoteEnabled' => false,
+                'defaultFont' => 'DejaVu Sans',
+                'fontHeightRatio' => 1.1,
             ]);
 
         return $pdf->download($filename);
+    }
+
+    public function mentorProgramCertificateHtml(Program $program)
+    {
+        $data = $this->buildMentorProgramCertificateData($program);
+        $data['isPdf'] = false;
+
+        return view('certificates.mentor-program-completion', $data);
+    }
+
+    public function mentorProgramCertificate(Program $program)
+    {
+        $data = $this->buildMentorProgramCertificateData($program);
+        $data['isPdf'] = true;
+
+        $name = str($data['mentor']->name ?? 'mentor')->slug();
+        $filename = "MNCH-Mentor-Certificate-{$name}-".str($program->name)->slug().'-'.now()->format('Y-m-d').'.pdf';
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.mentor-program-completion', $data)
+            ->setPaper('a4', 'landscape')
+            ->setOption([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => false,
+                'defaultFont' => 'DejaVu Sans',
+                'fontHeightRatio' => 1.1,
+            ]);
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Self-serve mentor program certificate: no persisted approval flag —
+     * eligibility is computed live from ProgramCertificationService, same as
+     * the progress shown on the Mentor Certificates page.
+     */
+    private function buildMentorProgramCertificateData(Program $program): array
+    {
+        $mentor = Auth::user();
+
+        $progress = collect(app(ProgramCertificationService::class)->mentorProgress($mentor))
+            ->firstWhere('program_id', $program->id);
+
+        abort_unless($progress && $progress['is_certified'], 403, 'Not all modules of this program have been completed yet.');
+
+        $trainings = Training::where('mentor_id', $mentor->id)
+            ->where('program_id', $program->id)
+            ->where('type', 'facility_mentorship')
+            ->with('facility')
+            ->get();
+
+        $modules = ClassModule::whereHas('mentorshipClass', fn ($q) => $q->whereIn('training_id', $trainings->pluck('id')))
+            ->where('status', 'completed')
+            ->with('programModule')
+            ->get()
+            ->unique('program_module_id')
+            ->sortBy(fn (ClassModule $cm) => $cm->programModule?->id)
+            ->values();
+
+        $cpd = app(CpdPointsService::class)->forMentor($mentor);
+        $qr = app(QrCodeService::class)->dataUri(route('certificates.mentor-program.verify', ['mentor' => $mentor->id, 'program' => $program->id]));
+
+        return compact('program', 'mentor', 'trainings', 'modules', 'cpd', 'qr');
+    }
+
+    public function verifyMentorProgramCertificate(User $mentor, Program $program)
+    {
+        $progress = collect(app(ProgramCertificationService::class)->mentorProgress($mentor))
+            ->firstWhere('program_id', $program->id);
+
+        $isValid = (bool) ($progress['is_certified'] ?? false);
+
+        return view('certificates.mentor-program-verify', compact('mentor', 'program', 'isValid', 'progress'));
     }
 
     private function ensureCanViewCertificate(MentorshipClass $class, ClassParticipant $participant): void
@@ -265,6 +347,4 @@ class ClassReportController extends Controller
 
         return response($svg, 200, ['Content-Type' => 'image/svg+xml']);
     }
-
-
 }

@@ -19,6 +19,7 @@ class MentorshipController extends Controller
 
         $query = Training::query()
             ->where('type', 'facility_mentorship')
+            ->where('status', '!=', 'draft')
             ->with([
                 'mentor:id,name',
                 'facility:id,name,mfl_code',

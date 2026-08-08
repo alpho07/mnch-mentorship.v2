@@ -1,4 +1,24 @@
 <x-filament-panels::page>
+<style>
+    .hdd-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+    .hdd-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+    .hdd-filters { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .hdd-search-input { padding:7px 12px 7px 30px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:13px; color:#374151; background:#fafafa; outline:none; width:230px; max-width:100%; }
+    .hdd-select { padding:7px 28px 7px 10px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:13px; color:#374151; background:#fafafa; outline:none; appearance:none; min-width:170px; cursor:pointer; }
+    .hdd-row-grid { display:grid; grid-template-columns: 2fr 2fr 1.4fr auto; gap:16px; align-items:center; }
+    .hdd-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; justify-content:flex-end; }
+    @media (max-width: 900px) {
+        .hdd-row-grid { grid-template-columns: 1fr 1fr; }
+        .hdd-actions { grid-column: 1 / -1; justify-content:flex-start; }
+    }
+    @media (max-width: 560px) {
+        .hdd-row-grid { grid-template-columns: 1fr; }
+        .hdd-search-input { width:100%; }
+        .hdd-toolbar { align-items:stretch; }
+        .hdd-filters { width:100%; }
+        .hdd-filters > * { flex:1; min-width:140px; }
+    }
+</style>
 @php
 $user      = auth()->user();
 $firstName = $user->first_name ?? (explode(' ', $user->name)[0] ?? 'Head DRMH');
@@ -83,53 +103,65 @@ $greeting  = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Goo
 <div class="rv-animate" style="animation-delay:0.14s;margin-bottom:24px;">
     <div class="md-card" style="background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05);">
 
-        {{-- Tab bar + search --}}
-        <div style="padding:16px 24px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-            <div style="display:flex;gap:6px;">
-                <button wire:click="$set('activeTab','pending')"
+        {{-- Tab bar + filters + search --}}
+        <div style="padding:16px 24px;border-bottom:1px solid #f3f4f6;" class="hdd-toolbar">
+            <div class="hdd-tabs">
+                <button wire:click="setTab('pending')"
                         style="padding:7px 18px;border-radius:10px;font-size:13px;font-weight:700;border:1.5px solid {{ $activeTab === 'pending' ? '#f59e0b' : '#e5e7eb' }};background:{{ $activeTab === 'pending' ? '#fffbeb' : '#fff' }};color:{{ $activeTab === 'pending' ? '#92400e' : '#6b7280' }};cursor:pointer;">
                     Pending
                     @if($kpis['pending'] > 0)
                         <span style="margin-left:5px;background:#f59e0b;color:#fff;border-radius:9999px;padding:1px 7px;font-size:11px;">{{ $kpis['pending'] }}</span>
                     @endif
                 </button>
-                <button wire:click="$set('activeTab','certified')"
+                <button wire:click="setTab('certified')"
                         style="padding:7px 18px;border-radius:10px;font-size:13px;font-weight:700;border:1.5px solid {{ $activeTab === 'certified' ? '#10b981' : '#e5e7eb' }};background:{{ $activeTab === 'certified' ? '#ecfdf5' : '#fff' }};color:{{ $activeTab === 'certified' ? '#065f46' : '#6b7280' }};cursor:pointer;">
                     Certified
                     <span style="margin-left:5px;background:#10b981;color:#fff;border-radius:9999px;padding:1px 7px;font-size:11px;">{{ $kpis['certified_total'] }}</span>
                 </button>
             </div>
 
-            {{-- Search --}}
-            <div style="position:relative;">
-                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#9ca3af" style="width:14px;height:14px;position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803 7.5 7.5 0 0015.803 15.803z"/></svg>
-                <input wire:model.live.debounce.300ms="dSearch"
-                       type="text"
-                       placeholder="Search name, facility, county…"
-                       style="padding:7px 12px 7px 30px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;color:#374151;background:#fafafa;outline:none;width:230px;">
+            <div class="hdd-filters">
+                {{-- Program filter --}}
+                @if(count($programOptions) > 1)
+                <select wire:model.live="dProgram" class="hdd-select">
+                    <option value="">All programs</option>
+                    @foreach($programOptions as $prog)
+                        <option value="{{ $prog }}">{{ $prog }}</option>
+                    @endforeach
+                </select>
+                @endif
+
+                {{-- Search --}}
+                <div style="position:relative;">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#9ca3af" style="width:14px;height:14px;position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803 7.5 7.5 0 0015.803 15.803z"/></svg>
+                    <input wire:model.live.debounce.300ms="dSearch"
+                           type="text"
+                           placeholder="Search name, facility, county…"
+                           class="hdd-search-input">
+                </div>
             </div>
         </div>
 
         {{-- PENDING TAB --}}
         @if($activeTab === 'pending')
-            @forelse($pending as $p)
+            @forelse($paginated as $p)
             <div class="md-row" style="padding:18px 24px;{{ !$loop->last ? 'border-bottom:1px solid #f9fafb;' : '' }}">
-                <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;">
+                <div class="hdd-row-grid">
 
                     {{-- Avatar + name --}}
-                    <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:200px;">
+                    <div style="display:flex;align-items:center;gap:12px;min-width:0;">
                         <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                             <span style="font-size:15px;font-weight:800;color:#fff;">{{ $p['initials'] }}</span>
                         </div>
-                        <div>
-                            <p style="font-size:14px;font-weight:700;color:#111827;margin:0;">{{ $p['name'] }}</p>
-                            <p style="font-size:12px;color:#6b7280;margin:2px 0 0;">{{ $p['cadre'] }} · {{ $p['facility'] }}</p>
+                        <div style="min-width:0;">
+                            <p style="font-size:14px;font-weight:700;color:#111827;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $p['name'] }}</p>
+                            <p style="font-size:12px;color:#6b7280;margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $p['cadre'] }} · {{ $p['facility'] }}</p>
                             <p style="font-size:11px;color:#9ca3af;margin:1px 0 0;">{{ $p['county'] }} county</p>
                         </div>
                     </div>
 
                     {{-- Class + Training --}}
-                    <div style="flex:1;min-width:180px;">
+                    <div style="min-width:0;">
                         <p style="font-size:12px;color:#6b7280;margin:0 0 2px;">
                             <span style="font-weight:600;color:#374151;">{{ $p['class'] }}</span>
                         </p>
@@ -137,20 +169,24 @@ $greeting  = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Goo
                         <p style="font-size:11px;color:#9ca3af;margin:1px 0 0;">{{ $p['training_facility'] }}</p>
                     </div>
 
-                    {{-- Modules + Mentor --}}
-                    <div style="min-width:140px;">
+                    {{-- Modules + Mentor (mentor line only shown for EmONC — non-EmONC never goes through mentor approval) --}}
+                    <div style="min-width:0;">
                         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                            <div style="flex:1;height:5px;background:#f3f4f6;border-radius:9999px;overflow:hidden;min-width:60px;">
+                            <div style="flex:1;height:5px;background:#f3f4f6;border-radius:9999px;overflow:hidden;min-width:40px;">
                                 <div style="height:100%;background:#10b981;border-radius:9999px;width:{{ $p['modules_total'] > 0 ? round(($p['modules_done']/$p['modules_total'])*100) : 0 }}%;"></div>
                             </div>
                             <span style="font-size:11px;font-weight:600;color:#374151;white-space:nowrap;">{{ $p['modules_done'] }}/{{ $p['modules_total'] }}</span>
                         </div>
+                        @if($p['is_emonc'])
                         <p style="font-size:11px;color:#9ca3af;margin:0;">Mentor: {{ $p['mentor_approved_by'] }}</p>
                         <p style="font-size:11px;color:#9ca3af;margin:1px 0 0;">{{ $p['mentor_approved_at'] }}</p>
+                        @else
+                        <p style="font-size:11px;color:#9ca3af;margin:0;">{{ $p['program_name'] }}</p>
+                        @endif
                     </div>
 
                     {{-- Waiting indicator --}}
-                    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                    <div class="hdd-actions">
                         <span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;border-radius:9999px;padding:4px 10px;font-size:11px;font-weight:700;">
                             <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:12px;height:12px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             Awaiting
@@ -169,38 +205,38 @@ $greeting  = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Goo
                     <svg fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="#10b981" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <p style="font-size:15px;font-weight:700;color:#111827;margin:0 0 4px;">All caught up!</p>
-                <p style="font-size:13px;color:#9ca3af;margin:0;">No mentees pending certification{{ $dSearch ? ' for your search' : '' }}.</p>
+                <p style="font-size:13px;color:#9ca3af;margin:0;">No mentees pending certification{{ $dSearch || $dProgram ? ' for your filters' : '' }}.</p>
             </div>
             @endforelse
         @endif
 
         {{-- CERTIFIED TAB --}}
         @if($activeTab === 'certified')
-            @forelse($certified as $p)
+            @forelse($paginated as $p)
             <div class="md-row" style="padding:18px 24px;{{ !$loop->last ? 'border-bottom:1px solid #f9fafb;' : '' }}">
-                <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;">
+                <div class="hdd-row-grid">
 
                     {{-- Avatar + name --}}
-                    <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:200px;">
+                    <div style="display:flex;align-items:center;gap:12px;min-width:0;">
                         <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                             <span style="font-size:15px;font-weight:800;color:#fff;">{{ $p['initials'] }}</span>
                         </div>
-                        <div>
-                            <p style="font-size:14px;font-weight:700;color:#111827;margin:0;">{{ $p['name'] }}</p>
-                            <p style="font-size:12px;color:#6b7280;margin:2px 0 0;">{{ $p['cadre'] }} · {{ $p['facility'] }}</p>
+                        <div style="min-width:0;">
+                            <p style="font-size:14px;font-weight:700;color:#111827;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $p['name'] }}</p>
+                            <p style="font-size:12px;color:#6b7280;margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $p['cadre'] }} · {{ $p['facility'] }}</p>
                             <p style="font-size:11px;color:#9ca3af;margin:1px 0 0;">{{ $p['county'] }} county</p>
                         </div>
                     </div>
 
                     {{-- Class + Training --}}
-                    <div style="flex:1;min-width:180px;">
+                    <div style="min-width:0;">
                         <p style="font-size:12px;color:#6b7280;margin:0 0 2px;"><span style="font-weight:600;color:#374151;">{{ $p['class'] }}</span></p>
                         <p style="font-size:11px;color:#9ca3af;margin:0;">{{ $p['training'] }}</p>
                         <p style="font-size:11px;color:#9ca3af;margin:1px 0 0;">{{ $p['training_facility'] }}</p>
                     </div>
 
                     {{-- Certified info --}}
-                    <div style="min-width:140px;">
+                    <div style="min-width:0;">
                         <span style="display:inline-flex;align-items:center;gap:4px;background:#d1fae5;color:#065f46;border-radius:9999px;padding:3px 10px;font-size:11px;font-weight:700;margin-bottom:5px;">
                             <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:11px;height:11px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             Certified
@@ -212,7 +248,7 @@ $greeting  = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Goo
                     </div>
 
                     {{-- Actions --}}
-                    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                    <div class="hdd-actions">
                         @if($p['cert_url'])
                         <a href="{{ $p['cert_url'] }}" target="_blank"
                            style="display:inline-flex;align-items:center;gap:5px;background:#ecfdf5;color:#065f46;border:1.5px solid #a7f3d0;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;text-decoration:none;">
@@ -229,9 +265,42 @@ $greeting  = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Goo
             </div>
             @empty
             <div style="padding:56px 24px;text-align:center;">
-                <p style="font-size:14px;color:#9ca3af;margin:0;">No certified mentees{{ $dSearch ? ' match your search' : ' yet' }}.</p>
+                <p style="font-size:14px;color:#9ca3af;margin:0;">No certified mentees{{ $dSearch || $dProgram ? ' match your filters' : ' yet' }}.</p>
             </div>
             @endforelse
+        @endif
+
+        {{-- Pagination --}}
+        @if($paginated->total() > $perPage)
+        @php
+            $totalPages = (int) ceil($paginated->total() / $perPage);
+            $curPage = max(1, $dPage);
+        @endphp
+        <div style="padding:14px 24px;border-top:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <p style="font-size:12px;color:#9ca3af;margin:0;">
+                Showing {{ (($curPage - 1) * $perPage) + 1 }}–{{ min($curPage * $perPage, $paginated->total()) }} of {{ $paginated->total() }}
+            </p>
+            <div style="display:flex;gap:6px;">
+                @if($curPage > 1)
+                <button wire:click="setDPage({{ $curPage - 1 }})"
+                        style="padding:6px 14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:13px;font-weight:600;cursor:pointer;">
+                    ← Prev
+                </button>
+                @endif
+                @for($pg = max(1, $curPage - 2); $pg <= min($totalPages, $curPage + 2); $pg++)
+                <button wire:click="setDPage({{ $pg }})"
+                        style="padding:6px 12px;border:1.5px solid {{ $pg === $curPage ? '#3b82f6' : '#e5e7eb' }};border-radius:8px;background:{{ $pg === $curPage ? '#3b82f6' : '#fff' }};color:{{ $pg === $curPage ? '#fff' : '#374151' }};font-size:13px;font-weight:600;cursor:pointer;min-width:36px;">
+                    {{ $pg }}
+                </button>
+                @endfor
+                @if($curPage < $totalPages)
+                <button wire:click="setDPage({{ $curPage + 1 }})"
+                        style="padding:6px 14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:13px;font-weight:600;cursor:pointer;">
+                    Next →
+                </button>
+                @endif
+            </div>
+        </div>
         @endif
 
     </div>

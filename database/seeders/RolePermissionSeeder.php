@@ -38,6 +38,7 @@ class RolePermissionSeeder extends Seeder
         'page_OrgUnitExplorer','page_ParticipantProfilePage','page_ReportManagement',
         'page_ReviewReport','page_TrainingCoverageDashboard','page_ValidationQueue',
         'page_ViewSubmission','page_HeadDrmhDashboard','page_EmoncDashboard','page_HeadDrmhReviewMentee',
+        'page_MyCertificates','page_MentorCertificates',
     ];
 
     private const PAGES_MENTOR = [
@@ -68,6 +69,7 @@ class RolePermissionSeeder extends Seeder
 
     private const PAGES_MENTEE = [
         'page_MenteeDashboard',
+        'page_MyCertificates',
     ];
 
     // ── Widget groups ────────────────────────────────────────────────────────
@@ -168,6 +170,8 @@ class RolePermissionSeeder extends Seeder
             'page_HeadDrmhDashboard',
             'page_EmoncDashboard',
             'page_HeadDrmhReviewMentee',
+            'page_MyCertificates',
+            'page_MentorCertificates',
         ];
 
         foreach ($extras as $name) {
@@ -259,7 +263,7 @@ class RolePermissionSeeder extends Seeder
             $this->perms(['mentorship::training'], self::MANAGE),    // → Mentorships nav
             $this->perms(['global::training'],     self::READ),      // → MOH Trainings nav
             $this->perms(['training::export'],     self::READ),      // → Export Center nav
-            ['page_MentorDashboard', 'page_IndicatorReporting', 'page_FillReport'],
+            ['page_MentorDashboard', 'page_IndicatorReporting', 'page_FillReport', 'page_MentorCertificates'],
             self::WIDGETS_MENTOR,
         ));
 

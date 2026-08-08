@@ -36,7 +36,9 @@
                 <div class="flex items-center justify-between h-16">
 
                     <!-- Logo -->
-                    <div class="flex items-center flex-shrink-0">
+                    <div class="flex items-center flex-shrink-0 gap-3 mr-6">
+                        <img src="{{ asset('moh_logo.png') }}" alt="Ministry of Health — Republic of Kenya" class="moh-logo-img hidden sm:block" style="height:36px;width:auto;">
+                        <span class="hidden sm:block w-px h-9 bg-gray-200"></span>
                         <a href="{{ route('home') }}" class="flex items-center gap-2.5">
                             <div class="w-9 h-9 rounded-xl flex items-center justify-center"
                                  style="background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);">
@@ -366,12 +368,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
                     <!-- About -->
                     <div class="md:col-span-1">
-                        <div class="flex items-center gap-2.5 mb-4">
-                            <div class="w-9 h-9 rounded-xl flex items-center justify-center"
-                                 style="background: linear-gradient(135deg, #1D6FB8 0%, #4FB3E8 100%);">
-                                <i class="fas fa-stethoscope text-white text-sm"></i>
-                            </div>
-                            <span class="text-lg font-bold"><span class="text-primary-400">MNCH</span> Kenya</span>
+                        <div class="inline-flex bg-white rounded-lg px-3 py-2 mb-4">
+                            <img src="{{ asset('moh_logo.png') }}" alt="Ministry of Health — Republic of Kenya" class="moh-logo-img" style="height:32px;width:auto;">
                         </div>
                         <p class="text-gray-400 text-sm mb-4 leading-relaxed">
                             Kenya's comprehensive platform for maternal, neonatal, and child health training resources.

@@ -39,10 +39,13 @@ Route::middleware(['auth'])->prefix('admin/reports')->name('reports.')->group(fu
     Route::get('/class/{class}/certificate/{participant}/preview', [\App\Http\Controllers\ClassReportController::class, 'certificateHtml'])->name('class.certificate.preview');
     Route::get('/class/{class}/mentor-certificate', [\App\Http\Controllers\ClassReportController::class, 'mentorCertificate'])->name('class.mentor-certificate');
     Route::get('/class/{class}/mentor-certificate/preview', [\App\Http\Controllers\ClassReportController::class, 'mentorCertificateHtml'])->name('class.mentor-certificate.preview');
+    Route::get('/mentor-certificate/program/{program}', [\App\Http\Controllers\ClassReportController::class, 'mentorProgramCertificate'])->name('mentor.program-certificate');
+    Route::get('/mentor-certificate/program/{program}/preview', [\App\Http\Controllers\ClassReportController::class, 'mentorProgramCertificateHtml'])->name('mentor.program-certificate.preview');
 });
 
 Route::get('/certificates/{class}/{participant}/verify', [\App\Http\Controllers\ClassReportController::class, 'verifyCertificate'])->name('certificates.verify');
 Route::get('/certificates/{class}/{participant}/badge', [\App\Http\Controllers\ClassReportController::class, 'badge'])->name('certificates.badge');
+Route::get('/certificates/mentor/{mentor}/{program}/verify', [\App\Http\Controllers\ClassReportController::class, 'verifyMentorProgramCertificate'])->name('certificates.mentor-program.verify');
 
 Route::get('/admin/set-password/{token}', App\Livewire\Auth\CustomResetPassword::class)
     ->middleware(['web', 'guest'])

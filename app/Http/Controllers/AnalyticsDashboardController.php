@@ -2194,6 +2194,7 @@ class AnalyticsDashboardController extends Controller {
         $selectedYear = $request->get('year', '');
 
         $mentorships = Training::where('type', 'facility_mentorship')->where('is_pilot', false)
+            ->where('status', '!=', 'draft')
             ->where('facility_id', $facility->id)
             ->when(!empty($selectedYear), fn($q) => $q->whereYear('start_date', $selectedYear))
             ->with([

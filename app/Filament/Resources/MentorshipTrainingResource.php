@@ -108,11 +108,14 @@ class MentorshipTrainingResource extends Resource
 
     private static function applyRoleScope(Builder $query, User $user): void
     {
-        if ($user->hasRole(['super_admin', 'admin', 'division', 'national_mentor', 'national_mentor_lead'])) {
+        if ($user->hasRole(['super_admin', 'admin', 'division', 'national_mentor_lead'])) {
             return;
         }
 
-        if ($user->hasRole('county_mentor_lead')) {
+        if ($user->hasRole('national_mentor')) {
+            // National visibility — no facility restriction, but program
+            // scope (below) can still apply.
+        } elseif ($user->hasRole('county_mentor_lead')) {
             $countyIds = $user->counties()->pluck('counties.id')->toArray();
             if ($user->county_id) {
                 $countyIds[] = $user->county_id;
@@ -121,29 +124,24 @@ class MentorshipTrainingResource extends Resource
                 fn ($q) => $q->whereIn('county_id', array_unique($countyIds))
             )->pluck('id');
             $query->whereIn('facility_id', $facilityIds);
-
-            return;
-        }
-
-        if ($user->hasRole('subcounty_mentor_lead')) {
+        } elseif ($user->hasRole('subcounty_mentor_lead')) {
             $subcountyIds = $user->subcounties()->pluck('subcounties.id');
             $facilityIds = Facility::whereIn('subcounty_id', $subcountyIds)->pluck('id');
             $query->whereIn('facility_id', $facilityIds);
-
-            return;
-        }
-
-        if ($user->hasRole('facility_mentor_lead')) {
+        } elseif ($user->hasRole('facility_mentor_lead')) {
             $facilityIds = $user->facilities()->pluck('facilities.id')->toArray();
             if ($user->facility_id) {
                 $facilityIds[] = $user->facility_id;
             }
             $query->whereIn('facility_id', array_unique($facilityIds));
-
-            return;
+        } else {
+            $query->forMentorOrCoMentor($user->id);
         }
 
-        $query->forMentorOrCoMentor($user->id);
+        $programIds = $user->allowedProgramIds();
+        if ($programIds !== null) {
+            $query->whereIn('program_id', $programIds);
+        }
     }
 
     public static function getNavigationLabel(): string

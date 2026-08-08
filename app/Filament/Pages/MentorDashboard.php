@@ -475,7 +475,16 @@ class MentorDashboard extends Page
             ->where('is_pilot', false)
             ->pluck('id');
 
-        return $asLead->merge($asCoMentor)->unique()->values()->toArray();
+        $trainingIds = $asLead->merge($asCoMentor)->unique()->values();
+
+        $programIds = auth()->user()->allowedProgramIds();
+        if ($programIds !== null) {
+            $trainingIds = Training::whereIn('id', $trainingIds)
+                ->whereIn('program_id', $programIds)
+                ->pluck('id');
+        }
+
+        return $trainingIds->toArray();
     }
 
     private function emptyKpis(): array

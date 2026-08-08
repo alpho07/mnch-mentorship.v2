@@ -25,16 +25,47 @@ class MentorshipApiTest extends TestCase
         $mentor->assignRole('facility_mentor');
 
         $training = Training::factory()->create([
-            'type'      => 'facility_mentorship',
+            'type' => 'facility_mentorship',
             'mentor_id' => $mentor->id,
+            'status' => 'active',
         ]);
 
         $token = $mentor->createToken('test')->plainTextToken;
 
-        $this->withHeader('Authorization', 'Bearer ' . $token)
-             ->getJson('/api/v1/mentorships')
-             ->assertOk()
-             ->assertJsonStructure(['data' => [['id', 'title', 'status', 'class_count']]]);
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/mentorships')
+            ->assertOk()
+            ->assertJsonStructure(['data' => [['id', 'title', 'status', 'class_count']]]);
+    }
+
+    public function test_draft_mentorships_are_excluded_from_the_list(): void
+    {
+        $mentor = User::factory()->create();
+        $mentor->assignRole('facility_mentor');
+
+        $active = Training::factory()->create([
+            'type' => 'facility_mentorship',
+            'mentor_id' => $mentor->id,
+            'status' => 'active',
+            'title' => 'Active Mentorship',
+        ]);
+        Training::factory()->create([
+            'type' => 'facility_mentorship',
+            'mentor_id' => $mentor->id,
+            'status' => 'draft',
+            'title' => 'Draft Mentorship',
+        ]);
+
+        $token = $mentor->createToken('test')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/mentorships')
+            ->assertOk();
+
+        $ids = collect($response->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($active->id));
+        $this->assertSame(1, $ids->count());
     }
 
     public function test_unauthenticated_user_gets_401(): void
