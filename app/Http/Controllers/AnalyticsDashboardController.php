@@ -183,10 +183,15 @@ class AnalyticsDashboardController extends Controller {
             ));
         }
 
-        $counties      = $this->getCountiesData($selectedYear, $mode);
-        $trainingsList = $this->getTrainingsList($selectedYear, $mode);
-        $summaryStats  = $this->getSummaryStats($selectedYear, $mode);
-        $chartData     = $this->getChartData($selectedYear, $mode);
+        // ── County / Subcounty / Facility filters ──────────────────────────
+        $selectedCounty    = $request->get('county_id');
+        $selectedSubcounty = $request->get('subcounty_id');
+        $selectedFacility  = $request->get('facility_id');
+
+        $counties      = $this->getCountiesData($selectedYear, $mode, null, $selectedCounty, $selectedSubcounty, $selectedFacility);
+        $trainingsList = $this->getTrainingsList($selectedYear, $mode, $selectedCounty, $selectedSubcounty, $selectedFacility);
+        $summaryStats  = $this->getSummaryStats($selectedYear, $mode, null, $selectedCounty, $selectedSubcounty, $selectedFacility);
+        $chartData     = $this->getChartData($selectedYear, $mode, null, $selectedCounty, $selectedSubcounty, $selectedFacility);
         $extendedStats = $this->getExtendedStats($selectedYear, $mode);
         $insights      = $this->generateInsights($summaryStats, $extendedStats, $mode);
 
@@ -196,10 +201,24 @@ class AnalyticsDashboardController extends Controller {
             $counties = collect($counties)->filter(fn ($c) => in_array($c->id, $allowedCountyIds))->values();
         }
 
+        // Filter dropdown option lists (independent of the selection above —
+        // only cascade by parent, same as the assessment/mentor filters)
+        $geoCounties = $counties instanceof \Illuminate\Support\Collection
+            ? $counties->map(fn ($c) => (object) ['id' => $c->id, 'name' => $c->name])->sortBy('name')->values()
+            : collect();
+        $geoSubcounties = $selectedCounty
+            ? Subcounty::where('county_id', $selectedCounty)->orderBy('name')->get(['id', 'name'])
+            : collect();
+        $geoFacilities = $selectedSubcounty
+            ? Facility::whereNull('deleted_at')->where('subcounty_id', $selectedSubcounty)->orderBy('name')->get(['id', 'name'])
+            : collect();
+
         return view('analytics.dashboard.index', compact(
                         'counties', 'trainingsList', 'summaryStats', 'chartData',
                         'availableYears', 'selectedYear', 'mode',
-                        'extendedStats', 'insights'
+                        'extendedStats', 'insights',
+                        'geoCounties', 'geoSubcounties', 'geoFacilities',
+                        'selectedCounty', 'selectedSubcounty', 'selectedFacility'
                 ));
     }
 
@@ -207,6 +226,9 @@ class AnalyticsDashboardController extends Controller {
         $selectedYear = $request->get('year', '');
         $mode = $request->get('mode', 'training');
         $trainingId = $request->get('training_id', '');
+        $selectedCounty = $request->get('county_id');
+        $selectedSubcounty = $request->get('subcounty_id');
+        $selectedFacility = $request->get('facility_id');
 
         // Load the actual GeoJSON file
         $path = public_path('kenyan-counties.geojson');
@@ -231,13 +253,13 @@ class AnalyticsDashboardController extends Controller {
         }
 
         // Get counties data with statistics
-        $counties = $this->getCountiesData($selectedYear, $mode, $trainingId);
+        $counties = $this->getCountiesData($selectedYear, $mode, $trainingId, $selectedCounty, $selectedSubcounty, $selectedFacility);
 
         // Create a mapping of county statistics by normalized name
         $countyStatsMap = [];
         foreach ($counties as $county) {
             // Calculate total programs for this county properly
-            $totalPrograms = $this->getCountyPrograms($county->id, $selectedYear, $mode, $trainingId);
+            $totalPrograms = $this->getCountyPrograms($county->id, $selectedYear, $mode, $trainingId, $selectedSubcounty, $selectedFacility);
 
             // Get total facilities with programs for this county
             if ($mode === 'training') {
@@ -251,7 +273,10 @@ class AnalyticsDashboardController extends Controller {
                     }
                 })->whereHas('subcounty', function ($query) use ($county) {
                     $query->where('county_id', $county->id);
-                })->count();
+                })
+                ->when($selectedFacility, fn ($q) => $q->where('id', $selectedFacility))
+                ->when(!$selectedFacility && $selectedSubcounty, fn ($q) => $q->where('subcounty_id', $selectedSubcounty))
+                ->count();
             } else {
                 // For mentorship, count facilities that host mentorship programs
                 $facilitiesWithPrograms = Facility::whereHas('trainings', function ($query) use ($selectedYear, $trainingId) {
@@ -264,7 +289,10 @@ class AnalyticsDashboardController extends Controller {
                     }
                 })->whereHas('subcounty', function ($query) use ($county) {
                     $query->where('county_id', $county->id);
-                })->count();
+                })
+                ->when($selectedFacility, fn ($q) => $q->where('id', $selectedFacility))
+                ->when(!$selectedFacility && $selectedSubcounty, fn ($q) => $q->where('subcounty_id', $selectedSubcounty))
+                ->count();
             }
 
             // Create multiple normalized variations for better matching
@@ -833,13 +861,16 @@ class AnalyticsDashboardController extends Controller {
         $selectedYear = $request->get('year', '');
         $mode = $request->get('mode', 'training');
         $trainingId = $request->get('training_id', '');
+        $countyId = $request->get('county_id');
+        $subcountyId = $request->get('subcounty_id');
+        $facilityId = $request->get('facility_id');
 
         try {
             // Get chart data
-            $chartData = $this->getChartDataSimple($selectedYear, $mode, $trainingId);
+            $chartData = $this->getChartDataSimple($selectedYear, $mode, $trainingId, $countyId, $subcountyId, $facilityId);
 
             // Get summary stats
-            $summaryStats = $this->getSummaryStatsSimple($selectedYear, $mode, $trainingId);
+            $summaryStats = $this->getSummaryStatsSimple($selectedYear, $mode, $trainingId, $countyId, $subcountyId, $facilityId);
 
             return response()->json([
                         'success' => true,
@@ -874,12 +905,30 @@ class AnalyticsDashboardController extends Controller {
     }
 
     // Updated counties data method
-    private function getCountiesData($year, $mode, $trainingId = null) {
+    /**
+     * Narrow a Facility (or facility-relation) query builder to the most
+     * specific of facility_id / subcounty_id / county_id that was selected —
+     * mirrors the drill-down semantics already used for the assessment and
+     * mentor analytics filters.
+     */
+    private function applyFacilityGeoScope($query, $countyId = null, $subcountyId = null, $facilityId = null): void {
+        if ($facilityId) {
+            $query->where('id', $facilityId);
+        } elseif ($subcountyId) {
+            $query->where('subcounty_id', $subcountyId);
+        } elseif ($countyId) {
+            $query->whereHas('subcounty', fn ($s) => $s->where('county_id', $countyId));
+        }
+    }
+
+    private function getCountiesData($year, $mode, $trainingId = null, $countyId = null, $subcountyId = null, $facilityId = null) {
+        $geoScope = fn ($query) => $this->applyFacilityGeoScope($query, $countyId, $subcountyId, $facilityId);
+
         if ($mode === 'training') {
             // Existing training logic
             $query = County::withCount([
-                'facilities as total_facilities',
-                'facilities as facilities_with_programs' => function ($query) use ($year, $trainingId) {
+                'facilities as total_facilities' => $geoScope,
+                'facilities as facilities_with_programs' => function ($query) use ($year, $trainingId, $geoScope) {
                     $query->whereHas('users.trainingParticipations.training', function ($q) use ($year, $trainingId) {
                         $q->where('type', 'global_training');
                         if (!empty($year)) {
@@ -889,13 +938,14 @@ class AnalyticsDashboardController extends Controller {
                             $q->where('id', $trainingId);
                         }
                     });
+                    $geoScope($query);
                 }
             ]);
         } else {
             // Mentorship logic - get counties based on facilities hosting mentorship programs
             $query = County::withCount([
-                'facilities as total_facilities',
-                'facilities as facilities_with_programs' => function ($query) use ($year, $trainingId) {
+                'facilities as total_facilities' => $geoScope,
+                'facilities as facilities_with_programs' => function ($query) use ($year, $trainingId, $geoScope) {
                     // Facilities that have mentorship programs
                     $query->whereHas('trainings', function ($q) use ($year, $trainingId) {
                         $q->where('type', 'facility_mentorship')->where('is_pilot', false);
@@ -906,19 +956,20 @@ class AnalyticsDashboardController extends Controller {
                             $q->where('id', $trainingId);
                         }
                     });
+                    $geoScope($query);
                 }
             ]);
         }
 
-        return $query->get()->map(function ($county) use ($year, $mode, $trainingId) {
-            $county->coverage_percentage = $county->total_facilities > 0 ? 
+        return $query->get()->map(function ($county) use ($year, $mode, $trainingId, $subcountyId, $facilityId) {
+            $county->coverage_percentage = $county->total_facilities > 0 ?
                 round(($county->facilities_with_programs / $county->total_facilities) * 100, 1) : 0;
-            $county->total_participants = $this->getCountyParticipants($county->id, $year, $mode, $trainingId);
+            $county->total_participants = $this->getCountyParticipants($county->id, $year, $mode, $trainingId, $subcountyId, $facilityId);
             return $county;
         });
     }
 
-    private function getTrainingsList($year, $mode) {
+    private function getTrainingsList($year, $mode, $countyId = null, $subcountyId = null, $facilityId = null) {
         $trainingType = $mode === 'training' ? 'global_training' : 'facility_mentorship';
 
         $query = Training::where('type', $trainingType);
@@ -928,6 +979,15 @@ class AnalyticsDashboardController extends Controller {
 
         if (!empty($year)) {
             $query->whereYear('start_date', $year);
+        }
+
+        if ($countyId || $subcountyId || $facilityId) {
+            $geoScope = fn ($q) => $this->applyFacilityGeoScope($q, $countyId, $subcountyId, $facilityId);
+            if ($mode === 'training') {
+                $query->whereHas('participants.user.facility', $geoScope);
+            } else {
+                $query->whereHas('facility', $geoScope);
+            }
         }
 
         $trainings = $query->withCount([
@@ -979,8 +1039,10 @@ class AnalyticsDashboardController extends Controller {
     }
 
     // Updated summary stats method
-    private function getSummaryStats($year, $mode, $trainingId = null) {
+    private function getSummaryStats($year, $mode, $trainingId = null, $countyId = null, $subcountyId = null, $facilityId = null) {
         $trainingType = $mode === 'training' ? 'global_training' : 'facility_mentorship';
+        $geoScope = fn ($q) => $this->applyFacilityGeoScope($q, $countyId, $subcountyId, $facilityId);
+        $hasGeoFilter = $countyId || $subcountyId || $facilityId;
 
         $totalProgramsQuery = Training::where('type', $trainingType);
         if ($mode !== 'training') {
@@ -991,6 +1053,13 @@ class AnalyticsDashboardController extends Controller {
         }
         if ($trainingId) {
             $totalProgramsQuery->where('id', $trainingId);
+        }
+        if ($hasGeoFilter) {
+            if ($mode === 'training') {
+                $totalProgramsQuery->whereHas('participants.user.facility', $geoScope);
+            } else {
+                $totalProgramsQuery->whereHas('facility', $geoScope);
+            }
         }
         $totalPrograms = $totalProgramsQuery->count();
 
@@ -1004,15 +1073,21 @@ class AnalyticsDashboardController extends Controller {
                     $query->where('id', $trainingId);
                 }
             });
+            if ($hasGeoFilter) {
+                $totalParticipantsQuery->whereHas('user.facility', $geoScope);
+            }
             $totalParticipants = $totalParticipantsQuery->distinct('user_id')->count();
         } else {
-            $totalParticipantsQuery = ClassParticipant::whereHas('mentorshipClass.training', function ($query) use ($year, $trainingId) {
+            $totalParticipantsQuery = ClassParticipant::whereHas('mentorshipClass.training', function ($query) use ($year, $trainingId, $hasGeoFilter, $geoScope) {
                 $query->where('type', 'facility_mentorship')->where('is_pilot', false);
                 if (!empty($year)) {
                     $query->whereYear('start_date', $year);
                 }
                 if ($trainingId) {
                     $query->where('id', $trainingId);
+                }
+                if ($hasGeoFilter) {
+                    $query->whereHas('facility', $geoScope);
                 }
             });
             $totalParticipants = $totalParticipantsQuery->distinct('user_id')->count('user_id');
@@ -1042,18 +1117,58 @@ class AnalyticsDashboardController extends Controller {
                 }
             });
         }
+        if ($hasGeoFilter) {
+            $geoScope($totalFacilitiesQuery);
+        }
         $totalFacilities = $totalFacilitiesQuery->count();
 
-        // Calculate facility coverage
-        $allFacilities = Facility::count();
+        // Calculate facility coverage — denominator narrows to the selected
+        // geography too, so the percentage stays meaningful when filtered.
+        $allFacilitiesQuery = Facility::query();
+        if ($hasGeoFilter) {
+            $geoScope($allFacilitiesQuery);
+        }
+        $allFacilities = $allFacilitiesQuery->count();
         $facilityCoverage = $allFacilities > 0 ? round(($totalFacilities / $allFacilities) * 100, 1) : 0;
 
         return compact('totalPrograms', 'totalParticipants', 'totalFacilities', 'facilityCoverage');
     }
 
     // Updated chart data method
-    private function getChartData($year, $mode, $trainingId = null) {
+    private function getChartData($year, $mode, $trainingId = null, $countyId = null, $subcountyId = null, $facilityId = null) {
         $trainingType = $mode === 'training' ? 'global_training' : 'facility_mentorship';
+        $geoScope = fn ($q) => $this->applyFacilityGeoScope($q, $countyId, $subcountyId, $facilityId);
+        $hasGeoFilter = $countyId || $subcountyId || $facilityId;
+
+        // Narrow a query-builder (not Eloquent) joined against `users` down to
+        // the selected facility/subcounty/county, joining `facilities` (and
+        // `subcounties` for a county-only filter) as needed.
+        $userFacilityGeoJoin = function ($q) use ($countyId, $subcountyId, $facilityId) {
+            $q->join('facilities', 'facilities.id', '=', 'users.facility_id');
+            if ($facilityId) {
+                $q->where('facilities.id', $facilityId);
+            } elseif ($subcountyId) {
+                $q->where('facilities.subcounty_id', $subcountyId);
+            } elseif ($countyId) {
+                $q->join('subcounties', 'subcounties.id', '=', 'facilities.subcounty_id')
+                    ->where('subcounties.county_id', $countyId);
+            }
+        };
+
+        // Same, but for a query-builder already joined against `trainings`
+        // whose own facility_id anchors the mentorship program.
+        $trainingFacilityGeoJoin = function ($q) use ($countyId, $subcountyId, $facilityId) {
+            if ($facilityId) {
+                $q->where('trainings.facility_id', $facilityId);
+            } elseif ($subcountyId) {
+                $q->join('facilities', 'facilities.id', '=', 'trainings.facility_id')
+                    ->where('facilities.subcounty_id', $subcountyId);
+            } elseif ($countyId) {
+                $q->join('facilities', 'facilities.id', '=', 'trainings.facility_id')
+                    ->join('subcounties', 'subcounties.id', '=', 'facilities.subcounty_id')
+                    ->where('subcounties.county_id', $countyId);
+            }
+        };
 
         if ($mode === 'training') {
             // Department data via TrainingParticipant
@@ -1064,6 +1179,7 @@ class AnalyticsDashboardController extends Controller {
                 ->where('trainings.type', 'global_training')
                 ->when(!empty($year), fn($q) => $q->whereYear('trainings.start_date', $year))
                 ->when($trainingId, fn($q) => $q->where('trainings.id', $trainingId))
+                ->when($hasGeoFilter, $userFacilityGeoJoin)
                 ->select('departments.name', DB::raw('COUNT(DISTINCT training_participants.user_id) as count'))
                 ->groupBy('departments.id', 'departments.name')
                 ->orderByDesc('count')
@@ -1077,6 +1193,7 @@ class AnalyticsDashboardController extends Controller {
                 ->where('trainings.type', 'global_training')
                 ->when(!empty($year), fn($q) => $q->whereYear('trainings.start_date', $year))
                 ->when($trainingId, fn($q) => $q->where('trainings.id', $trainingId))
+                ->when($hasGeoFilter, $userFacilityGeoJoin)
                 ->select('assessment_cadres.name', DB::raw('COUNT(DISTINCT training_participants.user_id) as count'))
                 ->groupBy('assessment_cadres.id', 'assessment_cadres.name')
                 ->orderByDesc('count')
@@ -1092,6 +1209,7 @@ class AnalyticsDashboardController extends Controller {
                 ->where('trainings.type', 'facility_mentorship')->where('trainings.is_pilot', false)
                 ->when(!empty($year), fn($q) => $q->whereYear('trainings.start_date', $year))
                 ->when($trainingId, fn($q) => $q->where('trainings.id', $trainingId))
+                ->when($hasGeoFilter, $trainingFacilityGeoJoin)
                 ->select('departments.name', DB::raw('COUNT(DISTINCT class_participants.user_id) as count'))
                 ->groupBy('departments.id', 'departments.name')
                 ->orderByDesc('count')
@@ -1106,6 +1224,7 @@ class AnalyticsDashboardController extends Controller {
                 ->where('trainings.type', 'facility_mentorship')->where('trainings.is_pilot', false)
                 ->when(!empty($year), fn($q) => $q->whereYear('trainings.start_date', $year))
                 ->when($trainingId, fn($q) => $q->where('trainings.id', $trainingId))
+                ->when($hasGeoFilter, $trainingFacilityGeoJoin)
                 ->select('assessment_cadres.name', DB::raw('COUNT(DISTINCT class_participants.user_id) as count'))
                 ->groupBy('assessment_cadres.id', 'assessment_cadres.name')
                 ->orderByDesc('count')
@@ -1116,8 +1235,8 @@ class AnalyticsDashboardController extends Controller {
         // Facility type coverage - adjusted for mentorship
         if ($mode === 'training') {
             $facilityTypeData = FacilityType::withCount([
-                'facilities as total_facilities',
-                'facilities as facilities_with_training' => function ($query) use ($year, $trainingId) {
+                'facilities as total_facilities' => $geoScope,
+                'facilities as facilities_with_training' => function ($query) use ($year, $trainingId, $geoScope) {
                     $query->whereHas('users.trainingParticipations.training', function ($q) use ($year, $trainingId) {
                         $q->where('type', 'global_training');
                         if (!empty($year)) {
@@ -1127,17 +1246,18 @@ class AnalyticsDashboardController extends Controller {
                             $q->where('id', $trainingId);
                         }
                     });
+                    $geoScope($query);
                 }
             ])->get()->map(function ($type) {
-                $type->coverage_percentage = $type->total_facilities > 0 ? 
+                $type->coverage_percentage = $type->total_facilities > 0 ?
                     round(($type->facilities_with_training / $type->total_facilities) * 100, 1) : 0;
                 return $type;
             });
         } else {
             // For mentorship - facilities hosting mentorship programs
             $facilityTypeData = FacilityType::withCount([
-                'facilities as total_facilities',
-                'facilities as facilities_with_training' => function ($query) use ($year, $trainingId) {
+                'facilities as total_facilities' => $geoScope,
+                'facilities as facilities_with_training' => function ($query) use ($year, $trainingId, $geoScope) {
                     $query->whereHas('trainings', function ($q) use ($year, $trainingId) {
                         $q->where('type', 'facility_mentorship')->where('is_pilot', false);
                         if (!empty($year)) {
@@ -1147,9 +1267,10 @@ class AnalyticsDashboardController extends Controller {
                             $q->where('id', $trainingId);
                         }
                     });
+                    $geoScope($query);
                 }
             ])->get()->map(function ($type) {
-                $type->coverage_percentage = $type->total_facilities > 0 ? 
+                $type->coverage_percentage = $type->total_facilities > 0 ?
                     round(($type->facilities_with_training / $type->total_facilities) * 100, 1) : 0;
                 return $type;
             });
@@ -1171,6 +1292,7 @@ class AnalyticsDashboardController extends Controller {
                             $query->where('id', $trainingId);
                         }
                     })
+                    ->when($hasGeoFilter, fn ($q) => $q->whereHas('user.facility', $geoScope))
                     ->whereBetween('registration_date', [$monthStart, $monthEnd])
                     ->count();
 
@@ -1188,8 +1310,33 @@ class AnalyticsDashboardController extends Controller {
         ];
     }
 
-    private function getChartDataSimple($year, $mode, $trainingId = null) {
+    private function getChartDataSimple($year, $mode, $trainingId = null, $countyId = null, $subcountyId = null, $facilityId = null) {
         $trainingType = $mode === 'training' ? 'global_training' : 'facility_mentorship';
+        $geoScope = fn ($q) => $this->applyFacilityGeoScope($q, $countyId, $subcountyId, $facilityId);
+        $hasGeoFilter = $countyId || $subcountyId || $facilityId;
+        $userFacilityGeoJoin = function ($q) use ($countyId, $subcountyId, $facilityId) {
+            $q->join('facilities', 'facilities.id', '=', 'users.facility_id');
+            if ($facilityId) {
+                $q->where('facilities.id', $facilityId);
+            } elseif ($subcountyId) {
+                $q->where('facilities.subcounty_id', $subcountyId);
+            } elseif ($countyId) {
+                $q->join('subcounties', 'subcounties.id', '=', 'facilities.subcounty_id')
+                    ->where('subcounties.county_id', $countyId);
+            }
+        };
+        $trainingFacilityGeoJoin = function ($q) use ($countyId, $subcountyId, $facilityId) {
+            if ($facilityId) {
+                $q->where('trainings.facility_id', $facilityId);
+            } elseif ($subcountyId) {
+                $q->join('facilities', 'facilities.id', '=', 'trainings.facility_id')
+                    ->where('facilities.subcounty_id', $subcountyId);
+            } elseif ($countyId) {
+                $q->join('facilities', 'facilities.id', '=', 'trainings.facility_id')
+                    ->join('subcounties', 'subcounties.id', '=', 'facilities.subcounty_id')
+                    ->where('subcounties.county_id', $countyId);
+            }
+        };
 
         // Base query for participants
         $baseQuery = TrainingParticipant::whereHas('training', function ($query) use ($trainingType, $year, $trainingId, $mode) {
@@ -1211,6 +1358,7 @@ class AnalyticsDashboardController extends Controller {
             $departmentData = (clone $baseQuery)
                     ->join('users', 'training_participants.user_id', '=', 'users.id')
                     ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                    ->when($hasGeoFilter, $userFacilityGeoJoin)
                     ->select('departments.name', DB::raw('COUNT(DISTINCT training_participants.user_id) as count'))
                     ->whereNotNull('departments.name')
                     ->groupBy('departments.id', 'departments.name')
@@ -1229,6 +1377,7 @@ class AnalyticsDashboardController extends Controller {
             $cadreData = (clone $baseQuery)
                     ->join('users', 'training_participants.user_id', '=', 'users.id')
                     ->leftJoin('cadres', 'users.cadre_id', '=', 'cadres.id')
+                    ->when($hasGeoFilter, $userFacilityGeoJoin)
                     ->select('cadres.name', DB::raw('COUNT(DISTINCT training_participants.user_id) as count'))
                     ->whereNotNull('cadres.name')
                     ->groupBy('cadres.id', 'cadres.name')
@@ -1246,8 +1395,8 @@ class AnalyticsDashboardController extends Controller {
         try {
             if ($mode === 'training') {
                 $facilityTypeData = FacilityType::withCount([
-                    'facilities as total_facilities',
-                    'facilities as facilities_with_training' => function ($query) use ($year, $trainingId) {
+                    'facilities as total_facilities' => $geoScope,
+                    'facilities as facilities_with_training' => function ($query) use ($year, $trainingId, $geoScope) {
                         $query->whereHas('users.trainingParticipations.training', function ($q) use ($year, $trainingId) {
                             $q->where('type', 'global_training');
                             if (!empty($year)) {
@@ -1257,17 +1406,18 @@ class AnalyticsDashboardController extends Controller {
                                 $q->where('id', $trainingId);
                             }
                         });
+                        $geoScope($query);
                     }
                 ])->get()->map(function ($type) {
-                    $type->coverage_percentage = $type->total_facilities > 0 ? 
+                    $type->coverage_percentage = $type->total_facilities > 0 ?
                         round(($type->facilities_with_training / $type->total_facilities) * 100, 1) : 0;
                     return $type;
                 });
             } else {
                 // For mentorship
                 $facilityTypeData = FacilityType::withCount([
-                    'facilities as total_facilities',
-                    'facilities as facilities_with_training' => function ($query) use ($year, $trainingId) {
+                    'facilities as total_facilities' => $geoScope,
+                    'facilities as facilities_with_training' => function ($query) use ($year, $trainingId, $geoScope) {
                         $query->whereHas('trainings', function ($q) use ($year, $trainingId) {
                             $q->where('type', 'facility_mentorship')->where('is_pilot', false);
                             if (!empty($year)) {
@@ -1277,9 +1427,10 @@ class AnalyticsDashboardController extends Controller {
                                 $q->where('id', $trainingId);
                             }
                         });
+                        $geoScope($query);
                     }
                 ])->get()->map(function ($type) {
-                    $type->coverage_percentage = $type->total_facilities > 0 ? 
+                    $type->coverage_percentage = $type->total_facilities > 0 ?
                         round(($type->facilities_with_training / $type->total_facilities) * 100, 1) : 0;
                     return $type;
                 });
@@ -1305,6 +1456,7 @@ class AnalyticsDashboardController extends Controller {
                                 $query->where('id', $trainingId);
                             }
                         })
+                        ->when($hasGeoFilter, fn ($q) => $q->whereHas('user.facility', $geoScope))
                         ->whereBetween('registration_date', [$monthStart, $monthEnd])
                         ->count();
 
@@ -1342,6 +1494,7 @@ class AnalyticsDashboardController extends Controller {
                 ->whereIn('class_participants.status', ['enrolled', 'active', 'completed'])
                 ->when(!empty($year), fn($q) => $q->whereYear('trainings.start_date', $year))
                 ->when($trainingId, fn($q) => $q->where('trainings.id', $trainingId))
+                ->when($hasGeoFilter, $trainingFacilityGeoJoin)
                 ->groupBy('class_participants.id')
                 ->selectRaw('
                     class_participants.id,
@@ -1372,13 +1525,16 @@ class AnalyticsDashboardController extends Controller {
             }
             $completionDistribution = $buckets;
 
-            $classStatusBreakdown = MentorshipClass::whereHas('training', function ($q) use ($year, $trainingId) {
+            $classStatusBreakdown = MentorshipClass::whereHas('training', function ($q) use ($year, $trainingId, $hasGeoFilter, $geoScope) {
                     $q->where('type', 'facility_mentorship')->where('is_pilot', false);
                     if (!empty($year)) {
                         $q->whereYear('start_date', $year);
                     }
                     if ($trainingId) {
                         $q->where('id', $trainingId);
+                    }
+                    if ($hasGeoFilter) {
+                        $q->whereHas('facility', $geoScope);
                     }
                 })
                 ->selectRaw("COALESCE(status, 'draft') as status, COUNT(*) as cnt")
@@ -1397,8 +1553,10 @@ class AnalyticsDashboardController extends Controller {
         ];
     }
 
-    private function getSummaryStatsSimple($year, $mode, $trainingId = null) {
+    private function getSummaryStatsSimple($year, $mode, $trainingId = null, $countyId = null, $subcountyId = null, $facilityId = null) {
         $trainingType = $mode === 'training' ? 'global_training' : 'facility_mentorship';
+        $geoScope = fn ($q) => $this->applyFacilityGeoScope($q, $countyId, $subcountyId, $facilityId);
+        $hasGeoFilter = $countyId || $subcountyId || $facilityId;
 
         try {
             $totalProgramsQuery = Training::where('type', $trainingType);
@@ -1411,6 +1569,13 @@ class AnalyticsDashboardController extends Controller {
             if ($trainingId) {
                 $totalProgramsQuery->where('id', $trainingId);
             }
+            if ($hasGeoFilter) {
+                if ($mode === 'training') {
+                    $totalProgramsQuery->whereHas('participants.user.facility', $geoScope);
+                } else {
+                    $totalProgramsQuery->whereHas('facility', $geoScope);
+                }
+            }
             $totalPrograms = $totalProgramsQuery->count();
 
             $totalParticipantsQuery = TrainingParticipant::whereHas('training', function ($query) use ($trainingType, $year, $trainingId) {
@@ -1422,6 +1587,9 @@ class AnalyticsDashboardController extends Controller {
                     $query->where('id', $trainingId);
                 }
             });
+            if ($hasGeoFilter) {
+                $totalParticipantsQuery->whereHas('user.facility', $geoScope);
+            }
             $totalParticipants = $totalParticipantsQuery->distinct('user_id')->count();
 
             // Total facilities for mentorship
@@ -1446,10 +1614,17 @@ class AnalyticsDashboardController extends Controller {
                     }
                 });
             }
+            if ($hasGeoFilter) {
+                $geoScope($totalFacilitiesQuery);
+            }
             $totalFacilities = $totalFacilitiesQuery->count();
 
             // Calculate facility coverage
-            $allFacilities = Facility::count();
+            $allFacilitiesQuery = Facility::query();
+            if ($hasGeoFilter) {
+                $geoScope($allFacilitiesQuery);
+            }
+            $allFacilities = $allFacilitiesQuery->count();
             $facilityCoverage = $allFacilities > 0 ? round(($totalFacilities / $allFacilities) * 100, 1) : 0;
 
             // Mentorship attendance rate
@@ -1463,6 +1638,18 @@ class AnalyticsDashboardController extends Controller {
                     ->whereNotIn('mentee_module_progress.status', ['exempted'])
                     ->when(!empty($year), fn($q) => $q->whereYear('trainings.start_date', $year))
                     ->when($trainingId, fn($q) => $q->where('trainings.id', $trainingId))
+                    ->when($hasGeoFilter, function ($q) use ($facilityId, $subcountyId, $countyId) {
+                        if ($facilityId) {
+                            $q->where('trainings.facility_id', $facilityId);
+                        } elseif ($subcountyId) {
+                            $q->join('facilities', 'facilities.id', '=', 'trainings.facility_id')
+                                ->where('facilities.subcounty_id', $subcountyId);
+                        } elseif ($countyId) {
+                            $q->join('facilities', 'facilities.id', '=', 'trainings.facility_id')
+                                ->join('subcounties', 'subcounties.id', '=', 'facilities.subcounty_id')
+                                ->where('subcounties.county_id', $countyId);
+                        }
+                    })
                     ->selectRaw('COUNT(*) as total_slots, SUM(CASE WHEN mentee_module_progress.status IN ("in_progress", "completed") THEN 1 ELSE 0 END) as present_slots')
                     ->first();
 
@@ -1490,11 +1677,17 @@ class AnalyticsDashboardController extends Controller {
     }
 
     // Updated county participants method
-    private function getCountyParticipants($countyId, $year, $mode, $trainingId = null) {
+    private function getCountyParticipants($countyId, $year, $mode, $trainingId = null, $subcountyId = null, $facilityId = null) {
         if ($mode === 'training') {
             // For training: participants from facilities in this county
-            $query = TrainingParticipant::whereHas('user.facility.subcounty', function ($query) use ($countyId) {
-                        $query->where('county_id', $countyId);
+            $query = TrainingParticipant::whereHas('user.facility', function ($query) use ($countyId, $subcountyId, $facilityId) {
+                        $query->whereHas('subcounty', fn ($s) => $s->where('county_id', $countyId));
+                        if ($subcountyId) {
+                            $query->where('subcounty_id', $subcountyId);
+                        }
+                        if ($facilityId) {
+                            $query->where('id', $facilityId);
+                        }
                     })->whereHas('training', function ($query) use ($year, $trainingId) {
                 $query->where('type', 'global_training');
                 if (!empty($year)) {
@@ -1506,10 +1699,16 @@ class AnalyticsDashboardController extends Controller {
             });
         } else {
             // For mentorship: participants in mentorship programs hosted by facilities in this county
-            $query = ClassParticipant::whereHas('mentorshipClass.training', function ($query) use ($countyId, $year, $trainingId) {
+            $query = ClassParticipant::whereHas('mentorshipClass.training', function ($query) use ($countyId, $subcountyId, $facilityId, $year, $trainingId) {
                 $query->where('type', 'facility_mentorship')
-                    ->whereHas('facility.subcounty', function ($q) use ($countyId) {
-                        $q->where('county_id', $countyId);
+                    ->whereHas('facility', function ($q) use ($countyId, $subcountyId, $facilityId) {
+                        $q->whereHas('subcounty', fn ($s) => $s->where('county_id', $countyId));
+                        if ($subcountyId) {
+                            $q->where('subcounty_id', $subcountyId);
+                        }
+                        if ($facilityId) {
+                            $q->where('id', $facilityId);
+                        }
                     });
                 if (!empty($year)) {
                     $query->whereYear('start_date', $year);
@@ -1524,7 +1723,7 @@ class AnalyticsDashboardController extends Controller {
     }
 
     // Updated county programs method
-    private function getCountyPrograms($countyId, $year, $mode, $trainingId = null) {
+    private function getCountyPrograms($countyId, $year, $mode, $trainingId = null, $subcountyId = null, $facilityId = null) {
         $trainingType = $mode === 'training' ? 'global_training' : 'facility_mentorship';
 
         $query = Training::where('type', $trainingType);
@@ -1540,16 +1739,22 @@ class AnalyticsDashboardController extends Controller {
             $query->where('id', $trainingId);
         }
 
+        $facilityConstraint = function ($q) use ($countyId, $subcountyId, $facilityId) {
+            $q->whereHas('subcounty', fn ($s) => $s->where('county_id', $countyId));
+            if ($subcountyId) {
+                $q->where('subcounty_id', $subcountyId);
+            }
+            if ($facilityId) {
+                $q->where('id', $facilityId);
+            }
+        };
+
         if ($mode === 'training') {
             // For training: programs that have participants from facilities in this county
-            $query->whereHas('participants.user.facility.subcounty', function ($q) use ($countyId) {
-                $q->where('county_id', $countyId);
-            });
+            $query->whereHas('participants.user.facility', $facilityConstraint);
         } else {
             // For mentorship: programs that are based in facilities in this county
-            $query->whereHas('facility.subcounty', function ($q) use ($countyId) {
-                $q->where('county_id', $countyId);
-            });
+            $query->whereHas('facility', $facilityConstraint);
         }
 
         return $query->count();

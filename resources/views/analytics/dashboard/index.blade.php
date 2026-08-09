@@ -19,6 +19,9 @@
 
 <meta name="dashboard-mode" content="{{ $mode ?? 'training' }}">
 <meta name="dashboard-year" content="{{ $selectedYear ?? '' }}">
+<meta name="dashboard-county-id" content="{{ $selectedCounty ?? '' }}">
+<meta name="dashboard-subcounty-id" content="{{ $selectedSubcounty ?? '' }}">
+<meta name="dashboard-facility-id" content="{{ $selectedFacility ?? '' }}">
 
 <style>
 :root {
@@ -337,6 +340,35 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     <button class="btn btn-outline-secondary w-100" id="clear-filters">
                         <i class="fas fa-times me-1"></i>Clear
                     </button>
+                </div>
+            </div>
+            <div class="row g-3 align-items-end mt-1">
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label">County</label>
+                    <select class="form-select" id="county-filter">
+                        <option value="">All Counties</option>
+                        @foreach($geoCounties ?? [] as $county)
+                            <option value="{{ $county->id }}" {{ ($selectedCounty ?? '') == $county->id ? 'selected' : '' }}>{{ $county->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label">Subcounty</label>
+                    <select class="form-select" id="subcounty-filter" {{ empty($selectedCounty) ? 'disabled' : '' }}>
+                        <option value="">All Subcounties</option>
+                        @foreach($geoSubcounties ?? [] as $sc)
+                            <option value="{{ $sc->id }}" {{ ($selectedSubcounty ?? '') == $sc->id ? 'selected' : '' }}>{{ $sc->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label">Facility</label>
+                    <select class="form-select" id="facility-filter" {{ empty($selectedSubcounty) ? 'disabled' : '' }}>
+                        <option value="">All Facilities</option>
+                        @foreach($geoFacilities ?? [] as $fac)
+                            <option value="{{ $fac->id }}" {{ ($selectedFacility ?? '') == $fac->id ? 'selected' : '' }}>{{ $fac->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
         </div>
@@ -816,6 +848,9 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
             charts: {},
             currentMode: document.querySelector('meta[name="dashboard-mode"]')?.content || 'training',
             currentYear: document.querySelector('meta[name="dashboard-year"]')?.content || '',
+            geoCountyId: document.querySelector('meta[name="dashboard-county-id"]')?.content || '',
+            geoSubcountyId: document.querySelector('meta[name="dashboard-subcounty-id"]')?.content || '',
+            geoFacilityId: document.querySelector('meta[name="dashboard-facility-id"]')?.content || '',
             facilityTypeData: null,
             originalTrainingsList: null
         },
@@ -858,6 +893,9 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     p.set('mode', Dashboard.state.currentMode);
                     if (Dashboard.state.currentYear) p.set('year', Dashboard.state.currentYear);
                     if (filterTrainingId) p.set('training_id', filterTrainingId);
+                    if (Dashboard.state.geoCountyId) p.set('county_id', Dashboard.state.geoCountyId);
+                    if (Dashboard.state.geoSubcountyId) p.set('subcounty_id', Dashboard.state.geoSubcountyId);
+                    if (Dashboard.state.geoFacilityId) p.set('facility_id', Dashboard.state.geoFacilityId);
                     const res = await fetch(`/analytics/dashboard/geojson?${p}`);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const data = await res.json();
@@ -1238,6 +1276,9 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     const p = new URLSearchParams({ mode: Dashboard.state.currentMode });
                     if (Dashboard.state.currentYear) p.set('year', Dashboard.state.currentYear);
                     if (trainingId) p.set('training_id', trainingId);
+                    if (Dashboard.state.geoCountyId) p.set('county_id', Dashboard.state.geoCountyId);
+                    if (Dashboard.state.geoSubcountyId) p.set('subcounty_id', Dashboard.state.geoSubcountyId);
+                    if (Dashboard.state.geoFacilityId) p.set('facility_id', Dashboard.state.geoFacilityId);
                     const res = await fetch(`/analytics/dashboard/training-data?${p}`);
                     if (!res.ok) return;
                     const json = await res.json();
@@ -1470,6 +1511,45 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                         }
                     });
                 }
+                // County filter — reload with county_id set, subcounty/facility reset
+                const countySel = document.getElementById('county-filter');
+                if (countySel) {
+                    countySel.addEventListener('change', function() {
+                        const url = new URL(window.location);
+                        url.searchParams.set('mode', Dashboard.state.currentMode);
+                        if (Dashboard.state.currentYear) url.searchParams.set('year', Dashboard.state.currentYear);
+                        this.value ? url.searchParams.set('county_id', this.value) : url.searchParams.delete('county_id');
+                        url.searchParams.delete('subcounty_id');
+                        url.searchParams.delete('facility_id');
+                        window.location.href = url.toString();
+                    });
+                }
+                // Subcounty filter — reload with subcounty_id set, facility reset
+                const subcountySel = document.getElementById('subcounty-filter');
+                if (subcountySel) {
+                    subcountySel.addEventListener('change', function() {
+                        const url = new URL(window.location);
+                        url.searchParams.set('mode', Dashboard.state.currentMode);
+                        if (Dashboard.state.currentYear) url.searchParams.set('year', Dashboard.state.currentYear);
+                        if (Dashboard.state.geoCountyId) url.searchParams.set('county_id', Dashboard.state.geoCountyId);
+                        this.value ? url.searchParams.set('subcounty_id', this.value) : url.searchParams.delete('subcounty_id');
+                        url.searchParams.delete('facility_id');
+                        window.location.href = url.toString();
+                    });
+                }
+                // Facility filter — reload with facility_id set
+                const facilitySel = document.getElementById('facility-filter');
+                if (facilitySel) {
+                    facilitySel.addEventListener('change', function() {
+                        const url = new URL(window.location);
+                        url.searchParams.set('mode', Dashboard.state.currentMode);
+                        if (Dashboard.state.currentYear) url.searchParams.set('year', Dashboard.state.currentYear);
+                        if (Dashboard.state.geoCountyId) url.searchParams.set('county_id', Dashboard.state.geoCountyId);
+                        if (Dashboard.state.geoSubcountyId) url.searchParams.set('subcounty_id', Dashboard.state.geoSubcountyId);
+                        this.value ? url.searchParams.set('facility_id', this.value) : url.searchParams.delete('facility_id');
+                        window.location.href = url.toString();
+                    });
+                }
                 // Clear filters
                 const clearBtn = document.getElementById('clear-filters');
                 if (clearBtn) {
@@ -1478,6 +1558,9 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                         url.searchParams.set('mode', Dashboard.state.currentMode);
                         url.searchParams.delete('year');
                         url.searchParams.delete('training_id');
+                        url.searchParams.delete('county_id');
+                        url.searchParams.delete('subcounty_id');
+                        url.searchParams.delete('facility_id');
                         window.location.href = url.toString();
                     });
                 }
