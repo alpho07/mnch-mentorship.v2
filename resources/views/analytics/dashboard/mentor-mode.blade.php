@@ -527,6 +527,11 @@
         try { return JSON.parse(document.getElementById(id)?.textContent || '{}'); } catch(e) { return {}; }
     }
 
+    const pctLabel = (value, ctx) => {
+        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+        return total > 0 && value > 0 ? Math.round((value / total) * 100) + '%' : '';
+    };
+
     function mkHBar(id, labels, data, colors, tooltipSuffix) {
         const el = document.getElementById(id);
         if (!el || !labels.length || typeof Chart === 'undefined') return;
@@ -535,7 +540,15 @@
             data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 4, borderSkipped: false }] },
             options: {
                 indexAxis: 'y', responsive: true, maintainAspectRatio: true,
-                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + (tooltipSuffix || '') } } },
+                plugins: {
+                    legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + (tooltipSuffix || '') } },
+                    datalabels: {
+                        display: true, anchor: 'end', align: 'end', offset: 4,
+                        color: '#374151', font: { size: 10, weight: '600' },
+                        formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                    },
+                },
+                layout: { padding: { right: 24 } },
                 scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 10 } } }, y: { ticks: { font: { size: 10 } } } }
             }
         });
@@ -547,7 +560,13 @@
         new Chart(el, {
             type: 'doughnut',
             data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 4 }] },
-            options: { responsive: true, maintainAspectRatio: true, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 7, boxWidth: 10 } } } }
+            options: {
+                responsive: true, maintainAspectRatio: true, cutout: '62%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 7, boxWidth: 10 } },
+                    datalabels: { display: true, color: '#fff', font: { size: 10, weight: '700' }, formatter: pctLabel },
+                },
+            }
         });
     }
 
@@ -598,7 +617,18 @@
             new Chart(trEl, {
                 type: 'line',
                 data: { labels: tr.map(t => t.short), datasets: [{ label: 'Classes', data: tr.map(t => t.count), borderColor: '#3B82F6', backgroundColor: grad, borderWidth: 2, fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#3B82F6', pointBorderColor: '#fff', pointBorderWidth: 2 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 } } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' }, ticks: { font: { size: 10 } } } } }
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            display: true, anchor: 'end', align: 'top', offset: 4,
+                            color: '#1D4ED8', font: { size: 10, weight: '600' },
+                            formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                        },
+                    },
+                    scales: { x: { grid: { display: false }, ticks: { font: { size: 10 } } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' }, ticks: { font: { size: 10 } } } }
+                }
             });
         }
 

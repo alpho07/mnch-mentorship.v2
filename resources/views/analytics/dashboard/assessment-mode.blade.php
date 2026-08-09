@@ -5,6 +5,7 @@
     $avgScore               = $summaryStats['avgScore'] ?? 0;
     $withSkillsLab          = $summaryStats['withSkillsLab'] ?? 0;
     $eligible               = $summaryStats['eligible'] ?? 0;
+    $readyForMentorship     = $summaryStats['readyForMentorship'] ?? 0;
     $facilityCoverage       = $summaryStats['facilityCoveragePercent'] ?? 0;
     $yoyChange              = $summaryStats['yoyChange'] ?? 0;
     $avgColor               = $avgScore >= 80 ? 'up' : ($avgScore >= 50 ? 'flat' : 'down');
@@ -115,9 +116,11 @@
             <div class="kpi-icon"><i class="fas fa-check-double"></i></div>
             <div class="kpi-value counter-animate" data-counter="{{ $eligible }}">0</div>
             <div class="kpi-label">Eligible for Mentorship</div>
-            @if($withSkillsLab > 0)
-                @php $partials = $withSkillsLab - $eligible; @endphp
-                <span class="kpi-trend flat">{{ $partials }} partial</span>
+            @php $pendingFeedback = $readyForMentorship - $eligible; @endphp
+            @if($pendingFeedback > 0)
+                <span class="kpi-trend flat" title="Have a skills lab/room but feedback not yet given">{{ $pendingFeedback }} pending feedback</span>
+            @elseif($readyForMentorship > 0)
+                <span class="kpi-trend up">All ready facilities eligible</span>
             @endif
         </div>
         @php $kpiDelay += 75; @endphp
@@ -159,6 +162,45 @@
 </div>
 @endif
 
+{{-- ████████ SKILLS LAB / ROOM × MENTORSHIP READINESS ████████ --}}
+@php
+    $sms = $skillsMentorshipStatus ?? ['total' => 0, 'goodProgress' => 0, 'needsMentorship' => 0, 'needsSetup' => 0, 'goodProgressPercent' => 0, 'needsMentorshipPercent' => 0, 'needsSetupPercent' => 0];
+@endphp
+@if($sms['total'] > 0)
+<div class="dash-section" data-aos="fade-up" data-aos-delay="120">
+    <div class="section-title"><i class="fas fa-flask"></i> Skills Lab/Room Readiness vs Mentorship</div>
+    <div class="insights-grid">
+        <div class="insight-card success clickable-insight" data-aos="fade-up" data-aos-delay="0"
+             onclick="window.dispatchEvent(new CustomEvent('filter-readiness', {detail:{ready:'yes',mentorship:'yes'}}))"
+             title="Click to view these facilities">
+            <div class="insight-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="insight-text">
+                <strong>{{ $sms['goodProgress'] }}</strong> ({{ $sms['goodProgressPercent'] }}%) have a skills lab/room <strong>and</strong> a live mentorship — good progress.
+                <div class="insight-cta">View facilities <i class="fas fa-arrow-right"></i></div>
+            </div>
+        </div>
+        <div class="insight-card warning clickable-insight" data-aos="fade-up" data-aos-delay="75"
+             onclick="window.dispatchEvent(new CustomEvent('filter-readiness', {detail:{ready:'yes',mentorship:'no'}}))"
+             title="Click to view these facilities">
+            <div class="insight-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="insight-text">
+                <strong>{{ $sms['needsMentorship'] }}</strong> ({{ $sms['needsMentorshipPercent'] }}%) have a skills lab/room but <strong>no</strong> mentorship yet — a missed opportunity.
+                <div class="insight-cta">View facilities <i class="fas fa-arrow-right"></i></div>
+            </div>
+        </div>
+        <div class="insight-card danger clickable-insight" data-aos="fade-up" data-aos-delay="150"
+             onclick="window.dispatchEvent(new CustomEvent('filter-readiness', {detail:{ready:'no',mentorship:'all'}}))"
+             title="Click to view these facilities">
+            <div class="insight-icon"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="insight-text">
+                <strong>{{ $sms['needsSetup'] }}</strong> ({{ $sms['needsSetupPercent'] }}%) have <strong>no</strong> skills lab or room — urgent need to set one up.
+                <div class="insight-cta">View facilities <i class="fas fa-arrow-right"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- ████████ CHARTS ROW 1 ████████ --}}
 <div class="dash-section" data-aos="fade-up" data-aos-delay="150">
     <div class="chart-row">
@@ -168,7 +210,7 @@
                     <h6><i class="fas fa-chart-bar"></i> Assessments Over Time</h6>
                     <small>Last 12 months by type</small>
                 </div>
-                <div class="chart-card-body"><canvas id="assessmentTrendChart" height="100"></canvas></div>
+                <div class="chart-card-body"><div class="chart-canvas-wrap"><canvas id="assessmentTrendChart"></canvas></div></div>
             </div>
         </div>
         <div class="chart-1-3">
@@ -177,8 +219,8 @@
                     <h6><i class="fas fa-circle-notch"></i> Grade Distribution</h6>
                     <small>Completed assessments</small>
                 </div>
-                <div class="chart-card-body" style="display:flex;justify-content:center;align-items:center;">
-                    <canvas id="gradeDistChart" style="max-height:220px;max-width:220px;"></canvas>
+                <div class="chart-card-body">
+                    <div class="chart-canvas-wrap"><canvas id="gradeDistChart"></canvas></div>
                 </div>
             </div>
         </div>
@@ -194,7 +236,7 @@
                     <h6><i class="fas fa-layer-group"></i> Section Score Averages</h6>
                     <small>Avg % across all completed assessments</small>
                 </div>
-                <div class="chart-card-body"><canvas id="sectionScoreChart" height="160"></canvas></div>
+                <div class="chart-card-body"><div class="chart-canvas-wrap"><canvas id="sectionScoreChart"></canvas></div></div>
             </div>
         </div>
         <div class="chart-half">
@@ -203,8 +245,8 @@
                     <h6><i class="fas fa-tasks"></i> Assessment Status</h6>
                     <small>Draft / In Progress / Completed</small>
                 </div>
-                <div class="chart-card-body" style="display:flex;justify-content:center;align-items:center;">
-                    <canvas id="statusChart" style="max-height:220px;max-width:220px;"></canvas>
+                <div class="chart-card-body">
+                    <div class="chart-canvas-wrap"><canvas id="statusChart"></canvas></div>
                 </div>
             </div>
         </div>
@@ -212,7 +254,7 @@
 </div>
 
 {{-- ████████ FACILITIES READINESS TABLE ████████ --}}
-<div class="dash-section" data-aos="fade-up" data-aos-delay="250" x-data="{
+<div class="dash-section" data-aos="fade-up" data-aos-delay="250" id="readinessSection" x-data="{
     filterSkillsLab: 'all',
     filterRoom: 'all',
     filterEligibility: 'all',
@@ -220,6 +262,7 @@
     filterType: 'all',
     filterMentorships: 'all',
     filterTraining: 'all',
+    filterFacilityReady: 'all',
     searchFacility: '',
     page: 1,
     perPage: 25,
@@ -265,8 +308,23 @@
         if (this.filterType !== 'all' && row.dataset.atype !== this.filterType) return false;
         if (this.filterMentorships !== 'all' && row.dataset.mentorships !== this.filterMentorships) return false;
         if (this.filterTraining !== 'all' && row.dataset.training !== this.filterTraining) return false;
+        if (this.filterFacilityReady !== 'all' && row.dataset.facilityReady !== this.filterFacilityReady) return false;
         if (this.searchFacility.trim() !== '' && !row.dataset.facility.includes(this.searchFacility.toLowerCase().trim())) return false;
         return true;
+    },
+
+    applyReadinessFilter(detail) {
+        this.filterSkillsLab = 'all';
+        this.filterRoom = 'all';
+        this.filterEligibility = 'all';
+        this.filterFeedback = 'all';
+        this.filterType = 'all';
+        this.filterTraining = 'all';
+        this.searchFacility = '';
+        this.filterFacilityReady = detail.ready;
+        this.filterMentorships = detail.mentorship;
+        this.page = 1;
+        this.$nextTick(() => document.getElementById('readinessSection').scrollIntoView({ behavior: 'smooth', block: 'start' }));
     },
 
     init() {
@@ -277,10 +335,11 @@
         this.$watch('filterType', () => this.page = 1);
         this.$watch('filterMentorships', () => this.page = 1);
         this.$watch('filterTraining', () => this.page = 1);
+        this.$watch('filterFacilityReady', () => this.page = 1);
         this.$watch('searchFacility', () => this.page = 1);
         this.$watch('perPage', () => this.page = 1);
     }
-}">
+}" x-on:filter-readiness.window="applyReadinessFilter($event.detail)">
     <div class="section-title d-flex align-items-center justify-content-between flex-wrap gap-2">
         <span><i class="fas fa-table"></i> Facilities Readiness &amp; Mentorship Eligibility</span>
         <a href="{{ route('analytics.dashboard.assessment.export-readiness', array_filter(['year' => $selectedYear, 'county_id' => $selectedCounty, 'subcounty_id' => $selectedSubcounty ?? null, 'facility_id' => $selectedFacility ?? null, 'assessment_type' => $selectedAssessmentType])) }}"
@@ -328,6 +387,14 @@
                     <option value="eligible">Eligible</option>
                     <option value="partial">Partial</option>
                     <option value="not_eligible">Not Eligible</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label">Facility Readiness</label>
+                <select class="form-select form-select-sm" x-model="filterFacilityReady">
+                    <option value="all">All</option>
+                    <option value="yes">Has Skills Lab/Room</option>
+                    <option value="no">No Skills Lab/Room</option>
                 </select>
             </div>
             <div class="col-auto">
@@ -392,6 +459,7 @@
                         $fbKey       = $assessment->feedback_given ? 'given' : 'pending';
                         $eligKey     = $assessment->eligibility_status;
                         $msKey       = $assessment->mentorship_count > 0 ? 'yes' : 'no';
+                        $readyKey    = ($assessment->has_skills_lab || $assessment->has_room) ? 'yes' : 'no';
                         $trainingKey = $eligKey !== 'eligible' ? 'not_eligible' : ($assessment->has_prior_training ? 'yes' : 'no');
                         $eligStyle   = match($eligKey) {
                             'eligible' => 'background:#D1FAE5;color:#065F46',
@@ -413,6 +481,7 @@
                         data-atype="{{ $assessment->assessment_type }}"
                         data-mentorships="{{ $msKey }}"
                         data-training="{{ $trainingKey }}"
+                        data-facility-ready="{{ $readyKey }}"
                         data-facility="{{ strtolower($assessment->facility->name) }}"
                     >
                         <td>
@@ -553,6 +622,11 @@
 @push('scripts')
 <script>
 (function () {
+    const pct = (value, ctx) => {
+        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+        return total > 0 && value > 0 ? Math.round((value / total) * 100) + '%' : '';
+    };
+
     const trendChart = document.getElementById('assessmentTrendChart');
     if (trendChart) {
         new Chart(trendChart, {
@@ -565,7 +639,18 @@
                     { label: 'Endline',  data: {!! json_encode(array_column($chartData['monthlyTrend'], 'endline'))  !!}, backgroundColor: '#8B5CF6' },
                 ]
             },
-            options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked: false }, y: { beginAtZero: true, stacked: false } } }
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    datalabels: {
+                        display: true, anchor: 'end', align: 'top', offset: 2,
+                        color: '#374151', font: { size: 10, weight: '600' },
+                        formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                    },
+                },
+                scales: { x: { stacked: false }, y: { beginAtZero: true, stacked: false } },
+            }
         });
     }
 
@@ -577,7 +662,16 @@
                 labels: ['Good (≥80%)', 'Fair (50–79%)', 'Poor (<50%)'],
                 datasets: [{ data: [{{ $chartData['gradeDistribution']['green'] }}, {{ $chartData['gradeDistribution']['yellow'] }}, {{ $chartData['gradeDistribution']['red'] }}], backgroundColor: ['#10B981','#F59E0B','#EF4444'], borderWidth: 2 }]
             },
-            options: { responsive: true, cutout: '65%', plugins: { legend: { position: 'bottom' } } }
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom' },
+                    datalabels: {
+                        display: true, color: '#fff', font: { size: 11, weight: '700' },
+                        formatter: pct,
+                    },
+                },
+            }
         });
     }
 
@@ -593,7 +687,19 @@
                     backgroundColor: {!! json_encode($chartData['sectionAverages']->pluck('color')->toArray()) !!},
                 }]
             },
-            options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, max: 100 } } }
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: true, anchor: 'end', align: 'end', offset: 4,
+                        color: '#374151', font: { size: 10, weight: '600' },
+                        formatter: (value) => value > 0 ? value + '%' : '',
+                    },
+                },
+                layout: { padding: { right: 30 } },
+                scales: { x: { beginAtZero: true, max: 100 } },
+            }
         });
     }
 
@@ -605,7 +711,16 @@
                 labels: ['Completed', 'In Progress', 'Draft'],
                 datasets: [{ data: [{{ $chartData['statusBreakdown']['completed'] }}, {{ $chartData['statusBreakdown']['in_progress'] }}, {{ $chartData['statusBreakdown']['draft'] }}], backgroundColor: ['#0097A7','#F59E0B','#94A3B8'], borderWidth: 2 }]
             },
-            options: { responsive: true, cutout: '65%', plugins: { legend: { position: 'bottom' } } }
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom' },
+                    datalabels: {
+                        display: true, color: '#fff', font: { size: 11, weight: '700' },
+                        formatter: pct,
+                    },
+                },
+            }
         });
     }
 })();

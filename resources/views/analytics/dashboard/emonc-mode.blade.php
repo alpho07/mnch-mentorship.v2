@@ -453,6 +453,11 @@
         try { return JSON.parse(document.getElementById(id)?.textContent || '{}'); } catch (e) { return {}; }
     }
 
+    const pctLabel = (value, ctx) => {
+        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+        return total > 0 && value > 0 ? Math.round((value / total) * 100) + '%' : '';
+    };
+
     function mkLine(id, labels, data, label) {
         const el = document.getElementById(id);
         if (!el || typeof Chart === 'undefined') return;
@@ -463,7 +468,18 @@
         new Chart(ctx, {
             type: 'line',
             data: { labels, datasets: [{ label, data, borderColor: '#0097A7', backgroundColor: grad, borderWidth: 2.5, fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#0097A7', pointBorderColor: '#fff', pointBorderWidth: 2 }] },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 11 } } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 } } } } }
+            options: {
+                responsive: true, maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }, tooltip: { mode: 'index', intersect: false },
+                    datalabels: {
+                        display: true, anchor: 'end', align: 'top', offset: 4,
+                        color: '#00707D', font: { size: 10, weight: '600' },
+                        formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                    },
+                },
+                scales: { x: { grid: { display: false }, ticks: { font: { size: 11 } } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 } } } }
+            }
         });
     }
 
@@ -473,7 +489,13 @@
         new Chart(el, {
             type: 'doughnut',
             data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 4 }] },
-            options: { responsive: true, maintainAspectRatio: true, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 8, boxWidth: 12 } } } }
+            options: {
+                responsive: true, maintainAspectRatio: true, cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 8, boxWidth: 12 } },
+                    datalabels: { display: true, color: '#fff', font: { size: 10, weight: '700' }, formatter: pctLabel },
+                },
+            }
         });
     }
 
@@ -483,7 +505,19 @@
         new Chart(el, {
             type: 'bar',
             data: { labels, datasets: [{ label, data, backgroundColor: labels.map((_, i) => TEAL_COLORS[i % TEAL_COLORS.length]), borderRadius: 6, borderSkipped: false }] },
-            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' } }, y: { ticks: { font: { size: 11 } } } } }
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: true, anchor: 'end', align: 'end', offset: 4,
+                        color: '#374151', font: { size: 10, weight: '600' },
+                        formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                    },
+                },
+                layout: { padding: { right: 24 } },
+                scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' } }, y: { ticks: { font: { size: 11 } } } }
+            }
         });
     }
 
@@ -493,7 +527,18 @@
         new Chart(el, {
             type: 'bar',
             data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + ' mentee' + (c.raw === 1 ? '' : 's') } } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 11 } } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 11 } } } } }
+            options: {
+                responsive: true, maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + ' mentee' + (c.raw === 1 ? '' : 's') } },
+                    datalabels: {
+                        display: true, anchor: 'end', align: 'top', offset: 2,
+                        color: '#374151', font: { size: 10, weight: '600' },
+                        formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                    },
+                },
+                scales: { x: { grid: { display: false }, ticks: { font: { size: 11 } } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 11 } } } }
+            }
         });
     }
 
@@ -536,7 +581,18 @@
                     labels: ft.map(f => f.name || 'Unknown'),
                     datasets: [{ label: 'EmONC Facilities', data: ft.map(f => f.facilities_with_training || 0), backgroundColor: '#0097A7', borderRadius: 4 }]
                 },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }, scales: { x: { ticks: { font: { size: 10 } } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' } } } }
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 11 } } },
+                        datalabels: {
+                            display: true, anchor: 'end', align: 'top', offset: 2,
+                            color: '#374151', font: { size: 10, weight: '600' },
+                            formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                        },
+                    },
+                    scales: { x: { ticks: { font: { size: 10 } } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' } } }
+                }
             });
         }
 

@@ -102,17 +102,58 @@ class AssessmentAnalyticsService
             ->distinct('assessments.facility_id')
             ->count('assessments.facility_id');
 
+        // Ready = has skills lab OR room/space, regardless of whether
+        // feedback has been given yet (the physical-readiness superset that
+        // $eligible narrows down with the feedback_given requirement — use
+        // this, not $withSkillsLab, to compute "pending feedback" so the
+        // math can't go negative: $withSkillsLab only counts a dedicated
+        // lab and excludes room-only facilities that $eligible does count).
+        $readyForMentorship = (int) DB::table('assessments')
+            ->where('assessments.status', 'completed')
+            ->whereNull('assessments.deleted_at')
+            ->where(function ($q) use ($skillsMasterQId, $skillsRoomQId) {
+                $q->whereExists(function ($sub) use ($skillsMasterQId) {
+                    $sub->select(DB::raw(1))
+                        ->from('assessment_question_responses as aqr')
+                        ->whereColumn('aqr.assessment_id', 'assessments.id')
+                        ->where('aqr.assessment_question_id', (int) $skillsMasterQId)
+                        ->where('aqr.response_value', 'Yes');
+                })->orWhereExists(function ($sub) use ($skillsRoomQId) {
+                    $sub->select(DB::raw(1))
+                        ->from('assessment_question_responses as aqr')
+                        ->whereColumn('aqr.assessment_id', 'assessments.id')
+                        ->where('aqr.assessment_question_id', (int) $skillsRoomQId)
+                        ->where('aqr.response_value', 'Yes');
+                });
+            })
+            ->when($year, fn($q) => $q->whereYear('assessments.assessment_date', $year))
+            ->when($assessmentType, fn($q) => $q->where('assessments.assessment_type', $assessmentType))
+            ->when($facilityIds !== null, fn($q) => $q->whereIn('assessments.facility_id', $facilityIds))
+            ->distinct('assessments.facility_id')
+            ->count('assessments.facility_id');
+
         $facilityCoveragePercent = $allFacilities > 0
             ? round(($facilitiesAssessed / $allFacilities) * 100, 1)
             : 0;
 
-        // Facilities with at least one mentorship programme
+        // Facilities with at least one live mentorship (non-pilot, active/
+        // completed, and actually has an enrolled mentee — matches the
+        // facilities readiness table's mentorship_count definition)
         $withMentorships = (int) DB::table('assessments')
             ->join('trainings', 'trainings.facility_id', '=', 'assessments.facility_id')
             ->where('assessments.status', 'completed')
             ->whereNull('assessments.deleted_at')
             ->where('trainings.type', 'facility_mentorship')
             ->whereNull('trainings.deleted_at')
+            ->where('trainings.is_pilot', false)
+            ->whereIn('trainings.status', ['active', 'completed'])
+            ->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('mentorship_classes as mc')
+                    ->join('class_participants as cp', 'cp.mentorship_class_id', '=', 'mc.id')
+                    ->whereColumn('mc.training_id', 'trainings.id')
+                    ->whereIn('cp.status', ['enrolled', 'active', 'completed']);
+            })
             ->when($year, fn($q) => $q->whereYear('assessments.assessment_date', $year))
             ->when($assessmentType, fn($q) => $q->where('assessments.assessment_type', $assessmentType))
             ->when($facilityIds !== null, fn($q) => $q->whereIn('assessments.facility_id', $facilityIds))
@@ -134,7 +175,7 @@ class AssessmentAnalyticsService
 
         return compact(
             'uniqueAssessments', 'facilitiesAssessed', 'allFacilities',
-            'avgScore', 'withSkillsLab', 'eligible',
+            'avgScore', 'withSkillsLab', 'eligible', 'readyForMentorship',
             'facilityCoveragePercent', 'yoyChange', 'curYear',
             'withMentorships', 'mentorshipCoverage'
         );
@@ -148,6 +189,7 @@ class AssessmentAnalyticsService
         $coverage           = $stats['facilityCoveragePercent'] ?? 0;
         $withSkillsLab      = $stats['withSkillsLab'] ?? 0;
         $eligible           = $stats['eligible'] ?? 0;
+        $readyForMentorship = $stats['readyForMentorship'] ?? 0;
         $avgScore           = $stats['avgScore'] ?? 0;
 
         if ($coverage >= 60) {
@@ -161,16 +203,16 @@ class AssessmentAnalyticsService
                 "Low coverage at {$coverage}% — significant outreach needed; " . ($allFacilities - $facilitiesAssessed) . " facilities unassessed."];
         }
 
-        $noSkillsLab = $facilitiesAssessed - $withSkillsLab;
+        $noSkillsLab = $facilitiesAssessed - $readyForMentorship;
         if ($noSkillsLab > 0) {
             $insights[] = ['type' => 'warning', 'icon' => 'exclamation-triangle', 'text' =>
-                "{$noSkillsLab} assessed " . str('facility')->plural($noSkillsLab) . " lack a skills lab — not eligible for mentorship training."];
+                "{$noSkillsLab} assessed " . str('facility')->plural($noSkillsLab) . " lack a skills lab or room — not eligible for mentorship training."];
         }
 
-        $pendingFeedback = $withSkillsLab - $eligible;
+        $pendingFeedback = $readyForMentorship - $eligible;
         if ($pendingFeedback > 0) {
             $insights[] = ['type' => 'info', 'icon' => 'clock', 'text' =>
-                "{$pendingFeedback} " . str('facility')->plural($pendingFeedback) . " have a skills lab but feedback not given — partially eligible for mentorship."];
+                "{$pendingFeedback} " . str('facility')->plural($pendingFeedback) . " have a skills lab/room but feedback not given — partially eligible for mentorship."];
         }
 
         if ($avgScore > 0) {
@@ -238,7 +280,7 @@ class AssessmentAnalyticsService
                 DB::raw('ROUND(AVG(assessment_section_scores.percentage), 1) as avg_percentage')
             )
             ->groupBy('assessment_sections.id', 'assessment_sections.name', 'assessment_sections.code')
-            ->orderBy('assessment_sections.order')
+            ->orderByDesc('avg_percentage')
             ->get()
             ->map(fn($row) => [
                 'name'       => $row->name,
@@ -331,7 +373,7 @@ class AssessmentAnalyticsService
                       WHERE t.facility_id = assessments.facility_id
                       AND t.type = "facility_mentorship"
                       AND t.deleted_at IS NULL
-                      AND t.status = "active"
+                      AND t.status IN ("active", "completed")
                       AND t.is_pilot = 0
                       AND EXISTS (
                           SELECT 1 FROM mentorship_classes mc
@@ -346,6 +388,48 @@ class AssessmentAnalyticsService
             ->map(fn ($assessment) => $this->hydrateReadiness($assessment));
 
         return $assessments;
+    }
+
+    /**
+     * Crosses skills-lab/room readiness against live mentorship presence
+     * for each assessed facility's latest completed assessment (one row
+     * per facility, sourced from getFacilitiesReadiness()):
+     *
+     *  - Skills lab/room + mentorship  -> good progress
+     *  - Skills lab/room, no mentorship -> missed opportunity
+     *  - No skills lab/room at all      -> urgent setup needed
+     */
+    public function summarizeSkillsLabMentorshipStatus(Collection $facilitiesReadiness): array
+    {
+        $goodProgress    = 0;
+        $needsMentorship = 0;
+        $needsSetup      = 0;
+
+        foreach ($facilitiesReadiness as $assessment) {
+            $hasFacility   = $assessment->has_skills_lab || $assessment->has_room;
+            $hasMentorship = ($assessment->mentorship_count ?? 0) > 0;
+
+            if (! $hasFacility) {
+                $needsSetup++;
+            } elseif ($hasMentorship) {
+                $goodProgress++;
+            } else {
+                $needsMentorship++;
+            }
+        }
+
+        $total = $facilitiesReadiness->count();
+        $pct   = fn (int $n) => $total > 0 ? round(($n / $total) * 100, 1) : 0;
+
+        return [
+            'total'                  => $total,
+            'goodProgress'           => $goodProgress,
+            'needsMentorship'        => $needsMentorship,
+            'needsSetup'             => $needsSetup,
+            'goodProgressPercent'    => $pct($goodProgress),
+            'needsMentorshipPercent' => $pct($needsMentorship),
+            'needsSetupPercent'      => $pct($needsSetup),
+        ];
     }
 
     private function hydrateReadiness(Assessment $assessment): Assessment

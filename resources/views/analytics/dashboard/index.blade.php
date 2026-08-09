@@ -129,6 +129,10 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
 .insight-card.primary .insight-icon { background: var(--teal-50); color: var(--teal); }
 .insight-card.info    .insight-icon { background: #DBEAFE; color: #1D4ED8; }
 .insight-text { font-size: .855rem; color: var(--gray-700); line-height: 1.5; }
+.clickable-insight { cursor: pointer; transition: transform .15s, box-shadow .15s; }
+.clickable-insight:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.1); }
+.insight-cta { margin-top: .4rem; font-size: .75rem; font-weight: 700; color: var(--teal); }
+.clickable-insight:hover .insight-cta { text-decoration: underline; }
 
 /* ── Charts ── */
 .chart-card { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); border: 1px solid var(--gray-200); overflow: hidden; }
@@ -141,6 +145,7 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
 .chart-1-3 { flex: 1; min-width: 0; }
 .chart-row { display: flex; gap: 1.25rem; }
 .chart-half { flex: 1; min-width: 0; }
+.chart-canvas-wrap { position: relative; width: 100%; height: 280px; }
 
 /* ── Map section ── */
 .map-container { position: relative; border-radius: 8px; overflow: hidden; }
@@ -837,6 +842,11 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
         // convert hex to rgba approximation — just return solid colors
         return c;
     };
+    const pctLabel = (value, ctx) => {
+        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+        return total > 0 && value > 0 ? Math.round((value / total) * 100) + '%' : '';
+    };
+    const valueLabel = (value) => (typeof value === 'number' && value > 0) ? value.toLocaleString() : '';
 
     // ── Dashboard state ──
     const Dashboard = {
@@ -1087,7 +1097,14 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     }]},
                     options: {
                         responsive: true, maintainAspectRatio: true,
-                        plugins: { legend:{ display:false }, tooltip:{ mode:'index', intersect:false } },
+                        plugins: {
+                            legend:{ display:false }, tooltip:{ mode:'index', intersect:false },
+                            datalabels: {
+                                display: true, anchor: 'end', align: 'top', offset: 4,
+                                color: '#00707D', font: { size: 10, weight: '600' },
+                                formatter: valueLabel,
+                            },
+                        },
                         scales: {
                             x: { grid:{ display:false }, ticks:{ font:{size:11} } },
                             y: { beginAtZero:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{size:11} } }
@@ -1110,7 +1127,10 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor:'#fff', hoverOffset: 4 }] },
                     options: {
                         responsive: true, maintainAspectRatio: true, cutout: '65%',
-                        plugins: { legend:{ position:'bottom', labels:{ font:{size:11}, padding:8, boxWidth:12 } } }
+                        plugins: {
+                            legend:{ position:'bottom', labels:{ font:{size:11}, padding:8, boxWidth:12 } },
+                            datalabels: { display: true, color: '#fff', font: { size: 10, weight: '700' }, formatter: pctLabel },
+                        }
                     }
                 });
             },
@@ -1130,7 +1150,15 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     },
                     options: {
                         indexAxis: 'y', responsive: true, maintainAspectRatio: true,
-                        plugins: { legend:{ display:false } },
+                        plugins: {
+                            legend:{ display:false },
+                            datalabels: {
+                                display: true, anchor: 'end', align: 'end', offset: 4,
+                                color: '#374151', font: { size: 10, weight: '600' },
+                                formatter: valueLabel,
+                            },
+                        },
+                        layout: { padding: { right: 24 } },
                         scales: { x:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.04)' } }, y:{ ticks:{ font:{size:11} } } }
                     }
                 });
@@ -1150,7 +1178,10 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     },
                     options: {
                         responsive: true, maintainAspectRatio: true, cutout:'55%',
-                        plugins: { legend:{ position:'bottom', labels:{ font:{size:10}, padding:8, boxWidth:11 } } }
+                        plugins: {
+                            legend:{ position:'bottom', labels:{ font:{size:10}, padding:8, boxWidth:11 } },
+                            datalabels: { display: true, color: '#fff', font: { size: 10, weight: '700' }, formatter: pctLabel },
+                        }
                     }
                 });
             },
@@ -1172,7 +1203,14 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     },
                     options: {
                         responsive: true, maintainAspectRatio: true,
-                        plugins: { legend:{ position:'bottom', labels:{ font:{size:11}, padding:8, boxWidth:12 } } },
+                        plugins: {
+                            legend:{ position:'bottom', labels:{ font:{size:11}, padding:8, boxWidth:12 } },
+                            datalabels: {
+                                display: true, anchor: 'end', align: 'top', offset: 2,
+                                color: '#374151', font: { size: 9, weight: '600' },
+                                formatter: valueLabel,
+                            },
+                        },
                         scales: { x:{ stacked:false, ticks:{ font:{size:10} } }, y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.04)' } } }
                     }
                 });
@@ -1194,7 +1232,15 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     },
                     options: {
                         indexAxis: 'y', responsive: true, maintainAspectRatio: true,
-                        plugins: { legend:{ display:false } },
+                        plugins: {
+                            legend:{ display:false },
+                            datalabels: {
+                                display: true, anchor: 'end', align: 'end', offset: 4,
+                                color: '#374151', font: { size: 10, weight: '600' },
+                                formatter: valueLabel,
+                            },
+                        },
+                        layout: { padding: { right: 24 } },
                         scales: { x:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.04)' } }, y:{ ticks:{ font:{size:11} } } }
                     }
                 });
@@ -1212,7 +1258,10 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     type:'doughnut',
                     data:{ labels, datasets:[{ data, backgroundColor: Object.keys(ms).map(k=>colors[k]||colors.default), borderWidth:2, borderColor:'#fff', hoverOffset:4 }] },
                     options:{ responsive:true, maintainAspectRatio:true, cutout:'60%',
-                        plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, padding:8, boxWidth:11 } } } }
+                        plugins:{
+                            legend:{ position:'bottom', labels:{ font:{size:11}, padding:8, boxWidth:11 } },
+                            datalabels: { display: true, color: '#fff', font: { size: 10, weight: '700' }, formatter: pctLabel },
+                        } }
                 });
             },
 
@@ -1230,7 +1279,15 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     },
                     options: {
                         indexAxis:'y', responsive:true, maintainAspectRatio:true,
-                        plugins:{ legend:{ display:false } },
+                        plugins:{
+                            legend:{ display:false },
+                            datalabels: {
+                                display: true, anchor: 'end', align: 'end', offset: 4,
+                                color: '#374151', font: { size: 10, weight: '600' },
+                                formatter: valueLabel,
+                            },
+                        },
+                        layout: { padding: { right: 24 } },
                         scales:{ x:{ beginAtZero:true }, y:{ ticks:{ font:{size:10} } } }
                     }
                 });
@@ -1249,7 +1306,10 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     type:'doughnut',
                     data:{ labels, datasets:[{ data, backgroundColor: colors, borderWidth:2, borderColor:'#fff', hoverOffset:4 }] },
                     options:{ responsive:true, maintainAspectRatio:true, cutout:'60%',
-                        plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, padding:8, boxWidth:11 } } } }
+                        plugins:{
+                            legend:{ position:'bottom', labels:{ font:{size:11}, padding:8, boxWidth:11 } },
+                            datalabels: { display: true, color: '#fff', font: { size: 10, weight: '700' }, formatter: pctLabel },
+                        } }
                 });
             },
 
@@ -1266,7 +1326,14 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                     type:'bar',
                     data:{ labels, datasets:[{ label:'Mentees', data, backgroundColor: bucketColors, borderRadius:6, borderSkipped:false }] },
                     options:{ responsive:true, maintainAspectRatio:true,
-                        plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label: c => `${c.raw} mentee${c.raw===1?'':'s'}` } } },
+                        plugins:{
+                            legend:{ display:false }, tooltip:{ callbacks:{ label: c => `${c.raw} mentee${c.raw===1?'':'s'}` } },
+                            datalabels: {
+                                display: true, anchor: 'end', align: 'top', offset: 2,
+                                color: '#374151', font: { size: 10, weight: '600' },
+                                formatter: valueLabel,
+                            },
+                        },
                         scales:{ x:{ grid:{ display:false }, ticks:{ font:{size:11} } }, y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,.04)' }, ticks:{ font:{size:11} } } } }
                 });
             },
