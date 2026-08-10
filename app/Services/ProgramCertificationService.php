@@ -126,8 +126,8 @@ class ProgramCertificationService
                 'modules_total' => $total,
                 'percent' => $total > 0 ? round(($doneCount / $total) * 100) : 0,
                 'is_certified' => $isCertified,
-                'cert_url' => $isCertified ? route('mentor.program-certificate', ['program' => $program->id]) : null,
-                'preview_url' => $isCertified ? route('mentor.program-certificate.preview', ['program' => $program->id]) : null,
+                'cert_url' => $isCertified ? route('reports.mentor.program-certificate', ['program' => $program->id]) : null,
+                'preview_url' => $isCertified ? route('reports.mentor.program-certificate.preview', ['program' => $program->id]) : null,
                 'classes' => $group->map(fn (Training $t) => [
                     'title' => $t->title,
                     'facility' => $t->facility?->name ?? '—',

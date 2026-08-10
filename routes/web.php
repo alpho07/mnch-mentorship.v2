@@ -44,6 +44,9 @@ Route::middleware(['auth'])->prefix('admin/reports')->name('reports.')->group(fu
     Route::get('/class/{class}/mentor-certificate/preview', [\App\Http\Controllers\ClassReportController::class, 'mentorCertificateHtml'])->name('class.mentor-certificate.preview');
     Route::get('/mentor-certificate/program/{program}', [\App\Http\Controllers\ClassReportController::class, 'mentorProgramCertificate'])->name('mentor.program-certificate');
     Route::get('/mentor-certificate/program/{program}/preview', [\App\Http\Controllers\ClassReportController::class, 'mentorProgramCertificateHtml'])->name('mentor.program-certificate.preview');
+    // Admin-viewable — same shape as class.certificate above, for viewing any mentor's certificate without impersonation.
+    Route::get('/mentor-certificate/{mentor}/program/{program}', [\App\Http\Controllers\ClassReportController::class, 'mentorProgramCertificateFor'])->name('mentor.program-certificate.for');
+    Route::get('/mentor-certificate/{mentor}/program/{program}/preview', [\App\Http\Controllers\ClassReportController::class, 'mentorProgramCertificateHtmlFor'])->name('mentor.program-certificate.preview.for');
 });
 
 Route::middleware(['auth', 'throttle:downloads'])

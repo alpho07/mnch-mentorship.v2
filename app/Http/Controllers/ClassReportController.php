@@ -247,11 +247,32 @@ class ClassReportController extends Controller
 
     public function mentorProgramCertificate(Program $program)
     {
-        $data = $this->buildMentorProgramCertificateData($program);
+        return $this->downloadMentorProgramCertificate($this->buildMentorProgramCertificateData($program));
+    }
+
+    /**
+     * Admin-viewable versions of the two above — same eligibility/authorization
+     * logic, just for a specific $mentor rather than the logged-in viewer.
+     */
+    public function mentorProgramCertificateHtmlFor(User $mentor, Program $program)
+    {
+        $data = $this->buildMentorProgramCertificateData($program, $mentor);
+        $data['isPdf'] = false;
+
+        return view('certificates.mentor-program-completion', $data);
+    }
+
+    public function mentorProgramCertificateFor(User $mentor, Program $program)
+    {
+        return $this->downloadMentorProgramCertificate($this->buildMentorProgramCertificateData($program, $mentor));
+    }
+
+    private function downloadMentorProgramCertificate(array $data)
+    {
         $data['isPdf'] = true;
 
         $name = str($data['mentor']->name ?? 'mentor')->slug();
-        $filename = "MNCH-Mentor-Certificate-{$name}-".str($program->name)->slug().'-'.now()->format('Y-m-d').'.pdf';
+        $filename = "MNCH-Mentor-Certificate-{$name}-".str($data['program']->name)->slug().'-'.now()->format('Y-m-d').'.pdf';
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.mentor-program-completion', $data)
             ->setPaper('a4', 'landscape')
@@ -268,11 +289,21 @@ class ClassReportController extends Controller
     /**
      * Self-serve mentor program certificate: no persisted approval flag —
      * eligibility is computed live from ProgramCertificationService, same as
-     * the progress shown on the Mentor Certificates page.
+     * the progress shown on the Mentor Certificates page. An admin-tier
+     * viewer (same role list as authorizeClass()) may pass $mentor to view
+     * any mentor's certificate, mirroring how they can already view any
+     * mentee's certificate; anyone else viewing someone other than
+     * themselves is rejected.
      */
-    private function buildMentorProgramCertificateData(Program $program): array
+    private function buildMentorProgramCertificateData(Program $program, ?User $mentor = null): array
     {
-        $mentor = Auth::user();
+        $viewer = Auth::user();
+
+        if ($mentor && $mentor->id !== $viewer->id) {
+            abort_unless($viewer->hasRole(['super_admin', 'admin', 'division', 'national_mentor_lead', 'head_drmh']), 403);
+        }
+
+        $mentor ??= $viewer;
 
         $progress = collect(app(ProgramCertificationService::class)->mentorProgress($mentor))
             ->firstWhere('program_id', $program->id);
