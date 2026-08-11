@@ -774,4 +774,74 @@ textarea.fi-input:focus,
     text-decoration: none;
     transition: background 0.15s;
 }
+
+/* ============================================
+   EmONC-style bordered data tables
+   (DynamicFormBuilder::buildGroupFieldset() / buildTableFieldset())
+   ============================================ */
+
+/* Both info tables (Person In Charge, Respondent) and repeating-row
+   tables (Human Resources) render as a Filament Fieldset whose grid gap
+   is collapsed to 0 and each cell given its own border, so adjacent
+   cells butt up against each other like a real <table>. */
+.aqs-info-table,
+.aqs-data-table {
+    padding: 0 !important;
+    overflow: hidden;
+    border-radius: 0.5rem;
+}
+.aqs-info-table > legend,
+.aqs-data-table > legend {
+    background: #1e3a5f;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    margin: 0 !important;
+    width: 100%;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+.aqs-info-table .fi-fo-component-ctn,
+.aqs-data-table .fi-fo-component-ctn {
+    gap: 0 !important;
+}
+.aqs-info-table .fi-fo-component-ctn > div,
+.aqs-data-table .fi-fo-component-ctn > div {
+    border: 1px solid #d1d5db;
+    margin: -1px 0 0 -1px;
+    padding: 0.625rem 0.875rem;
+    background: #fff;
+}
+.dark .aqs-info-table .fi-fo-component-ctn > div,
+.dark .aqs-data-table .fi-fo-component-ctn > div {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: transparent;
+}
+
+/* Repeating-row tables (Human Resources) also get a dark header row —
+   the first row's cells are tagged .aqs-header-cell by buildTableFieldset()
+   — matching the source survey's header-row-then-data-rows layout. Info
+   tables (single row) skip this: label-above-input is already the header. */
+.aqs-data-table .aqs-header-cell {
+    background: #1e3a5f !important;
+}
+.aqs-data-table .aqs-header-cell label {
+    color: #fff !important;
+    font-weight: 600;
+}
+
+/* Repeater tables (add/remove-row: Action Plans, Monthly Referrals,
+   Gaps, Success Stories) — bordered boxed rows instead of Filament's
+   default plain stacked look, so each row reads as a table row. */
+.aqs-repeater-table > .fi-fo-repeater-items {
+    gap: 0.5rem;
+}
+.aqs-repeater-table .fi-fo-repeater-item {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background: #fff;
+}
+.dark .aqs-repeater-table .fi-fo-repeater-item {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: transparent;
+}
 .guide-btn-create:hover { background: #15803d; }

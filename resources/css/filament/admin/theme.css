@@ -325,5 +325,62 @@ html {
 
 
 
+/* ============================================
+   EmONC-style bordered data tables
+   (DynamicFormBuilder::buildGroupFieldset() / buildTableFieldset())
+   Source copy — active rules are in public/css/filament-admin-theme.css
+   ============================================ */
+.aqs-info-table,
+.aqs-data-table {
+    padding: 0 !important;
+    overflow: hidden;
+    border-radius: 0.5rem;
+}
+.aqs-info-table > legend,
+.aqs-data-table > legend {
+    background: #1e3a5f;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    margin: 0 !important;
+    width: 100%;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+.aqs-info-table .fi-fo-component-ctn,
+.aqs-data-table .fi-fo-component-ctn {
+    gap: 0 !important;
+}
+.aqs-info-table .fi-fo-component-ctn > div,
+.aqs-data-table .fi-fo-component-ctn > div {
+    border: 1px solid #d1d5db;
+    margin: -1px 0 0 -1px;
+    padding: 0.625rem 0.875rem;
+    background: #fff;
+}
+.dark .aqs-info-table .fi-fo-component-ctn > div,
+.dark .aqs-data-table .fi-fo-component-ctn > div {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: transparent;
+}
+.aqs-data-table .aqs-header-cell {
+    background: #1e3a5f !important;
+}
+.aqs-data-table .aqs-header-cell label {
+    color: #fff !important;
+    font-weight: 600;
+}
+.aqs-repeater-table > .fi-fo-repeater-items {
+    gap: 0.5rem;
+}
+.aqs-repeater-table .fi-fo-repeater-item {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background: #fff;
+}
+.dark .aqs-repeater-table .fi-fo-repeater-item {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: transparent;
+}
+
 /* ── Guide walkthrough modal (source copy — compiled version is in public/css/filament-admin-theme.css) */
 /* See public/css/filament-admin-theme.css for the active rules */

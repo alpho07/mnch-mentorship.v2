@@ -140,10 +140,19 @@ class DynamicFormBuilder
     {
         $columns = count($fields) <= 4 ? count($fields) : 1;
 
-        return Forms\Components\Fieldset::make($label)
+        $fieldset = Forms\Components\Fieldset::make($label)
             ->schema($fields)
             ->columns($columns)
             ->columnSpanFull();
+
+        // Only the compact, side-by-side groups (Person In Charge,
+        // Respondent) get the bordered "info table" look — a single-column
+        // kit checklist reads better as a plain list, not a 1-wide table.
+        if ($columns > 1) {
+            $fieldset->extraAttributes(['class' => 'aqs-info-table']);
+        }
+
+        return $fieldset;
     }
 
     /**
@@ -167,11 +176,21 @@ class DynamicFormBuilder
                 ->hiddenLabel(! $isFirstRow)
                 ->content($row['label']);
 
+            // Deliberately NOT tagged .aqs-header-cell even on row 0: this
+            // cell's CONTENT is real data (the first cadre's name, e.g.
+            // "Nurses") — only its LABEL ("Cadre") is header-like, and
+            // Filament already renders that label the same understated way
+            // on every field. Darkening the whole cell would make the
+            // first cadre's name itself look like a column title.
             $cells[] = $rowLabelCell;
 
             foreach ($row['fields'] as $field) {
-                if (! $isFirstRow && method_exists($field, 'hiddenLabel')) {
-                    $field->hiddenLabel();
+                if (! $isFirstRow) {
+                    if (method_exists($field, 'hiddenLabel')) {
+                        $field->hiddenLabel();
+                    }
+                } elseif (method_exists($field, 'extraAttributes')) {
+                    $field->extraAttributes(['class' => 'aqs-header-cell']);
                 }
 
                 $cells[] = $field;
