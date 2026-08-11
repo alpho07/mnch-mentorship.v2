@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('mentorships:auto-close')->dailyAt('00:05');
 Schedule::command('rag:lexicon')->dailyAt('02:40')->withoutOverlapping();
+Schedule::command('db:backup:check')->everyFiveMinutes()->withoutOverlapping();
