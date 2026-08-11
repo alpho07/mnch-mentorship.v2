@@ -27,34 +27,19 @@ class DynamicFormBuilder
             ];
         }
 
-        $fields = [];
+        // First pass: collapse consecutive same-`group` questions into
+        // "runs" — one run per group occurrence, carrying its built fields
+        // alongside the raw `group` string (parsed by buildGroupedField()
+        // below into either a plain small-group label or a repeating
+        // table row — see its docblock for the `group` string convention).
+        $runs = [];
         $currentGroup = null;
-        $groupBuffer = [];
-
-        $flushGroup = function () use (&$fields, &$groupBuffer, &$currentGroup) {
-            if ($groupBuffer === []) {
-                return;
-            }
-
-            if ($currentGroup === null) {
-                array_push($fields, ...$groupBuffer);
-            } else {
-                // Small groups (e.g. a handful of details about one row —
-                // "Name", "Contact", "Cadre") lay out side by side, table-
-                // style, matching the existing readiness assessment's
-                // per-cadre Human Resources layout. Larger groups (a kit's
-                // many checklist items) stay a single readable column —
-                // laying out 10+ fields side by side would be unusable.
-                $columns = count($groupBuffer) <= 4 ? count($groupBuffer) : 1;
-
-                $fields[] = Forms\Components\Fieldset::make($currentGroup)
-                    ->schema($groupBuffer)
-                    ->columns($columns)
-                    ->columnSpanFull();
-            }
-
-            $groupBuffer = [];
-        };
+        $currentRun = null;
+        // A question's own `group` can legitimately be null (ungrouped),
+        // which is indistinguishable from the "no run started yet"
+        // sentinel above by equality alone — this flag disambiguates the
+        // very first question so its run always gets initialized.
+        $started = false;
 
         foreach ($questions as $question) {
             $existingResponse = null;
@@ -71,17 +56,135 @@ class DynamicFormBuilder
                 continue;
             }
 
-            if ($question->group !== $currentGroup) {
-                $flushGroup();
+            if (! $started || $question->group !== $currentGroup) {
+                if ($currentRun !== null) {
+                    $runs[] = $currentRun;
+                }
                 $currentGroup = $question->group;
+                $currentRun = ['group' => $currentGroup, 'fields' => []];
+                $started = true;
             }
 
-            $groupBuffer[] = $field;
+            $currentRun['fields'][] = $field;
         }
 
-        $flushGroup();
+        if ($currentRun !== null) {
+            $runs[] = $currentRun;
+        }
+
+        return static::renderRuns($runs);
+    }
+
+    /**
+     * Second pass: turns each run into a rendered field/layout component.
+     * Ungrouped runs (`group === null`) render their fields directly.
+     * Table-row runs (see buildGroupedField()) that share the same table
+     * title AND appear consecutively merge into one table with a single
+     * shared header row — everything else renders as its own component.
+     */
+    protected static function renderRuns(array $runs): array
+    {
+        $fields = [];
+        $tableBuffer = [];
+        $tableTitle = null;
+
+        $flushTable = function () use (&$fields, &$tableBuffer, &$tableTitle) {
+            if ($tableBuffer !== []) {
+                $fields[] = static::buildTableFieldset($tableTitle, $tableBuffer);
+            }
+            $tableBuffer = [];
+            $tableTitle = null;
+        };
+
+        foreach ($runs as $run) {
+            if ($run['group'] === null) {
+                $flushTable();
+                array_push($fields, ...$run['fields']);
+
+                continue;
+            }
+
+            $parts = explode('|', $run['group']);
+
+            if (count($parts) !== 3) {
+                // A plain small/large group (no table-row convention) —
+                // unaffected by table merging.
+                $flushTable();
+                $fields[] = static::buildGroupFieldset($run['group'], $run['fields']);
+
+                continue;
+            }
+
+            [$title, $rowLabelHeader, $rowLabel] = $parts;
+
+            if ($tableTitle !== null && $tableTitle !== $title) {
+                $flushTable();
+            }
+
+            $tableTitle = $title;
+            $tableBuffer[] = ['header' => $rowLabelHeader, 'label' => $rowLabel, 'fields' => $run['fields']];
+        }
+
+        $flushTable();
 
         return $fields;
+    }
+
+    /**
+     * A plain group: small groups (<=4 fields — a handful of details about
+     * one row, e.g. "Name"/"Contact") lay out side by side, table-style.
+     * Larger groups (a kit's many checklist items) stay a single readable
+     * column — laying out 10+ fields side by side would be unusable.
+     */
+    protected static function buildGroupFieldset(string $label, array $fields)
+    {
+        $columns = count($fields) <= 4 ? count($fields) : 1;
+
+        return Forms\Components\Fieldset::make($label)
+            ->schema($fields)
+            ->columns($columns)
+            ->columnSpanFull();
+    }
+
+    /**
+     * Renders $rows as one table: the first row's fields keep their real
+     * labels (acting as the shared column header row, plus $rowLabelHeader
+     * from that row for the leading row-label column); every subsequent
+     * row's field labels are hidden so they read as bare data cells under
+     * that same header. This is how CadreMatrixSyncService's per-cadre
+     * Human Resources rows collapse into one table instead of N separate
+     * boxed groups.
+     */
+    protected static function buildTableFieldset(string $title, array $rows)
+    {
+        $cells = [];
+
+        foreach ($rows as $index => $row) {
+            $isFirstRow = $index === 0;
+
+            $rowLabelCell = Forms\Components\Placeholder::make('table_row_label_'.md5($title.$row['label'].$index))
+                ->label($isFirstRow ? $row['header'] : '')
+                ->hiddenLabel(! $isFirstRow)
+                ->content($row['label']);
+
+            $cells[] = $rowLabelCell;
+
+            foreach ($row['fields'] as $field) {
+                if (! $isFirstRow && method_exists($field, 'hiddenLabel')) {
+                    $field->hiddenLabel();
+                }
+
+                $cells[] = $field;
+            }
+        }
+
+        $columnsPerRow = 1 + count($rows[0]['fields']);
+
+        return Forms\Components\Fieldset::make($title)
+            ->schema($cells)
+            ->columns($columnsPerRow)
+            ->extraAttributes(['class' => 'aqs-data-table'])
+            ->columnSpanFull();
     }
 
     /**
@@ -107,6 +210,7 @@ class DynamicFormBuilder
             'radio' => static::buildRadioField($question, $fieldName, $existingResponse),
             'group_completeness' => static::buildGroupCompletenessField($question, $fieldName, $existingResponse),
             'mortality_three_month' => static::buildMortalityThreeMonthField($question, $fieldName, $existingResponse),
+            'repeater' => static::buildRepeaterField($question, $fieldName, $existingResponse),
             default => null,
         };
 
@@ -206,6 +310,52 @@ class DynamicFormBuilder
         }
 
         return $value;
+    }
+
+    /**
+     * A dynamic add/remove-row table. Column definitions live in
+     * $question->options as [{key, label, type, options?}, ...] (type is
+     * text|select|date|number; options required for type=select). Every
+     * row is stored as one JSON object; the whole set is one JSON array in
+     * response_value — see saveResponses() for the write side. Not scored:
+     * used for free-form repeating data (action plans, monthly counts,
+     * gaps, success stories), never a scoreable answer.
+     */
+    protected static function buildRepeaterField(AssessmentQuestion $question, string $fieldName, ?AssessmentQuestionResponse $response)
+    {
+        $columns = is_array($question->options) ? $question->options : [];
+
+        $rows = [];
+        if ($response?->response_value) {
+            $decoded = json_decode($response->response_value, true);
+            if (is_array($decoded)) {
+                $rows = $decoded;
+            }
+        }
+
+        $itemSchema = collect($columns)->map(function (array $column) {
+            $key = $column['key'];
+            $label = $column['label'];
+
+            return match ($column['type'] ?? 'text') {
+                'select' => Forms\Components\Select::make($key)
+                    ->label($label)
+                    ->options(array_combine($column['options'] ?? [], $column['options'] ?? [])),
+                'date' => Forms\Components\DatePicker::make($key)->label($label),
+                'number' => Forms\Components\TextInput::make($key)->label($label)->numeric(),
+                default => Forms\Components\TextInput::make($key)->label($label),
+            };
+        })->all();
+
+        return Forms\Components\Repeater::make($fieldName)
+            ->label($question->question_text)
+            ->schema($itemSchema)
+            ->columns(max(count($columns), 1))
+            ->default($rows)
+            ->addActionLabel('Add row')
+            ->reorderable(false)
+            ->extraAttributes(['class' => 'aqs-repeater-table'])
+            ->columnSpanFull();
     }
 
     /**
@@ -531,6 +681,13 @@ class DynamicFormBuilder
                 $responseValue = json_encode($counts);
             }
 
+            // Repeater — the field's raw value is already the array of row
+            // objects Filament's Repeater submits; store it as one JSON
+            // blob, same shape read back by buildRepeaterField() above.
+            if ($question->question_type === 'repeater') {
+                $responseValue = json_encode(array_values($responseValue ?? []));
+            }
+
             // NBU/Paediatric metadata
             if (in_array($question->question_code, ['INFRA_NBU', 'INFRA_PAED'])) {
                 if ($responseValue === 'Yes') {
@@ -549,11 +706,12 @@ class DynamicFormBuilder
                 }
             }
 
-            // Score — mortality_three_month is data-only for the PDF
-            // report, never scored, regardless of the question's is_scored
-            // flag (a 3-count value has no meaningful scoring_map entry).
+            // Score — mortality_three_month and repeater are data-only,
+            // never scored regardless of the question's is_scored flag
+            // (neither a 3-count value nor a row array has a meaningful
+            // scoring_map entry).
             $score = null;
-            if ($question->question_type !== 'mortality_three_month' && $question->is_scored && $question->scoring_map) {
+            if (! in_array($question->question_type, ['mortality_three_month', 'repeater'], true) && $question->is_scored && $question->scoring_map) {
                 $score = $question->scoring_map[$responseValue] ?? 0;
             }
 
