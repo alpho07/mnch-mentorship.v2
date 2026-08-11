@@ -31,6 +31,38 @@ class DatabaseBackupServiceTest extends TestCase
         $this->assertStringEndsWith('.sql.gz', $backup->filename);
     }
 
+    public function test_create_pending_backup_is_visible_immediately_before_any_process_runs(): void
+    {
+        // The whole point of splitting create from run: a caller (the
+        // Filament action, the scheduler command) can show the row the
+        // instant the user acts, before a queue worker ever picks up the
+        // job that actually runs mysqldump — otherwise nothing appears at
+        // all until a worker happens to process it, and if no worker is
+        // running, nothing ever appears.
+        $user = User::factory()->create();
+
+        $backup = app(DatabaseBackupService::class)->createPendingBackup($user->id, 'manual');
+
+        $this->assertSame('pending', $backup->status);
+        $this->assertSame($user->id, $backup->triggered_by);
+        $this->assertNull($backup->started_at);
+        Process::assertNothingRan();
+    }
+
+    public function test_run_backup_moves_a_pending_row_through_running_to_completed(): void
+    {
+        Storage::fake('backups');
+        Process::fake(['mysqldump*' => Process::result()]);
+        $service = app(DatabaseBackupService::class);
+        $pending = $service->createPendingBackup(null, 'manual');
+
+        $backup = $service->runBackup($pending);
+
+        $this->assertSame('completed', $backup->status);
+        $this->assertNotNull($backup->started_at);
+        $this->assertNotNull($backup->completed_at);
+    }
+
     public function test_create_backup_excludes_its_own_tracking_tables_from_the_dump(): void
     {
         // A full mysqldump captures every table, including database_backups
@@ -113,6 +145,35 @@ class DatabaseBackupServiceTest extends TestCase
         $this->assertSame(['backup-4.sql.gz', 'backup-3.sql.gz'], $remaining);
         $this->assertFalse(Storage::disk('backups')->exists('backup-1.sql.gz'));
         $this->assertFalse(Storage::disk('backups')->exists('backup-2.sql.gz'));
+    }
+
+    public function test_create_pending_restore_is_visible_immediately_before_any_process_runs(): void
+    {
+        $user = User::factory()->create();
+        $backup = DatabaseBackup::create(['filename' => 'target.sql.gz', 'disk' => 'backups', 'type' => 'manual', 'status' => 'completed']);
+
+        $restore = app(DatabaseBackupService::class)->createPendingRestore($backup, $user->id);
+
+        $this->assertSame('pending', $restore->status);
+        $this->assertSame($backup->id, $restore->database_backup_id);
+        $this->assertSame($user->id, $restore->restored_by);
+        Process::assertNothingRan();
+    }
+
+    public function test_run_restore_moves_a_pending_row_through_running_to_completed(): void
+    {
+        Storage::fake('backups');
+        Process::fake(['mysqldump*' => Process::result(), 'gunzip*' => Process::result()]);
+        $user = User::factory()->create();
+        $backup = DatabaseBackup::create(['filename' => 'target.sql.gz', 'disk' => 'backups', 'type' => 'manual', 'status' => 'completed']);
+        Storage::disk('backups')->put('target.sql.gz', 'fake dump');
+        $service = app(DatabaseBackupService::class);
+        $pending = $service->createPendingRestore($backup, $user->id);
+
+        $restore = $service->runRestore($pending);
+
+        $this->assertSame('completed', $restore->status);
+        $this->assertNotNull($restore->safety_backup_id);
     }
 
     public function test_restore_takes_a_safety_backup_first_then_restores(): void

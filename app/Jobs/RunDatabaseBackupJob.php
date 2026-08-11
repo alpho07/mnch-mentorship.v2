@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\DatabaseBackup;
 use App\Services\DatabaseBackupService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,12 +20,11 @@ class RunDatabaseBackupJob implements ShouldQueue
     public int $timeout = 700;
 
     public function __construct(
-        public string $type,
-        public ?int $userId,
+        public int $backupId,
     ) {}
 
     public function handle(DatabaseBackupService $service): void
     {
-        $service->createBackup($this->userId, $this->type);
+        $service->runBackup(DatabaseBackup::findOrFail($this->backupId));
     }
 }

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Jobs\RunDatabaseBackupJob;
 use App\Models\Setting;
+use App\Services\DatabaseBackupService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
@@ -13,7 +14,7 @@ class CheckScheduledDatabaseBackup extends Command
 
     protected $description = 'Run a scheduled database backup if the configured cadence is due right now.';
 
-    public function handle(): int
+    public function handle(DatabaseBackupService $service): int
     {
         if (! Setting::getBool(Setting::BACKUP_SCHEDULE_ENABLED, false)) {
             return self::SUCCESS;
@@ -24,7 +25,9 @@ class CheckScheduledDatabaseBackup extends Command
         }
 
         Setting::set(Setting::BACKUP_LAST_SCHEDULED_RUN_AT, now()->toIso8601String());
-        RunDatabaseBackupJob::dispatch('scheduled', null);
+
+        $backup = $service->createPendingBackup(null, 'scheduled');
+        RunDatabaseBackupJob::dispatch($backup->id);
 
         return self::SUCCESS;
     }

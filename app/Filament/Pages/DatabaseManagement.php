@@ -106,9 +106,10 @@ class DatabaseManagement extends Page implements HasActions, HasForms, Tables\Co
                             return;
                         }
 
-                        RestoreDatabaseJob::dispatch($record->id, auth()->id());
+                        $restore = app(\App\Services\DatabaseBackupService::class)->createPendingRestore($record, auth()->id());
+                        RestoreDatabaseJob::dispatch($restore->id);
 
-                        Notification::make()->warning()->title('Restore started')->body('Taking a safety backup, then restoring. This runs in the background.')->send();
+                        Notification::make()->warning()->title('Restore started')->body('Taking a safety backup, then restoring. Watch this list for live progress.')->send();
                     }),
                 Tables\Actions\DeleteAction::make()
                     ->action(function (DatabaseBackup $record): void {
@@ -122,9 +123,10 @@ class DatabaseManagement extends Page implements HasActions, HasForms, Tables\Co
                     ->icon('heroicon-o-server-stack')
                     ->color('primary')
                     ->action(function (): void {
-                        RunDatabaseBackupJob::dispatch('manual', auth()->id());
+                        $backup = app(\App\Services\DatabaseBackupService::class)->createPendingBackup(auth()->id(), 'manual');
+                        RunDatabaseBackupJob::dispatch($backup->id);
 
-                        Notification::make()->success()->title('Backup started')->body('Running in the background — refresh to see progress.')->send();
+                        Notification::make()->success()->title('Backup started')->body('It now appears in the list below — watch it move from pending to running to completed.')->send();
                     }),
                 Tables\Actions\Action::make('schedule_settings')
                     ->label('Schedule Settings')

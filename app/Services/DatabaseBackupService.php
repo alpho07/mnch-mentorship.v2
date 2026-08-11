@@ -12,25 +12,36 @@ use Throwable;
 
 class DatabaseBackupService
 {
-    public function createBackup(?int $userId, string $type = 'manual'): DatabaseBackup
+    /**
+     * Insert the row synchronously so callers (the Filament action, the
+     * scheduler command) see it appear immediately — before a queued job
+     * ever gets a chance to run mysqldump. Without this split, nothing is
+     * visible at all until a worker happens to pick the job up, and if no
+     * worker is running, nothing ever appears.
+     */
+    public function createPendingBackup(?int $userId, string $type = 'manual'): DatabaseBackup
     {
         $prefix = $type === 'pre_restore_safety' ? 'safety' : 'backup';
         $filename = "{$prefix}-".now()->format('Ymd_His').'.sql.gz';
 
-        $backup = DatabaseBackup::create([
+        return DatabaseBackup::create([
             'filename' => $filename,
             'disk' => 'backups',
             'type' => $type,
-            'status' => 'running',
+            'status' => 'pending',
             'triggered_by' => $userId,
-            'started_at' => now(),
         ]);
+    }
+
+    public function runBackup(DatabaseBackup $backup): DatabaseBackup
+    {
+        $backup->update(['status' => 'running', 'started_at' => now()]);
 
         $credentialsFile = null;
 
         try {
             $credentialsFile = $this->writeCredentialsFile();
-            $destPath = Storage::disk('backups')->path($filename);
+            $destPath = Storage::disk($backup->disk)->path($backup->filename);
             $database = config('database.connections.mysql.database');
 
             // These tables track backup/restore operations themselves — a
@@ -59,7 +70,7 @@ class DatabaseBackupService
                 'completed_at' => now(),
             ]);
 
-            if (in_array($type, ['manual', 'scheduled'], true)) {
+            if (in_array($backup->type, ['manual', 'scheduled'], true)) {
                 $this->pruneOldBackups();
             }
         } catch (Throwable $e) {
@@ -77,16 +88,29 @@ class DatabaseBackupService
         return $backup->fresh();
     }
 
-    public function restore(DatabaseBackup $backup, int $userId): DatabaseRestore
+    public function createBackup(?int $userId, string $type = 'manual'): DatabaseBackup
     {
-        $restore = DatabaseRestore::create([
-            'database_backup_id' => $backup->id,
-            'status' => 'running',
-            'restored_by' => $userId,
-            'started_at' => now(),
-        ]);
+        return $this->runBackup($this->createPendingBackup($userId, $type));
+    }
 
-        $safetyBackup = $this->createBackup($userId, 'pre_restore_safety');
+    /**
+     * Same immediate-visibility reasoning as createPendingBackup().
+     */
+    public function createPendingRestore(DatabaseBackup $backup, int $userId): DatabaseRestore
+    {
+        return DatabaseRestore::create([
+            'database_backup_id' => $backup->id,
+            'status' => 'pending',
+            'restored_by' => $userId,
+        ]);
+    }
+
+    public function runRestore(DatabaseRestore $restore): DatabaseRestore
+    {
+        $restore->update(['status' => 'running', 'started_at' => now()]);
+        $backup = $restore->backup;
+
+        $safetyBackup = $this->createBackup($restore->restored_by, 'pre_restore_safety');
         $restore->update(['safety_backup_id' => $safetyBackup->id]);
 
         if ($safetyBackup->status !== 'completed') {
@@ -132,6 +156,11 @@ class DatabaseBackupService
         }
 
         return $restore->fresh();
+    }
+
+    public function restore(DatabaseBackup $backup, int $userId): DatabaseRestore
+    {
+        return $this->runRestore($this->createPendingRestore($backup, $userId));
     }
 
     public function pruneOldBackups(): void

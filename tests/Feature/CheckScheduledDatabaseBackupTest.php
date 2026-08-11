@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Jobs\RunDatabaseBackupJob;
+use App\Models\DatabaseBackup;
 use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -32,7 +33,13 @@ class CheckScheduledDatabaseBackupTest extends TestCase
 
         $this->artisan('db:backup:check')->assertSuccessful();
 
-        Queue::assertPushed(RunDatabaseBackupJob::class, fn ($job) => $job->type === 'scheduled' && $job->userId === null);
+        // The pending row is inserted synchronously by the command itself
+        // (visible immediately, before any worker runs the job) — the job
+        // only carries its id.
+        $backup = DatabaseBackup::sole();
+        $this->assertSame('scheduled', $backup->type);
+        $this->assertNull($backup->triggered_by);
+        Queue::assertPushed(RunDatabaseBackupJob::class, fn ($job) => $job->backupId === $backup->id);
     }
 
     public function test_does_not_fire_a_daily_backup_outside_the_configured_time_window(): void

@@ -6,6 +6,7 @@ use App\Filament\Pages\DatabaseManagement;
 use App\Jobs\RestoreDatabaseJob;
 use App\Jobs\RunDatabaseBackupJob;
 use App\Models\DatabaseBackup;
+use App\Models\DatabaseRestore;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -56,17 +57,24 @@ class DatabaseManagementPageTest extends TestCase
         $response->assertSee('listed-backup.sql.gz');
     }
 
-    public function test_backup_now_dispatches_the_job(): void
+    public function test_backup_now_creates_a_pending_row_immediately_and_dispatches_the_job(): void
     {
         Queue::fake();
         $user = $this->actingAsSuperAdmin();
 
         Livewire::test(DatabaseManagement::class)->callTableAction('backup_now');
 
-        Queue::assertPushed(RunDatabaseBackupJob::class, fn ($job) => $job->type === 'manual' && $job->userId === $user->id);
+        // The row must exist the instant the action runs — not only once a
+        // queue worker eventually processes the job — otherwise nothing is
+        // visible if no worker happens to be running.
+        $backup = DatabaseBackup::sole();
+        $this->assertSame('pending', $backup->status);
+        $this->assertSame('manual', $backup->type);
+        $this->assertSame($user->id, $backup->triggered_by);
+        Queue::assertPushed(RunDatabaseBackupJob::class, fn ($job) => $job->backupId === $backup->id);
     }
 
-    public function test_restore_action_requires_the_exact_filename_and_then_dispatches_the_job(): void
+    public function test_restore_action_requires_the_exact_filename_and_then_creates_a_pending_row_and_dispatches_the_job(): void
     {
         Queue::fake();
         $this->actingAsSuperAdmin();
@@ -75,9 +83,14 @@ class DatabaseManagementPageTest extends TestCase
         Livewire::test(DatabaseManagement::class)
             ->callTableAction('restore', $backup, data: ['confirm_filename' => 'wrong-name.sql.gz']);
         Queue::assertNotPushed(RestoreDatabaseJob::class);
+        $this->assertSame(0, DatabaseRestore::count());
 
         Livewire::test(DatabaseManagement::class)
             ->callTableAction('restore', $backup, data: ['confirm_filename' => 'restore-me.sql.gz']);
-        Queue::assertPushed(RestoreDatabaseJob::class, fn ($job) => $job->backupId === $backup->id);
+
+        $restore = DatabaseRestore::sole();
+        $this->assertSame('pending', $restore->status);
+        $this->assertSame($backup->id, $restore->database_backup_id);
+        Queue::assertPushed(RestoreDatabaseJob::class, fn ($job) => $job->restoreId === $restore->id);
     }
 }
