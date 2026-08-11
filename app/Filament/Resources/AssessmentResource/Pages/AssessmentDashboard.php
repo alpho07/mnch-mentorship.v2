@@ -263,6 +263,7 @@ class AssessmentDashboard extends Page
                 'total' => $total,
                 'percentage' => $total > 0 ? round(($completed / $total) * 100) : 0,
             ],
+            'team' => app(\App\Services\AssessmentTeamService::class)->getTeamForDisplay($this->record),
         ];
     }
 }
