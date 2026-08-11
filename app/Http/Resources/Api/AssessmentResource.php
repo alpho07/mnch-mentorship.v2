@@ -37,6 +37,31 @@ class AssessmentResource extends JsonResource {
                         ],
                             ])
             ),
+            'team' => $this->whenLoaded('teamMembers', fn () => $this->teamMembers->map(fn ($member) => [
+                'id' => $member->id,
+                'name' => $member->name,
+                'email' => $member->email,
+                'role' => $member->pivot->role,
+            ])->values()),
+            'lead_assessor' => $this->when($this->relationLoaded('teamMembers'), function () {
+                $lead = $this->teamMembers->first(fn ($member) => $member->pivot->role === 'team_lead');
+
+                return [
+                    'id' => $lead?->id ?? $this->assessor_id,
+                    'name' => $lead?->name ?? $this->assessor_name,
+                    'email' => $lead?->email ?? $this->assessor_contact,
+                    'role' => 'team_lead',
+                ];
+            }),
+            'team_members' => $this->whenLoaded('teamMembers', fn () => $this->teamMembers
+                ->filter(fn ($member) => $member->pivot->role === 'member')
+                ->map(fn ($member) => [
+                    'id' => $member->id,
+                    'name' => $member->name,
+                    'email' => $member->email,
+                    'role' => 'member',
+                ])->values()),
+            'can_manage_team' => $this->when($request->user(), fn () => $this->canManageTeam($request->user()->id)),
         ];
     }
 }

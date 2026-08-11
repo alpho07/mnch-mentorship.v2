@@ -81,4 +81,25 @@ class AssessmentApiTeamScopingTest extends TestCase
         $ids = collect($response->json('data'))->pluck('id')->all();
         $this->assertNotContains($assessment->id, $ids);
     }
+
+    public function test_show_payload_includes_team_and_lead_assessor_fields(): void
+    {
+        $lead = $this->makeAssessor('Lead Assessor');
+        $member = $this->makeAssessor('Member Assessor');
+        $assessment = $this->createAssessmentAs($lead);
+        $assessment->teamMembers()->attach($member->id, [
+            'role' => 'member',
+            'added_by' => $lead->id,
+            'added_at' => now(),
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->tokenFor($lead))
+            ->getJson("/api/v1/assessments/{$assessment->id}");
+
+        $response->assertSuccessful();
+        $response->assertJsonPath('data.lead_assessor.id', $lead->id);
+        $response->assertJsonPath('data.can_manage_team', true);
+        $memberIds = collect($response->json('data.team_members'))->pluck('id')->all();
+        $this->assertContains($member->id, $memberIds);
+    }
 }
