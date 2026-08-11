@@ -1,0 +1,186 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\AssessmentQuestion;
+use App\Models\AssessmentSection;
+use App\Models\AssessmentType;
+use App\Models\AssessmentTypeCategory;
+use Illuminate\Database\Seeder;
+
+/**
+ * Ports CHAI's REDCap "Post EmONC Training Supportive Supervision" survey
+ * into the platform's dynamic assessment engine as a single categorized
+ * AssessmentType. Content transcribed from the live survey on 2026-08-11 —
+ * see docs/superpowers/specs/2026-08-11-emonc-supportive-supervision-assessment-design.md
+ * §8 for the source-of-truth question inventory.
+ *
+ * Idempotent — every write is updateOrCreate, safe to re-run.
+ *
+ * Run with:
+ *   php artisan db:seed --class=EmoncSupportiveSupervisionSeeder
+ */
+class EmoncSupportiveSupervisionSeeder extends Seeder
+{
+    public const TYPE_CODE = 'EMONC_SUPPORTIVE_SUPERVISION';
+
+    private int $order = 0;
+
+    public function run(): void
+    {
+        $this->seedCategories();
+        $type = $this->seedAssessmentType();
+        $this->seedSectionA($type);
+    }
+
+    private function seedCategories(): void
+    {
+        $categories = [
+            ['name' => 'EmONC', 'description' => 'Emergency Maternal and Newborn Care assessments.', 'order' => 1],
+            ['name' => 'Newborn, Infant & Child', 'description' => 'Newborn, infant, and child health assessments.', 'order' => 2],
+            ['name' => 'General Facility Readiness', 'description' => 'Catch-all category for facility assessment templates that predate categorization.', 'order' => 0],
+        ];
+
+        foreach ($categories as $category) {
+            AssessmentTypeCategory::updateOrCreate(
+                ['name' => $category['name']],
+                array_merge($category, ['is_active' => true])
+            );
+        }
+    }
+
+    private function seedAssessmentType(): AssessmentType
+    {
+        $category = AssessmentTypeCategory::where('name', 'EmONC')->firstOrFail();
+
+        return AssessmentType::updateOrCreate(
+            ['code' => self::TYPE_CODE],
+            [
+                'name' => 'EmONC Post-Training Supportive Supervision Survey',
+                'description' => 'Assesses how facilities apply EmONC training in practice: facility readiness, commodities, emergency kits, referral systems, infection prevention, and gaps/success stories. Ported from CHAI\'s REDCap instrument.',
+                'version' => '1.0',
+                'is_active' => true,
+                'category_id' => $category->id,
+            ]
+        );
+    }
+
+    // ── Shared helpers, used by every seedSectionX() method ────────────────
+
+    private function upsertSection(AssessmentType $type, string $code, string $name, ?string $description, bool $isScored, int $order): AssessmentSection
+    {
+        $this->order = 0;
+
+        return AssessmentSection::updateOrCreate(
+            ['code' => $code],
+            [
+                'assessment_type_id' => $type->id,
+                'name' => $name,
+                'description' => $description,
+                'section_type' => AssessmentSection::KIND_QUESTION_GROUP,
+                'is_scored' => $isScored,
+                'order' => $order,
+                'is_active' => true,
+            ]
+        );
+    }
+
+    private function nextOrder(): int
+    {
+        return ++$this->order;
+    }
+
+    private function upsertQuestion(AssessmentSection $section, array $attrs): void
+    {
+        AssessmentQuestion::updateOrCreate(
+            ['question_code' => $attrs['code']],
+            [
+                'assessment_section_id' => $section->id,
+                'question_text' => $attrs['text'],
+                'help_text' => $attrs['help_text'] ?? null,
+                'question_type' => $attrs['type'],
+                'options' => $attrs['options'] ?? null,
+                'is_required' => false,
+                'is_scored' => $attrs['scored'] ?? false,
+                'scoring_map' => $attrs['scoring_map'] ?? null,
+                'requires_explanation_on' => $attrs['requires_explanation_on'] ?? null,
+                // NOT NULL DB column with a default — pass that default
+                // explicitly rather than null for question types that never
+                // render an explanation field anyway (only buildYesNoField
+                // reads this column).
+                'explanation_label' => $attrs['explanation_label'] ?? 'Comments/Recommendations',
+                'group' => $attrs['group'] ?? null,
+                'order' => $attrs['order'],
+                'is_active' => true,
+            ]
+        );
+    }
+
+    /** A scored Yes/No question with the survey's standard always-visible-remarks config. */
+    private function yesNo(string $code, string $text, int $order, ?string $group = null, ?string $helpText = null): array
+    {
+        return [
+            'code' => $code,
+            'text' => $text,
+            'type' => 'yes_no',
+            'scored' => true,
+            'scoring_map' => ['Yes' => 1, 'No' => 0],
+            'requires_explanation_on' => ['Yes', 'No'],
+            'explanation_label' => 'Remarks',
+            'order' => $order,
+            'group' => $group,
+            'help_text' => $helpText,
+        ];
+    }
+
+    // ── A. Facility Profile (not scored) ───────────────────────────────────
+
+    private function seedSectionA(AssessmentType $type): void
+    {
+        $section = $this->upsertSection(
+            $type,
+            'emonc_facility_context',
+            'A. Facility Profile',
+            'Facility identity, EmONC training coverage, and human resources in the maternity unit. Facility name, MFL code, county, level, and ownership are shown from the selected facility record and not re-collected here.',
+            false,
+            1
+        );
+
+        $this->upsertQuestion($section, [
+            'code' => 'EMONC_A_FACILITY_CATEGORY',
+            'text' => 'Facility Category',
+            'type' => 'select',
+            'options' => ['CEMONC', 'BEMONC'],
+            'order' => $this->nextOrder(),
+        ]);
+
+        for ($i = 1; $i <= 3; $i++) {
+            $this->upsertQuestion($section, ['code' => "EMONC_A_SUP{$i}_NAME", 'text' => "Supervisor {$i} — Name", 'type' => 'text', 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, ['code' => "EMONC_A_SUP{$i}_TITLE", 'text' => "Supervisor {$i} — Title", 'type' => 'text', 'order' => $this->nextOrder()]);
+        }
+
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_NAME', 'text' => 'Facility Supervision Respondent — Name', 'type' => 'text', 'order' => $this->nextOrder()]);
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CONTACT', 'text' => 'Facility Supervision Respondent — Contact', 'type' => 'text', 'order' => $this->nextOrder()]);
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CADRE', 'text' => 'Facility Supervision Respondent — Cadre', 'type' => 'text', 'order' => $this->nextOrder()]);
+
+        $cadres = [
+            'EMONC_A_HR_NURSES' => 'Nurses',
+            'EMONC_A_HR_CO' => 'Clinical Officers',
+            'EMONC_A_HR_MO' => 'Medical Officers',
+            'EMONC_A_HR_OB' => 'Obstetricians',
+        ];
+        foreach ($cadres as $prefix => $label) {
+            $this->upsertQuestion($section, ['code' => "{$prefix}_ALLOCATED", 'text' => "{$label} — Number Allocated in Maternity (ANW/Labour Ward/PNW)", 'type' => 'number', 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, ['code' => "{$prefix}_TRAINED", 'text' => "{$label} — Number Trained on 5-day EmONC (from 2024 to date)", 'type' => 'number', 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, ['code' => "{$prefix}_24HR", 'text' => "{$label} — Number present in the maternity unit in a 24hr shift", 'type' => 'number', 'order' => $this->nextOrder()]);
+        }
+
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_EMONC_TRAINED_TOTAL', 'text' => 'Number of EmONC-trained healthcare workers', 'type' => 'number', 'order' => $this->nextOrder()]);
+
+        $departments = ['ANC', 'HRC', 'L/W', 'NBU', 'ANW', 'PNW'];
+        foreach ($departments as $dept) {
+            $deptCode = str_replace('/', '', $dept);
+            $this->upsertQuestion($section, ['code' => "EMONC_A_DIST_{$deptCode}", 'text' => "EmONC-trained healthcare workers — {$dept}", 'type' => 'number', 'order' => $this->nextOrder()]);
+        }
+    }
+}
