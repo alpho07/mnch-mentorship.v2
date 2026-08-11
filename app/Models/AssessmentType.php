@@ -40,6 +40,11 @@ class AssessmentType extends Model
         return $this->hasMany(AssessmentSection::class);
     }
 
+    public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(AssessmentTypeCategory::class, 'category_id');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
