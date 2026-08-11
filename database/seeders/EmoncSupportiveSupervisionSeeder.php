@@ -545,18 +545,38 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
     {
         $section = $this->upsertSection($type, 'emonc_gaps_success', 'H. Gaps & Success Stories', null, false, 8);
 
-        for ($i = 1; $i <= 5; $i++) {
-            $this->upsertQuestion($section, ['code' => "EMONC_H_GAP{$i}_GAP", 'text' => "Gap {$i}", 'type' => 'text', 'order' => $this->nextOrder()]);
-            $this->upsertQuestion($section, ['code' => "EMONC_H_GAP{$i}_ACTION", 'text' => "Gap {$i} — Action", 'type' => 'text', 'order' => $this->nextOrder()]);
-            $this->upsertQuestion($section, ['code' => "EMONC_H_GAP{$i}_WHO", 'text' => "Gap {$i} — Who", 'type' => 'text', 'order' => $this->nextOrder()]);
-            $this->upsertQuestion($section, ['code' => "EMONC_H_GAP{$i}_WHEN", 'text' => "Gap {$i} — When", 'type' => 'text', 'order' => $this->nextOrder()]);
-        }
+        // Cleanup for environments that ran an earlier version of this
+        // seeder: gaps and success stories used to be 5 hardcoded row slots
+        // each. Replaced with dynamic add/remove tables.
+        AssessmentQuestion::where('question_code', 'like', 'EMONC_H_GAP%')
+            ->orWhere('question_code', 'like', 'EMONC_H_SUCCESS%')
+            ->delete();
 
-        for ($i = 1; $i <= 5; $i++) {
-            $this->upsertQuestion($section, ['code' => "EMONC_H_SUCCESS{$i}_WHAT", 'text' => "Success Story {$i} — What Happened", 'type' => 'text', 'order' => $this->nextOrder()]);
-            $this->upsertQuestion($section, ['code' => "EMONC_H_SUCCESS{$i}_HOW", 'text' => "Success Story {$i} — How It Was Achieved", 'type' => 'text', 'order' => $this->nextOrder()]);
-            $this->upsertQuestion($section, ['code' => "EMONC_H_SUCCESS{$i}_IMPACT", 'text' => "Success Story {$i} — Impact on Patient Care", 'type' => 'text', 'order' => $this->nextOrder()]);
-        }
+        $this->upsertQuestion($section, [
+            'code' => 'EMONC_H_GAPS',
+            'text' => 'Key Gaps and Recommendations',
+            'type' => 'repeater',
+            'options' => [
+                ['key' => 'gap', 'label' => 'Gap', 'type' => 'text'],
+                ['key' => 'action', 'label' => 'Action', 'type' => 'text'],
+                ['key' => 'who', 'label' => 'Who', 'type' => 'text'],
+                ['key' => 'when', 'label' => 'When', 'type' => 'text'],
+            ],
+            'order' => $this->nextOrder(),
+        ]);
+
+        $this->upsertQuestion($section, [
+            'code' => 'EMONC_H_SUCCESS_STORIES',
+            'text' => 'Since the last EmONC training or supportive supervision, please describe any notable positive outcomes in maternal or neonatal care that resulted from applying EmONC skills and protocols',
+            'help_text' => 'Include what happened, how it was achieved, and its impact on patient care.',
+            'type' => 'repeater',
+            'options' => [
+                ['key' => 'what', 'label' => 'What Happened', 'type' => 'text'],
+                ['key' => 'how', 'label' => 'How It Was Achieved', 'type' => 'text'],
+                ['key' => 'impact', 'label' => 'Impact on Patient Care', 'type' => 'text'],
+            ],
+            'order' => $this->nextOrder(),
+        ]);
     }
 
     // ── J. Additional Notes (not scored) ────────────────────────────────────
