@@ -11,7 +11,7 @@ class Cadre extends Model
     use HasFactory;
     protected $table='assessment_cadres';
 
-    protected $fillable = ['name', 'code', 'description', 'order', 'is_active'];
+    protected $fillable = ['name', 'code', 'category', 'description', 'order', 'is_active'];
 
     public function trainingParticipants(): HasMany
     {
@@ -32,6 +32,27 @@ class Cadre extends Model
     public function scopeWithUsers($query)
     {
         return $query->has('users');
+    }
+
+    /**
+     * Cadres seeded for a specific assessment template's own bucket set
+     * (e.g. 'emonc') — kept separate from the unscoped general-purpose
+     * cadre list used elsewhere (Users, Training Participants), which has
+     * category = null and is unaffected by this scope.
+     */
+    public function scopeCategory($query, string $category)
+    {
+        return $query->where('category', $category);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('order');
     }
 
     // Computed Attributes
