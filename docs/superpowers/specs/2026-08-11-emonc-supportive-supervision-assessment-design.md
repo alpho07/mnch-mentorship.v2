@@ -29,7 +29,7 @@ implementation seeder.
   Infant & Child / General Facility Readiness / …), then pick the specific
   **template** (`AssessmentType`) within that category — sections/questions
   load automatically exactly as today.
-- The EmONC survey's ~232 fields, scoring, and structure are faithfully
+- The EmONC survey's ~235 fields, scoring, and structure are faithfully
   represented as one new `AssessmentType` with ~9 sections and their
   questions — no new database tables for content (categories table is the one
   exception — see §3).
@@ -92,7 +92,7 @@ category = EmONC, version `1.0`.
 | Code | Name | Kind | Scored? | Questions |
 |---|---|---|---|---|
 | `emonc_facility_context` | A. Facility Profile | dynamic_questions | No | ~29 |
-| `emonc_feedback` | B. Feedback to Office & Colleagues | dynamic_questions | Yes | 7 |
+| `emonc_feedback` | B. Feedback to Office & Colleagues | dynamic_questions | Yes | 10 |
 | `emonc_capacity_building` | C. Capacity Building | dynamic_questions | Yes | 2 |
 | `emonc_key_commodities` | D. Key Commodities | dynamic_questions | Yes | 27 |
 | `emonc_emergency_kits` | E. Emergency Preparedness — Kits & SOPs | dynamic_questions | Yes | ~106 |
@@ -180,7 +180,7 @@ A new idempotent seeder, `EmoncSupportiveSupervisionSeeder` (follows the
    General Facility Readiness).
 2. A migration backfilling `category_id = General Facility Readiness` on the
    existing "Standard Facility Assessment" type.
-3. The new `AssessmentType`, its 9 `AssessmentSection` rows, and all ~232
+3. The new `AssessmentType`, its 9 `AssessmentSection` rows, and all ~235
    `AssessmentQuestion` rows (content transcribed in §8), from a structured
    PHP array in the seeder itself.
 
@@ -205,14 +205,16 @@ Transcribed from the live REDCap survey on 2026-08-11. All yes/no items use
 - Distribution of EmONC-trained healthcare workers per department: ANC, HRC,
   L/W, NBU, ANW, PNW (number × 6)
 
-### B. Feedback to Office & Colleagues (scored)
+### B. Feedback to Office & Colleagues (scored, 10 questions)
 - Feedback meeting to office held — yes/no, **scored**
-- Action Plan 1/2/3 — Action Plan description (text, not scored), Status
-  (select: Resolved / In Progress / Not Addressed, not scored;
-  `requires_explanation_on: ["Resolved", "In Progress", "Not Addressed"]` so
-  remarks are always visible, matching the source form's always-shown Remarks
-  column — same "always visible" intent as the yes/no default above, just
-  spelled out with this field's own option values instead of Yes/No)
+- Action Plan 1/2/3, each: description (text, not scored), Status (select:
+  Resolved / In Progress / Not Addressed, not scored), Remarks (text, not
+  scored). Remarks is its own separate question rather than an attached
+  explanation field — `DynamicFormBuilder`'s `buildSelectField()` doesn't
+  support an attached explanation/remarks field the way `buildYesNoField()`
+  does, and extending it wasn't warranted just for this; a plain text
+  question reproduces the source form's always-visible Remarks column
+  without touching the engine further.
 
 ### C. Capacity Building (scored)
 - CMEs held — yes/no, scored, help text "Confirm using the CME
