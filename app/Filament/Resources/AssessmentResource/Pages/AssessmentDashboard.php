@@ -67,6 +67,7 @@ class AssessmentDashboard extends Page
                 Section::make('Assessment Details')
                     ->schema([
                         TextEntry::make('facility.name')->label('Facility'),
+                        TextEntry::make('assessmentType.category.name')->label('Category')->placeholder('—'),
                         TextEntry::make('assessment_type')->label('Type'),
                         TextEntry::make('assessment_date')->label('Date')->date(),
                         TextEntry::make('assessor.name')->label('Assessor'),
