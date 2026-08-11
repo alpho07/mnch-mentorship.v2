@@ -143,6 +143,10 @@ class DynamicFormBuilder
     {
         $columns = count($fields) <= 7 ? count($fields) : 1;
 
+        if ($columns > 1) {
+            static::normalizeColumnSpans($fields);
+        }
+
         $fieldset = Forms\Components\Fieldset::make($label)
             ->schema($fields)
             // Fieldset's own constructor already calls columns(2) (setting
@@ -163,6 +167,23 @@ class DynamicFormBuilder
         }
 
         return $fieldset;
+    }
+
+    /**
+     * Some field builders (buildTextField(), for one) call
+     * ->columnSpanFull() unconditionally — correct for a field standing
+     * alone in the main form, but it overrides a table Fieldset's own
+     * column count, forcing every field back to full width regardless of
+     * how many columns were configured. Resetting to a single-column span
+     * here undoes that override so the fields actually sit side by side.
+     */
+    protected static function normalizeColumnSpans(array $fields): void
+    {
+        foreach ($fields as $field) {
+            if (method_exists($field, 'columnSpan')) {
+                $field->columnSpan(1);
+            }
+        }
     }
 
     /**
@@ -201,6 +222,13 @@ class DynamicFormBuilder
                     }
                 } elseif (method_exists($field, 'extraAttributes')) {
                     $field->extraAttributes(['class' => 'aqs-header-cell']);
+                }
+
+                // See normalizeColumnSpans() — undoes any per-field-type
+                // forced ->columnSpanFull() so the row's cells actually
+                // sit side by side under the shared header.
+                if (method_exists($field, 'columnSpan')) {
+                    $field->columnSpan(1);
                 }
 
                 $cells[] = $field;

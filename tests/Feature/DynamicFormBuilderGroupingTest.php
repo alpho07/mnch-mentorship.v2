@@ -142,6 +142,40 @@ class DynamicFormBuilderGroupingTest extends TestCase
         $this->assertSame(1, $fields[0]->getColumns('default'));
     }
 
+    private function makeText(AssessmentSection $section, string $questionCode, int $order, ?string $group): AssessmentQuestion
+    {
+        return AssessmentQuestion::create([
+            'assessment_section_id' => $section->id,
+            'question_code' => $questionCode,
+            'question_text' => "Question {$questionCode}",
+            'question_type' => 'text',
+            'group' => $group,
+            'is_scored' => false,
+            'order' => $order,
+            'is_active' => true,
+        ]);
+    }
+
+    public function test_text_fields_in_a_small_group_actually_sit_side_by_side(): void
+    {
+        // buildTextField() calls ->columnSpanFull() unconditionally (right
+        // for a standalone question) — that must not survive once the
+        // field is placed inside a table-style Fieldset, or every "column"
+        // stacks full-width regardless of the Fieldset's own column count.
+        $section = $this->makeSection('text_field_span_section_test');
+        $this->makeText($section, 'SPAN_Q1', 1, 'Person In Charge');
+        $this->makeText($section, 'SPAN_Q2', 2, 'Person In Charge');
+
+        $fields = DynamicFormBuilder::buildForSection($section->id);
+
+        $this->assertCount(1, $fields);
+        $this->assertInstanceOf(Fieldset::class, $fields[0]);
+
+        foreach ($fields[0]->getChildComponents() as $child) {
+            $this->assertSame(1, $child->getColumnSpan('default'));
+        }
+    }
+
     private function makeNumber(AssessmentSection $section, string $questionCode, int $order, string $group): AssessmentQuestion
     {
         return AssessmentQuestion::create([
