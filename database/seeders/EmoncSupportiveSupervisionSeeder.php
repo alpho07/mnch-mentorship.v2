@@ -244,17 +244,24 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
 
         $this->upsertQuestion($section, $this->yesNo('EMONC_B_FEEDBACK_MEETING_DONE', 'Feedback meeting to office held', $this->nextOrder()));
 
-        for ($i = 1; $i <= 3; $i++) {
-            $this->upsertQuestion($section, ['code' => "EMONC_B_AP{$i}_TEXT", 'text' => "Action Plan {$i} — Description", 'type' => 'text', 'order' => $this->nextOrder()]);
-            $this->upsertQuestion($section, [
-                'code' => "EMONC_B_AP{$i}_STATUS",
-                'text' => "Action Plan {$i} — Status",
-                'type' => 'select',
-                'options' => ['Resolved', 'In Progress', 'Not Addressed'],
-                'order' => $this->nextOrder(),
-            ]);
-            $this->upsertQuestion($section, ['code' => "EMONC_B_AP{$i}_REMARKS", 'text' => "Action Plan {$i} — Remarks", 'type' => 'text', 'order' => $this->nextOrder()]);
-        }
+        // Cleanup for environments that ran an earlier version of this
+        // seeder: action plans used to be 3 hardcoded slots. The source
+        // survey's own row limit is arbitrary too — replaced with a
+        // dynamic add/remove table so an assessor can record as many (or
+        // as few) as actually came out of the meeting.
+        AssessmentQuestion::where('question_code', 'like', 'EMONC_B_AP%')->delete();
+
+        $this->upsertQuestion($section, [
+            'code' => 'EMONC_B_ACTION_PLANS',
+            'text' => 'Please specify below which action plan(s) were developed during the meeting and the status of each',
+            'type' => 'repeater',
+            'options' => [
+                ['key' => 'plan', 'label' => 'Action Plan', 'type' => 'text'],
+                ['key' => 'status', 'label' => 'Status', 'type' => 'select', 'options' => ['Resolved', 'In Progress', 'Not Addressed']],
+                ['key' => 'remarks', 'label' => 'Remarks', 'type' => 'text'],
+            ],
+            'order' => $this->nextOrder(),
+        ]);
     }
 
     // ── C. Capacity Building (scored) ───────────────────────────────────────

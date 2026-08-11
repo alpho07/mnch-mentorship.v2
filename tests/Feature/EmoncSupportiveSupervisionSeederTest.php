@@ -70,7 +70,7 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertSame(12, AssessmentQuestion::where('question_code', 'like', 'EMONC_A_HR_CADRE%')->count());
     }
 
-    public function test_section_b_is_seeded_with_10_questions_one_scored(): void
+    public function test_section_b_is_seeded_with_2_questions_one_scored(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);
 
@@ -78,9 +78,15 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
 
         $this->assertNotNull($section);
         $this->assertTrue($section->is_scored);
-        $this->assertSame(10, $section->questions()->count());
+        $this->assertSame(2, $section->questions()->count());
         $this->assertSame(1, $section->questions()->where('is_scored', true)->count());
         $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_B_FEEDBACK_MEETING_DONE')->where('is_scored', true)->exists());
+
+        $actionPlans = AssessmentQuestion::where('question_code', 'EMONC_B_ACTION_PLANS')->first();
+        $this->assertNotNull($actionPlans);
+        $this->assertSame('repeater', $actionPlans->question_type);
+        $this->assertSame(['plan', 'status', 'remarks'], array_column($actionPlans->options, 'key'));
+        $this->assertFalse(AssessmentQuestion::where('question_code', 'like', 'EMONC_B_AP%')->exists());
     }
 
     public function test_section_c_is_seeded_with_2_scored_questions(): void
