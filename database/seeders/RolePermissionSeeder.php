@@ -175,6 +175,7 @@ class RolePermissionSeeder extends Seeder
             'page_MentorCertificates',
             'page_RagChat',
             'use_rag_chat',
+            'page_DatabaseManagement',
         ];
 
         foreach ($extras as $name) {

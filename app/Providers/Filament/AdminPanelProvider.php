@@ -59,7 +59,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->navigationGroups([
                 'Dashboards',
-                'Mentorships',
+                'Rubric Assessments',
                 'Facility Assessment',
                 'Training Management',
                 'Indicator Catalog',
@@ -67,6 +67,7 @@ class AdminPanelProvider extends PanelProvider
                 'Reporting',
                 'Curriculum',
                 'Organization Units',
+                'App Configuration',
                 'Inventory',
                 'Report Management',
                 'Reports & Analytics',
@@ -74,19 +75,19 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationItems([
                 NavigationItem::make('Newborn Care')
-                    ->group('Mentorships')
+                    ->group('Rubric Assessments')
                     ->icon('heroicon-o-heart')
                     ->url('/admin/mentor-dashboard?program=newborn')
                     ->sort(1)
                     ->visible(false),
                 NavigationItem::make('Infant and Child Care')
-                    ->group('Mentorships')
+                    ->group('Rubric Assessments')
                     ->icon('heroicon-o-user-group')
                     ->url('/admin/mentor-dashboard?program=infant')
                     ->sort(2)
                     ->visible(false),
                 NavigationItem::make('Maternal Health (EmONC)')
-                    ->group('Mentorships')
+                    ->group('Rubric Assessments')
                     ->icon('heroicon-o-heart')
                     ->url('/admin/mentor-dashboard?program=emonc')
                     ->sort(3)
