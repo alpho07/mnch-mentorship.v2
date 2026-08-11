@@ -18,7 +18,11 @@ class AssessmentTypeCategoryTest extends TestCase
 
         $activeIds = AssessmentTypeCategory::active()->ordered()->pluck('id')->all();
 
-        $this->assertSame([$active->id], $activeIds);
+        // Not an exact-equality assertion: the backfill migration seeds its
+        // own "General Facility Readiness" category on every fresh
+        // migration run, so other active categories legitimately exist.
+        $this->assertContains($active->id, $activeIds);
+        $this->assertNotContains($inactive->id, $activeIds);
     }
 
     public function test_assessment_type_belongs_to_a_category(): void

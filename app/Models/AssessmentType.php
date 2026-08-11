@@ -14,6 +14,7 @@ class AssessmentType extends Model
     protected $fillable = [
         'name',
         'code',
+        'category_id',
         'description',
         'version',
         'is_active',
