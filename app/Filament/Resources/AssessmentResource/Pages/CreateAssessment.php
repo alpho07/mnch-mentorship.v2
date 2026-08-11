@@ -57,16 +57,27 @@ class CreateAssessment extends CreateRecord
                     ->columns(2),
                 Forms\Components\Section::make('Assessment Details')
                     ->schema([
+                        Forms\Components\Select::make('category_filter')
+                            ->label('Category')
+                            ->helperText('Optional — narrows the Assessment list below to templates in this category.')
+                            ->options(fn () => \App\Models\AssessmentTypeCategory::active()->ordered()->pluck('name', 'id'))
+                            ->searchable()
+                            ->live()
+                            ->dehydrated(false),
                         Forms\Components\Select::make('assessment_type_id')
                             ->label('Assessment')
                             ->helperText('Pick the assessment template to use — its sections and questions load automatically.')
                             ->relationship(
                                 name: 'assessmentType',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: fn ($query) => $query->where('is_active', true)->orderBy('name'),
+                                modifyQueryUsing: fn (Forms\Get $get, $query) => $query
+                                    ->where('is_active', true)
+                                    ->when($get('category_filter'), fn ($q, $categoryId) => $q->where('category_id', $categoryId))
+                                    ->orderBy('name'),
                             )
                             ->searchable()
                             ->preload()
+                            ->live()
                             ->required(),
                         Forms\Components\DatePicker::make('assessment_date')
                             ->label('Assessment Date')
