@@ -48,6 +48,33 @@ class AssessmentManageTeamActionTest extends TestCase
         $this->assertTrue($assessment->fresh()->isTeamMember($invitee->id));
     }
 
+    public function test_manage_team_action_invites_a_non_assessor_and_grants_them_the_role(): void
+    {
+        $lead = $this->makeAssessor('Lead Assessor');
+
+        $this->actingAs($lead);
+        $facility = Facility::factory()->create();
+        $assessment = Assessment::create([
+            'facility_id' => $facility->id,
+            'assessment_type' => 'baseline',
+            'assessment_date' => now(),
+        ]);
+
+        $mentor = User::factory()->create(['name' => 'Facility Mentor']);
+        Role::firstOrCreate(['name' => 'facility_mentor', 'guard_name' => 'web']);
+        $mentor->assignRole('facility_mentor');
+
+        Livewire::test(ListAssessments::class)
+            ->callTableAction('manage_team', $assessment, data: [
+                'member_ids' => [$mentor->id],
+            ]);
+
+        $mentor->refresh();
+        $this->assertTrue($assessment->fresh()->isTeamMember($mentor->id));
+        $this->assertTrue($mentor->hasRole('assessor'));
+        $this->assertTrue($mentor->hasRole('facility_mentor'));
+    }
+
     public function test_manage_team_action_is_hidden_for_a_regular_team_member(): void
     {
         $lead = $this->makeAssessor('Lead Assessor');

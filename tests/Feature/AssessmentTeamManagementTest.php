@@ -117,4 +117,59 @@ class AssessmentTeamManagementTest extends TestCase
         $this->assertTrue($assessment->fresh()->isTeamLead($assessor->id));
         $this->assertTrue($assessment->fresh()->isTeamMember($newMember->id));
     }
+
+    public function test_adding_a_non_assessor_user_grants_them_the_assessor_role(): void
+    {
+        $lead = $this->makeUserWithRole('assessor');
+        $assessment = $this->createAssessmentAs($lead);
+
+        $mentor = User::factory()->create(['name' => 'Some Mentor']);
+        Role::firstOrCreate(['name' => 'facility_mentor', 'guard_name' => 'web']);
+        $mentor->assignRole('facility_mentor');
+
+        $this->assertFalse($mentor->hasRole('assessor'));
+
+        app(AssessmentTeamService::class)->addMember($assessment, $mentor->id, $lead->id);
+
+        $mentor->refresh();
+        $this->assertTrue($assessment->fresh()->isTeamMember($mentor->id));
+        $this->assertTrue($mentor->hasRole('assessor'));
+        $this->assertTrue($mentor->hasRole('facility_mentor'), 'existing roles must not be removed');
+    }
+
+    public function test_adding_an_existing_assessor_does_not_duplicate_their_role(): void
+    {
+        $lead = $this->makeUserWithRole('assessor');
+        $existingAssessor = $this->makeUserWithRole('assessor');
+        $assessment = $this->createAssessmentAs($lead);
+
+        app(AssessmentTeamService::class)->addMember($assessment, $existingAssessor->id, $lead->id);
+
+        $existingAssessor->refresh();
+        $this->assertCount(1, $existingAssessor->roles()->where('name', 'assessor')->get());
+    }
+
+    public function test_search_eligible_users_finds_users_regardless_of_role(): void
+    {
+        $lead = $this->makeUserWithRole('assessor');
+        $assessment = $this->createAssessmentAs($lead);
+
+        $mentor = User::factory()->create(['name' => 'Searchable Mentor']);
+        Role::firstOrCreate(['name' => 'facility_mentor', 'guard_name' => 'web']);
+        $mentor->assignRole('facility_mentor');
+
+        $results = app(AssessmentTeamService::class)->searchEligibleUsers($assessment, 'Searchable Mentor');
+
+        $this->assertTrue($results->contains('id', $mentor->id));
+    }
+
+    public function test_search_eligible_users_excludes_existing_team_members(): void
+    {
+        $lead = $this->makeUserWithRole('assessor');
+        $assessment = $this->createAssessmentAs($lead);
+
+        $results = app(AssessmentTeamService::class)->searchEligibleUsers($assessment, 'Test assessor');
+
+        $this->assertFalse($results->contains('id', $lead->id));
+    }
 }
