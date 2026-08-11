@@ -333,7 +333,8 @@ html {
 .aqs-info-table,
 .aqs-data-table {
     padding: 0 !important;
-    overflow: hidden;
+    /* No overflow:hidden — it clips the Cadre select's dropdown popover
+       to this container's bounding box, cutting its options off. */
     border-radius: 0.5rem;
 }
 .aqs-info-table > legend,

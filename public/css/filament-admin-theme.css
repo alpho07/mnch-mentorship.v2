@@ -787,7 +787,10 @@ textarea.fi-input:focus,
 .aqs-info-table,
 .aqs-data-table {
     padding: 0 !important;
-    overflow: hidden;
+    /* No overflow:hidden here — it used to clip corners for a cleaner
+       rounded look, but it also clipped the Cadre select's dropdown
+       popover (a descendant) to this container's own bounding box,
+       making its options unreachable/cut off. */
     border-radius: 0.5rem;
 }
 .aqs-info-table > legend,
