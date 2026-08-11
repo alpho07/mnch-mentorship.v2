@@ -110,6 +110,36 @@ class AssessmentResourceTest extends TestCase
         $response->assertSee('Renamed On Dashboard');
     }
 
+    public function test_team_member_can_see_an_assessment_they_were_invited_to(): void
+    {
+        $assessorA = $this->makeUserWithRole('assessor');
+        $assessorB = $this->makeUserWithRole('assessor');
+        $assessmentA = $this->createAssessmentAs($assessorA);
+
+        $assessmentA->teamMembers()->attach($assessorB->id, [
+            'role' => 'member',
+            'added_by' => $assessorA->id,
+            'added_at' => now(),
+        ]);
+
+        $this->actingAs($assessorB);
+        $visibleIds = AssessmentResource::getEloquentQuery()->pluck('id')->all();
+
+        $this->assertContains($assessmentA->id, $visibleIds);
+    }
+
+    public function test_an_uninvited_assessor_still_cannot_see_another_assessors_record(): void
+    {
+        $assessorA = $this->makeUserWithRole('assessor');
+        $outsider = $this->makeUserWithRole('assessor');
+        $assessmentA = $this->createAssessmentAs($assessorA);
+
+        $this->actingAs($outsider);
+        $visibleIds = AssessmentResource::getEloquentQuery()->pluck('id')->all();
+
+        $this->assertNotContains($assessmentA->id, $visibleIds);
+    }
+
     public function test_list_page_appends_mfl_code_to_the_facility_name_instead_of_a_separate_column(): void
     {
         $admin = $this->makeUserWithRole('admin');

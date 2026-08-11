@@ -59,7 +59,11 @@ class AssessmentResource extends Resource
         $user = auth()->user();
 
         if ($user && ! $user->hasRole(['super_admin', 'admin', 'division'])) {
-            $query->where('assessor_id', $user->id);
+            $query->where(function (Builder $query) use ($user) {
+                $query->where('assessor_id', $user->id)
+                    ->orWhere('created_by', $user->id)
+                    ->orWhereHas('teamMembers', fn (Builder $team) => $team->where('users.id', $user->id));
+            });
         }
 
         return $query;
