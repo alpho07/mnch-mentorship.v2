@@ -149,10 +149,18 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
             $type,
             'emonc_facility_context',
             'A. Facility Profile',
-            'Facility identity, EmONC training coverage, and human resources in the maternity unit. Facility name, MFL code, county, level, and ownership are shown from the selected facility record and not re-collected here.',
+            'Facility identity, EmONC training coverage, and human resources in the maternity unit. Facility name, MFL code, county, level, and ownership are shown from the selected facility record and not re-collected here. "Supervisors" from the source survey are not separate fields here — they are this assessment\'s real team lead/members (see the Team Members step on Create Assessment and the "Manage Team" action), the same as every other assessment template.',
             false,
             1
         );
+
+        // Cleanup for environments that ran an earlier version of this
+        // seeder: the source survey's free-text "Supervisors" table (Name +
+        // Title x3) was initially ported as its own fields, but that data
+        // is fully redundant with the assessment's real team lead/member
+        // records — removed in favor of the existing team feature rather
+        // than duplicating it.
+        AssessmentQuestion::where('question_code', 'like', 'EMONC_A_SUP%')->delete();
 
         $this->upsertQuestion($section, [
             'code' => 'EMONC_A_FACILITY_CATEGORY',
@@ -161,11 +169,6 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
             'options' => ['CEMONC', 'BEMONC'],
             'order' => $this->nextOrder(),
         ]);
-
-        for ($i = 1; $i <= 3; $i++) {
-            $this->upsertQuestion($section, ['code' => "EMONC_A_SUP{$i}_NAME", 'text' => "Supervisor {$i} — Name", 'type' => 'text', 'order' => $this->nextOrder()]);
-            $this->upsertQuestion($section, ['code' => "EMONC_A_SUP{$i}_TITLE", 'text' => "Supervisor {$i} — Title", 'type' => 'text', 'order' => $this->nextOrder()]);
-        }
 
         $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_NAME', 'text' => 'Facility Supervision Respondent — Name', 'type' => 'text', 'order' => $this->nextOrder()]);
         $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CONTACT', 'text' => 'Facility Supervision Respondent — Contact', 'type' => 'text', 'order' => $this->nextOrder()]);

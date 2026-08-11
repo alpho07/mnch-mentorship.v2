@@ -29,7 +29,7 @@ implementation seeder.
   Infant & Child / General Facility Readiness / …), then pick the specific
   **template** (`AssessmentType`) within that category — sections/questions
   load automatically exactly as today.
-- The EmONC survey's ~235 fields, scoring, and structure are faithfully
+- The EmONC survey's ~229 fields, scoring, and structure are faithfully
   represented as one new `AssessmentType` with ~9 sections and their
   questions — no new database tables for content (categories table is the one
   exception — see §3).
@@ -91,7 +91,7 @@ category = EmONC, version `1.0`.
 
 | Code | Name | Kind | Scored? | Questions |
 |---|---|---|---|---|
-| `emonc_facility_context` | A. Facility Profile | dynamic_questions | No | ~29 |
+| `emonc_facility_context` | A. Facility Profile | dynamic_questions | No | 23 |
 | `emonc_feedback` | B. Feedback to Office & Colleagues | dynamic_questions | Yes | 10 |
 | `emonc_capacity_building` | C. Capacity Building | dynamic_questions | Yes | 2 |
 | `emonc_key_commodities` | D. Key Commodities | dynamic_questions | Yes | 27 |
@@ -180,7 +180,7 @@ A new idempotent seeder, `EmoncSupportiveSupervisionSeeder` (follows the
    General Facility Readiness).
 2. A migration backfilling `category_id = General Facility Readiness` on the
    existing "Standard Facility Assessment" type.
-3. The new `AssessmentType`, its 9 `AssessmentSection` rows, and all ~235
+3. The new `AssessmentType`, its 9 `AssessmentSection` rows, and all ~229
    `AssessmentQuestion` rows (content transcribed in §8), from a structured
    PHP array in the seeder itself.
 
@@ -195,7 +195,12 @@ Transcribed from the live REDCap survey on 2026-08-11. All yes/no items use
 
 ### A. Facility Profile (not scored)
 - Facility Category — select, options: CEMONC, BEMONC
-- Supervisor 1/2/3 — Name (text), Title (text) — 3 pairs
+- Supervisors — NOT ported as fields. The source survey's free-text
+  Supervisor 1/2/3 Name/Title table is fully redundant with this
+  assessment's real team lead/member records (the existing `assessment_team`
+  pivot, managed via `CreateAssessment`'s Team Members step and
+  `ListAssessments`' "Manage Team" action) — the same team feature every
+  other assessment template already uses. No new fields or UI needed.
 - Facility Supervision Respondent — Name, Contact, Cadre (text)
 - Human Resources in Maternity Unit — for each of Nurses / Clinical Officers /
   Medical Officers / Obstetricians: Number Allocated in Maternity (number),

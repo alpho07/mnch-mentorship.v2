@@ -27,7 +27,7 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertTrue($type->is_active);
     }
 
-    public function test_section_a_is_seeded_with_29_unscored_questions(): void
+    public function test_section_a_is_seeded_with_23_unscored_questions(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);
 
@@ -36,8 +36,15 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
 
         $this->assertNotNull($section);
         $this->assertFalse($section->is_scored);
-        $this->assertSame(29, $section->questions()->count());
+        $this->assertSame(23, $section->questions()->count());
         $this->assertSame(0, $section->questions()->where('is_scored', true)->count());
+
+        // Supervisors are NOT free-text fields here — they're the
+        // assessment's real team_lead/member records (assessment_team
+        // pivot), managed via CreateAssessment's team-invite step and
+        // ListAssessments' "Manage Team" action, same as every other
+        // assessment template.
+        $this->assertFalse(AssessmentQuestion::where('question_code', 'like', 'EMONC_A_SUP%')->exists());
 
         $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_A_FACILITY_CATEGORY')->exists());
         $facilityCategory = AssessmentQuestion::where('question_code', 'EMONC_A_FACILITY_CATEGORY')->first();
@@ -184,14 +191,14 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertFalse($question->is_required);
     }
 
-    public function test_full_seeder_produces_9_sections_and_235_questions(): void
+    public function test_full_seeder_produces_9_sections_and_229_questions(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);
 
         $type = AssessmentType::where('code', 'EMONC_SUPPORTIVE_SUPERVISION')->first();
 
         $this->assertSame(9, $type->sections()->count());
-        $this->assertSame(235, AssessmentQuestion::whereIn('assessment_section_id', $type->sections()->pluck('id'))->count());
+        $this->assertSame(229, AssessmentQuestion::whereIn('assessment_section_id', $type->sections()->pluck('id'))->count());
     }
 
     public function test_seeder_is_idempotent(): void
