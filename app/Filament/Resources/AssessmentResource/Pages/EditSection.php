@@ -6,6 +6,7 @@ use App\Filament\Resources\AssessmentResource;
 use App\Filament\Resources\AssessmentResource\Traits\HasSectionNavigation;
 use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentSection;
+use App\Services\CadreMatrixSyncService;
 use App\Services\DynamicFormBuilder;
 use App\Services\DynamicScoringService;
 use Filament\Forms;
@@ -57,6 +58,16 @@ class EditSection extends EditRecord
 
         $this->section = $section;
 
+        // EmONC's Human Resources block has no fixed cadre list — its rows
+        // come from the admin-managed Cadre list (category: 'emonc'),
+        // which can change any time. Re-synced on every visit so a cadre
+        // added or deactivated since the last visit is reflected
+        // immediately, without needing to re-run any seeder. A no-op
+        // (single indexed WHERE, no writes) for every other section code.
+        if ($section->code === 'emonc_facility_context') {
+            app(CadreMatrixSyncService::class)->syncMaternityHrQuestions($section);
+        }
+
         $this->authorizeAccess();
 
         $this->previousUrl = url()->previous();
@@ -99,8 +110,16 @@ class EditSection extends EditRecord
     public function form(Form $form): Form
     {
         return $form->schema([
+            Forms\Components\View::make('filament.pages.assessment.section-chrome')
+                ->viewData(fn () => [
+                    'sections' => $this->getAllSections(),
+                    'currentKey' => $this->section->code,
+                ])
+                ->columnSpanFull(),
             Forms\Components\Section::make("{$this->section->name} Assessment")
                 ->description($this->section->description)
+                ->icon('heroicon-o-clipboard-document-check')
+                ->extraAttributes(['class' => 'aqs'])
                 ->schema(
                     DynamicFormBuilder::buildForSection($this->section->id, $this->record->id)
                 )
