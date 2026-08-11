@@ -28,7 +28,9 @@ class HeadDrmhReviewMenteeTest extends TestCase
         $reviewer->givePermissionTo(['page_HeadDrmhReviewMentee']);
         $this->actingAs($reviewer);
 
-        $program = Program::factory()->create(['is_active' => true]);
+        // "Knowledge Tests" is only shown for EmONC programs — Program::isEmonc()
+        // requires the name to contain both "maternal" and "emonc".
+        $program = Program::factory()->create(['name' => 'Maternal Health EmONC Mentorship', 'is_active' => true]);
         $programModule = ProgramModule::factory()->create(['program_id' => $program->id, 'is_active' => true]);
         $training = Training::factory()->facilityMentorship()->create(['program_id' => $program->id]);
         $class = MentorshipClass::factory()->create(['training_id' => $training->id]);
