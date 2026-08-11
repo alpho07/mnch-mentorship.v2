@@ -187,41 +187,47 @@ class DynamicFormBuilder
     }
 
     /**
-     * Renders $rows as one table: the first row's fields keep their real
-     * labels (acting as the shared column header row, plus $rowLabelHeader
-     * from that row for the leading row-label column); every subsequent
-     * row's field labels are hidden so they read as bare data cells under
-     * that same header. This is how CadreMatrixSyncService's per-cadre
-     * Human Resources rows collapse into one table instead of N separate
-     * boxed groups.
+     * Renders $rows as one table with a genuine, dedicated header row (row
+     * labels + each column's own field label, all styled via
+     * .aqs-header-cell) followed by one full data row per entry in $rows —
+     * every data row, including the first, has its own labels hidden and
+     * shows only its values. Earlier this let the first data row double as
+     * the header (its own visible label serving as the shared column
+     * title), which read wrong: that row's row-label cell showed its
+     * value (e.g. "Nurses") styled exactly like a column heading. This is
+     * how CadreMatrixSyncService's per-cadre Human Resources rows collapse
+     * into one table instead of N separate boxed groups.
      */
     protected static function buildTableFieldset(string $title, array $rows)
     {
         $cells = [];
 
-        foreach ($rows as $index => $row) {
-            $isFirstRow = $index === 0;
+        // Header row: the row-label column's header (e.g. "Cadre") plus
+        // one header cell per data column, using the first row's fields
+        // purely to read off their label text before every field's own
+        // label gets hidden below.
+        $cells[] = Forms\Components\Placeholder::make('table_header_rowlabel_'.md5($title))
+            ->label($rows[0]['header'])
+            ->content('')
+            ->extraAttributes(['class' => 'aqs-header-cell']);
 
+        foreach ($rows[0]['fields'] as $field) {
+            $cells[] = Forms\Components\Placeholder::make('table_header_col_'.md5($title).'_'.count($cells))
+                ->label(method_exists($field, 'getLabel') ? $field->getLabel() : '')
+                ->content('')
+                ->extraAttributes(['class' => 'aqs-header-cell']);
+        }
+
+        foreach ($rows as $index => $row) {
             $rowLabelCell = Forms\Components\Placeholder::make('table_row_label_'.md5($title.$row['label'].$index))
-                ->label($isFirstRow ? $row['header'] : '')
-                ->hiddenLabel(! $isFirstRow)
+                ->hiddenLabel()
                 ->content($row['label']);
 
-            // Deliberately NOT tagged .aqs-header-cell even on row 0: this
-            // cell's CONTENT is real data (the first cadre's name, e.g.
-            // "Nurses") — only its LABEL ("Cadre") is header-like, and
-            // Filament already renders that label the same understated way
-            // on every field. Darkening the whole cell would make the
-            // first cadre's name itself look like a column title.
             $cells[] = $rowLabelCell;
 
             foreach ($row['fields'] as $field) {
-                if (! $isFirstRow) {
-                    if (method_exists($field, 'hiddenLabel')) {
-                        $field->hiddenLabel();
-                    }
-                } elseif (method_exists($field, 'extraAttributes')) {
-                    $field->extraAttributes(['class' => 'aqs-header-cell']);
+                if (method_exists($field, 'hiddenLabel')) {
+                    $field->hiddenLabel();
                 }
 
                 // See normalizeColumnSpans() — undoes any per-field-type

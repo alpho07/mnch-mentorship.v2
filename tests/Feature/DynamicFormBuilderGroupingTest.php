@@ -207,9 +207,44 @@ class DynamicFormBuilderGroupingTest extends TestCase
         $this->assertInstanceOf(Fieldset::class, $fields[0]);
         $this->assertSame('Human Resources', $fields[0]->getLabel());
 
-        // 1 row-label column + 2 metric columns per row, x2 rows = 6 cells.
-        $this->assertCount(6, $fields[0]->getChildComponents());
+        // A genuine header row (1 row-label header + 2 column headers = 3
+        // cells) followed by 2 full data rows (3 cells each) = 9 total.
+        // Every row, including the first, is a real data row — none of
+        // them also doubles as the header.
+        $this->assertCount(9, $fields[0]->getChildComponents());
         $this->assertSame(3, $fields[0]->getColumns('default'));
+    }
+
+    public function test_table_row_group_has_a_dedicated_header_row_separate_from_every_data_row(): void
+    {
+        $section = $this->makeSection('table_header_separation_section_test');
+        $this->makeNumber($section, 'HEADSEP_Q1', 1, 'HR|Cadre|Nurses');
+        $this->makeNumber($section, 'HEADSEP_Q2', 2, 'HR|Cadre|Doctors');
+
+        $fields = DynamicFormBuilder::buildForSection($section->id);
+        $cells = $fields[0]->getChildComponents();
+
+        // Header row: row-label header ("Cadre") + 1 column header
+        // ("Question HEADSEP_Q1"), both tagged .aqs-header-cell, both with
+        // their labels visible — then 2 data rows x 2 cells each = 6 total.
+        $this->assertCount(6, $cells);
+        $this->assertFalse($cells[0]->isLabelHidden());
+        $this->assertSame('Cadre', $cells[0]->getLabel());
+        $this->assertFalse($cells[1]->isLabelHidden());
+
+        // Data row 1 (Nurses): its own row-label cell has its label
+        // hidden (it's not "Cadre" again, just the bare value "Nurses"),
+        // and — critically — its field's label is ALSO hidden, unlike the
+        // old design where the first data row doubled as the header.
+        $this->assertTrue($cells[2]->isLabelHidden());
+        $this->assertSame('Nurses', $cells[2]->getContent());
+        $this->assertTrue($cells[3]->isLabelHidden());
+
+        // Data row 2 (Doctors) behaves identically to data row 1 — no
+        // row is special-cased as "the header row" anymore.
+        $this->assertTrue($cells[4]->isLabelHidden());
+        $this->assertSame('Doctors', $cells[4]->getContent());
+        $this->assertTrue($cells[5]->isLabelHidden());
     }
 
     public function test_table_rows_with_a_different_title_do_not_merge(): void
