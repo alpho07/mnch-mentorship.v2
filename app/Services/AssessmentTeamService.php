@@ -19,6 +19,7 @@ class AssessmentTeamService {
      */
     public function addMember(Assessment $assessment, int $userId, int $actorId): void {
         $this->assertCanManageTeam($assessment, $actorId);
+        $this->ensureLegacyCreatorIsTeamLead($assessment, $actorId);
 
         if ($assessment->isTeamMember($userId)) {
             return; // already on team — silent no-op
@@ -36,6 +37,7 @@ class AssessmentTeamService {
      */
     public function addMembers(Assessment $assessment, array $userIds, int $actorId): void {
         $this->assertCanManageTeam($assessment, $actorId);
+        $this->ensureLegacyCreatorIsTeamLead($assessment, $actorId);
 
         $existing = $assessment->teamMembers()->pluck('users.id')->toArray();
 
@@ -167,6 +169,29 @@ class AssessmentTeamService {
         if (!$assessment->canToggleLock($actorId)) {
             throw new \Exception('Only the team lead or an administrator can lock or unlock this assessment.');
         }
+    }
+
+    /**
+     * Give the original assessor lead ownership the first time a legacy
+     * assessment is shared. New assessments receive this pivot row on
+     * create via the Assessment model's `created` event.
+     */
+    private function ensureLegacyCreatorIsTeamLead(Assessment $assessment, int $actorId): void {
+        if ($assessment->teamLeads()->exists()) {
+            return;
+        }
+
+        if ($assessment->assessor_id !== $actorId && $assessment->created_by !== $actorId) {
+            return;
+        }
+
+        $assessment->teamMembers()->syncWithoutDetaching([
+            $actorId => [
+                'role' => 'team_lead',
+                'added_by' => $actorId,
+                'added_at' => now(),
+            ],
+        ]);
     }
 
     // =========================================================================

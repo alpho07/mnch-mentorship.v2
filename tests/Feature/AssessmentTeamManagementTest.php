@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Assessment;
 use App\Models\Facility;
 use App\Models\User;
+use App\Services\AssessmentTeamService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -98,5 +99,22 @@ class AssessmentTeamManagementTest extends TestCase
         $assessment->unlock();
         $this->assertFalse($assessment->fresh()->isLocked());
         $this->assertNull($assessment->fresh()->locked_by);
+    }
+
+    public function test_adding_a_member_to_a_legacy_assessment_promotes_the_original_assessor_to_lead(): void
+    {
+        $assessor = $this->makeUserWithRole('assessor');
+        $newMember = $this->makeUserWithRole('assessor');
+        $assessment = $this->createAssessmentAs($assessor);
+
+        // Simulate a pre-team-management assessment: no pivot rows at all,
+        // as if it were created before the `created` boot hook existed.
+        $assessment->teamMembers()->detach();
+        $this->assertTrue($assessment->teamLeads()->doesntExist());
+
+        app(AssessmentTeamService::class)->addMember($assessment, $newMember->id, $assessor->id);
+
+        $this->assertTrue($assessment->fresh()->isTeamLead($assessor->id));
+        $this->assertTrue($assessment->fresh()->isTeamMember($newMember->id));
     }
 }
