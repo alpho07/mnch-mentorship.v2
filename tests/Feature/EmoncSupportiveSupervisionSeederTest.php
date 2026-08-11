@@ -157,6 +157,43 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertSame(6, $section->questions()->where('is_scored', true)->count());
     }
 
+    public function test_section_h_is_seeded_with_35_unscored_questions(): void
+    {
+        $this->seed(EmoncSupportiveSupervisionSeeder::class);
+
+        $section = AssessmentSection::where('code', 'emonc_gaps_success')->first();
+
+        $this->assertNotNull($section);
+        $this->assertFalse($section->is_scored);
+        $this->assertSame(35, $section->questions()->count());
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_H_GAP1_GAP')->exists());
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_H_GAP5_WHEN')->exists());
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_H_SUCCESS1_WHAT')->exists());
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_H_SUCCESS5_IMPACT')->exists());
+    }
+
+    public function test_section_j_is_seeded_with_1_optional_question(): void
+    {
+        $this->seed(EmoncSupportiveSupervisionSeeder::class);
+
+        $section = AssessmentSection::where('code', 'emonc_notes')->first();
+
+        $this->assertNotNull($section);
+        $this->assertSame(1, $section->questions()->count());
+        $question = $section->questions()->first();
+        $this->assertFalse($question->is_required);
+    }
+
+    public function test_full_seeder_produces_9_sections_and_235_questions(): void
+    {
+        $this->seed(EmoncSupportiveSupervisionSeeder::class);
+
+        $type = AssessmentType::where('code', 'EMONC_SUPPORTIVE_SUPERVISION')->first();
+
+        $this->assertSame(9, $type->sections()->count());
+        $this->assertSame(235, AssessmentQuestion::whereIn('assessment_section_id', $type->sections()->pluck('id'))->count());
+    }
+
     public function test_seeder_is_idempotent(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);

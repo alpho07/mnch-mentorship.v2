@@ -37,6 +37,8 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
         $this->seedSectionE($type);
         $this->seedSectionF($type);
         $this->seedSectionG($type);
+        $this->seedSectionH($type);
+        $this->seedSectionJ($type);
     }
 
     private function seedCategories(): void
@@ -464,5 +466,40 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
         foreach ($questions as $i => $text) {
             $this->upsertQuestion($section, $this->yesNo('EMONC_G_'.($i + 1), $text, $this->nextOrder()));
         }
+    }
+
+    // ── H. Key Gaps, Recommendations & Success Stories (not scored) ────────
+
+    private function seedSectionH(AssessmentType $type): void
+    {
+        $section = $this->upsertSection($type, 'emonc_gaps_success', 'H. Gaps & Success Stories', null, false, 8);
+
+        for ($i = 1; $i <= 5; $i++) {
+            $this->upsertQuestion($section, ['code' => "EMONC_H_GAP{$i}_GAP", 'text' => "Gap {$i}", 'type' => 'text', 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, ['code' => "EMONC_H_GAP{$i}_ACTION", 'text' => "Gap {$i} — Action", 'type' => 'text', 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, ['code' => "EMONC_H_GAP{$i}_WHO", 'text' => "Gap {$i} — Who", 'type' => 'text', 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, ['code' => "EMONC_H_GAP{$i}_WHEN", 'text' => "Gap {$i} — When", 'type' => 'text', 'order' => $this->nextOrder()]);
+        }
+
+        for ($i = 1; $i <= 5; $i++) {
+            $this->upsertQuestion($section, ['code' => "EMONC_H_SUCCESS{$i}_WHAT", 'text' => "Success Story {$i} — What Happened", 'type' => 'text', 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, ['code' => "EMONC_H_SUCCESS{$i}_HOW", 'text' => "Success Story {$i} — How It Was Achieved", 'type' => 'text', 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, ['code' => "EMONC_H_SUCCESS{$i}_IMPACT", 'text' => "Success Story {$i} — Impact on Patient Care", 'type' => 'text', 'order' => $this->nextOrder()]);
+        }
+    }
+
+    // ── J. Additional Notes (not scored) ────────────────────────────────────
+
+    private function seedSectionJ(AssessmentType $type): void
+    {
+        $section = $this->upsertSection($type, 'emonc_notes', 'J. Additional Notes', null, false, 9);
+
+        $this->upsertQuestion($section, [
+            'code' => 'EMONC_J_COMMENTS',
+            'text' => 'Additional comments',
+            'help_text' => 'Optional',
+            'type' => 'text',
+            'order' => $this->nextOrder(),
+        ]);
     }
 }
