@@ -97,6 +97,7 @@ class DynamicFormBuilder
             'text' => static::buildTextField($question, $fieldName, $existingResponse),
             'select' => static::buildSelectField($question, $fieldName, $existingResponse),
             'radio' => static::buildRadioField($question, $fieldName, $existingResponse),
+            'group_completeness' => static::buildGroupCompletenessField($question, $fieldName, $existingResponse),
             'mortality_three_month' => static::buildMortalityThreeMonthField($question, $fieldName, $existingResponse),
             default => null,
         };
@@ -280,6 +281,26 @@ class DynamicFormBuilder
             ->required($question->is_required)
             ->default($response?->response_value)
             ->helperText($question->help_text);
+    }
+
+    /**
+     * Group-completeness questions aren't user-answerable — their response
+     * is derived by DynamicScoringService from sibling questions sharing
+     * the same `group`. Rendered as a disabled placeholder; never submitted
+     * (no form key), so saveResponses() needs no changes to skip it.
+     */
+    protected static function buildGroupCompletenessField(AssessmentQuestion $question, string $fieldName, ?AssessmentQuestionResponse $response)
+    {
+        $content = match ($response?->response_value) {
+            'Yes' => '✓ Complete',
+            'No' => '✗ Incomplete',
+            default => 'Not yet calculated — save this section to compute',
+        };
+
+        return Forms\Components\Placeholder::make($fieldName)
+            ->label($question->question_text)
+            ->content($content)
+            ->columnSpanFull();
     }
 
     /**

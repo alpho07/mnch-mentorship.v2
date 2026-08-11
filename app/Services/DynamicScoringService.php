@@ -29,6 +29,12 @@ class DynamicScoringService
             ->where('question_type', '!=', 'mortality_three_month')
             ->get();
 
+        // Resolve any group_completeness questions' responses from their
+        // sibling groups before scoring sums them like any other question.
+        // No-op for sections without one — i.e. every section that existed
+        // before this feature.
+        self::resolveGroupCompletenessResponses($assessmentId, $questions);
+
         // ── Conditional exclusion ───────────────────────────────────────────
         // A scored question whose display_conditions resolve to "hidden"
         // (given the assessment's actual answers so far) doesn't count
@@ -103,6 +109,56 @@ class DynamicScoringService
 
             return ConditionalLogicEvaluator::isVisible($question->display_conditions, $valueResolver);
         });
+    }
+
+    /**
+     * A `group_completeness` question's response is derived, not submitted:
+     * 1 (Yes) iff every other active, scored sibling sharing its `group`
+     * (within the same section's already-loaded $questions collection)
+     * currently has a response scored at that sibling's own maximum
+     * possible score; 0 (No) otherwise, including when a sibling is
+     * unanswered. Upserts the response so the normal sum below picks it up
+     * exactly like any other scored question.
+     */
+    private static function resolveGroupCompletenessResponses(int $assessmentId, $questions): void
+    {
+        $completenessQuestions = $questions->where('question_type', 'group_completeness');
+
+        if ($completenessQuestions->isEmpty()) {
+            return;
+        }
+
+        foreach ($completenessQuestions as $completenessQuestion) {
+            $siblings = $questions->filter(fn ($q) => $q->group === $completenessQuestion->group
+                && $q->id !== $completenessQuestion->id
+                && $q->question_type !== 'group_completeness');
+
+            if ($siblings->isEmpty()) {
+                continue;
+            }
+
+            $siblingResponses = AssessmentQuestionResponse::where('assessment_id', $assessmentId)
+                ->whereIn('assessment_question_id', $siblings->pluck('id'))
+                ->get()
+                ->keyBy('assessment_question_id');
+
+            $allComplete = $siblings->every(function ($sibling) use ($siblingResponses) {
+                $response = $siblingResponses->get($sibling->id);
+
+                if (! $response || $response->score === null) {
+                    return false;
+                }
+
+                $maxForSibling = ! empty($sibling->scoring_map) ? max($sibling->scoring_map) : 1;
+
+                return (float) $response->score >= (float) $maxForSibling;
+            });
+
+            AssessmentQuestionResponse::updateOrCreate(
+                ['assessment_id' => $assessmentId, 'assessment_question_id' => $completenessQuestion->id],
+                ['response_value' => $allComplete ? 'Yes' : 'No', 'score' => $allComplete ? 1 : 0]
+            );
+        }
     }
 
     /**
