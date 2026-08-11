@@ -152,6 +152,12 @@ class ListAssessments extends ListRecords
                 Tables\Columns\TextColumn::make('assessor.name')
                     ->label('Assessor')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('team_members_count')
+                    ->label('Team')
+                    ->counts('teamMembers')
+                    ->badge()
+                    ->color('primary')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -235,19 +241,79 @@ class ListAssessments extends ListRecords
             ->filtersLayout(FiltersLayout::Dropdown)
             ->actions([
                 Tables\Actions\ActionGroup::make([
+                    // Dashboard Action
+                    Tables\Actions\Action::make('dashboard')
+                        ->label('Continue Assessments')
+                        ->icon('heroicon-o-clipboard-document-list')
+                        ->color('primary')
+                        ->visible(fn ($record) => $record->status !== 'completed')
+                        ->url(fn ($record) => AssessmentResource::getUrl('dashboard', ['record' => $record])),
                     // View Summary Action
                     Tables\Actions\Action::make('view_summary')
                         ->label('View Summary')
                         ->icon('heroicon-o-eye')
                         ->color('info')
                         ->url(fn ($record) => AssessmentResource::getUrl('summary', ['record' => $record])),
-                    // Dashboard Action
-                    Tables\Actions\Action::make('dashboard')
-                        ->label('Continue Summary')
-                        ->icon('heroicon-o-clipboard-document-list')
+                    // Manage Team Action
+                    Tables\Actions\Action::make('manage_team')
+                        ->label('Manage Team')
+                        ->icon('heroicon-o-user-group')
                         ->color('primary')
-                        ->visible(fn ($record) => $record->status !== 'completed')
-                        ->url(fn ($record) => AssessmentResource::getUrl('dashboard', ['record' => $record])),
+                        ->visible(fn ($record) => $record->canManageTeam(auth()->id()))
+                        ->form([
+                            \Filament\Forms\Components\Section::make('Team Members')
+                                ->description('People who can currently view and work on this assessment.')
+                                ->schema([
+                                    \Filament\Forms\Components\Placeholder::make('current_team')
+                                        ->hiddenLabel()
+                                        ->content(function ($record): \Illuminate\Support\HtmlString {
+                                            $members = app(\App\Services\AssessmentTeamService::class)
+                                                ->getTeamForDisplay($record)
+                                                ->map(function ($member): string {
+                                                    $role = $member->pivot->role === 'team_lead' ? 'Lead Assessor' : 'Team Member';
+                                                    $name = e($member->name);
+                                                    $email = e($member->email ?? 'No email');
+
+                                                    return "<div class=\"flex items-center justify-between py-2\"><div><p class=\"font-medium text-gray-950 dark:text-white\">{$name}</p><p class=\"text-xs text-gray-500\">{$email}</p></div><span class=\"text-xs font-medium text-primary-600\">{$role}</span></div>";
+                                                })
+                                                ->implode('<hr class="border-gray-200 dark:border-gray-700">');
+
+                                            return new \Illuminate\Support\HtmlString($members ?: '<p class="text-sm text-gray-500">No team members yet.</p>');
+                                        }),
+                                ])
+                                ->columnSpanFull(),
+                            \Filament\Forms\Components\Placeholder::make('other_potential_members_heading')
+                                ->hiddenLabel()
+                                ->content(new \Illuminate\Support\HtmlString('<hr class="border-gray-200 dark:border-gray-700 mb-4"><h3 class="text-base font-semibold text-gray-950 dark:text-white">Other Potential Members</h3><p class="text-sm text-gray-500">Select assessors to add to this assessment team.</p>'))
+                                ->columnSpanFull(),
+                            \Filament\Forms\Components\CheckboxList::make('member_ids')
+                                ->label('Available assessors')
+                                ->options(fn ($record): array => app(\App\Services\AssessmentTeamService::class)
+                                    ->getEligibleUsers($record)
+                                    ->mapWithKeys(fn ($user) => [$user->id => "{$user->name} — {$user->email}"])
+                                    ->all())
+                                ->searchable()
+                                ->columns(1)
+                                ->helperText('Invited assessors can open and work on this assessment.'),
+                        ])
+                        ->modalHeading('Assessment Team')
+                        ->modalDescription(fn ($record) => "This assessment currently has {$record->teamMembers()->count()} team member(s), including its lead.")
+                        ->modalSubmitActionLabel('Invite Selected Assessors')
+                        ->action(function ($record, array $data): void {
+                            $memberIds = $data['member_ids'] ?? [];
+
+                            if ($memberIds === []) {
+                                return;
+                            }
+
+                            app(\App\Services\AssessmentTeamService::class)
+                                ->addMembers($record, $memberIds, auth()->id());
+
+                            \Filament\Notifications\Notification::make()
+                                ->title(count($memberIds).' assessor(s) added to the team')
+                                ->success()
+                                ->send();
+                        }),
                     // Export Single CSV Action
                     Tables\Actions\Action::make('export_csv')
                         ->label('CSV')
