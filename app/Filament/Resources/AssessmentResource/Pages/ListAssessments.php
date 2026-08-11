@@ -125,6 +125,12 @@ class ListAssessments extends ListRecords
                     ->badge()
                     ->color('gray')
                     ->placeholder('—'),
+                Tables\Columns\TextColumn::make('assessmentType.category.name')
+                    ->label('Category')
+                    ->searchable()
+                    ->badge()
+                    ->color('gray')
+                    ->placeholder('—'),
                 Tables\Columns\TextColumn::make('assessment_date')
                     ->date()
                     ->sortable(),
@@ -204,6 +210,16 @@ class ListAssessments extends ListRecords
                     ->relationship('assessmentType', 'name')
                     ->searchable()
                     ->preload(),
+                Tables\Filters\SelectFilter::make('assessment_type_category_id')
+                    ->label('Category')
+                    ->options(fn () => \App\Models\AssessmentTypeCategory::ordered()->pluck('name', 'id'))
+                    ->query(fn (Builder $query, array $data): Builder => $query->when(
+                        $data['value'] ?? null,
+                        fn (Builder $q, $categoryId) => $q->whereHas(
+                            'assessmentType',
+                            fn ($sq) => $sq->where('category_id', $categoryId)
+                        )
+                    )),
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'draft' => 'Draft',
