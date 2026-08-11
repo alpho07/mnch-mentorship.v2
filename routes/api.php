@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AssessmentController;
 use App\Http\Controllers\Api\AssessmentResponseController;
 use App\Http\Controllers\Api\AssessmentSectionController;
+use App\Http\Controllers\Api\AssessmentTeamController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\FacilityController;
@@ -102,6 +103,11 @@ Route::prefix('v1')->name('api.v1.')->middleware(MobileApiCors::class)->group(fu
             // ── Section progress ──────────────────────────────────────────────
             Route::put('{assessment}/sections/{sectionCode}/progress',
                 [AssessmentController::class, 'updateSectionProgress'])->name('section-progress');
+
+            // ── Team ──────────────────────────────────────────────────────────
+            Route::get('{assessment}/team', [AssessmentTeamController::class, 'show'])->name('team.show');
+            Route::get('{assessment}/team/eligible', [AssessmentTeamController::class, 'eligible'])->name('team.eligible');
+            Route::post('{assessment}/team', [AssessmentTeamController::class, 'store'])->name('team.store');
 
             // ── Responses ─────────────────────────────────────────────────────
             Route::prefix('{assessment}/responses')->name('responses.')->group(function () {
