@@ -31,11 +31,19 @@ class DatabaseBackupService
         try {
             $credentialsFile = $this->writeCredentialsFile();
             $destPath = Storage::disk('backups')->path($filename);
+            $database = config('database.connections.mysql.database');
 
+            // These tables track backup/restore operations themselves — a
+            // full dump would capture them too, and restoring it later
+            // would overwrite them back to their state at dump time,
+            // erasing any backups/restores tracked since. They must never
+            // round-trip through their own backup.
             $command = sprintf(
-                'mysqldump --defaults-extra-file=%s %s | gzip > %s',
+                'mysqldump --defaults-extra-file=%s --ignore-table=%s --ignore-table=%s %s | gzip > %s',
                 escapeshellarg($credentialsFile),
-                escapeshellarg(config('database.connections.mysql.database')),
+                escapeshellarg("{$database}.database_backups"),
+                escapeshellarg("{$database}.database_restores"),
+                escapeshellarg($database),
                 escapeshellarg($destPath)
             );
 

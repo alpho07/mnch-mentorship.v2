@@ -31,6 +31,26 @@ class DatabaseBackupServiceTest extends TestCase
         $this->assertStringEndsWith('.sql.gz', $backup->filename);
     }
 
+    public function test_create_backup_excludes_its_own_tracking_tables_from_the_dump(): void
+    {
+        // A full mysqldump captures every table, including database_backups
+        // and database_restores themselves. Restoring that dump later would
+        // overwrite those tracking tables back to their state at dump time —
+        // silently erasing the very row created to track that restore, and
+        // any backup rows created after this dump was taken. They must be
+        // excluded so the feature's own bookkeeping survives a restore.
+        Storage::fake('backups');
+        Process::fake(['mysqldump*' => Process::result()]);
+
+        app(DatabaseBackupService::class)->createBackup(null, 'manual');
+
+        Process::assertRan(function ($process): bool {
+            return str_contains($process->command, '--ignore-table')
+                && str_contains($process->command, 'database_backups')
+                && str_contains($process->command, 'database_restores');
+        });
+    }
+
     public function test_create_backup_records_a_failed_row_with_the_error_on_failure(): void
     {
         Storage::fake('backups');
