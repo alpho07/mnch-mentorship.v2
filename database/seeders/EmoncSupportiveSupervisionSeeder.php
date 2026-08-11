@@ -332,6 +332,66 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
             'Nasal prongs',
             'Magnesium Sulphate Toxicity Monitoring Chart',
         ]);
+
+        $this->seedKit($section, 'EMONC_E_K4', '4. Maternal Resuscitation Kit', 'Maternal Resuscitation Kit', [
+            'Ambu bag (1.5L, adult)',
+            'Oropharyngeal airway (different sizes)',
+            'Foleys catheter with urine bag',
+            'Oxygen tubing & mask (NRM)',
+            'IV fluids',
+            'Large bore cannulas',
+            'Specimen bottles',
+            'NASG',
+            'Patella hammer',
+            'Fetoscope',
+            'Stethoscope',
+            'BP machine',
+            'Thermometer',
+            'Blood loss monitoring chart',
+        ]);
+
+        $this->seedKit($section, 'EMONC_E_K5', '5. Delivery Kit', 'Delivery Kit', [
+            '6 green towels',
+            '1 Tray 10×14',
+            '2 straight artery forceps 8"',
+            'Cord scissors',
+            'Episiotomy scissors',
+            '2 needle holders 7"',
+            '2 large kidney dishes 10"',
+            'Cord clamps',
+            '1 Gallipot',
+            'Sims speculum (small/medium/large)',
+            'Cusco speculum (small/medium/large)',
+        ]);
+
+        $this->seedKit($section, 'EMONC_E_K6', '6. Assisted Vacuum Delivery Kit (AVD/Kiwi kit)', 'Assisted Vacuum Delivery Kit (AVD/Kiwi kit)', [
+            'Vacuum extractor (Omni Cap/Pro Cap)',
+            'Syringes',
+            'Needles',
+            'Foleys catheter',
+            'Fetoscope',
+            'V-drape',
+            'Lubricant (e.g. K-Y jelly)',
+        ]);
+
+        $sopHelpText = 'Confirm physically that the job aid is available — laminated chart, wall chart, poster, or leaflet — appropriately placed in a visible location.';
+        $sops = [
+            'EMOTIVE',
+            'PET/Eclampsia',
+            'Breech Delivery',
+            'Shoulder Dystocia',
+            'Maternal Resuscitation',
+            'Neonatal Resuscitation',
+            'Maternal Shock',
+            'PPH',
+            'NASG Application',
+            'Assisted Vacuum Delivery',
+            'Heat Stable Carbetocin',
+            'AMTSL Job Aid',
+        ];
+        foreach ($sops as $i => $text) {
+            $this->upsertQuestion($section, $this->yesNo('EMONC_E_SOP_'.($i + 1), $text, $this->nextOrder(), 'SOPs / Job Aids', $sopHelpText));
+        }
     }
 
     /**

@@ -113,6 +113,26 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertCount(20, $section->questions()->where('group', '3. PET/Eclampsia Kit')->get()); // 1 + 18 + 1
     }
 
+    public function test_section_e_is_fully_seeded_with_106_questions(): void
+    {
+        $this->seed(EmoncSupportiveSupervisionSeeder::class);
+
+        $section = AssessmentSection::where('code', 'emonc_emergency_kits')->first();
+
+        $this->assertSame(106, $section->questions()->count());
+        $this->assertSame(6, $section->questions()->where('question_type', 'group_completeness')->count());
+
+        $this->assertCount(16, $section->questions()->where('group', '4. Maternal Resuscitation Kit')->get()); // 1 + 14 + 1
+        $this->assertCount(13, $section->questions()->where('group', '5. Delivery Kit')->get()); // 1 + 11 + 1
+        $this->assertCount(9, $section->questions()->where('group', '6. Assisted Vacuum Delivery Kit (AVD/Kiwi kit)')->get()); // 1 + 7 + 1
+
+        $sopQuestions = $section->questions()->where('group', 'SOPs / Job Aids')->get();
+        $this->assertCount(12, $sopQuestions);
+        $this->assertTrue($sopQuestions->every(fn ($q) => $q->question_type === 'yes_no'));
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_E_SOP_1')->exists());
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_E_SOP_12')->exists());
+    }
+
     public function test_seeder_is_idempotent(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);
