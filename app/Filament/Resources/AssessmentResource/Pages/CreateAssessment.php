@@ -52,33 +52,7 @@ class CreateAssessment extends CreateRecord
 
                                     return [$facility->id => $label];
                                 });
-                            })
-                            ->afterStateUpdated(function (Forms\Set $set, $state) {
-                                if ($state) {
-                                    $facility = Facility::with(['subcounty.county'])->find($state);
-                                    if ($facility) {
-                                        $set('facility_info', [
-                                            'mfl_code' => $facility->mfl_code ?? 'N/A',
-                                            'level' => $facility->level ?? 'N/A',
-                                            'ownership' => $facility->ownership ?? 'N/A',
-                                            'county' => $facility->subcounty->county->name ?? 'N/A',
-                                            'subcounty' => $facility->subcounty->name ?? 'N/A',
-                                            'contact' => $facility->phone ?? $facility->email ?? 'N/A',
-                                        ]);
-                                    }
-                                }
                             }),
-                        Forms\Components\Placeholder::make('facility_info')
-                            ->label('')
-                            ->content(function (Forms\Get $get) {
-                                $info = $get('facility_info');
-                                if (! $info) {
-                                    return 'Select a facility to see details';
-                                }
-
-                                return view('filament.components.facility-info', ['info' => $info]);
-                            })
-                            ->dehydrated(false),
                     ])
                     ->columns(2),
                 Forms\Components\Section::make('Assessment Details')
