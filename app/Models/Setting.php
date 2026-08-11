@@ -31,6 +31,20 @@ class Setting extends Model
      */
     public const PROGRAM_SCOPING_ENABLED = 'program_scoping_enabled';
 
+    public const BACKUP_SCHEDULE_ENABLED = 'backup_schedule_enabled';
+
+    public const BACKUP_SCHEDULE_FREQUENCY = 'backup_schedule_frequency';
+
+    public const BACKUP_SCHEDULE_TIME = 'backup_schedule_time';
+
+    public const BACKUP_SCHEDULE_DAY_OF_WEEK = 'backup_schedule_day_of_week';
+
+    public const BACKUP_SCHEDULE_DAY_OF_MONTH = 'backup_schedule_day_of_month';
+
+    public const BACKUP_RETENTION_COUNT = 'backup_retention_count';
+
+    public const BACKUP_LAST_SCHEDULED_RUN_AT = 'backup_last_scheduled_run_at';
+
     protected $fillable = [
         'key',
         'value',

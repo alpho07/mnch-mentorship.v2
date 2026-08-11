@@ -1,0 +1,108 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\DatabaseBackup;
+use App\Models\Setting;
+use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Throwable;
+
+class DatabaseBackupService
+{
+    public function createBackup(?int $userId, string $type = 'manual'): DatabaseBackup
+    {
+        $prefix = $type === 'pre_restore_safety' ? 'safety' : 'backup';
+        $filename = "{$prefix}-".now()->format('Ymd_His').'.sql.gz';
+
+        $backup = DatabaseBackup::create([
+            'filename' => $filename,
+            'disk' => 'backups',
+            'type' => $type,
+            'status' => 'running',
+            'triggered_by' => $userId,
+            'started_at' => now(),
+        ]);
+
+        $credentialsFile = null;
+
+        try {
+            $credentialsFile = $this->writeCredentialsFile();
+            $destPath = Storage::disk('backups')->path($filename);
+
+            $command = sprintf(
+                'mysqldump --defaults-extra-file=%s %s | gzip > %s',
+                escapeshellarg($credentialsFile),
+                escapeshellarg(config('database.connections.mysql.database')),
+                escapeshellarg($destPath)
+            );
+
+            $result = Process::timeout(600)->run($command);
+
+            if (! $result->successful()) {
+                throw new \RuntimeException($result->errorOutput() ?: 'mysqldump exited with a non-zero status.');
+            }
+
+            $backup->update([
+                'status' => 'completed',
+                'size_bytes' => is_file($destPath) ? filesize($destPath) : null,
+                'completed_at' => now(),
+            ]);
+
+            if (in_array($type, ['manual', 'scheduled'], true)) {
+                $this->pruneOldBackups();
+            }
+        } catch (Throwable $e) {
+            $backup->update([
+                'status' => 'failed',
+                'error_message' => Str::limit($e->getMessage(), 2000),
+                'completed_at' => now(),
+            ]);
+        } finally {
+            if ($credentialsFile) {
+                @unlink($credentialsFile);
+            }
+        }
+
+        return $backup->fresh();
+    }
+
+    public function pruneOldBackups(): void
+    {
+        $keep = max(0, (int) Setting::get(Setting::BACKUP_RETENTION_COUNT, 14));
+
+        $keepIds = DatabaseBackup::query()
+            ->where('status', 'completed')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit($keep)
+            ->pluck('id');
+
+        DatabaseBackup::query()
+            ->where('status', 'completed')
+            ->whereNotIn('id', $keepIds)
+            ->get()
+            ->each(function (DatabaseBackup $backup): void {
+                Storage::disk($backup->disk)->delete($backup->filename);
+                $backup->delete();
+            });
+    }
+
+    private function writeCredentialsFile(): string
+    {
+        $config = config('database.connections.mysql');
+        $path = tempnam(sys_get_temp_dir(), 'dbcnf');
+
+        file_put_contents($path, sprintf(
+            "[client]\nhost=%s\nport=%s\nuser=%s\npassword=%s\n",
+            $config['host'],
+            $config['port'],
+            $config['username'],
+            $config['password']
+        ));
+        chmod($path, 0600);
+
+        return $path;
+    }
+}
