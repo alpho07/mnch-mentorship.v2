@@ -70,6 +70,19 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertSame('Confirm using the CME register/booklet', $cmes->help_text);
     }
 
+    public function test_section_d_is_seeded_with_27_scored_commodity_questions(): void
+    {
+        $this->seed(EmoncSupportiveSupervisionSeeder::class);
+
+        $section = AssessmentSection::where('code', 'emonc_key_commodities')->first();
+
+        $this->assertNotNull($section);
+        $this->assertSame(27, $section->questions()->count());
+        $this->assertSame(27, $section->questions()->where('is_scored', true)->count());
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_D_1')->exists());
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_D_27')->exists());
+    }
+
     public function test_seeder_is_idempotent(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);

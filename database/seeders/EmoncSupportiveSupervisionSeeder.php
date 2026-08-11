@@ -33,6 +33,7 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
         $this->seedSectionA($type);
         $this->seedSectionB($type);
         $this->seedSectionC($type);
+        $this->seedSectionD($type);
     }
 
     private function seedCategories(): void
@@ -216,5 +217,53 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
         $helpText = 'Confirm using the CME register/booklet';
         $this->upsertQuestion($section, $this->yesNo('EMONC_C_CMES', 'CMEs held', $this->nextOrder(), null, $helpText));
         $this->upsertQuestion($section, $this->yesNo('EMONC_C_DRILLS', 'Drills held', $this->nextOrder(), null, $helpText));
+    }
+
+    // ── D. Key Commodities (scored) ─────────────────────────────────────────
+
+    private function seedSectionD(AssessmentType $type): void
+    {
+        $section = $this->upsertSection(
+            $type,
+            'emonc_key_commodities',
+            'D. Key Commodities',
+            'Available and functional in quantity sufficient for one month\'s caseload in the maternity department. Does not refer to other departments.',
+            true,
+            4
+        );
+
+        $items = [
+            'Assorted IV cannulas/branulas',
+            'Assorted disposable syringes with needles',
+            'Elbow gloves/gynaecological gloves',
+            'Sterile surgical gloves',
+            'Assorted suture material',
+            'Blood pressure measurement equipment (Digital BP machine or sphygmomanometer + stethoscope)',
+            'Delivery Kit (5 Green towels, 1 Tray 10×14, 2 straight artery forceps 8", cord scissors, episiotomy scissors, 2 needle holders 7", 2 large kidney dishes 10", cord clamps, 1 Gallipot — randomly check 1 kit for contents)',
+            'Ambu bag (280ml) with neonatal pre-term (size 0) masks',
+            'Ambu bag (280ml) with neonatal term (size 1) masks',
+            'Ambu bag (1.5L) with adult masks',
+            'Fetoscope/handheld fetal heart monitor/digital fetoscope',
+            'Portable examination lamp',
+            'Assorted speculums (small/medium/large)',
+            'Functional suction machines and catheters or penguin suction',
+            'Functional Infant Resuscitation Unit/Radiant Warmer/Resuscitaire',
+            'Oxygen set (portable cylinder or central wall supply with mask/nasal cannula + flow meter) or concentrator',
+            'Patella hammer',
+            'Thermometer',
+            'Non-Pneumatic Antishock Garment (NASG)',
+            'Oropharyngeal airway for adults',
+            'Urine strips (proteinuria and sugar dip sticks) in labour ward and lab',
+            'Functioning refrigerator for cold-chain drugs/lab reagents, powered 24/7 (excludes KEPI fridges)',
+            'Blood/blood products currently stored with blood-giving/transfusion sets',
+            'Haemoglobin meter with reagents',
+            'Blood grouping & cross-matching kit (water bath, centrifuge, reagents, cold-chain blood carriers)',
+            'Functioning refrigerator available for storing blood, powered 24/7',
+            "IV fluids assorted (Normal saline / Ringer's lactate / Half-strength Darrow's) with IV administration set",
+        ];
+
+        foreach ($items as $i => $text) {
+            $this->upsertQuestion($section, $this->yesNo('EMONC_D_'.($i + 1), $text, $this->nextOrder()));
+        }
     }
 }
