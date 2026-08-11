@@ -85,4 +85,35 @@ class CadreMatrixSyncService
             ->whereNotIn('question_code', $activeCodes)
             ->update(['is_active' => false]);
     }
+
+    /**
+     * Applies changes from the "Manage Cadres" action on EditSection:
+     * activates exactly $activeCadreIds within $category (deactivating
+     * every other cadre in that category), optionally creates a new one,
+     * then re-syncs the maternity HR questions so the effect is immediate.
+     * Kept out of the Filament Action's closure so it's testable without
+     * needing a full Livewire-mounted, route-bound page — EditSection's
+     * `sectionCode` comes from the URL route, which Livewire's test harness
+     * doesn't resolve outside a real HTTP request.
+     */
+    public function applyMaternityCadreManagement(AssessmentSection $section, array $activeCadreIds, ?string $newCadreName = null): void
+    {
+        $activeCadreIds = array_map('intval', $activeCadreIds);
+
+        Cadre::category('emonc')->get()->each(
+            fn (Cadre $cadre) => $cadre->update(['is_active' => in_array($cadre->id, $activeCadreIds, true)])
+        );
+
+        if (filled($newCadreName)) {
+            Cadre::create([
+                'name' => $newCadreName,
+                'code' => 'emonc_'.\Illuminate\Support\Str::slug($newCadreName, '_').'_'.\Illuminate\Support\Str::random(4),
+                'category' => 'emonc',
+                'is_active' => true,
+                'order' => (Cadre::category('emonc')->max('order') ?? 0) + 1,
+            ]);
+        }
+
+        $this->syncMaternityHrQuestions($section);
+    }
 }

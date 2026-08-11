@@ -6,9 +6,11 @@ use App\Filament\Resources\AssessmentResource;
 use App\Filament\Resources\AssessmentResource\Traits\HasSectionNavigation;
 use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentSection;
+use App\Models\Cadre;
 use App\Services\CadreMatrixSyncService;
 use App\Services\DynamicFormBuilder;
 use App\Services\DynamicScoringService;
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -144,6 +146,59 @@ class EditSection extends EditRecord
         }
 
         return $data;
+    }
+
+    /**
+     * Only the EmONC facility-context section gets a header action — its
+     * Human Resources table's rows come from the admin-managed Cadre list
+     * (category: 'emonc'), so assessors need a way to add or retire a
+     * cadre without leaving this page. Mirrors EditHumanResources'
+     * existing "Manage Cadres" pattern.
+     */
+    protected function getHeaderActions(): array
+    {
+        if ($this->section->code !== 'emonc_facility_context') {
+            return [];
+        }
+
+        return [
+            Actions\Action::make('manage_emonc_cadres')
+                ->label('Manage Cadres')
+                ->icon('heroicon-o-adjustments-horizontal')
+                ->color('gray')
+                ->modalHeading('Manage Human Resources Cadres')
+                ->modalDescription('Uncheck a cadre to remove its row from the table below, or add a new one. Changes apply immediately.')
+                ->fillForm(fn () => [
+                    'active_cadre_ids' => Cadre::category('emonc')->active()->pluck('id')->toArray(),
+                ])
+                ->form([
+                    Forms\Components\CheckboxList::make('active_cadre_ids')
+                        ->label('Active Cadres')
+                        ->options(fn () => Cadre::category('emonc')->ordered()->pluck('name', 'id'))
+                        ->columns(2),
+                    Forms\Components\TextInput::make('new_cadre_name')
+                        ->label('Add a new cadre')
+                        ->placeholder('e.g. Anaesthetists')
+                        ->maxLength(255),
+                ])
+                ->action(function (array $data) {
+                    app(CadreMatrixSyncService::class)->applyMaternityCadreManagement(
+                        $this->section,
+                        $data['active_cadre_ids'] ?? [],
+                        $data['new_cadre_name'] ?? null,
+                    );
+
+                    Notification::make()
+                        ->title('Cadres updated')
+                        ->success()
+                        ->send();
+
+                    $this->redirect(static::getResource()::getUrl('edit-section', [
+                        'record' => $this->record->id,
+                        'sectionCode' => $this->section->code,
+                    ]));
+                }),
+        ];
     }
 
     protected function getCurrentSectionKey(): string

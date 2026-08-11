@@ -13,6 +13,11 @@ class Cadre extends Model
 
     protected $fillable = ['name', 'code', 'category', 'description', 'order', 'is_active'];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+        'order' => 'integer',
+    ];
+
     public function trainingParticipants(): HasMany
     {
         return $this->hasMany(TrainingParticipant::class);
