@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\DatabaseBackup;
+use App\Models\DatabaseRestore;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\DatabaseBackupService;
@@ -92,5 +93,56 @@ class DatabaseBackupServiceTest extends TestCase
         $this->assertSame(['backup-4.sql.gz', 'backup-3.sql.gz'], $remaining);
         $this->assertFalse(Storage::disk('backups')->exists('backup-1.sql.gz'));
         $this->assertFalse(Storage::disk('backups')->exists('backup-2.sql.gz'));
+    }
+
+    public function test_restore_takes_a_safety_backup_first_then_restores(): void
+    {
+        Storage::fake('backups');
+        Process::fake([
+            'mysqldump*' => Process::result(),
+            'gunzip*' => Process::result(),
+        ]);
+        $user = User::factory()->create();
+        $backup = DatabaseBackup::create(['filename' => 'target.sql.gz', 'disk' => 'backups', 'type' => 'manual', 'status' => 'completed']);
+        Storage::disk('backups')->put('target.sql.gz', 'fake dump');
+
+        $restore = app(DatabaseBackupService::class)->restore($backup, $user->id);
+
+        $this->assertSame('completed', $restore->status);
+        $this->assertSame($user->id, $restore->restored_by);
+        $this->assertNotNull($restore->safety_backup_id);
+        $this->assertSame('pre_restore_safety', DatabaseBackup::find($restore->safety_backup_id)->type);
+    }
+
+    public function test_restore_aborts_without_touching_mysql_if_the_safety_backup_fails(): void
+    {
+        Storage::fake('backups');
+        Process::fake(['mysqldump*' => Process::result(exitCode: 1, errorOutput: 'disk full')]);
+        $user = User::factory()->create();
+        $backup = DatabaseBackup::create(['filename' => 'target.sql.gz', 'disk' => 'backups', 'type' => 'manual', 'status' => 'completed']);
+
+        $restore = app(DatabaseBackupService::class)->restore($backup, $user->id);
+
+        $this->assertSame('failed', $restore->status);
+        $this->assertStringContainsString('safety backup failed', $restore->error_message);
+        Process::assertNotRan(fn ($process): bool => str_starts_with($process->command, 'gunzip'));
+    }
+
+    public function test_restore_records_failure_when_the_mysql_import_itself_fails(): void
+    {
+        Storage::fake('backups');
+        Process::fake([
+            'mysqldump*' => Process::result(),
+            'gunzip*' => Process::result(exitCode: 1, errorOutput: 'syntax error near line 40'),
+        ]);
+        $user = User::factory()->create();
+        $backup = DatabaseBackup::create(['filename' => 'target.sql.gz', 'disk' => 'backups', 'type' => 'manual', 'status' => 'completed']);
+        Storage::disk('backups')->put('target.sql.gz', 'fake dump');
+
+        $restore = app(DatabaseBackupService::class)->restore($backup, $user->id);
+
+        $this->assertSame('failed', $restore->status);
+        $this->assertStringContainsString('syntax error near line 40', $restore->error_message);
+        $this->assertNotNull($restore->safety_backup_id, 'the safety backup should still exist even though the restore itself failed');
     }
 }

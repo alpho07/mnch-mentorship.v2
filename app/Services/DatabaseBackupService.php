@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DatabaseBackup;
+use App\Models\DatabaseRestore;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
@@ -66,6 +67,63 @@ class DatabaseBackupService
         }
 
         return $backup->fresh();
+    }
+
+    public function restore(DatabaseBackup $backup, int $userId): DatabaseRestore
+    {
+        $restore = DatabaseRestore::create([
+            'database_backup_id' => $backup->id,
+            'status' => 'running',
+            'restored_by' => $userId,
+            'started_at' => now(),
+        ]);
+
+        $safetyBackup = $this->createBackup($userId, 'pre_restore_safety');
+        $restore->update(['safety_backup_id' => $safetyBackup->id]);
+
+        if ($safetyBackup->status !== 'completed') {
+            $restore->update([
+                'status' => 'failed',
+                'error_message' => 'Restore aborted: the automatic safety backup failed — '.$safetyBackup->error_message,
+                'completed_at' => now(),
+            ]);
+
+            return $restore->fresh();
+        }
+
+        $credentialsFile = null;
+
+        try {
+            $credentialsFile = $this->writeCredentialsFile();
+            $sourcePath = Storage::disk($backup->disk)->path($backup->filename);
+
+            $command = sprintf(
+                'gunzip < %s | mysql --defaults-extra-file=%s %s',
+                escapeshellarg($sourcePath),
+                escapeshellarg($credentialsFile),
+                escapeshellarg(config('database.connections.mysql.database'))
+            );
+
+            $result = Process::timeout(900)->run($command);
+
+            if (! $result->successful()) {
+                throw new \RuntimeException($result->errorOutput() ?: 'mysql restore exited with a non-zero status.');
+            }
+
+            $restore->update(['status' => 'completed', 'completed_at' => now()]);
+        } catch (Throwable $e) {
+            $restore->update([
+                'status' => 'failed',
+                'error_message' => Str::limit($e->getMessage(), 2000),
+                'completed_at' => now(),
+            ]);
+        } finally {
+            if ($credentialsFile) {
+                @unlink($credentialsFile);
+            }
+        }
+
+        return $restore->fresh();
     }
 
     public function pruneOldBackups(): void
