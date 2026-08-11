@@ -43,7 +43,7 @@ implementation seeder.
 
 ## 3. Data Model Changes
 
-### New table: `assessment_categories`
+### New table: `assessment_type_categories`
 ```
 id
 name                 -- "EmONC", "Newborn, Infant & Child", "General Facility Readiness"
@@ -52,15 +52,25 @@ order                integer, default 0
 is_active            boolean, default true
 timestamps
 ```
-Deliberately **not** the existing curriculum `programs` table — that table's
-boundaries are set by mentorship/training curriculum (e.g. "Newborn Care" and
-"Infant and Child Care" are two separate programs there), which don't line up
-1:1 with how assessments should be grouped. Kept as its own small lookup
-table scoped only to assessments, per the earlier decision.
+Model: `AssessmentTypeCategory`. Named `assessment_type_categories` /
+`AssessmentTypeCategory` rather than the more obvious `assessment_categories`
+/ `AssessmentCategory` — that name is **already taken** by an existing,
+unrelated model (`app/Models/AssessmentCategory.php`, table
+`assessment_categories`): a mentorship-curriculum concept for training
+pre-test/post-test categories (`category_type`, `training_assessment_categories`
+pivot, `MenteeAssessmentResult`), nothing to do with facility assessments.
+Reusing that name would collide.
+
+Also deliberately **not** the existing curriculum `programs` table — that
+table's boundaries are set by mentorship/training curriculum (e.g. "Newborn
+Care" and "Infant and Child Care" are two separate programs there), which
+don't line up 1:1 with how assessments should be grouped. Kept as its own
+small lookup table scoped only to assessment templates, per the earlier
+decision.
 
 ### `assessment_types` — add column
 ```
-category_id  FK -> assessment_categories, required going forward
+category_id  FK -> assessment_type_categories, required going forward
 ```
 Backfill migration sets the existing "Standard Facility Assessment" type's
 `category_id` to the new "General Facility Readiness" category so every
@@ -147,7 +157,7 @@ into the ~106 question count above), positioned last within its kit's group.
 
 ## 6. UI Changes
 
-- `CreateAssessment` form: new **Category** select (`assessment_categories`,
+- `CreateAssessment` form: new **Category** select (`assessment_type_categories`,
   active + ordered) placed above the existing **Assessment (template)**
   select. Selecting a category filters the template select's options to that
   category (`assessmentType.category_id`). Category is not stored on the
@@ -166,7 +176,7 @@ into the ~106 question count above), positioned last within its kit's group.
 A new idempotent seeder, `EmoncSupportiveSupervisionSeeder` (follows the
 `updateOrCreate`-throughout convention of the existing
 `AssessmentQuestionConfigSeeder`), creates:
-1. The 3 initial `assessment_categories` rows (EmONC, Newborn/Infant/Child,
+1. The 3 initial `assessment_type_categories` rows (EmONC, Newborn/Infant/Child,
    General Facility Readiness).
 2. A migration backfilling `category_id = General Facility Readiness` on the
    existing "Standard Facility Assessment" type.
@@ -331,6 +341,6 @@ Functional sterilization facility.
 ## 10. Open Items For The Implementation Plan
 - Exact Filament icon/color choices per section (cosmetic, low-risk, decide
   during implementation).
-- Whether `assessment_categories` needs its own Filament resource for
+- Whether `assessment_type_categories` needs its own Filament resource for
   admin CRUD, or is seed-only for now (lean towards seed-only + a simple
   read-only list, since only 3 rows exist initially).
