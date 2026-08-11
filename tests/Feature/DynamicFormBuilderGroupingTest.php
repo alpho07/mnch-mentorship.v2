@@ -117,4 +117,53 @@ class DynamicFormBuilderGroupingTest extends TestCase
         $this->assertInstanceOf(Fieldset::class, $fields[0]);
         $this->assertSame(['lg' => 1], $fields[0]->getColumns());
     }
+
+    private function makeNumber(AssessmentSection $section, string $questionCode, int $order, string $group): AssessmentQuestion
+    {
+        return AssessmentQuestion::create([
+            'assessment_section_id' => $section->id,
+            'question_code' => $questionCode,
+            'question_text' => "Question {$questionCode}",
+            'question_type' => 'number',
+            'group' => $group,
+            'is_scored' => false,
+            'order' => $order,
+            'is_active' => true,
+        ]);
+    }
+
+    public function test_consecutive_table_row_groups_merge_into_one_shared_header_table(): void
+    {
+        $section = $this->makeSection('table_merge_section_test');
+        // 2 "rows" (Nurses, Doctors), 2 columns each — the table-row
+        // convention: "{title}|{rowLabelHeader}|{rowLabel}".
+        $this->makeNumber($section, 'TABLE_Q1', 1, 'Human Resources|Cadre|Nurses');
+        $this->makeNumber($section, 'TABLE_Q2', 2, 'Human Resources|Cadre|Nurses');
+        $this->makeNumber($section, 'TABLE_Q3', 3, 'Human Resources|Cadre|Doctors');
+        $this->makeNumber($section, 'TABLE_Q4', 4, 'Human Resources|Cadre|Doctors');
+
+        $fields = DynamicFormBuilder::buildForSection($section->id);
+
+        // Both cadre rows collapse into ONE Fieldset, not two.
+        $this->assertCount(1, $fields);
+        $this->assertInstanceOf(Fieldset::class, $fields[0]);
+        $this->assertSame('Human Resources', $fields[0]->getLabel());
+
+        // 1 row-label column + 2 metric columns per row, x2 rows = 6 cells.
+        $this->assertCount(6, $fields[0]->getChildComponents());
+        $this->assertSame(['lg' => 3], $fields[0]->getColumns());
+    }
+
+    public function test_table_rows_with_a_different_title_do_not_merge(): void
+    {
+        $section = $this->makeSection('table_no_merge_section_test');
+        $this->makeNumber($section, 'NOMERGE_Q1', 1, 'Table A|Row|First');
+        $this->makeNumber($section, 'NOMERGE_Q2', 2, 'Table B|Row|Second');
+
+        $fields = DynamicFormBuilder::buildForSection($section->id);
+
+        $this->assertCount(2, $fields);
+        $this->assertSame('Table A', $fields[0]->getLabel());
+        $this->assertSame('Table B', $fields[1]->getLabel());
+    }
 }

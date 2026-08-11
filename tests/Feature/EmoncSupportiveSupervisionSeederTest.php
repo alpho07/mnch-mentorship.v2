@@ -60,12 +60,13 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         // Human Resources rows are NOT statically seeded questions — the
         // seeder seeds the 4 EmONC-category Cadre records and calls
         // CadreMatrixSyncService to materialize their questions (see
-        // CadreMatrixSyncServiceTest for the sync mechanics), grouped by
-        // bare cadre name so DynamicFormBuilder renders one table row per
-        // cadre.
+        // CadreMatrixSyncServiceTest for the sync mechanics). group encodes
+        // DynamicFormBuilder's table-row convention
+        // ("{title}|{rowLabelHeader}|{rowLabel}") so all 4 cadres render as
+        // rows in one shared-header table instead of 4 separate boxes.
         $this->assertSame(4, Cadre::category('emonc')->active()->count());
-        $this->assertSame(3, $section->questions()->where('group', 'Nurses')->count());
-        $this->assertSame(3, $section->questions()->where('group', 'Obstetricians')->count());
+        $this->assertSame(3, $section->questions()->where('group', 'Human Resources in Maternity Unit|Cadre|Nurses')->count());
+        $this->assertSame(3, $section->questions()->where('group', 'Human Resources in Maternity Unit|Cadre|Obstetricians')->count());
         $this->assertSame(12, AssessmentQuestion::where('question_code', 'like', 'EMONC_A_HR_CADRE%')->count());
     }
 

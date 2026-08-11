@@ -63,7 +63,7 @@ class EditSectionCadreSyncTest extends TestCase
 
         $synced = AssessmentQuestion::where('question_code', 'like', 'EMONC_A_HR_CADRE%')->get();
         $this->assertCount(3, $synced);
-        $this->assertTrue($synced->every(fn ($q) => $q->group === 'Live Sync Nurses'));
+        $this->assertTrue($synced->every(fn ($q) => $q->group === 'Human Resources in Maternity Unit|Cadre|Live Sync Nurses'));
     }
 
     public function test_other_question_group_sections_are_not_affected_by_the_sync(): void

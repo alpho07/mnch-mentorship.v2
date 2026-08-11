@@ -23,26 +23,42 @@ class CadreMatrixSyncService
 
     public function syncMaternityHrQuestions(AssessmentSection $section): void
     {
-        $this->sync($section, 'emonc', 'EMONC_A_HR_CADRE', 500);
+        $this->sync(
+            $section,
+            'emonc',
+            'EMONC_A_HR_CADRE',
+            500,
+            ['title' => 'Human Resources in Maternity Unit', 'rowLabelHeader' => 'Cadre']
+        );
     }
 
     /**
      * Materializes 3 AssessmentQuestion rows (one per metric) for every
      * active cadre in $category, keyed by a stable per-cadre code so
-     * re-syncing updates existing rows rather than duplicating them —
-     * each cadre's 3 questions share `group = $cadre->name`, so
-     * DynamicFormBuilder renders them as one table-style row per cadre.
+     * re-syncing updates existing rows rather than duplicating them.
+     *
+     * $table, when given, encodes DynamicFormBuilder's 3-part table-row
+     * `group` convention ("{title}|{rowLabelHeader}|{rowLabel}") so every
+     * cadre's 3 questions render as one row in a single shared-header
+     * table instead of N separate boxed groups. Without it, each cadre's
+     * questions just share a plain `group = $cadre->name` (their own
+     * small boxed group).
+     *
      * Deactivates (never deletes) previously-materialized rows for cadres
      * that are no longer active or no longer in the category, preserving
      * any historical responses already recorded against them.
      */
-    public function sync(AssessmentSection $section, string $category, string $codePrefix, int $orderBase = 0): void
+    public function sync(AssessmentSection $section, string $category, string $codePrefix, int $orderBase = 0, ?array $table = null): void
     {
         $activeCadres = Cadre::category($category)->active()->ordered()->get();
         $activeCodes = [];
         $order = $orderBase;
 
         foreach ($activeCadres as $cadre) {
+            $group = $table
+                ? "{$table['title']}|{$table['rowLabelHeader']}|{$cadre->name}"
+                : $cadre->name;
+
             foreach (self::METRICS as $suffix => $label) {
                 $code = "{$codePrefix}{$cadre->id}_{$suffix}";
                 $activeCodes[] = $code;
@@ -54,7 +70,7 @@ class CadreMatrixSyncService
                         'assessment_section_id' => $section->id,
                         'question_text' => $label,
                         'question_type' => 'number',
-                        'group' => $cadre->name,
+                        'group' => $group,
                         'is_required' => false,
                         'is_scored' => false,
                         'order' => $order,
