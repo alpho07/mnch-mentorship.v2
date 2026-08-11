@@ -27,7 +27,7 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertTrue($type->is_active);
     }
 
-    public function test_section_a_is_seeded_with_23_unscored_questions(): void
+    public function test_section_a_is_seeded_with_25_unscored_questions(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);
 
@@ -36,7 +36,7 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
 
         $this->assertNotNull($section);
         $this->assertFalse($section->is_scored);
-        $this->assertSame(23, $section->questions()->count());
+        $this->assertSame(25, $section->questions()->count());
         $this->assertSame(0, $section->questions()->where('is_scored', true)->count());
 
         // Supervisors are NOT free-text fields here — they're the
@@ -49,6 +49,14 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_A_FACILITY_CATEGORY')->exists());
         $facilityCategory = AssessmentQuestion::where('question_code', 'EMONC_A_FACILITY_CATEGORY')->first();
         $this->assertSame(['CEMONC', 'BEMONC'], $facilityCategory->options);
+
+        // Person In Charge, Respondent, and each cadre's HR row render as
+        // small table-style groups (see DynamicFormBuilderGroupingTest for
+        // the <=4-field-groups-lay-out-side-by-side behavior itself).
+        $this->assertSame(2, $section->questions()->where('group', 'Person In Charge of the Facility')->count());
+        $this->assertSame(3, $section->questions()->where('group', 'Facility Supervision Respondent')->count());
+        $this->assertSame(3, $section->questions()->where('group', 'Human Resources — Nurses')->count());
+        $this->assertSame(3, $section->questions()->where('group', 'Human Resources — Obstetricians')->count());
     }
 
     public function test_section_b_is_seeded_with_10_questions_one_scored(): void
@@ -191,14 +199,14 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertFalse($question->is_required);
     }
 
-    public function test_full_seeder_produces_9_sections_and_229_questions(): void
+    public function test_full_seeder_produces_9_sections_and_231_questions(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);
 
         $type = AssessmentType::where('code', 'EMONC_SUPPORTIVE_SUPERVISION')->first();
 
         $this->assertSame(9, $type->sections()->count());
-        $this->assertSame(229, AssessmentQuestion::whereIn('assessment_section_id', $type->sections()->pluck('id'))->count());
+        $this->assertSame(231, AssessmentQuestion::whereIn('assessment_section_id', $type->sections()->pluck('id'))->count());
     }
 
     public function test_seeder_is_idempotent(): void

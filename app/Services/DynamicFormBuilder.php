@@ -39,9 +39,17 @@ class DynamicFormBuilder
             if ($currentGroup === null) {
                 array_push($fields, ...$groupBuffer);
             } else {
+                // Small groups (e.g. a handful of details about one row —
+                // "Name", "Contact", "Cadre") lay out side by side, table-
+                // style, matching the existing readiness assessment's
+                // per-cadre Human Resources layout. Larger groups (a kit's
+                // many checklist items) stay a single readable column —
+                // laying out 10+ fields side by side would be unusable.
+                $columns = count($groupBuffer) <= 4 ? count($groupBuffer) : 1;
+
                 $fields[] = Forms\Components\Fieldset::make($currentGroup)
                     ->schema($groupBuffer)
-                    ->columns(1)
+                    ->columns($columns)
                     ->columnSpanFull();
             }
 

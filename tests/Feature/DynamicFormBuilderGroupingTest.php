@@ -89,4 +89,32 @@ class DynamicFormBuilderGroupingTest extends TestCase
         $this->assertInstanceOf(Fieldset::class, $fields[1]);
         $this->assertSame('Kit B', $fields[1]->getLabel());
     }
+
+    public function test_a_small_group_lays_out_side_by_side_table_style(): void
+    {
+        $section = $this->makeSection('small_group_section_test');
+        $this->makeYesNo($section, 'SMALL_Q1', 1, 'Respondent');
+        $this->makeYesNo($section, 'SMALL_Q2', 2, 'Respondent');
+        $this->makeYesNo($section, 'SMALL_Q3', 3, 'Respondent');
+
+        $fields = DynamicFormBuilder::buildForSection($section->id);
+
+        $this->assertCount(1, $fields);
+        $this->assertInstanceOf(Fieldset::class, $fields[0]);
+        $this->assertSame(['lg' => 3], $fields[0]->getColumns());
+    }
+
+    public function test_a_large_group_stays_a_single_readable_column(): void
+    {
+        $section = $this->makeSection('large_group_section_test');
+        for ($i = 1; $i <= 7; $i++) {
+            $this->makeYesNo($section, "LARGE_Q{$i}", $i, 'Big Kit');
+        }
+
+        $fields = DynamicFormBuilder::buildForSection($section->id);
+
+        $this->assertCount(1, $fields);
+        $this->assertInstanceOf(Fieldset::class, $fields[0]);
+        $this->assertSame(['lg' => 1], $fields[0]->getColumns());
+    }
 }

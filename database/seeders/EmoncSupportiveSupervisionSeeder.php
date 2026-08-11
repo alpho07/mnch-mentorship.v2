@@ -170,10 +170,17 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
             'order' => $this->nextOrder(),
         ]);
 
-        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_NAME', 'text' => 'Facility Supervision Respondent — Name', 'type' => 'text', 'order' => $this->nextOrder()]);
-        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CONTACT', 'text' => 'Facility Supervision Respondent — Contact', 'type' => 'text', 'order' => $this->nextOrder()]);
-        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CADRE', 'text' => 'Facility Supervision Respondent — Cadre', 'type' => 'text', 'order' => $this->nextOrder()]);
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_INCHARGE_NAME', 'text' => 'Name', 'type' => 'text', 'group' => 'Person In Charge of the Facility', 'order' => $this->nextOrder()]);
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_INCHARGE_CONTACT', 'text' => 'Contact', 'type' => 'text', 'group' => 'Person In Charge of the Facility', 'order' => $this->nextOrder()]);
 
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_NAME', 'text' => 'Name', 'type' => 'text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CONTACT', 'text' => 'Contact', 'type' => 'text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CADRE', 'text' => 'Cadre', 'type' => 'text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
+
+        // Human Resources in Maternity Unit — one small group per cadre, so
+        // each cadre renders as its own table-style row (cadre name as the
+        // row heading, the 3 metrics as columns), matching how the existing
+        // readiness assessment presents its own Human Resources section.
         $cadres = [
             'EMONC_A_HR_NURSES' => 'Nurses',
             'EMONC_A_HR_CO' => 'Clinical Officers',
@@ -181,9 +188,10 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
             'EMONC_A_HR_OB' => 'Obstetricians',
         ];
         foreach ($cadres as $prefix => $label) {
-            $this->upsertQuestion($section, ['code' => "{$prefix}_ALLOCATED", 'text' => "{$label} — Number Allocated in Maternity (ANW/Labour Ward/PNW)", 'type' => 'number', 'order' => $this->nextOrder()]);
-            $this->upsertQuestion($section, ['code' => "{$prefix}_TRAINED", 'text' => "{$label} — Number Trained on 5-day EmONC (from 2024 to date)", 'type' => 'number', 'order' => $this->nextOrder()]);
-            $this->upsertQuestion($section, ['code' => "{$prefix}_24HR", 'text' => "{$label} — Number present in the maternity unit in a 24hr shift", 'type' => 'number', 'order' => $this->nextOrder()]);
+            $group = "Human Resources — {$label}";
+            $this->upsertQuestion($section, ['code' => "{$prefix}_ALLOCATED", 'text' => 'Allocated in Maternity (ANW/Labour Ward/PNW)', 'type' => 'number', 'group' => $group, 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, ['code' => "{$prefix}_TRAINED", 'text' => 'Trained on 5-day EmONC (from 2024 to date)', 'type' => 'number', 'group' => $group, 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, ['code' => "{$prefix}_24HR", 'text' => 'Present in a 24hr shift', 'type' => 'number', 'group' => $group, 'order' => $this->nextOrder()]);
         }
 
         $this->upsertQuestion($section, ['code' => 'EMONC_A_EMONC_TRAINED_TOTAL', 'text' => 'Number of EmONC-trained healthcare workers', 'type' => 'number', 'order' => $this->nextOrder()]);

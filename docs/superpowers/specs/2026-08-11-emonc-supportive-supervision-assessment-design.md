@@ -29,7 +29,7 @@ implementation seeder.
   Infant & Child / General Facility Readiness / …), then pick the specific
   **template** (`AssessmentType`) within that category — sections/questions
   load automatically exactly as today.
-- The EmONC survey's ~229 fields, scoring, and structure are faithfully
+- The EmONC survey's ~231 fields, scoring, and structure are faithfully
   represented as one new `AssessmentType` with ~9 sections and their
   questions — no new database tables for content (categories table is the one
   exception — see §3).
@@ -91,7 +91,7 @@ category = EmONC, version `1.0`.
 
 | Code | Name | Kind | Scored? | Questions |
 |---|---|---|---|---|
-| `emonc_facility_context` | A. Facility Profile | dynamic_questions | No | 23 |
+| `emonc_facility_context` | A. Facility Profile | dynamic_questions | No | 25 |
 | `emonc_feedback` | B. Feedback to Office & Colleagues | dynamic_questions | Yes | 10 |
 | `emonc_capacity_building` | C. Capacity Building | dynamic_questions | Yes | 2 |
 | `emonc_key_commodities` | D. Key Commodities | dynamic_questions | Yes | 27 |
@@ -103,10 +103,13 @@ category = EmONC, version `1.0`.
 
 Deliberate simplifications from the REDCap source:
 - **Facility identity fields dropped** (name, MFL code, county, subcounty,
-  facility level, ownership, lat/long, person-in-charge name/contact) — all
-  already exist on the `Facility` model and are shown from `facility_id`
-  (the same pattern the existing engine already uses for the `facility_profile`
-  informational section).
+  facility level, ownership, lat/long) — all already exist on the
+  `Facility` model and are shown from `facility_id` (the same pattern the
+  existing engine already uses for the `facility_profile` informational
+  section). Person-in-charge name/contact *is* re-collected here despite
+  also existing on `Facility` — the source survey treats it as a per-visit
+  detail, not a static facility fact, and it's presented as its own small
+  table-style group (see §5.3).
 - **Assessment date** — already the existing `assessments.assessment_date`
   column, not re-asked.
 - **"I. Final Scores"** section is not ported as content — it's a pure
@@ -155,6 +158,23 @@ reusable composite scoring primitive:
 Section E gets one `group_completeness` question per kit (6 total, folded
 into the ~106 question count above), positioned last within its kit's group.
 
+### 5.3 Small groups lay out table-style
+The source survey presents "Person In Charge", "Facility Supervision
+Respondent", and each Human Resources cadre row as compact tables (a
+handful of labeled columns in one row), not a vertical list of individually-
+labeled fields. `DynamicFormBuilder`'s Fieldset from §5.1 now picks its
+column count from group size: groups of ≤4 questions render side by side
+(`columns(count)`); larger groups (kits, SOPs) stay a single column exactly
+as before — laying out a 14-item kit checklist across 14 columns would be
+unusable. This mirrors, without touching, the existing "Standard Facility
+Assessment" Human Resources page (`EditHumanResources.php`), which achieves
+its own per-cadre table look the same way: a boxed group per row with a
+multi-column grid of fields inside, not a literal HTML `<table>`.
+Backward-safe by construction: every pre-existing group in the codebase has
+either 0 questions (n/a) or was already exercised at exactly this size
+range in tests before this change: the threshold only starts *doing*
+anything for groups that didn't exist prior to this feature.
+
 ## 6. UI Changes
 
 - `CreateAssessment` form: new **Category** select (`assessment_type_categories`,
@@ -180,7 +200,7 @@ A new idempotent seeder, `EmoncSupportiveSupervisionSeeder` (follows the
    General Facility Readiness).
 2. A migration backfilling `category_id = General Facility Readiness` on the
    existing "Standard Facility Assessment" type.
-3. The new `AssessmentType`, its 9 `AssessmentSection` rows, and all ~229
+3. The new `AssessmentType`, its 9 `AssessmentSection` rows, and all ~231
    `AssessmentQuestion` rows (content transcribed in §8), from a structured
    PHP array in the seeder itself.
 
@@ -201,11 +221,15 @@ Transcribed from the live REDCap survey on 2026-08-11. All yes/no items use
   pivot, managed via `CreateAssessment`'s Team Members step and
   `ListAssessments`' "Manage Team" action) — the same team feature every
   other assessment template already uses. No new fields or UI needed.
-- Facility Supervision Respondent — Name, Contact, Cadre (text)
-- Human Resources in Maternity Unit — for each of Nurses / Clinical Officers /
-  Medical Officers / Obstetricians: Number Allocated in Maternity (number),
-  Number Trained on 5-day EmONC from 2024 to date (number), Number present in
-  a 24hr shift (number) — 12 fields
+- Person In Charge of the Facility — Name, Contact (text), `group: "Person In
+  Charge of the Facility"` — renders as a 2-column table row (§5.3)
+- Facility Supervision Respondent — Name, Contact, Cadre (text), `group:
+  "Facility Supervision Respondent"` — renders as a 3-column table row
+- Human Resources in Maternity Unit — one `group: "Human Resources —
+  <Cadre>"` per cadre (Nurses / Clinical Officers / Medical Officers /
+  Obstetricians), each with 3 fields (Allocated in Maternity, Trained on
+  5-day EmONC from 2024 to date, Present in a 24hr shift — all number) —
+  12 fields total, each cadre its own 3-column table row
 - Number of EmONC-trained healthcare workers (number)
 - Distribution of EmONC-trained healthcare workers per department: ANC, HRC,
   L/W, NBU, ANW, PNW (number × 6)
