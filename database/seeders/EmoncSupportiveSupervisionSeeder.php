@@ -489,15 +489,35 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
             $this->upsertQuestion($section, $this->yesNo('EMONC_F_'.($i + 1), $text, $this->nextOrder()));
         }
 
-        $months = [
-            'JAN2025' => 'Jan 2025', 'FEB2025' => 'Feb 2025', 'MAR2025' => 'Mar 2025', 'APR2025' => 'Apr 2025',
-            'MAY2025' => 'May 2025', 'JUN2025' => 'Jun 2025', 'JUL2025' => 'Jul 2025', 'AUG2025' => 'Aug 2025',
-            'SEP2025' => 'Sep 2025', 'OCT2025' => 'Oct 2025', 'NOV2025' => 'Nov 2025', 'DEC2025' => 'Dec 2025',
-            'JAN2026' => 'Jan 2026', 'FEB2026' => 'Feb 2026', 'MAR2026' => 'Mar 2026',
-        ];
-        foreach ($months as $code => $label) {
-            $this->upsertQuestion($section, ['code' => "EMONC_F_REF_{$code}", 'text' => "Referrals out — {$label}", 'type' => 'number', 'order' => $this->nextOrder()]);
+        // Cleanup for environments that ran an earlier version of this
+        // seeder: monthly referrals used to be 15 hardcoded month slots
+        // (Jan 2025 - Mar 2026). Replaced with a dynamic add/remove table
+        // (pick any month, add a row) so it isn't bound to a fixed window.
+        AssessmentQuestion::where('question_code', 'like', 'EMONC_F_REF_%')->delete();
+
+        $this->upsertQuestion($section, [
+            'code' => 'EMONC_F_MONTHLY_REFERRALS',
+            'text' => 'Please enter the number of monthly referrals out from the year 2025 to date',
+            'type' => 'repeater',
+            'options' => [
+                ['key' => 'month', 'label' => 'Month', 'type' => 'select', 'options' => $this->monthYearOptions()],
+                ['key' => 'referrals_out', 'label' => 'Referrals Out', 'type' => 'number'],
+            ],
+            'order' => $this->nextOrder(),
+        ]);
+    }
+
+    /** "Jan 2023" .. "Dec 2027" — a wide practical window for the Month select on any repeater. */
+    private function monthYearOptions(): array
+    {
+        $options = [];
+        $start = \Carbon\Carbon::create(2023, 1, 1);
+
+        for ($i = 0; $i < 60; $i++) {
+            $options[] = $start->copy()->addMonths($i)->format('M Y');
         }
+
+        return $options;
     }
 
     // ── G. Infection Prevention Control (scored) ────────────────────────────

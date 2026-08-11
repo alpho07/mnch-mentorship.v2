@@ -165,17 +165,22 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_E_SOP_12')->exists());
     }
 
-    public function test_section_f_is_seeded_with_19_questions_4_scored(): void
+    public function test_section_f_is_seeded_with_5_questions_4_scored(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);
 
         $section = AssessmentSection::where('code', 'emonc_referrals')->first();
 
         $this->assertNotNull($section);
-        $this->assertSame(19, $section->questions()->count());
+        $this->assertSame(5, $section->questions()->count());
         $this->assertSame(4, $section->questions()->where('is_scored', true)->count());
-        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_F_REF_JAN2025')->exists());
-        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_F_REF_MAR2026')->exists());
+        $this->assertFalse(AssessmentQuestion::where('question_code', 'like', 'EMONC_F_REF_%')->exists());
+
+        $monthly = AssessmentQuestion::where('question_code', 'EMONC_F_MONTHLY_REFERRALS')->first();
+        $this->assertNotNull($monthly);
+        $this->assertSame('repeater', $monthly->question_type);
+        $this->assertSame(['month', 'referrals_out'], array_column($monthly->options, 'key'));
+        $this->assertContains('Jan 2025', $monthly->options[0]['options']);
     }
 
     public function test_section_g_is_seeded_with_6_scored_ipc_questions(): void
