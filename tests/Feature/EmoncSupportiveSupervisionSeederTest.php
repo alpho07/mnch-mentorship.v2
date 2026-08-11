@@ -56,6 +56,7 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         // <=4-field-groups-lay-out-side-by-side behavior itself).
         $this->assertSame(2, $section->questions()->where('group', 'Person In Charge of the Facility')->count());
         $this->assertSame(3, $section->questions()->where('group', 'Facility Supervision Respondent')->count());
+        $this->assertSame('cadre_select', AssessmentQuestion::where('question_code', 'EMONC_A_RESPONDENT_CADRE')->value('question_type'));
 
         // Human Resources rows are NOT statically seeded questions — the
         // seeder seeds the 4 EmONC-category Cadre records and calls

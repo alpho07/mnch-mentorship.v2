@@ -177,7 +177,7 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
 
         $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_NAME', 'text' => 'Name', 'type' => 'text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
         $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CONTACT', 'text' => 'Contact', 'type' => 'text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
-        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CADRE', 'text' => 'Cadre', 'type' => 'text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CADRE', 'text' => 'Cadre', 'type' => 'cadre_select', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
 
         // Cleanup for environments that ran an earlier version of this
         // seeder: Human Resources in Maternity Unit used to be 4 hardcoded

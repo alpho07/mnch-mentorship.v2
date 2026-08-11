@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AssessmentQuestion;
 use App\Models\AssessmentQuestionResponse;
+use App\Models\Cadre;
 use Filament\Forms;
 
 class DynamicFormBuilder
@@ -243,6 +244,7 @@ class DynamicFormBuilder
             'group_completeness' => static::buildGroupCompletenessField($question, $fieldName, $existingResponse),
             'mortality_three_month' => static::buildMortalityThreeMonthField($question, $fieldName, $existingResponse),
             'repeater' => static::buildRepeaterField($question, $fieldName, $existingResponse),
+            'cadre_select' => static::buildCadreSelectField($question, $fieldName, $existingResponse),
             default => null,
         };
 
@@ -453,6 +455,28 @@ class DynamicFormBuilder
         return Forms\Components\Select::make($fieldName)
             ->label($question->question_text)
             ->options($optionsArray)
+            ->required($question->is_required)
+            ->searchable()
+            ->default($response?->response_value)
+            ->helperText($question->help_text)
+            ->live();
+    }
+
+    /**
+     * A dropdown of live, active Cadre records (the same admin-managed
+     * assessment_cadres table CadreMatrixSyncService reads from) — every
+     * active cadre regardless of category, since the person answering a
+     * survey section could plausibly be any cadre in the system, not just
+     * one of a specific template's own buckets (e.g. EmONC's 4). Queried
+     * fresh on every render rather than a static seeded options list, so
+     * a cadre added after this question was created still shows up
+     * without needing to re-seed anything.
+     */
+    protected static function buildCadreSelectField(AssessmentQuestion $question, string $fieldName, ?AssessmentQuestionResponse $response)
+    {
+        return Forms\Components\Select::make($fieldName)
+            ->label($question->question_text)
+            ->options(fn () => Cadre::active()->ordered()->pluck('name', 'name'))
             ->required($question->is_required)
             ->searchable()
             ->default($response?->response_value)
