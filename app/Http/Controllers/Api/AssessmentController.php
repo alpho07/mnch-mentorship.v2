@@ -33,17 +33,23 @@ class AssessmentController extends Controller {
         $query = Assessment::with([
                     'facility.subcounty.county',
                     'sectionScores.section',
+                    'teamMembers',
                 ])
                 ->latest();
 
         if ($user->hasRole('super_admin')) {
             // Super admin sees everything including soft-deleted
             $query->withTrashed();
-        } elseif (!$user->isAboveSite()) {
-            // Regular users see only their own assessments
-            $query->where('assessor_id', $user->id);
+        } elseif (!$user->isAboveSite() && !$user->hasRole('admin')) {
+            // Assessors see records they created and assessments shared with
+            // them by a team lead.
+            $query->where(function ($query) use ($user) {
+                $query->where('assessor_id', $user->id)
+                    ->orWhere('created_by', $user->id)
+                    ->orWhereHas('teamMembers', fn ($team) => $team->where('users.id', $user->id));
+            });
         }
-        // isAboveSite() non-super-admin roles see all non-deleted
+        // isAboveSite()/admin roles see all non-deleted
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -133,7 +139,7 @@ class AssessmentController extends Controller {
 
         return response()->json([
                     'message' => 'Assessment created. Continue by submitting responses for each section.',
-                    'assessment' => new AssessmentResource($assessment->load('facility.subcounty.county')),
+                    'assessment' => new AssessmentResource($assessment->load(['facility.subcounty.county', 'teamMembers'])),
                         ], 201);
     }
 
@@ -147,6 +153,7 @@ class AssessmentController extends Controller {
             'facility.subcounty.county',
             'sectionScores.section',
             'questionResponses.question.section',
+            'teamMembers',
         ]);
 
         return response()->json([
@@ -171,7 +178,7 @@ class AssessmentController extends Controller {
 
         return response()->json([
                     'message' => 'Assessment updated.',
-                    'assessment' => new AssessmentResource($assessment->fresh('facility.subcounty.county')),
+                    'assessment' => new AssessmentResource($assessment->fresh(['facility.subcounty.county', 'teamMembers'])),
         ]);
     }
 
@@ -235,7 +242,7 @@ class AssessmentController extends Controller {
         return response()->json([
                     'message' => 'Assessment submitted successfully.',
                     'assessment' => new AssessmentResource(
-                            $assessment->fresh(['facility.subcounty.county', 'sectionScores.section'])
+                            $assessment->fresh(['facility.subcounty.county', 'sectionScores.section', 'teamMembers'])
                     ),
         ]);
     }
