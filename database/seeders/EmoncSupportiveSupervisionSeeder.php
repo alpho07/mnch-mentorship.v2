@@ -30,7 +30,9 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
     {
         $this->seedCategories();
         $type = $this->seedAssessmentType();
-        $this->seedSectionA($type);
+        $sectionA = $this->seedSectionA($type);
+        $this->seedEmoncCadres();
+        app(\App\Services\CadreMatrixSyncService::class)->syncMaternityHrQuestions($sectionA);
         $this->seedSectionB($type);
         $this->seedSectionC($type);
         $this->seedSectionD($type);
@@ -143,7 +145,7 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
 
     // ── A. Facility Profile (not scored) ───────────────────────────────────
 
-    private function seedSectionA(AssessmentType $type): void
+    private function seedSectionA(AssessmentType $type): AssessmentSection
     {
         $section = $this->upsertSection(
             $type,
@@ -177,22 +179,26 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
         $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CONTACT', 'text' => 'Contact', 'type' => 'text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
         $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CADRE', 'text' => 'Cadre', 'type' => 'text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
 
-        // Human Resources in Maternity Unit — one small group per cadre, so
-        // each cadre renders as its own table-style row (cadre name as the
-        // row heading, the 3 metrics as columns), matching how the existing
-        // readiness assessment presents its own Human Resources section.
-        $cadres = [
-            'EMONC_A_HR_NURSES' => 'Nurses',
-            'EMONC_A_HR_CO' => 'Clinical Officers',
-            'EMONC_A_HR_MO' => 'Medical Officers',
-            'EMONC_A_HR_OB' => 'Obstetricians',
-        ];
-        foreach ($cadres as $prefix => $label) {
-            $group = "Human Resources — {$label}";
-            $this->upsertQuestion($section, ['code' => "{$prefix}_ALLOCATED", 'text' => 'Allocated in Maternity (ANW/Labour Ward/PNW)', 'type' => 'number', 'group' => $group, 'order' => $this->nextOrder()]);
-            $this->upsertQuestion($section, ['code' => "{$prefix}_TRAINED", 'text' => 'Trained on 5-day EmONC (from 2024 to date)', 'type' => 'number', 'group' => $group, 'order' => $this->nextOrder()]);
-            $this->upsertQuestion($section, ['code' => "{$prefix}_24HR", 'text' => 'Present in a 24hr shift', 'type' => 'number', 'group' => $group, 'order' => $this->nextOrder()]);
-        }
+        // Cleanup for environments that ran an earlier version of this
+        // seeder: Human Resources in Maternity Unit used to be 4 hardcoded
+        // cadres seeded as static questions here. It's now driven by the
+        // admin-managed Cadre list (category: 'emonc') and materialized by
+        // CadreMatrixSyncService (called at the end of run(), and again on
+        // every Section A page visit) — see seedEmoncCadres() below.
+        AssessmentQuestion::where('question_code', 'like', 'EMONC_A_HR_NURSES%')
+            ->orWhere('question_code', 'like', 'EMONC_A_HR_CO_%')
+            ->orWhere('question_code', 'like', 'EMONC_A_HR_MO_%')
+            ->orWhere('question_code', 'like', 'EMONC_A_HR_OB_%')
+            ->delete();
+
+        // Reserves order 500-599 for the dynamically-synced HR cadre
+        // questions (up to ~33 cadres at 3 questions each — see
+        // CadreMatrixSyncService::syncMaternityHrQuestions(), which uses
+        // the same 500 base), so they render between "Facility Supervision
+        // Respondent" above and "Number of EmONC-trained healthcare
+        // workers" below, matching the source survey's layout, regardless
+        // of how many cadres actually exist.
+        $this->order = 599;
 
         $this->upsertQuestion($section, ['code' => 'EMONC_A_EMONC_TRAINED_TOTAL', 'text' => 'Number of EmONC-trained healthcare workers', 'type' => 'number', 'order' => $this->nextOrder()]);
 
@@ -200,6 +206,33 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
         foreach ($departments as $dept) {
             $deptCode = str_replace('/', '', $dept);
             $this->upsertQuestion($section, ['code' => "EMONC_A_DIST_{$deptCode}", 'text' => "EmONC-trained healthcare workers — {$dept}", 'type' => 'number', 'order' => $this->nextOrder()]);
+        }
+
+        return $section;
+    }
+
+    /**
+     * The 4 cadres Human Resources in Maternity Unit is measured against.
+     * Seeded into the shared assessment_cadres table (category: 'emonc')
+     * rather than hardcoded as questions, so an admin can add/remove/rename
+     * them later via the Cadres admin page — CadreMatrixSyncService (called
+     * below, and again on every Section A page visit) keeps the actual
+     * question rows in sync with whatever's active in this category.
+     */
+    private function seedEmoncCadres(): void
+    {
+        $cadres = [
+            ['name' => 'Nurses', 'code' => 'emonc_nurses', 'order' => 1],
+            ['name' => 'Clinical Officers', 'code' => 'emonc_clinical_officers', 'order' => 2],
+            ['name' => 'Medical Officers', 'code' => 'emonc_medical_officers', 'order' => 3],
+            ['name' => 'Obstetricians', 'code' => 'emonc_obstetricians', 'order' => 4],
+        ];
+
+        foreach ($cadres as $cadre) {
+            \App\Models\Cadre::updateOrCreate(
+                ['code' => $cadre['code']],
+                array_merge($cadre, ['category' => 'emonc', 'is_active' => true])
+            );
         }
     }
 

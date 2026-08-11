@@ -6,6 +6,7 @@ use App\Models\AssessmentQuestion;
 use App\Models\AssessmentSection;
 use App\Models\AssessmentType;
 use App\Models\AssessmentTypeCategory;
+use App\Models\Cadre;
 use Database\Seeders\EmoncSupportiveSupervisionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -50,13 +51,22 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $facilityCategory = AssessmentQuestion::where('question_code', 'EMONC_A_FACILITY_CATEGORY')->first();
         $this->assertSame(['CEMONC', 'BEMONC'], $facilityCategory->options);
 
-        // Person In Charge, Respondent, and each cadre's HR row render as
-        // small table-style groups (see DynamicFormBuilderGroupingTest for
-        // the <=4-field-groups-lay-out-side-by-side behavior itself).
+        // Person In Charge and Respondent render as small table-style
+        // groups (see DynamicFormBuilderGroupingTest for the
+        // <=4-field-groups-lay-out-side-by-side behavior itself).
         $this->assertSame(2, $section->questions()->where('group', 'Person In Charge of the Facility')->count());
         $this->assertSame(3, $section->questions()->where('group', 'Facility Supervision Respondent')->count());
-        $this->assertSame(3, $section->questions()->where('group', 'Human Resources — Nurses')->count());
-        $this->assertSame(3, $section->questions()->where('group', 'Human Resources — Obstetricians')->count());
+
+        // Human Resources rows are NOT statically seeded questions — the
+        // seeder seeds the 4 EmONC-category Cadre records and calls
+        // CadreMatrixSyncService to materialize their questions (see
+        // CadreMatrixSyncServiceTest for the sync mechanics), grouped by
+        // bare cadre name so DynamicFormBuilder renders one table row per
+        // cadre.
+        $this->assertSame(4, Cadre::category('emonc')->active()->count());
+        $this->assertSame(3, $section->questions()->where('group', 'Nurses')->count());
+        $this->assertSame(3, $section->questions()->where('group', 'Obstetricians')->count());
+        $this->assertSame(12, AssessmentQuestion::where('question_code', 'like', 'EMONC_A_HR_CADRE%')->count());
     }
 
     public function test_section_b_is_seeded_with_10_questions_one_scored(): void
