@@ -200,12 +200,16 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
         // of how many cadres actually exist.
         $this->order = 599;
 
-        $this->upsertQuestion($section, ['code' => 'EMONC_A_EMONC_TRAINED_TOTAL', 'text' => 'Number of EmONC-trained healthcare workers', 'type' => 'number', 'order' => $this->nextOrder()]);
+        // One 7-column table row: total + the 6 department counts —
+        // matches the source survey's "Number of EmONC trained healthcare
+        // worker" / "Distribution... per department" table.
+        $distributionGroup = 'EmONC-Trained Healthcare Workers';
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_EMONC_TRAINED_TOTAL', 'text' => 'Total', 'type' => 'number', 'group' => $distributionGroup, 'order' => $this->nextOrder()]);
 
         $departments = ['ANC', 'HRC', 'L/W', 'NBU', 'ANW', 'PNW'];
         foreach ($departments as $dept) {
             $deptCode = str_replace('/', '', $dept);
-            $this->upsertQuestion($section, ['code' => "EMONC_A_DIST_{$deptCode}", 'text' => "EmONC-trained healthcare workers — {$dept}", 'type' => 'number', 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, ['code' => "EMONC_A_DIST_{$deptCode}", 'text' => $dept, 'type' => 'number', 'group' => $distributionGroup, 'order' => $this->nextOrder()]);
         }
 
         return $section;

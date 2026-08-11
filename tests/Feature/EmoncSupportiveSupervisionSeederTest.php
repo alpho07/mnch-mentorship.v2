@@ -58,6 +58,9 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertSame(3, $section->questions()->where('group', 'Facility Supervision Respondent')->count());
         $this->assertSame('cadre_select', AssessmentQuestion::where('question_code', 'EMONC_A_RESPONDENT_CADRE')->value('question_type'));
 
+        // Total + 6 department counts collapse into one 7-column table row.
+        $this->assertSame(7, $section->questions()->where('group', 'EmONC-Trained Healthcare Workers')->count());
+
         // Human Resources rows are NOT statically seeded questions — the
         // seeder seeds the 4 EmONC-category Cadre records and calls
         // CadreMatrixSyncService to materialize their questions (see
