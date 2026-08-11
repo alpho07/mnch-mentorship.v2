@@ -273,6 +273,7 @@ class DynamicFormBuilder
             'mortality_three_month' => static::buildMortalityThreeMonthField($question, $fieldName, $existingResponse),
             'repeater' => static::buildRepeaterField($question, $fieldName, $existingResponse),
             'cadre_select' => static::buildCadreSelectField($question, $fieldName, $existingResponse),
+            'short_text' => static::buildShortTextField($question, $fieldName, $existingResponse),
             default => null,
         };
 
@@ -432,6 +433,21 @@ class DynamicFormBuilder
             ->default($response?->response_value)
             ->helperText($question->help_text)
             ->columnSpanFull();
+    }
+
+    /**
+     * A single-line text field (e.g. a person's Name or Contact) — unlike
+     * buildTextField()'s Textarea, doesn't force ->columnSpanFull(), so it
+     * sits naturally in a compact table row without needing
+     * normalizeColumnSpans() to undo anything.
+     */
+    protected static function buildShortTextField(AssessmentQuestion $question, string $fieldName, ?AssessmentQuestionResponse $response)
+    {
+        return Forms\Components\TextInput::make($fieldName)
+            ->label($question->question_text)
+            ->required($question->is_required)
+            ->default($response?->response_value)
+            ->helperText($question->help_text);
     }
 
     /**

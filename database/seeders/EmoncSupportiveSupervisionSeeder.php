@@ -172,11 +172,11 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
             'order' => $this->nextOrder(),
         ]);
 
-        $this->upsertQuestion($section, ['code' => 'EMONC_A_INCHARGE_NAME', 'text' => 'Name', 'type' => 'text', 'group' => 'Person In Charge of the Facility', 'order' => $this->nextOrder()]);
-        $this->upsertQuestion($section, ['code' => 'EMONC_A_INCHARGE_CONTACT', 'text' => 'Contact', 'type' => 'text', 'group' => 'Person In Charge of the Facility', 'order' => $this->nextOrder()]);
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_INCHARGE_NAME', 'text' => 'Name', 'type' => 'short_text', 'group' => 'Person In Charge of the Facility', 'order' => $this->nextOrder()]);
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_INCHARGE_CONTACT', 'text' => 'Contact', 'type' => 'short_text', 'group' => 'Person In Charge of the Facility', 'order' => $this->nextOrder()]);
 
-        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_NAME', 'text' => 'Name', 'type' => 'text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
-        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CONTACT', 'text' => 'Contact', 'type' => 'text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_NAME', 'text' => 'Name', 'type' => 'short_text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
+        $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CONTACT', 'text' => 'Contact', 'type' => 'short_text', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
         $this->upsertQuestion($section, ['code' => 'EMONC_A_RESPONDENT_CADRE', 'text' => 'Cadre', 'type' => 'cadre_select', 'group' => 'Facility Supervision Respondent', 'order' => $this->nextOrder()]);
 
         // Cleanup for environments that ran an earlier version of this
