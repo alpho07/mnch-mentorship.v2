@@ -55,9 +55,13 @@ class CommodityScoringService {
                 ->whereIn('commodity_id', $applicableCommodities)
                 ->get();
 
-        // Calculate counts
-        $totalApplicable = $applicableCommodities->count();
-        $availableCount = $responses->where('available', true)->count();
+        // Calculate counts — commodities the assessor marked "not
+        // applicable" for this facility are excluded from both the
+        // numerator and the denominator entirely, rather than counted as
+        // unavailable.
+        $naCount = $responses->where('not_applicable', true)->count();
+        $totalApplicable = $applicableCommodities->count() - $naCount;
+        $availableCount = $responses->where('not_applicable', false)->where('available', true)->count();
 
         // Calculate percentage
         $percentage = $totalApplicable > 0 ? ($availableCount / $totalApplicable) * 100 : 0;

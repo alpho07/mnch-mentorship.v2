@@ -110,7 +110,9 @@
             <td style="width:4mm;background-color:#c9a227;padding:0;"></td>
 
             {{-- ===== RIGHT CONTENT ===== --}}
-            <td style="vertical-align:top;padding:14mm 10mm 40mm 17mm;background-color:#ffffff;">
+            <td style="vertical-align:top;padding:10mm 10mm 40mm 17mm;background-color:#ffffff;">
+
+                @include('certificates.partials.logo-header', ['logoHeight' => '8mm', 'iconSize' => '7mm', 'textSize' => '9pt', 'marginBottom' => '3mm', 'align' => 'left', 'dividerColor' => '#c9a227'])
 
                 {{-- Organisation tag --}}
                 <div style="font-size:7pt;color:#c9a227;letter-spacing:2.5px;font-weight:bold;margin-bottom:3.5mm;">

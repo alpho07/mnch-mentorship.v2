@@ -205,6 +205,31 @@ else                               { $vidC='#f59e0b'; $vidBg='#fffbeb'; $vidBdr=
                         {{ $isPresent ? 'Attendance Confirmed' : 'Attendance Not Confirmed' }}
                     </span>
                 </div>
+                @if($canApprove && $progress && ! $progress->isLockedForMentee())
+                    <div style="margin-top:6px;">
+                        <button type="button"
+                                x-on:click="openConfirm('markModuleComplete','Mark Module Complete','Mark this module complete and lock it for {{ addslashes($mentee?->full_name) }}? They will no longer be able to retake the post-test, resubmit their video, or restart the pre-test.','Mark Complete')"
+                                style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:9999px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;">
+                            <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:12px;height:12px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Mark Module Complete
+                        </button>
+                    </div>
+                @elseif($progress?->isLockedForMentee())
+                    <div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
+                        <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,0.18);border:1px solid rgba(110,231,183,0.4);color:#d1fae5;border-radius:9999px;padding:4px 12px;font-size:11px;font-weight:700;">
+                            <svg fill="currentColor" viewBox="0 0 20 20" style="width:11px;height:11px;"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L9.53 12.22a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
+                            Module Locked — Complete
+                        </span>
+                        @if($canApprove && ! $mentorApprovedAt)
+                            <button type="button"
+                                    x-on:click="openConfirm('unlockModule','Unlock Module','Reopen this module for {{ addslashes($mentee?->full_name) }}? They will be able to retake the post-test, resubmit their video, and activities can be re-edited.','Unlock','danger')"
+                                    style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);border-radius:9999px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer;">
+                                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:10px;height:10px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                                Unlock
+                            </button>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -691,7 +716,7 @@ else                               { $vidC='#f59e0b'; $vidBg='#fffbeb'; $vidBdr=
                                         </div>
                                     </div>
                                 @elseif(!$isReady)
-                                    <p style="font-size:12px;color:#d97706;margin:0;line-height:1.5;">All module progress and video reviews must be completed before approval can be granted.</p>
+                                    <p style="font-size:12px;color:#d97706;margin:0;line-height:1.5;">All modules must be completed — and any module with a hands-on video must have that video reviewed and passed — before approval can be granted.</p>
                                 @else
                                     <p style="font-size:12px;color:#7c3aed;margin:0;line-height:1.5;">All requirements met — ready for mentor approval.</p>
                                 @endif

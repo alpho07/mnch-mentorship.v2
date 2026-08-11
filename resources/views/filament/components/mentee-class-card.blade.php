@@ -153,26 +153,11 @@ $isOpen = $defaultOpen ?? true;
                             default       => ['icon' => '⬜', 'bg' => '#f1f5f9', 'badge_bg' => '#f1f5f9', 'badge_color' => '#64748b', 'label' => 'Not Started'],
                         };
 
-                        // Determine score to display
-                        $preScore  = $mod['pre_test_score'] ?? null;
-                        $postScore = $mod['post_test_score'] ?? null;
-                        $assScore  = $mod['assessment_score'] ?? null;
-                        $hasScore  = $preScore !== null || $postScore !== null || $assScore !== null;
-
-                        // For display: use post-test if available (most recent/relevant), else pre-test, else assessment
-                        if ($postScore !== null) {
-                            $displayScore = $postScore;
-                            $scoreLabel   = 'Post';
-                        } elseif ($preScore !== null) {
-                            $displayScore = $preScore;
-                            $scoreLabel   = 'Pre';
-                        } elseif ($assScore !== null) {
-                            $displayScore = $assScore;
-                            $scoreLabel   = 'Score';
-                        } else {
-                            $displayScore = null;
-                            $scoreLabel   = '';
-                        }
+                        // Score pill shows the practical (rubric) assessment score
+                        // only — left blank when no rubric assessment exists yet,
+                        // rather than falling back to pre/post-test percentages.
+                        $displayScore = $mod['rubric_score'] ?? null;
+                        $scoreLabel   = 'Rubric';
 
                         $scoreColor = ($displayScore !== null && $displayScore >= 85) ? '#16a34a'
                             : (($displayScore !== null && $displayScore >= 50) ? '#d97706'
@@ -209,9 +194,6 @@ $isOpen = $defaultOpen ?? true;
                             <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-right:4px;">
                                 <span style="font-size:13px;font-weight:800;color:{{ $scoreColor }};line-height:1;">{{ $displayScore }}%</span>
                                 <span style="font-size:9px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">{{ $scoreLabel }}</span>
-                                @if($preScore !== null && $postScore !== null)
-                                    <span style="font-size:9px;color:#64748b;margin-top:1px;">{{ $preScore }}↗{{ $postScore }}</span>
-                                @endif
                             </div>
                         @endif
 

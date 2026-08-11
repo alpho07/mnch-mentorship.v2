@@ -12,20 +12,26 @@ class AssessmentCommodityResponse extends Model {
         'commodity_id',
         'assessment_department_id',
         'available',
+        'not_applicable',
         'notes',
         'score',
     ];
     protected $casts = [
         'available' => 'boolean',
+        'not_applicable' => 'boolean',
         'score' => 'decimal:2',
     ];
 
     protected static function boot() {
         parent::boot();
 
-        // Auto-calculate score before saving
+        // Auto-calculate score before saving. Not-applicable responses keep
+        // a score of 0 for storage purposes (the `score` column is not
+        // nullable) — the actual exclusion from scoring denominators is
+        // driven by `not_applicable`, not by this field, in
+        // CommodityScoringService.
         static::saving(function ($response) {
-            $response->score = $response->available ? 1 : 0;
+            $response->score = ($response->not_applicable || ! $response->available) ? 0 : 1;
         });
 
         // Trigger scoring recalculation after save

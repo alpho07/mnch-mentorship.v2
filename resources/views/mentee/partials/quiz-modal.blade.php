@@ -1,5 +1,21 @@
-@if(session('quiz_attempt_id'))
-    @php $attempt = App\Models\QuizAttempt::with(['quiz.questions.options'])->find(session('quiz_attempt_id')); @endphp
+@php
+    // The flash session value only survives the single request right after
+    // "start quiz" redirects — on any later page refresh it's gone. Fall
+    // back to looking up an in-progress (uncompleted) attempt directly, so
+    // the modal — and its timer, anchored to the original started_at — comes
+    // back exactly as it was instead of looking closed until re-started.
+    $quizAttemptId = session('quiz_attempt_id');
+    if (! $quizAttemptId) {
+        $moduleQuizIds = $classModule->programModule?->quizzes?->pluck('id') ?? collect();
+        $quizAttemptId = App\Models\QuizAttempt::whereIn('program_module_quiz_id', $moduleQuizIds)
+            ->where('user_id', auth()->id())
+            ->whereNull('completed_at')
+            ->latest('started_at')
+            ->value('id');
+    }
+@endphp
+@if($quizAttemptId)
+    @php $attempt = App\Models\QuizAttempt::with(['quiz.questions.options', 'responses'])->find($quizAttemptId); @endphp
     @if($attempt)
         @php
             $hasTimeLimit = $attempt->quiz->time_limit_minutes !== null;
@@ -16,6 +32,7 @@
                 isOnline: navigator.onLine,
                 pausedRemainingMs: null,
                 timerHandle: null,
+                timeUp: false,
                 init() {
                     if (!this.hasTimer) return;
                     this.tick();
@@ -39,13 +56,33 @@
                     this.remaining = Math.max(0, Math.round((this.deadline - Date.now()) / 1000));
                     if (this.remaining <= 0) {
                         clearInterval(this.timerHandle);
-                        this.autoSubmit();
+                        this.timeUp = true;
+                        // Lock the form visually (pointer-events, not the
+                        // `disabled` attribute) for a beat so the mentee sees
+                        // it's over before it submits — disabling the radio
+                        // inputs themselves would drop their checked values
+                        // from the submission.
+                        setTimeout(() => this.autoSubmit(), 600);
                     }
                 },
                 autoSubmit() {
                     const form = this.$refs.quizForm;
                     form.querySelectorAll('[required]').forEach(el => el.removeAttribute('required'));
                     form.requestSubmit();
+                },
+                saveAnswer(questionId, optionId) {
+                    // Persists the pick immediately so closing the modal (or
+                    // losing the tab) never loses an answer — the timer keeps
+                    // running regardless, this just protects the selections.
+                    fetch('{{ route('mentee.class.quiz.save', [$class->id, $classModule->id, $attempt->id]) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify({ question_id: questionId, option_id: optionId }),
+                    }).catch(() => {});
                 },
                 formatRemaining() {
                     const m = Math.floor(this.remaining / 60);
@@ -69,7 +106,7 @@
                             x-show="hasTimer"
                             x-cloak
                             class="quiz-timer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold tabular-nums"
-                            :class="remaining <= 60 ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
+                            :class="remaining <= 60 ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 animate-pulse' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'"
                         >
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"/></svg>
                             <span x-text="formatRemaining()"></span>
@@ -87,8 +124,17 @@
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 11-1.414-1.414 1 1 0 011.414 1.414zM3 3l18 18"/></svg>
                     You're offline — the timer is paused. Reconnect to continue.
                 </div>
+                <div
+                    x-show="timeUp"
+                    x-cloak
+                    class="quiz-timeup-banner mx-5 mt-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-xs font-semibold text-red-700 dark:text-red-300"
+                >
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"/></svg>
+                    Time's up — submitting what you've answered...
+                </div>
                 <div class="p-5">
-                    <form x-ref="quizForm" action="{{ route('mentee.class.quiz.submit', [$class->id, $classModule->id, $attempt->id]) }}" method="POST" class="space-y-4">
+                    <form x-ref="quizForm" action="{{ route('mentee.class.quiz.submit', [$class->id, $classModule->id, $attempt->id]) }}" method="POST" class="space-y-4"
+                          :class="timeUp ? 'pointer-events-none opacity-60 grayscale' : ''">
                         @csrf
                         @foreach($attempt->quiz->questions as $index => $question)
                             <div class="rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 p-4">
@@ -96,10 +142,14 @@
                                     <span class="inline-flex w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 items-center justify-center text-[11px] font-bold mr-2 shrink-0 align-text-bottom">{{ $index + 1 }}</span>
                                     {!! $question->question_text !!}
                                 </p>
+                                @php $savedOptionId = $attempt->responses->firstWhere('quiz_question_id', $question->id)?->quiz_option_id; @endphp
                                 <div class="space-y-2">
                                     @foreach($question->options as $option)
                                         <label class="flex items-start gap-3 p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-brand-300 transition-colors has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 dark:has-[:checked]:bg-brand-950/30">
-                                            <input type="radio" name="responses[{{ $question->id }}]" value="{{ $option->id }}" required class="mt-0.5 text-brand-600 focus:ring-brand-500 shrink-0">
+                                            <input type="radio" name="responses[{{ $question->id }}]" value="{{ $option->id }}" required
+                                                   @checked($savedOptionId === $option->id)
+                                                   @change="saveAnswer({{ $question->id }}, {{ $option->id }})"
+                                                   class="mt-0.5 text-brand-600 focus:ring-brand-500 shrink-0">
                                             <span class="text-sm text-slate-700 dark:text-slate-300">{{ $option->option_text }}</span>
                                         </label>
                                     @endforeach
@@ -107,7 +157,7 @@
                             </div>
                         @endforeach
                         <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold transition-colors shadow-sm">
-                            Submit Quiz
+                            <span x-text="timeUp ? 'Submitting…' : 'Submit Quiz'"></span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
                     </form>

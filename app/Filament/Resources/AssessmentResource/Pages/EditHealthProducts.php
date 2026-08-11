@@ -58,7 +58,9 @@ class EditHealthProducts extends EditRecord
         $data = ['commodities' => []];
 
         foreach ($responses as $response) {
-            $data['commodities'][$response->assessment_department_id][$response->commodity_id] = $response->available ? 1 : 0;
+            $data['commodities'][$response->assessment_department_id][$response->commodity_id] = $response->not_applicable
+                ? 'na'
+                : ($response->available ? 1 : 0);
         }
 
         return $data;
@@ -116,14 +118,17 @@ class EditHealthProducts extends EditRecord
                                         ->options([
                                             1 => 'Available',
                                             0 => 'Not Available',
+                                            'na' => 'Not Applicable',
                                         ])
                                         ->colors([
                                             1 => 'success',
                                             0 => 'danger',
+                                            'na' => 'gray',
                                         ])
                                         ->icons([
                                             1 => 'heroicon-o-check-circle',
                                             0 => 'heroicon-o-x-circle',
+                                            'na' => 'heroicon-o-minus-circle',
                                         ])
                                         ->inline()
                                         ->columnSpan(1),
@@ -141,6 +146,8 @@ class EditHealthProducts extends EditRecord
 
         foreach ($payload as $departmentId => $commodityEntries) {
             foreach ($commodityEntries as $commodityId => $value) {
+                $isNotApplicable = $value === 'na';
+
                 AssessmentCommodityResponse::updateOrCreate(
                     [
                         'assessment_id' => $this->record->id,
@@ -148,8 +155,8 @@ class EditHealthProducts extends EditRecord
                         'commodity_id' => $commodityId,
                     ],
                     [
-                        'available' => (bool) $value,
-                        'score' => (bool) $value ? 1 : 0,
+                        'available' => $isNotApplicable ? false : (bool) $value,
+                        'not_applicable' => $isNotApplicable,
                     ]
                 );
             }

@@ -19,7 +19,7 @@ class CadreResource extends Resource {
 
     protected static ?string $model = Cadre::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationGroup = 'Organizational Structure';
+    protected static ?string $navigationGroup = 'Organization Units';
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 2;
 

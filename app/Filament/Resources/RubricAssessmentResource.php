@@ -22,7 +22,7 @@ class RubricAssessmentResource extends Resource
 
     protected static ?string $navigationLabel = 'Practical Assessments';
 
-    protected static ?string $navigationGroup = 'Mentorships';
+    protected static ?string $navigationGroup = 'Rubric Assessments';
 
     protected static ?int $navigationSort = 6;
 

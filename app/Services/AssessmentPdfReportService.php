@@ -284,8 +284,9 @@ class AssessmentPdfReportService {
 
             $categories = [];
             foreach ($byCategory as $categoryName => $items) {
-                $available = $items->where('available', true)->count();
-                $total = $items->count();
+                $applicableItems = $items->where('not_applicable', false);
+                $available = $applicableItems->where('available', true)->count();
+                $total = $applicableItems->count();
 
                 $categories[] = [
                     'name' => $categoryName,
@@ -296,13 +297,15 @@ class AssessmentPdfReportService {
                         return [
                             'name' => $item->commodity->name,
                             'available' => $item->available,
+                            'not_applicable' => $item->not_applicable,
                         ];
                     })->toArray(),
                 ];
             }
 
-            $totalAvailable = $responses->where('available', true)->count();
-            $totalApplicable = $responses->count();
+            $applicableResponses = $responses->where('not_applicable', false);
+            $totalAvailable = $applicableResponses->where('available', true)->count();
+            $totalApplicable = $applicableResponses->count();
             $percentage = $totalApplicable > 0 ? round(($totalAvailable / $totalApplicable) * 100, 1) : 0;
 
             $result[$departmentName] = [
@@ -316,6 +319,7 @@ class AssessmentPdfReportService {
                         'name' => $response->commodity->name,
                         'category' => $response->commodity->category->name,
                         'available' => $response->available,
+                        'not_applicable' => $response->not_applicable,
                     ];
                 }),
                 'by_category' => collect($categories)->keyBy('name'),

@@ -195,6 +195,13 @@ class MenteeClassProgressController extends Controller
                 );
         }
 
+        // Catch-up for progress that already satisfied the completion
+        // criteria before this auto-lock existed (or via a path that
+        // doesn't call maybeAutoComplete() directly).
+        if ($progress->maybeAutoComplete()) {
+            $progress = $progress->fresh();
+        }
+
         $program = $class->training->program;
         $isEmonc = $program
             && str_contains(strtolower($program->name), 'maternal')
@@ -384,11 +391,15 @@ class MenteeClassProgressController extends Controller
         $service = app(QuizAttemptService::class);
         $attemptType = request()->input('attempt_type', 'pre_test');
 
-        if ($attemptType === 'post_test') {
-            $progress = MenteeModuleProgress::where('class_participant_id', $participant->id)
-                ->where('class_module_id', $classModule->id)
-                ->first();
+        $progress = MenteeModuleProgress::where('class_participant_id', $participant->id)
+            ->where('class_module_id', $classModule->id)
+            ->first();
 
+        if ($progress?->isLockedForMentee()) {
+            return back()->with('error', 'This module has already been completed and is locked.');
+        }
+
+        if ($attemptType === 'post_test') {
             if (! $progress || ! $progress->isVideoPassed()) {
                 return back()->with('error', 'Your hands-on video must be reviewed and marked as passed by your mentor before you can take the post-test.');
             }
@@ -402,6 +413,29 @@ class MenteeClassProgressController extends Controller
 
         return redirect()->route('mentee.class.module', [$class->id, $classModule->id])
             ->with('quiz_attempt_id', $attempt->id);
+    }
+
+    public function saveQuizResponse(Request $request, int $classId, int $classModuleId, QuizAttempt $attempt)
+    {
+        $class = MentorshipClass::findOrFail($classId);
+        $classModule = ClassModule::findOrFail($classModuleId);
+        abort_if($classModule->mentorship_class_id !== $class->id, 404);
+        abort_if($attempt->user_id !== Auth::id(), 403);
+
+        $validated = $request->validate([
+            'question_id' => ['required', 'integer'],
+            'option_id' => ['required', 'integer'],
+        ]);
+
+        $service = app(QuizAttemptService::class);
+
+        try {
+            $service->saveResponse($attempt, $validated['question_id'], $validated['option_id']);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['saved' => true]);
     }
 
     public function submitQuiz(int $classId, int $classModuleId, QuizAttempt $attempt)
@@ -423,6 +457,10 @@ class MenteeClassProgressController extends Controller
             ['status' => 'not_started']
         );
 
+        if ($progress->isLockedForMentee()) {
+            return back()->with('error', 'This module has already been completed and is locked.');
+        }
+
         $responses = request()->input('responses', []);
         $service = app(QuizAttemptService::class);
 
@@ -437,6 +475,10 @@ class MenteeClassProgressController extends Controller
         } elseif ($attempt->attempt_type === 'post_test') {
             $progress->update(['post_test_attempt_id' => $attempt->id]);
         }
+
+        // Locks the module for the mentee the instant their own steps
+        // (pre-test, passed video, post-test) are all done.
+        $progress->fresh()->maybeAutoComplete();
 
         // Notify mentor for EmONC classes
         $class->load('training.program');
@@ -466,6 +508,10 @@ class MenteeClassProgressController extends Controller
             ],
             ['status' => 'not_started']
         );
+
+        if ($progress->isLockedForMentee()) {
+            return back()->with('error', 'This module has already been completed and is locked.');
+        }
 
         $inputType = $request->input('video_input_type', 'file');
 

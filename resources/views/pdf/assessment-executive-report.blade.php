@@ -285,6 +285,10 @@
         .badge-yellow {
             background-color: #f59e0b;
         }
+
+        .badge-gray {
+            background-color: #9ca3af;
+        }
         
         /* Health Products Table */
         table.commodity-table thead th {
@@ -621,9 +625,13 @@
                                     <tr>
                                         <td>{{ $item['name'] }}</td>
                                         <td class="center">
-                                            <span class="badge badge-{{ $item['available'] ? 'green' : 'red' }}">
-                                                {{ $item['available'] ? 'Available' : 'Not Available' }}
-                                            </span>
+                                            @if($item['not_applicable'] ?? false)
+                                                <span class="badge badge-gray">N/A</span>
+                                            @else
+                                                <span class="badge badge-{{ $item['available'] ? 'green' : 'red' }}">
+                                                    {{ $item['available'] ? 'Available' : 'Not Available' }}
+                                                </span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

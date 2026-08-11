@@ -251,7 +251,7 @@ class ManageClassMentees extends Page implements HasTable
                             Notification::make()
                                 ->danger()
                                 ->title('Not Ready for Approval')
-                                ->body('This mentee must have a passed video review and completed module progress before mentor approval.')
+                                ->body('This mentee must complete all modules — and pass video review on any module that has one — before mentor approval.')
                                 ->send();
 
                             return;

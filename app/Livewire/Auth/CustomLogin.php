@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Auth;
 
+use App\Services\PlatformStatsService;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\TextInput;
@@ -29,6 +30,13 @@ class CustomLogin extends SimplePage
         $email = session()->pull('login_email');
 
         $this->form->fill($email ? ['email' => $email] : []);
+    }
+
+    protected function getViewData(): array
+    {
+        return [
+            'platformStats' => app(PlatformStatsService::class)->summary(),
+        ];
     }
 
     public function authenticate(): ?LoginResponse

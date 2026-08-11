@@ -127,7 +127,7 @@ class AssessmentDownloadActionTest extends TestCase
         $assessment->update(['status' => 'in_progress']);
 
         Livewire::test(ListAssessments::class)
-            ->assertTableActionHasLabel('dashboard', 'Continue Summary', $assessment);
+            ->assertTableActionHasLabel('dashboard', 'Continue Assessments', $assessment);
     }
 
     public function test_only_an_admin_can_delete_a_completed_assessment(): void

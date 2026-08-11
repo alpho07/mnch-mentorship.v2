@@ -609,10 +609,15 @@
             }
 
             /* ── Revealable password toggle button ── */
-            /* Target the suffix action button Filament renders */
+            /* Target the suffix action button Filament renders. The show
+               and hide icons are two separate buttons, each toggled by
+               Alpine's x-show (which sets inline style="display:none" on
+               whichever should be hidden) — display must NOT be !important
+               here, or it clobbers Alpine's toggle and both icons render
+               at once instead of swapping. */
             .auth-box .fi-input-wrp button,
             .auth-box .fi-input-suffix-action {
-                display: inline-flex !important;
+                display: inline-flex;
                 align-items: center !important;
                 justify-content: center !important;
                 width: 38px !important;
@@ -752,6 +757,14 @@
         </style>
 
     @filamentStyles
+    {{-- Custom SimplePage layout bypasses the panel's own render pipeline,
+         so PanelsRenderHook::HEAD_END (registered in AdminPanelProvider)
+         never fires here and @filamentStyles doesn't pull in the panel's
+         base theme bundle either — both are loaded explicitly instead.
+         Without app.css specifically, Filament notifications/toasts render
+         completely unstyled (raw text, no card/color/icon sizing). --}}
+    <link rel="stylesheet" href="{{ asset('css/filament/filament/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/filament-admin-theme.css') }}?v={{ filemtime(public_path('css/filament-admin-theme.css')) }}">
     @livewireStyles
     </head>
     <body style="height:100%; overflow:hidden;">

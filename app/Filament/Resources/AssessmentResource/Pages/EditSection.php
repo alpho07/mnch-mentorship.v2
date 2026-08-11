@@ -10,8 +10,9 @@ use App\Models\Cadre;
 use App\Services\CadreMatrixSyncService;
 use App\Services\DynamicFormBuilder;
 use App\Services\DynamicScoringService;
-use Filament\Actions;
 use Filament\Forms;
+use Filament\Forms\Components\Actions as FormActions;
+use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -111,6 +112,12 @@ class EditSection extends EditRecord
 
     public function form(Form $form): Form
     {
+        $fields = DynamicFormBuilder::buildForSection($this->section->id, $this->record->id);
+
+        if ($this->section->code === 'emonc_facility_context') {
+            $fields = $this->insertManageCadresAction($fields);
+        }
+
         return $form->schema([
             Forms\Components\View::make('filament.pages.assessment.section-chrome')
                 ->viewData(fn () => [
@@ -122,11 +129,89 @@ class EditSection extends EditRecord
                 ->description($this->section->description)
                 ->icon('heroicon-o-clipboard-document-check')
                 ->extraAttributes(['class' => 'aqs'])
-                ->schema(
-                    DynamicFormBuilder::buildForSection($this->section->id, $this->record->id)
-                )
+                ->schema($fields)
                 ->columns(1),
         ]);
+    }
+
+    /**
+     * Splices the "Manage Cadres" action directly above the Human
+     * Resources table it affects, rather than in the page header where
+     * its connection to that one table (out of everything else on this
+     * page) wasn't obvious. Appended at the end if that table isn't
+     * present yet (e.g. no active 'emonc' cadres at all, so
+     * CadreMatrixSyncService produced no table for buildForSection() to
+     * return) — the button must still show, since it's the only way to
+     * add the first cadre.
+     */
+    private function insertManageCadresAction(array $fields): array
+    {
+        $hrTableIndex = null;
+
+        foreach ($fields as $index => $field) {
+            if (method_exists($field, 'getLabel') && $field->getLabel() === 'Human Resources in Maternity Unit') {
+                $hrTableIndex = $index;
+                break;
+            }
+        }
+
+        $action = FormActions::make([$this->manageCadresAction()])->columnSpanFull();
+
+        if ($hrTableIndex === null) {
+            $fields[] = $action;
+
+            return $fields;
+        }
+
+        array_splice($fields, $hrTableIndex, 0, [$action]);
+
+        return $fields;
+    }
+
+    /**
+     * Assessors need a way to add or retire a cadre without leaving this
+     * page — the Human Resources table's rows come from the admin-managed
+     * Cadre list (category: 'emonc'). Mirrors EditHumanResources' existing
+     * "Manage Cadres" pattern.
+     */
+    private function manageCadresAction(): FormAction
+    {
+        return FormAction::make('manage_emonc_cadres')
+            ->label('Manage Cadres')
+            ->icon('heroicon-o-adjustments-horizontal')
+            ->color('gray')
+            ->modalHeading('Manage Human Resources Cadres')
+            ->modalDescription('Uncheck a cadre to remove its row from the table below, or add a new one. Changes apply immediately.')
+            ->fillForm(fn () => [
+                'active_cadre_ids' => Cadre::category('emonc')->active()->pluck('id')->toArray(),
+            ])
+            ->form([
+                Forms\Components\CheckboxList::make('active_cadre_ids')
+                    ->label('Active Cadres')
+                    ->options(fn () => Cadre::category('emonc')->ordered()->pluck('name', 'id'))
+                    ->columns(2),
+                Forms\Components\TextInput::make('new_cadre_name')
+                    ->label('Add a new cadre')
+                    ->placeholder('e.g. Anaesthetists')
+                    ->maxLength(255),
+            ])
+            ->action(function (array $data) {
+                app(CadreMatrixSyncService::class)->applyMaternityCadreManagement(
+                    $this->section,
+                    $data['active_cadre_ids'] ?? [],
+                    $data['new_cadre_name'] ?? null,
+                );
+
+                Notification::make()
+                    ->title('Cadres updated')
+                    ->success()
+                    ->send();
+
+                $this->redirect(static::getResource()::getUrl('edit-section', [
+                    'record' => $this->record->id,
+                    'sectionCode' => $this->section->code,
+                ]));
+            });
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
@@ -146,59 +231,6 @@ class EditSection extends EditRecord
         }
 
         return $data;
-    }
-
-    /**
-     * Only the EmONC facility-context section gets a header action — its
-     * Human Resources table's rows come from the admin-managed Cadre list
-     * (category: 'emonc'), so assessors need a way to add or retire a
-     * cadre without leaving this page. Mirrors EditHumanResources'
-     * existing "Manage Cadres" pattern.
-     */
-    protected function getHeaderActions(): array
-    {
-        if ($this->section->code !== 'emonc_facility_context') {
-            return [];
-        }
-
-        return [
-            Actions\Action::make('manage_emonc_cadres')
-                ->label('Manage Cadres')
-                ->icon('heroicon-o-adjustments-horizontal')
-                ->color('gray')
-                ->modalHeading('Manage Human Resources Cadres')
-                ->modalDescription('Uncheck a cadre to remove its row from the table below, or add a new one. Changes apply immediately.')
-                ->fillForm(fn () => [
-                    'active_cadre_ids' => Cadre::category('emonc')->active()->pluck('id')->toArray(),
-                ])
-                ->form([
-                    Forms\Components\CheckboxList::make('active_cadre_ids')
-                        ->label('Active Cadres')
-                        ->options(fn () => Cadre::category('emonc')->ordered()->pluck('name', 'id'))
-                        ->columns(2),
-                    Forms\Components\TextInput::make('new_cadre_name')
-                        ->label('Add a new cadre')
-                        ->placeholder('e.g. Anaesthetists')
-                        ->maxLength(255),
-                ])
-                ->action(function (array $data) {
-                    app(CadreMatrixSyncService::class)->applyMaternityCadreManagement(
-                        $this->section,
-                        $data['active_cadre_ids'] ?? [],
-                        $data['new_cadre_name'] ?? null,
-                    );
-
-                    Notification::make()
-                        ->title('Cadres updated')
-                        ->success()
-                        ->send();
-
-                    $this->redirect(static::getResource()::getUrl('edit-section', [
-                        'record' => $this->record->id,
-                        'sectionCode' => $this->section->code,
-                    ]));
-                }),
-        ];
     }
 
     protected function getCurrentSectionKey(): string

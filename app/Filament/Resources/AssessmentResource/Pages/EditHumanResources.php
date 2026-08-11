@@ -40,7 +40,7 @@ class EditHumanResources extends EditRecord
                 ->modalSubmitActionLabel('Save Selection')
                 ->fillForm(function () {
                     $allCadreIds = MainCadre::where('is_active', true)->pluck('id')->toArray();
-                    $excludedIds = $this->record->excluded_cadre_ids ?? [];
+                    $excludedIds = $this->record->excluded_cadre_ids ?? $this->defaultExcludedCadreIds();
 
                     return [
                         'included_cadre_ids' => array_values(array_diff($allCadreIds, $excludedIds)),
@@ -59,7 +59,13 @@ class EditHumanResources extends EditRecord
                     $includedIds = array_map('intval', $data['included_cadre_ids'] ?? []);
                     $excludedIds = array_values(array_diff($allCadreIds, $includedIds));
 
-                    $this->record->update(['excluded_cadre_ids' => $excludedIds ?: null]);
+                    // Stored as an explicit array (even when empty) rather than
+                    // collapsing to null — null is reserved to mean "assessor
+                    // has never customized this," which is what makes the
+                    // Others-excluded-by-default behavior below possible. Once
+                    // the assessor saves any selection, including "everything",
+                    // that explicit choice must stick.
+                    $this->record->update(['excluded_cadre_ids' => $excludedIds]);
 
                     Notification::make()
                         ->title('Cadre selection updated')
@@ -115,9 +121,25 @@ class EditHumanResources extends EditRecord
         return $data;
     }
 
+    /**
+     * "Others" is excluded out of the box — it's a catch-all cadre that
+     * only applies to some facilities, and defaulting it to visible meant
+     * every assessment carried an empty, easy-to-miss section. Assessors
+     * add it back manually via "Manage Cadres" when it's actually needed.
+     * Only applies while excluded_cadre_ids is null (never customized) —
+     * once an assessor saves a selection, their explicit choice wins.
+     */
+    private function defaultExcludedCadreIds(): array
+    {
+        return MainCadre::where('is_active', true)
+            ->where('name', 'Others')
+            ->pluck('id')
+            ->toArray();
+    }
+
     public function form(Form $form): Form
     {
-        $excludedIds = $this->record->excluded_cadre_ids ?? [];
+        $excludedIds = $this->record->excluded_cadre_ids ?? $this->defaultExcludedCadreIds();
 
         $cadres = MainCadre::where('is_active', true)
             ->when(! empty($excludedIds), fn ($q) => $q->whereNotIn('id', $excludedIds))

@@ -18,6 +18,8 @@ class ActivityCompletionMatrix extends Field
 
     protected \Closure|array $certificateStatuses = [];
 
+    protected \Closure|array $lockedParticipantIds = [];
+
     public function participants(array|\Closure $participants): static
     {
         $this->participants = $participants;
@@ -76,5 +78,17 @@ class ActivityCompletionMatrix extends Field
     public function getCertificateStatuses(): array
     {
         return $this->evaluate($this->certificateStatuses);
+    }
+
+    public function lockedParticipantIds(array|\Closure $lockedParticipantIds): static
+    {
+        $this->lockedParticipantIds = $lockedParticipantIds;
+
+        return $this;
+    }
+
+    public function getLockedParticipantIds(): array
+    {
+        return $this->evaluate($this->lockedParticipantIds);
     }
 }

@@ -18,7 +18,7 @@ class SupplierResource extends Resource {
 
     protected static ?string $model = Supplier::class;
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
-    protected static ?string $navigationGroup = 'Inventory Management';
+    protected static ?string $navigationGroup = 'Inventory';
     protected static ?int $navigationSort = 1;
 
     public static function shouldRegisterNavigation(): bool {

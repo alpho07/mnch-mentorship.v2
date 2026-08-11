@@ -705,6 +705,11 @@ class ManageClassModules extends Page implements HasTable
                             ])
                             ->toArray();
 
+                        $lockedParticipantIds = $progressMap
+                            ->filter(fn ($progress) => in_array($progress->status, ['completed', 'exempted'], true))
+                            ->keys()
+                            ->all();
+
                         $activities = $record->programModule?->activities
                             ?->map(fn ($a) => [
                                 'id' => $a->id,
@@ -735,6 +740,7 @@ class ManageClassModules extends Page implements HasTable
                                 ->completedActivityIds($completedActivityIds)
                                 ->videoReviews($videoReviews)
                                 ->certificateStatuses($certificateStatuses)
+                                ->lockedParticipantIds($lockedParticipantIds)
                                 ->default(json_encode($defaultPayload)),
                         ];
                     })
@@ -909,13 +915,26 @@ class ManageClassModules extends Page implements HasTable
 
         $newlyCompletedParticipantIds = [];
 
-        DB::transaction(function () use ($classModule, $participantIds, $activityIds, $completedKeys, $completions, &$newlyCompletedParticipantIds) {
+        // Participants whose module is already locked (completed/exempted)
+        // for this class module — their activity records are frozen, a
+        // mentor can no longer toggle them from this matrix once done.
+        $lockedParticipantIds = MenteeModuleProgress::where('class_module_id', $classModule->id)
+            ->whereIn('class_participant_id', $participantIds)
+            ->whereIn('status', ['completed', 'exempted'])
+            ->pluck('class_participant_id')
+            ->all();
+
+        DB::transaction(function () use ($classModule, $participantIds, $activityIds, $completedKeys, $completions, $lockedParticipantIds, &$newlyCompletedParticipantIds) {
             $existing = ClassModuleActivityParticipant::where('class_module_id', $classModule->id)
                 ->whereIn('class_participant_id', $participantIds)
                 ->whereIn('activity_id', $activityIds)
                 ->get();
 
             foreach ($existing as $record) {
+                if (in_array($record->class_participant_id, $lockedParticipantIds, true)) {
+                    continue;
+                }
+
                 $key = "{$record->class_participant_id}:{$record->activity_id}";
                 $shouldBeCompleted = isset($completedKeys[$key]);
 
@@ -937,7 +956,7 @@ class ManageClassModules extends Page implements HasTable
             foreach ($completions as $entry) {
                 $participantId = (int) ($entry['participantId'] ?? 0);
 
-                if (! in_array($participantId, $participantIds)) {
+                if (! in_array($participantId, $participantIds) || in_array($participantId, $lockedParticipantIds, true)) {
                     continue;
                 }
 

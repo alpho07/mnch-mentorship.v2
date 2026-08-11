@@ -17,7 +17,7 @@ class DivisionResource extends Resource {
 
     protected static ?string $model = Division::class;
     protected static ?string $navigationIcon = 'heroicon-o-map';
-    protected static ?string $navigationGroup = 'Geographic Structure';
+    protected static ?string $navigationGroup = 'Organization Units';
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 1;
 

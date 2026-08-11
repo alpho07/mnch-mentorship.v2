@@ -19,7 +19,7 @@ class CountyResource extends Resource {
 
     protected static ?string $model = County::class;
     protected static ?string $navigationIcon = 'heroicon-o-map';
-    protected static ?string $navigationGroup = 'Geographic Structure';
+    protected static ?string $navigationGroup = 'Organization Units';
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 2;
 

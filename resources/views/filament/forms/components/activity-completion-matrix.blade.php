@@ -4,6 +4,7 @@
     $completedActivityIds = $getCompletedActivityIds();
     $videoReviews = $getVideoReviews();
     $certificateStatuses = $getCertificateStatuses();
+    $lockedParticipantIds = $getLockedParticipantIds();
 @endphp
 
 <x-dynamic-component
@@ -105,16 +106,25 @@
                                 $allDone = count($activities) > 0 && count($completedIds) === count($activities);
                                 $videoStatus = $videoReviews[$pId] ?? 'not_submitted';
                                 $certStatus = $certificateStatuses[$pId] ?? ['mentor_approved' => false, 'head_drmh_approved' => false, 'certified' => false];
+                                $isLocked = in_array($pId, $lockedParticipantIds, true);
                             @endphp
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 {{ $isLocked ? 'opacity-60' : '' }}">
                                 <td class="px-4 py-3 sticky left-0 bg-white dark:bg-gray-800 z-10">
                                     <div class="flex items-center gap-2">
                                         <input type="checkbox"
                                                class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500"
                                                title="Mark all activities complete for this mentee"
+                                               @if($isLocked) disabled @endif
                                                @change="toggleAllForParticipant({{ $pId }}, $event.target.checked)">
                                         <div>
-                                            <div class="font-medium text-gray-900 dark:text-white">{{ $participant['name'] }}</div>
+                                            <div class="font-medium text-gray-900 dark:text-white flex items-center gap-1.5">
+                                                {{ $participant['name'] }}
+                                                @if($isLocked)
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700" title="Module completed — locked">
+                                                        <x-heroicon-o-lock-closed class="w-2.5 h-2.5" /> Locked
+                                                    </span>
+                                                @endif
+                                            </div>
                                             <div class="text-xs text-gray-500">{{ $participant['email'] ?? '' }}</div>
                                         </div>
                                     </div>
@@ -124,6 +134,7 @@
                                         <input type="checkbox"
                                                class="rounded border-gray-300 text-primary-600 shadow-sm focus:ring-primary-500"
                                                :checked="isCompleted({{ $pId }}, {{ $activity['id'] }})"
+                                               @if($isLocked) disabled @endif
                                                @change="toggle({{ $pId }}, {{ $activity['id'] }})">
                                     </td>
                                 @endforeach

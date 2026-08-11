@@ -21,7 +21,7 @@ class StockLevelResource extends Resource {
 
     protected static ?string $model = StockLevel::class;
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
-    protected static ?string $navigationGroup = 'Inventory Management';
+    protected static ?string $navigationGroup = 'Inventory';
     protected static ?string $navigationLabel = 'Stock Levels';
     protected static ?int $navigationSort = 3;
 

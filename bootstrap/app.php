@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Middleware alias used in routes/api.php
         $middleware->alias([
             'api.active' => \App\Http\Middleware\EnsureUserIsActive::class,
+            'prevent-stale-cache' => \App\Http\Middleware\PreventStalePageCache::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

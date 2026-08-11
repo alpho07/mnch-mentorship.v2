@@ -141,6 +141,18 @@ class MenteeDashboard extends Page
             ->flip()
             ->toArray();
 
+        // ── 3b. Latest practical (rubric) assessment per module, for the
+        // dashboard's module score pill — the actual scored source of
+        // truth, distinct from MenteeModuleProgress::assessment_score
+        // (never populated by the real rubric flow).
+        $moduleIdsForRubric = ClassModule::whereIn('mentorship_class_id', $classIds)->pluck('id');
+        $rubricScoresByModule = \App\Models\RubricAssessment::whereIn('class_module_id', $moduleIdsForRubric)
+            ->where('mentee_id', $user->id)
+            ->with('rubric')
+            ->get()
+            ->groupBy('class_module_id')
+            ->map(fn ($group) => $group->sortByDesc('assessed_at')->first());
+
         // ── 4. Build per-enrollment data ─────────────────────────────────────
         $allModules = collect();
         $globalCompleted = 0;
@@ -153,7 +165,7 @@ class MenteeDashboard extends Page
         $activeClasses = 0;
 
         $this->enrollments = $participants->map(function (ClassParticipant $p) use (
-            $confirmedModuleIds, &$globalCompleted, &$globalInProgress, &$globalNotStarted,
+            $confirmedModuleIds, $rubricScoresByModule, &$globalCompleted, &$globalInProgress, &$globalNotStarted,
             &$globalExempted, &$globalPendingAttend, &$globalAttended,
             &$completedClasses, &$activeClasses, &$allModules
         ) {
@@ -164,7 +176,7 @@ class MenteeDashboard extends Page
             $progressMap = $p->moduleProgress->keyBy('class_module_id');
 
             $modules = ($class?->classModules ?? collect())->map(function (ClassModule $m) use (
-                $confirmedModuleIds, $progressMap
+                $confirmedModuleIds, $progressMap, $rubricScoresByModule
             ) {
                 $prog = $progressMap->get($m->id);
                 $progStatus = $prog?->status ?? 'not_started';
@@ -198,6 +210,7 @@ class MenteeDashboard extends Page
                     'video_review_notes' => $prog?->video_review_notes,
                     'video_reviewed_at' => $prog?->video_reviewed_at ? Carbon::parse($prog->video_reviewed_at)->format('d M Y') : null,
                     'assessment_score' => $prog?->assessment_score,
+                    'rubric_score'     => $rubricScoresByModule->get($m->id)?->scorePercentage(),
                     'pre_test_score'   => $prog?->preTestAttempt?->score,
                     'post_test_score'  => $prog?->postTestAttempt?->score,
                     'sessions' => $sessions,

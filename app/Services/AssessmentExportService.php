@@ -206,7 +206,7 @@ class AssessmentExportService {
                 $response->department->name ?? 'N/A',
                 $response->commodity->category->name ?? 'N/A',
                 $response->commodity->name ?? 'N/A',
-                $response->available ? 'Yes' : 'No',
+                $response->not_applicable ? 'N/A' : ($response->available ? 'Yes' : 'No'),
                 $response->score ?? 0,
             ];
         }

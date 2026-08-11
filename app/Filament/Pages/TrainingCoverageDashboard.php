@@ -16,7 +16,7 @@ class TrainingCoverageDashboard extends Page
 
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar-square';
     protected static ?string $navigationLabel = 'Training Dashboard';
-    protected static ?string $navigationGroup = 'Analytics & Reports';
+    protected static ?string $navigationGroup = 'Reports & Analytics';
     protected static ?int $navigationSort = 1;
     protected static string $view = 'filament.pages.training-coverage-dashboard';
     protected static ?string $title = 'Training Coverage Dashboard';

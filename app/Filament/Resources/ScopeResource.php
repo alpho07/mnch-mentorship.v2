@@ -111,7 +111,7 @@ class ScopeResource extends Resource
                 Tables\Columns\TextColumn::make('label')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('slug')->searchable(),
                 Tables\Columns\TextColumn::make('tabs')
-                    ->formatStateUsing(fn ($state) => implode(', ', $state ?? []))
+                    ->separator(', ')
                     ->label('Tabs'),
                 Tables\Columns\IconColumn::make('is_active')->boolean()->label('Active'),
             ])

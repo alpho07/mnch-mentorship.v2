@@ -127,7 +127,7 @@ Route::post('/enroll/{token}', [MenteeEnrollmentController::class, 'submit'])
     ->name('mentee.enroll.submit');
 
 // Mentee authenticated routes
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'prevent-stale-cache'])->group(function () {
     Route::get('/my-class/{class}', [MenteeClassProgressController::class, 'show'])
         ->name('mentee.class.progress');
 
@@ -136,6 +136,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/my-class/{class}/module/{classModule}/quiz/{quiz}/start', [MenteeClassProgressController::class, 'startQuiz'])
         ->name('mentee.class.quiz.start');
+
+    Route::post('/my-class/{class}/module/{classModule}/quiz/{attempt}/save', [MenteeClassProgressController::class, 'saveQuizResponse'])
+        ->name('mentee.class.quiz.save');
 
     Route::post('/my-class/{class}/module/{classModule}/quiz/{attempt}/submit', [MenteeClassProgressController::class, 'submitQuiz'])
         ->name('mentee.class.quiz.submit');

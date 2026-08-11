@@ -19,7 +19,7 @@ class StockRequestResource extends Resource {
 
     protected static ?string $model = StockRequest::class;
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
-    protected static ?string $navigationGroup = 'Inventory Management';
+    protected static ?string $navigationGroup = 'Inventory';
     protected static ?int $navigationSort = 4;
 
     public static function shouldRegisterNavigation(): bool {

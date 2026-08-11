@@ -894,7 +894,7 @@
         </div>
 
         {{-- ══ GLOBAL STATS ═══════════════════════════════════════════════════════ --}}
-        <details class="md-collapse-section">
+        <details class="md-collapse-section" id="md-details-progress" open>
             <summary class="md-collapse-summary">📊 My Progress</summary>
             <div class="md-collapse-body">
 @php
@@ -926,7 +926,7 @@ $cards = [
         </details>
 
 {{-- ══ MAIN CONTENT + SIDEBAR ══════════════════════════════════════════════ --}}
-        <details class="md-collapse-section">
+        <details class="md-collapse-section" id="md-details-classes" open>
             <summary class="md-collapse-summary">📚 My Classes</summary>
             <div class="md-collapse-body">
 
@@ -1142,6 +1142,25 @@ $cards = [
             icon.style.transform = isOpen ? 'rotate(180deg)' : '';
         }
     }
+
+    // "Memory foam" — remembers whichever open/closed state the mentee last
+    // left each top-level section in, instead of always resetting to the
+    // server-rendered default (both open) on every visit.
+    (function () {
+        const sections = ['md-details-progress', 'md-details-classes'];
+        sections.forEach(function (id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const storageKey = 'mnch_' + id + '_open';
+            const saved = localStorage.getItem(storageKey);
+            if (saved !== null) {
+                el.open = saved === '1';
+            }
+            el.addEventListener('toggle', function () {
+                localStorage.setItem(storageKey, el.open ? '1' : '0');
+            });
+        });
+    })();
     </script>
 @endpush
 </x-filament-panels::page>

@@ -128,7 +128,7 @@ class ReviewModuleMentee extends Page
         if (! $this->isReadyForMentorApproval()) {
             Notification::make()->danger()
                 ->title('Not Ready for Approval')
-                ->body('All module progress must be completed and all videos must have passed review.')
+                ->body('All modules must be completed, and any module with a hands-on video must have that video reviewed and passed.')
                 ->send();
 
             return;
@@ -183,6 +183,88 @@ class ReviewModuleMentee extends Page
 
         Notification::make()->warning()->title('Approval Reverted')
             ->body("Mentor approval for {$this->participant->user?->full_name} has been reverted.")
+            ->send();
+    }
+
+    /**
+     * Manual override for a mentor to lock this module as complete for the
+     * mentee, independent of the automatic pretest+video+post-test trigger
+     * (e.g. the mentee finished everything that matters but a step can't be
+     * satisfied through the normal flow).
+     */
+    public function markModuleComplete(): void
+    {
+        if (! $this->canMentorApprove()) {
+            Notification::make()->danger()->title('Not authorized')->send();
+
+            return;
+        }
+
+        if (! $this->progress) {
+            Notification::make()->danger()->title('Cannot Complete')
+                ->body('This mentee has not started this module yet.')
+                ->send();
+
+            return;
+        }
+
+        if ($this->progress->isLockedForMentee()) {
+            Notification::make()->warning()->title('Already Completed')->send();
+
+            return;
+        }
+
+        $this->progress->markCompleted();
+        $this->progress = $this->progress->fresh(['preTestAttempt.responses.option', 'postTestAttempt.responses.option']);
+
+        Notification::make()->success()->title('Module Marked Complete')
+            ->body("{$this->participant->user?->full_name}'s module is now locked and marked complete.")
+            ->send();
+    }
+
+    /**
+     * Escape hatch for correcting a mistake on a locked module — reopens
+     * the pre-test/video/post-test and Activity Completion Matrix for
+     * editing again. Refuses once the mentee is already mentor-approved,
+     * since that approval was granted on the assumption every module
+     * (including this one) was genuinely complete.
+     */
+    public function unlockModule(): void
+    {
+        if (! $this->canMentorApprove()) {
+            Notification::make()->danger()->title('Not authorized')->send();
+
+            return;
+        }
+
+        if (! $this->progress || ! $this->progress->isLockedForMentee()) {
+            Notification::make()->warning()->title('Not Locked')->send();
+
+            return;
+        }
+
+        if ($this->participant->mentor_approved_at) {
+            Notification::make()->danger()
+                ->title('Cannot Unlock')
+                ->body('This mentee is already mentor-approved for certification — revert that approval first if this module genuinely needs reopening.')
+                ->send();
+
+            return;
+        }
+
+        // isLockedForMentee() (and the video-reassessment guard) key off
+        // the video's own pass state, not `status` — reverting only
+        // `status` would leave the mentee still locked out, so reopen the
+        // video review too, back to pending.
+        $this->progress->update([
+            'status' => 'in_progress',
+            'completed_at' => null,
+            'video_review_status' => 'pending',
+        ]);
+        $this->progress = $this->progress->fresh(['preTestAttempt.responses.option', 'postTestAttempt.responses.option']);
+
+        Notification::make()->warning()->title('Module Unlocked')
+            ->body("{$this->participant->user?->full_name}'s module has been reopened for editing.")
             ->send();
     }
 

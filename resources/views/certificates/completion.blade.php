@@ -87,9 +87,15 @@
     </div>
 
     {{-- ── Vertically centered content ──────────────────────────────────────── --}}
-    <table style="width:297mm;height:210mm;border-collapse:collapse;">
+    {{-- Centered within 192mm (210mm minus the 9mm frame inset on each
+         side), not the full page height — the decorative frame div above is
+         an independent absolute overlay, so without this the centered block
+         can grow past the frame's own top/bottom lines as content is added. --}}
+    <table style="width:297mm;height:192mm;margin-top:9mm;border-collapse:collapse;">
         <tr>
             <td style="vertical-align:middle;text-align:center;padding:0 30mm;">
+
+                @include('certificates.partials.logo-header', ['logoHeight' => '8mm', 'iconSize' => '7mm', 'textSize' => '9pt', 'marginBottom' => '2mm'])
 
                 <div style="font-family:'DejaVu Sans',sans-serif;font-size:8pt;letter-spacing:4px;text-transform:uppercase;color:#8a6a30;font-weight:bold;margin-bottom:3mm;">
                     MNCH &bull; Ministry of Health, Kenya
@@ -127,14 +133,14 @@
                 <div style="font-family:'DejaVu Serif',serif;font-size:16pt;font-weight:bold;color:#2a1f0a;margin-bottom:1.5mm;">
                     {{ $class->training?->program?->name ?? 'MNCH Mentorship Program' }}
                 </div>
-                <div style="font-family:'DejaVu Sans',sans-serif;font-size:9pt;color:#6b5b45;letter-spacing:0.5px;margin-bottom:5mm;">
+                <div style="font-family:'DejaVu Sans',sans-serif;font-size:9pt;color:#6b5b45;letter-spacing:0.5px;margin-bottom:3mm;">
                     {{ $moduleCount }} module{{ $moduleCount === 1 ? '' : 's' }} completed &nbsp;&bull;&nbsp; {{ $year }}
                     @if($class->training?->facility?->name)&nbsp;&bull;&nbsp; {{ $class->training->facility->name }}@endif
                 </div>
 
                 {{-- QR verification code — centered --}}
                 @if(!empty($qr))
-                <div style="margin:0 auto 5mm;width:22mm;">
+                <div style="margin:0 auto 3mm;width:22mm;">
                     <img src="{{ $qr }}" alt="Verify" style="width:22mm;height:22mm;display:block;margin:0 auto;">
                     <div style="font-family:'DejaVu Sans',sans-serif;font-size:6pt;letter-spacing:1px;text-transform:uppercase;color:#9a8a70;margin-top:1.5mm;">Scan to Verify</div>
                 </div>

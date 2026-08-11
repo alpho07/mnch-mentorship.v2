@@ -13,23 +13,58 @@ use InvalidArgumentException;
 class QuizAttemptService
 {
     /**
-     * Start a new quiz attempt.
+     * Start a quiz attempt — resumes an existing in-progress (uncompleted)
+     * attempt for this quiz/user/type if one exists, rather than creating a
+     * new one with a fresh started_at. Without this, re-hitting the "start
+     * quiz" route (e.g. because the in-progress attempt didn't survive a
+     * page refresh) silently restarted the countdown from full duration
+     * every time.
      */
     public function startAttempt(ProgramModuleQuiz $quiz, User $user, string $attemptType): QuizAttempt
     {
         $this->validateAttemptType($quiz, $attemptType);
 
         return DB::transaction(function () use ($quiz, $user, $attemptType) {
-            $attempt = QuizAttempt::create([
+            $existing = QuizAttempt::where('program_module_quiz_id', $quiz->id)
+                ->where('user_id', $user->id)
+                ->where('attempt_type', $attemptType)
+                ->whereNull('completed_at')
+                ->latest('started_at')
+                ->first();
+
+            if ($existing) {
+                return $existing;
+            }
+
+            return QuizAttempt::create([
                 'program_module_quiz_id' => $quiz->id,
                 'user_id' => $user->id,
                 'attempt_type' => $attemptType,
                 'total_questions' => $quiz->questions()->where('is_active', true)->count(),
                 'started_at' => now(),
             ]);
-
-            return $attempt;
         });
+    }
+
+    /**
+     * Persist a single answer as the mentee picks it, so closing the quiz
+     * modal (or a crashed tab/lost connection) doesn't lose their progress —
+     * the timer keeps running regardless, and reopening the modal restores
+     * whatever was already selected.
+     */
+    public function saveResponse(QuizAttempt $attempt, int $questionId, int $optionId): QuizResponse
+    {
+        if ($attempt->completed_at !== null) {
+            throw new InvalidArgumentException('This attempt has already been submitted.');
+        }
+
+        $question = $attempt->quiz->questions()->where('is_active', true)->findOrFail($questionId);
+        $option = $question->options()->findOrFail($optionId);
+
+        return QuizResponse::updateOrCreate(
+            ['quiz_attempt_id' => $attempt->id, 'quiz_question_id' => $question->id],
+            ['quiz_option_id' => $option->id, 'is_correct' => (bool) $option->is_correct]
+        );
     }
 
     /**
@@ -93,6 +128,12 @@ class QuizAttemptService
                     'updated_at' => now(),
                 ];
             }
+
+            // Clear any autosaved responses first — the submitted form is the
+            // authoritative final state, and a question autosaved earlier via
+            // saveResponse() would otherwise collide with this bulk insert on
+            // the (quiz_attempt_id, quiz_question_id) unique constraint.
+            QuizResponse::where('quiz_attempt_id', $attempt->id)->delete();
 
             if (! empty($responsesToInsert)) {
                 QuizResponse::insert($responsesToInsert);

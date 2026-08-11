@@ -18,7 +18,7 @@ class FacilityTypeResource extends Resource {
 
     protected static ?string $model = FacilityType::class;
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
-    protected static ?string $navigationGroup = 'Geographic Structure';
+    protected static ?string $navigationGroup = 'Organization Units';
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 5;
     protected static ?string $navigationLabel = 'Facility Types';

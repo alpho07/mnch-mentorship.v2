@@ -57,22 +57,62 @@ class ConductRubricAssessment extends Page
 
     public ?User $menteeUser = null;
 
+    public bool $isModuleLocked = false;
+
     public function mount(): void
     {
         $this->mentor_id = auth()->id();
         $this->assessed_at = now()->format('Y-m-d\TH:i');
 
+        $this->isModuleLocked = $this->resolveLockedProgress() !== null;
+
         // Arrived from ReviewModuleMentee's "Conduct Practical Assessment"
         // link with rubric + mentee already known — skip the manual
         // picker in Step 1 and go straight to scoring. "Back" still lets
         // the mentor reach the picker if they need to correct something.
-        if ($this->module_rubric_id && $this->mentee_id) {
+        if ($this->module_rubric_id && $this->mentee_id && ! $this->isModuleLocked) {
             $this->loadRubric();
 
             if ($this->rubric) {
                 $this->step = 2;
             }
         }
+    }
+
+    /**
+     * A module whose video has already passed can't have a new assessment
+     * conducted against it — a mentor shouldn't be able to silently change
+     * an already-passed outcome. Deliberately checks the video's own
+     * pass state rather than the mentee's full lock (which also requires
+     * pre/post-test) — the Activity Completion Matrix can independently
+     * set `status = 'completed'` before the mentee has even submitted a
+     * video, and that must never block the FIRST, legitimate review.
+     * Returns the progress record when locked, so callers can reuse it.
+     */
+    private function resolveLockedProgress(): ?MenteeModuleProgress
+    {
+        if (! $this->class_module_id || ! $this->mentee_id) {
+            return null;
+        }
+
+        $classModule = ClassModule::find($this->class_module_id);
+        if (! $classModule) {
+            return null;
+        }
+
+        $participant = ClassParticipant::where('mentorship_class_id', $classModule->mentorship_class_id)
+            ->where('user_id', $this->mentee_id)
+            ->first();
+
+        if (! $participant) {
+            return null;
+        }
+
+        $progress = MenteeModuleProgress::where('class_participant_id', $participant->id)
+            ->where('class_module_id', $this->class_module_id)
+            ->first();
+
+        return $progress?->isVideoPassed() ? $progress : null;
     }
 
     public function loadRubric(): void
@@ -101,6 +141,15 @@ class ConductRubricAssessment extends Page
             'assessed_at' => 'required',
         ]);
 
+        if ($this->resolveLockedProgress()) {
+            $this->isModuleLocked = true;
+            Notification::make()->danger()->title('Module Locked')
+                ->body('This module is already completed and locked — a new assessment cannot be conducted.')
+                ->send();
+
+            return;
+        }
+
         $this->loadRubric();
         $this->step = 2;
     }
@@ -113,6 +162,15 @@ class ConductRubricAssessment extends Page
     public function submitAssessment(): void
     {
         if (! $this->rubric) {
+            return;
+        }
+
+        if ($this->resolveLockedProgress()) {
+            $this->isModuleLocked = true;
+            Notification::make()->danger()->title('Module Locked')
+                ->body('This module is already completed and locked — the assessment was not saved.')
+                ->send();
+
             return;
         }
 
@@ -194,6 +252,10 @@ class ConductRubricAssessment extends Page
             'Derived from practical (rubric) assessment.',
             $this->mentor_id
         );
+
+        // Locks the module for the mentee if the video pass was the last of
+        // their own steps (e.g. a module with no post-test quiz).
+        $progress->fresh()->maybeAutoComplete();
 
         $participant->syncCompletionStatus();
 

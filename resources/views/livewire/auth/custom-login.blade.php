@@ -1,5 +1,16 @@
 {{-- resources/views/livewire/auth/custom-login.blade.php --}}
-<div class="fi-simple-page">
+<div
+    class="fi-simple-page"
+    x-data="{
+        crisisOpen: false,
+        dismissCrisis() {
+            this.crisisOpen = false;
+            localStorage.setItem('mnch_why_seen_v1', '1');
+        },
+    }"
+    x-init="crisisOpen = !localStorage.getItem('mnch_why_seen_v1')"
+    @keydown.escape.window="dismissCrisis()"
+>
     <div class="auth-shell">
 
         {{-- ═══════════════════════════════════════════════════════════════
@@ -21,11 +32,41 @@
                     mentors and health workers through structured, trackable, evidence-based programmes.
                 </p>
 
+                <div class="crisis-panel">
+                    <div class="crisis-label">
+                        <svg viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                        Why This Platform Exists
+                    </div>
+                    <div class="crisis-stats">
+                        <div class="crisis-stat">
+                            <div class="crisis-val">355</div>
+                            <div class="crisis-lbl">Maternal deaths per 100,000 live births</div>
+                        </div>
+                        <div class="crisis-stat">
+                            <div class="crisis-val">21</div>
+                            <div class="crisis-lbl">Newborn deaths per 1,000 births — unchanged in 30 years</div>
+                        </div>
+                        <div class="crisis-stat">
+                            <div class="crisis-val">41</div>
+                            <div class="crisis-lbl">Child deaths (under 5) per 1,000 live births</div>
+                        </div>
+                    </div>
+                    <div class="crisis-note">
+                        <strong>Postpartum haemorrhage</strong> is Kenya's leading cause of maternal death, and
+                        <strong>newborns account for over half</strong> of all under-5 deaths. These are the exact
+                        gaps our EmONC mentorship curriculum closes — obstetric emergency response, essential
+                        newborn care &amp; resuscitation, and sick-child management — through live, hands-on
+                        mentorship at the facility level.
+                    </div>
+                    <div class="crisis-source">Source: Kenya Demographic &amp; Health Survey (KDHS) 2022 · Ministry of Health Kenya</div>
+                </div>
+
+                <div class="live-label"><span class="hero-dot"></span> Live Nationwide Impact — Not A Pilot</div>
                 <div class="hero-stats">
-                    <div><div class="stat-val">47</div><div class="stat-lbl">Counties</div></div>
-                    <div><div class="stat-val">2,400+</div><div class="stat-lbl">Health workers</div></div>
-                    <div><div class="stat-val">580+</div><div class="stat-lbl">Facilities</div></div>
-                    <div><div class="stat-val">98%</div><div class="stat-lbl">Completion rate</div></div>
+                    <div><div class="stat-val">{{ number_format($platformStats['mentorships']) }}</div><div class="stat-lbl">Mentorships</div></div>
+                    <div><div class="stat-val">{{ number_format($platformStats['mentees']) }}</div><div class="stat-lbl">Mentees Enrolled</div></div>
+                    <div><div class="stat-val">{{ number_format($platformStats['facilities']) }}</div><div class="stat-lbl">Facilities</div></div>
+                    <div><div class="stat-val">{{ number_format($platformStats['counties']) }}</div><div class="stat-lbl">Counties</div></div>
                 </div>
 
                 <div class="hero-features">
@@ -146,6 +187,57 @@
         </div>
     </div>
 
+    {{-- ═══════════════════════════════════════════════════════════════
+         "Why This Platform Exists" — one-time popup on first visit
+         ═══════════════════════════════════════════════════════════════ --}}
+    <div
+        x-show="crisisOpen"
+        x-cloak
+        class="crisis-modal-backdrop"
+        @click.self="dismissCrisis()"
+        style="display:none"
+    >
+        <div class="crisis-modal" role="dialog" aria-modal="true" aria-labelledby="crisis-modal-title">
+            <button type="button" class="crisis-modal-close" @click="dismissCrisis()" aria-label="Close">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+
+            <div class="crisis-modal-label" id="crisis-modal-title">
+                <svg viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                Why This Platform Exists
+            </div>
+
+            <div class="crisis-modal-stats">
+                <div class="crisis-modal-stat">
+                    <div class="crisis-modal-val">355</div>
+                    <div class="crisis-modal-lbl">Maternal deaths per 100,000 live births</div>
+                </div>
+                <div class="crisis-modal-stat">
+                    <div class="crisis-modal-val">21</div>
+                    <div class="crisis-modal-lbl">Newborn deaths per 1,000 births — unchanged in 30 years</div>
+                </div>
+                <div class="crisis-modal-stat">
+                    <div class="crisis-modal-val">41</div>
+                    <div class="crisis-modal-lbl">Child deaths (under 5) per 1,000 live births</div>
+                </div>
+            </div>
+
+            <p class="crisis-modal-note">
+                <strong>Postpartum haemorrhage</strong> is Kenya's leading cause of maternal death, and
+                <strong>newborns account for over half</strong> of all under-5 deaths. These are the exact gaps
+                our EmONC mentorship curriculum closes — obstetric emergency response, essential newborn care
+                &amp; resuscitation, and sick-child management — through live, hands-on mentorship already
+                running in <strong>{{ number_format($platformStats['counties']) }} counties</strong> today.
+            </p>
+
+            <div class="crisis-modal-source">Source: Kenya Demographic &amp; Health Survey (KDHS) 2022 · Ministry of Health Kenya</div>
+
+            <button type="button" class="crisis-modal-cta" @click="dismissCrisis()">
+                Continue to Sign In
+            </button>
+        </div>
+    </div>
+
     {{-- Filament's ->revealable() handles password toggle natively via Alpine --}}
 
     <style>
@@ -167,7 +259,9 @@
         .hero-badge    {animation:fade-down 0.55s cubic-bezier(.16,1,.3,1) both}
         .hero-title    {animation:fade-up   0.65s cubic-bezier(.16,1,.3,1) 0.10s both}
         .hero-desc     {animation:fade-up   0.65s cubic-bezier(.16,1,.3,1) 0.20s both}
-        .hero-stats    {animation:fade-up   0.65s cubic-bezier(.16,1,.3,1) 0.30s both}
+        .crisis-panel  {animation:fade-up   0.65s cubic-bezier(.16,1,.3,1) 0.26s both}
+        .live-label    {animation:fade-up   0.65s cubic-bezier(.16,1,.3,1) 0.30s both}
+        .hero-stats    {animation:fade-up   0.65s cubic-bezier(.16,1,.3,1) 0.34s both}
         .stat-val      {animation:count-up  0.5s  cubic-bezier(.16,1,.3,1) 0.35s both}
         .feature-card:nth-child(1){animation:fade-up 0.55s cubic-bezier(.16,1,.3,1) 0.40s both}
         .feature-card:nth-child(2){animation:fade-up 0.55s cubic-bezier(.16,1,.3,1) 0.48s both}
@@ -200,6 +294,44 @@
         .hero-title{font-size:2.15rem;font-weight:800;line-height:1.13;letter-spacing:-.04em;margin:0 0 .8rem}
         .hero-title em{font-style:normal;background:linear-gradient(120deg,#93c5fd,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
         .hero-desc{font-size:.875rem;line-height:1.65;opacity:.75;margin-bottom:1.5rem;font-weight:400;max-width:480px}
+
+        /* ── Crisis / urgency panel ──────────────────────────────────────── */
+        .crisis-panel{background:#ffffff;border:1px solid #fecaca;border-radius:13px;padding:1rem 1.1rem 1.05rem;margin-bottom:1.25rem;box-shadow:0 10px 28px rgba(0,0,0,.22)}
+        .crisis-label{display:flex;align-items:center;gap:.4rem;font-size:.63rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#dc2626;margin-bottom:.75rem}
+        .crisis-label svg{width:12px;height:12px;stroke:#dc2626;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+        .crisis-stats{display:flex;gap:.9rem;margin-bottom:.7rem}
+        .crisis-stat{flex:1;min-width:0}
+        .crisis-val{font-size:1.5rem;font-weight:800;letter-spacing:-.03em;line-height:1;color:#b91c1c}
+        .crisis-lbl{font-size:.62rem;line-height:1.4;color:#64748b;font-weight:500;margin-top:.3rem}
+        .crisis-note{font-size:.71rem;line-height:1.55;color:#334155;font-weight:500;border-top:1px solid #fee2e2;padding-top:.65rem;margin-bottom:.35rem}
+        .crisis-note strong{color:#b91c1c;font-weight:700}
+        .crisis-source{font-size:.58rem;color:#94a3b8;font-weight:500;letter-spacing:.01em}
+
+        /* ── "Why This Platform Exists" popup ────────────────────────────── */
+        [x-cloak]{display:none!important}
+        .crisis-modal-backdrop{position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1.5rem;animation:fade-in .25s ease both}
+        .crisis-modal{position:relative;background:#fff;border-radius:18px;max-width:480px;width:100%;padding:1.85rem 1.85rem 1.6rem;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:fade-up .35s cubic-bezier(.16,1,.3,1) both;max-height:88vh;overflow-y:auto}
+        .crisis-modal-close{position:absolute;top:.9rem;right:.9rem;width:28px;height:28px;border-radius:50%;border:none;background:#f1f5f9;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+        .crisis-modal-close:hover{background:#e2e8f0}
+        .crisis-modal-close svg{width:14px;height:14px;stroke:#64748b;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+        .crisis-modal-label{display:flex;align-items:center;gap:.5rem;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#dc2626;margin-bottom:1.15rem;padding-right:1.5rem}
+        .crisis-modal-label svg{width:14px;height:14px;stroke:#dc2626;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+        .crisis-modal-stats{display:flex;gap:1rem;margin-bottom:1.15rem;padding-bottom:1.15rem;border-bottom:1px solid #f1f5f9}
+        .crisis-modal-stat{flex:1;min-width:0}
+        .crisis-modal-val{font-size:1.9rem;font-weight:800;letter-spacing:-.03em;line-height:1;color:#b91c1c;margin-bottom:.35rem}
+        .crisis-modal-lbl{font-size:.68rem;line-height:1.4;color:#64748b;font-weight:500}
+        .crisis-modal-note{font-size:.82rem;line-height:1.65;color:#334155;font-weight:500;margin-bottom:.9rem}
+        .crisis-modal-note strong{color:#b91c1c;font-weight:700}
+        .crisis-modal-source{font-size:.65rem;color:#94a3b8;font-weight:500;margin-bottom:1.35rem}
+        .crisis-modal-cta{width:100%;padding:.85rem 1.25rem;background:linear-gradient(135deg,#1245A8,#1A54C8);color:#fff;border:none;border-radius:11px;cursor:pointer;font-family:inherit;font-size:.86rem;font-weight:700;transition:all .2s;box-shadow:0 4px 16px rgba(18,69,168,.28)}
+        .crisis-modal-cta:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(18,69,168,.36)}
+        .crisis-modal-cta:active{transform:translateY(0)}
+        @media(max-width:520px){
+            .crisis-modal{padding:1.5rem 1.35rem 1.35rem}
+            .crisis-modal-stats{flex-direction:column;gap:.85rem}
+        }
+
+        .live-label{display:flex;align-items:center;gap:.4rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;opacity:.55;margin-bottom:.6rem}
 
         .hero-stats{display:flex;border-top:1px solid rgba(255,255,255,.11);border-bottom:1px solid rgba(255,255,255,.11);padding:.85rem 0;margin-bottom:1.5rem}
         .hero-stats > div{flex:1;text-align:center;border-right:1px solid rgba(255,255,255,.09);padding:0 .5rem}

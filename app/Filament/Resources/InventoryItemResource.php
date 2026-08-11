@@ -20,7 +20,7 @@ class InventoryItemResource extends Resource {
 
     protected static ?string $model = InventoryItem::class;
     protected static ?string $navigationIcon = 'heroicon-o-cube';
-    protected static ?string $navigationGroup = 'Inventory Management';
+    protected static ?string $navigationGroup = 'Inventory';
     protected static ?int $navigationSort = 2;
 
     public static function shouldRegisterNavigation(): bool {

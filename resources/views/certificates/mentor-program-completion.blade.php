@@ -69,9 +69,11 @@
 
     <table style="width:297mm;height:210mm;border-collapse:collapse;">
         <tr>
-            <td style="vertical-align:top;text-align:center;padding:22mm 28mm 0;">
+            <td style="vertical-align:top;text-align:center;padding:14mm 28mm 0;">
 
-                <div style="font-family:'DejaVu Sans',sans-serif;font-size:8pt;letter-spacing:3px;text-transform:uppercase;color:#00796B;font-weight:bold;margin-bottom:6mm;">
+                @include('certificates.partials.logo-header', ['logoHeight' => '8mm', 'iconSize' => '7mm', 'textSize' => '9pt', 'marginBottom' => '3mm', 'dividerColor' => '#8fbfb8'])
+
+                <div style="font-family:'DejaVu Sans',sans-serif;font-size:8pt;letter-spacing:3px;text-transform:uppercase;color:#00796B;font-weight:bold;margin-bottom:5mm;">
                     MNCH Mentorship Platform &bull; Ministry of Health, Kenya
                 </div>
 
