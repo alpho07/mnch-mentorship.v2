@@ -28,6 +28,25 @@ class DynamicFormBuilder
         }
 
         $fields = [];
+        $currentGroup = null;
+        $groupBuffer = [];
+
+        $flushGroup = function () use (&$fields, &$groupBuffer, &$currentGroup) {
+            if ($groupBuffer === []) {
+                return;
+            }
+
+            if ($currentGroup === null) {
+                array_push($fields, ...$groupBuffer);
+            } else {
+                $fields[] = Forms\Components\Fieldset::make($currentGroup)
+                    ->schema($groupBuffer)
+                    ->columns(1)
+                    ->columnSpanFull();
+            }
+
+            $groupBuffer = [];
+        };
 
         foreach ($questions as $question) {
             $existingResponse = null;
@@ -40,10 +59,19 @@ class DynamicFormBuilder
 
             $field = static::buildFieldForQuestion($question, $existingResponse);
 
-            if ($field) {
-                $fields[] = $field;
+            if (! $field) {
+                continue;
             }
+
+            if ($question->group !== $currentGroup) {
+                $flushGroup();
+                $currentGroup = $question->group;
+            }
+
+            $groupBuffer[] = $field;
         }
+
+        $flushGroup();
 
         return $fields;
     }
