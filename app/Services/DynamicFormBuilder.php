@@ -131,18 +131,27 @@ class DynamicFormBuilder
     }
 
     /**
-     * A plain group: small groups (<=4 fields — a handful of details about
-     * one row, e.g. "Name"/"Contact") lay out side by side, table-style.
-     * Larger groups (a kit's many checklist items) stay a single readable
+     * A plain group: small groups (<=7 fields — a handful of details about
+     * one row, e.g. "Name"/"Contact", or a wider one-row summary like
+     * "Total + 6 department counts") lay out side by side, table-style.
+     * Larger groups (a kit's many checklist items — the smallest of which
+     * has 9 members, safely above this threshold) stay a single readable
      * column — laying out 10+ fields side by side would be unusable.
      */
     protected static function buildGroupFieldset(string $label, array $fields)
     {
-        $columns = count($fields) <= 4 ? count($fields) : 1;
+        $columns = count($fields) <= 7 ? count($fields) : 1;
 
         $fieldset = Forms\Components\Fieldset::make($label)
             ->schema($fields)
-            ->columns($columns)
+            // Fieldset's own constructor already calls columns(2) (setting
+            // 'lg' => 2 internally), and columns() merges rather than
+            // replaces — so setting only 'default' here would leave that
+            // stale 'lg' => 2 in place. Every breakpoint must be set
+            // explicitly to fully override it and apply $columns at every
+            // width, not just >=1024px (which, behind this admin panel's
+            // sidebar, the content area frequently doesn't reach anyway).
+            ->columns(['default' => $columns, 'sm' => $columns, 'md' => $columns, 'lg' => $columns, 'xl' => $columns, '2xl' => $columns])
             ->columnSpanFull();
 
         // Only the compact, side-by-side groups (Person In Charge,
@@ -201,7 +210,11 @@ class DynamicFormBuilder
 
         return Forms\Components\Fieldset::make($title)
             ->schema($cells)
-            ->columns($columnsPerRow)
+            // See buildGroupFieldset()'s comment — every breakpoint must be
+            // set explicitly, or Fieldset's own constructor default
+            // ('lg' => 2) survives the merge and this collapses to 1
+            // column below 1024px.
+            ->columns(['default' => $columnsPerRow, 'sm' => $columnsPerRow, 'md' => $columnsPerRow, 'lg' => $columnsPerRow, 'xl' => $columnsPerRow, '2xl' => $columnsPerRow])
             ->extraAttributes(['class' => 'aqs-data-table'])
             ->columnSpanFull();
     }

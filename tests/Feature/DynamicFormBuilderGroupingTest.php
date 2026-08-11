@@ -90,6 +90,22 @@ class DynamicFormBuilderGroupingTest extends TestCase
         $this->assertSame('Kit B', $fields[1]->getLabel());
     }
 
+    public function test_a_group_of_exactly_7_fields_still_lays_out_side_by_side(): void
+    {
+        // The upper edge of the small-group threshold — matches the
+        // EmONC-trained-workers distribution row (total + 6 departments).
+        $section = $this->makeSection('seven_field_section_test');
+        for ($i = 1; $i <= 7; $i++) {
+            $this->makeYesNo($section, "SEVEN_Q{$i}", $i, 'Distribution');
+        }
+
+        $fields = DynamicFormBuilder::buildForSection($section->id);
+
+        $this->assertCount(1, $fields);
+        $this->assertInstanceOf(Fieldset::class, $fields[0]);
+        $this->assertSame(7, $fields[0]->getColumns('default'));
+    }
+
     public function test_a_small_group_lays_out_side_by_side_table_style(): void
     {
         $section = $this->makeSection('small_group_section_test');
@@ -101,13 +117,21 @@ class DynamicFormBuilderGroupingTest extends TestCase
 
         $this->assertCount(1, $fields);
         $this->assertInstanceOf(Fieldset::class, $fields[0]);
-        $this->assertSame(['lg' => 3], $fields[0]->getColumns());
+        // 'default' must resolve to 3 (not just 'lg') — Filament's
+        // plain-int columns(3) only sets the 'lg' breakpoint, which
+        // silently collapses to a single column below 1024px or whenever
+        // the container (not the raw viewport) is narrower than that,
+        // e.g. behind this admin panel's sidebar.
+        $this->assertSame(3, $fields[0]->getColumns('default'));
     }
 
     public function test_a_large_group_stays_a_single_readable_column(): void
     {
+        // 9 — above the <=7 small-group threshold, matching the smallest
+        // real "large" group (the Assisted Vacuum Delivery kit: 1 parent +
+        // 7 items + 1 completeness = 9).
         $section = $this->makeSection('large_group_section_test');
-        for ($i = 1; $i <= 7; $i++) {
+        for ($i = 1; $i <= 9; $i++) {
             $this->makeYesNo($section, "LARGE_Q{$i}", $i, 'Big Kit');
         }
 
@@ -115,7 +139,7 @@ class DynamicFormBuilderGroupingTest extends TestCase
 
         $this->assertCount(1, $fields);
         $this->assertInstanceOf(Fieldset::class, $fields[0]);
-        $this->assertSame(['lg' => 1], $fields[0]->getColumns());
+        $this->assertSame(1, $fields[0]->getColumns('default'));
     }
 
     private function makeNumber(AssessmentSection $section, string $questionCode, int $order, string $group): AssessmentQuestion
@@ -151,7 +175,7 @@ class DynamicFormBuilderGroupingTest extends TestCase
 
         // 1 row-label column + 2 metric columns per row, x2 rows = 6 cells.
         $this->assertCount(6, $fields[0]->getChildComponents());
-        $this->assertSame(['lg' => 3], $fields[0]->getColumns());
+        $this->assertSame(3, $fields[0]->getColumns('default'));
     }
 
     public function test_table_rows_with_a_different_title_do_not_merge(): void
