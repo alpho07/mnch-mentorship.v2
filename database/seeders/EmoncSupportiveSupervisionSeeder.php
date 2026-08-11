@@ -31,6 +31,8 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
         $this->seedCategories();
         $type = $this->seedAssessmentType();
         $this->seedSectionA($type);
+        $this->seedSectionB($type);
+        $this->seedSectionC($type);
     }
 
     private function seedCategories(): void
@@ -182,5 +184,37 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
             $deptCode = str_replace('/', '', $dept);
             $this->upsertQuestion($section, ['code' => "EMONC_A_DIST_{$deptCode}", 'text' => "EmONC-trained healthcare workers — {$dept}", 'type' => 'number', 'order' => $this->nextOrder()]);
         }
+    }
+
+    // ── B. Feedback to Office & Colleagues (scored) ────────────────────────
+
+    private function seedSectionB(AssessmentType $type): void
+    {
+        $section = $this->upsertSection($type, 'emonc_feedback', 'B. Feedback to Office & Colleagues', null, true, 2);
+
+        $this->upsertQuestion($section, $this->yesNo('EMONC_B_FEEDBACK_MEETING_DONE', 'Feedback meeting to office held', $this->nextOrder()));
+
+        for ($i = 1; $i <= 3; $i++) {
+            $this->upsertQuestion($section, ['code' => "EMONC_B_AP{$i}_TEXT", 'text' => "Action Plan {$i} — Description", 'type' => 'text', 'order' => $this->nextOrder()]);
+            $this->upsertQuestion($section, [
+                'code' => "EMONC_B_AP{$i}_STATUS",
+                'text' => "Action Plan {$i} — Status",
+                'type' => 'select',
+                'options' => ['Resolved', 'In Progress', 'Not Addressed'],
+                'order' => $this->nextOrder(),
+            ]);
+            $this->upsertQuestion($section, ['code' => "EMONC_B_AP{$i}_REMARKS", 'text' => "Action Plan {$i} — Remarks", 'type' => 'text', 'order' => $this->nextOrder()]);
+        }
+    }
+
+    // ── C. Capacity Building (scored) ───────────────────────────────────────
+
+    private function seedSectionC(AssessmentType $type): void
+    {
+        $section = $this->upsertSection($type, 'emonc_capacity_building', 'C. Capacity Building', 'Sessions for knowledge and skills sharing.', true, 3);
+
+        $helpText = 'Confirm using the CME register/booklet';
+        $this->upsertQuestion($section, $this->yesNo('EMONC_C_CMES', 'CMEs held', $this->nextOrder(), null, $helpText));
+        $this->upsertQuestion($section, $this->yesNo('EMONC_C_DRILLS', 'Drills held', $this->nextOrder(), null, $helpText));
     }
 }

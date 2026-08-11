@@ -44,6 +44,32 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertSame(['CEMONC', 'BEMONC'], $facilityCategory->options);
     }
 
+    public function test_section_b_is_seeded_with_10_questions_one_scored(): void
+    {
+        $this->seed(EmoncSupportiveSupervisionSeeder::class);
+
+        $section = AssessmentSection::where('code', 'emonc_feedback')->first();
+
+        $this->assertNotNull($section);
+        $this->assertTrue($section->is_scored);
+        $this->assertSame(10, $section->questions()->count());
+        $this->assertSame(1, $section->questions()->where('is_scored', true)->count());
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_B_FEEDBACK_MEETING_DONE')->where('is_scored', true)->exists());
+    }
+
+    public function test_section_c_is_seeded_with_2_scored_questions(): void
+    {
+        $this->seed(EmoncSupportiveSupervisionSeeder::class);
+
+        $section = AssessmentSection::where('code', 'emonc_capacity_building')->first();
+
+        $this->assertNotNull($section);
+        $this->assertSame(2, $section->questions()->count());
+        $this->assertSame(2, $section->questions()->where('is_scored', true)->count());
+        $cmes = AssessmentQuestion::where('question_code', 'EMONC_C_CMES')->first();
+        $this->assertSame('Confirm using the CME register/booklet', $cmes->help_text);
+    }
+
     public function test_seeder_is_idempotent(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);
