@@ -15,6 +15,8 @@ class CreateAssessment extends CreateRecord
 {
     protected static string $resource = AssessmentResource::class;
 
+    private array $pendingTeamMemberIds = [];
+
     /**
      * Step 1 only — UI form schema
      */
@@ -98,6 +100,24 @@ class CreateAssessment extends CreateRecord
                             ->required(),
                     ])
                     ->columns(2),
+                Forms\Components\Section::make('Team Members')
+                    ->description('Invite other assessors to help with this assessment now — you\'ll automatically be the lead assessor. You can also invite people later from the assessments list.')
+                    ->schema([
+                        Forms\Components\Select::make('member_ids')
+                            ->label('Invite team members')
+                            ->multiple()
+                            ->searchable()
+                            ->getSearchResultsUsing(fn (string $search): array => app(\App\Services\AssessmentTeamService::class)
+                                ->searchEligibleUsers(null, $search)
+                                ->mapWithKeys(fn ($user) => [$user->id => "{$user->name} — {$user->email}"])
+                                ->all())
+                            ->getOptionLabelsUsing(fn (array $values): array => \App\Models\User::whereIn('id', $values)
+                                ->get()
+                                ->mapWithKeys(fn ($user) => [$user->id => "{$user->name} — {$user->email}"])
+                                ->all())
+                            ->helperText('Optional — search by name or email. Anyone added who isn\'t already an assessor will be granted the Assessor role.'),
+                    ])
+                    ->columns(1),
                 Forms\Components\Section::make('Assessor Information')
                     ->description('Auto-populated from logged-in user')
                     ->schema([
@@ -153,6 +173,9 @@ class CreateAssessment extends CreateRecord
      */
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $this->pendingTeamMemberIds = $data['member_ids'] ?? [];
+        unset($data['member_ids']);
+
         $data['assessor_id'] = auth()->id();
         $data['status'] = 'in_progress';
 
@@ -172,6 +195,25 @@ class CreateAssessment extends CreateRecord
         );
 
         return $data;
+    }
+
+    /**
+     * The record (and its auto-attached lead, via Assessment's `created`
+     * event) exists by this point, so invited members can be attached now.
+     */
+    protected function afterCreate(): void
+    {
+        if ($this->pendingTeamMemberIds === []) {
+            return;
+        }
+
+        app(\App\Services\AssessmentTeamService::class)
+            ->addMembers($this->record, $this->pendingTeamMemberIds, auth()->id());
+
+        Notification::make()
+            ->success()
+            ->title(count($this->pendingTeamMemberIds).' team member(s) invited')
+            ->send();
     }
 
     /**

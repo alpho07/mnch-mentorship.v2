@@ -172,4 +172,13 @@ class AssessmentTeamManagementTest extends TestCase
 
         $this->assertFalse($results->contains('id', $lead->id));
     }
+
+    public function test_search_eligible_users_works_before_the_assessment_exists(): void
+    {
+        $someone = User::factory()->create(['name' => 'Not Yet Invited', 'status' => 'active']);
+
+        $results = app(AssessmentTeamService::class)->searchEligibleUsers(null, 'Not Yet Invited');
+
+        $this->assertTrue($results->contains('id', $someone->id));
+    }
 }

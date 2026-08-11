@@ -234,9 +234,15 @@ class AssessmentTeamService {
      * Search all active users by name/email for the admin "Manage Team"
      * invite field — not restricted to the 'assessor' role, since a team
      * lead may want to invite anyone and have them promoted to assessor.
+     *
+     * $assessment is null when inviting during assessment creation, before
+     * the record (and its auto-attached lead) exists yet — in that case
+     * only the current user is excluded, since they'll become the lead.
      */
-    public function searchEligibleUsers(Assessment $assessment, string $search): \Illuminate\Support\Collection {
-        $existingIds = $assessment->teamMembers()->pluck('users.id')->toArray();
+    public function searchEligibleUsers(?Assessment $assessment, string $search): \Illuminate\Support\Collection {
+        $existingIds = $assessment
+            ? $assessment->teamMembers()->pluck('users.id')->toArray()
+            : array_filter([auth()->id()]);
 
         return User::query()
                         ->whereNotIn('id', $existingIds)
