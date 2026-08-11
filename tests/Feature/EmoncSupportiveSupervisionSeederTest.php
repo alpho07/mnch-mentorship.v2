@@ -133,6 +133,30 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_E_SOP_12')->exists());
     }
 
+    public function test_section_f_is_seeded_with_19_questions_4_scored(): void
+    {
+        $this->seed(EmoncSupportiveSupervisionSeeder::class);
+
+        $section = AssessmentSection::where('code', 'emonc_referrals')->first();
+
+        $this->assertNotNull($section);
+        $this->assertSame(19, $section->questions()->count());
+        $this->assertSame(4, $section->questions()->where('is_scored', true)->count());
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_F_REF_JAN2025')->exists());
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_F_REF_MAR2026')->exists());
+    }
+
+    public function test_section_g_is_seeded_with_6_scored_ipc_questions(): void
+    {
+        $this->seed(EmoncSupportiveSupervisionSeeder::class);
+
+        $section = AssessmentSection::where('code', 'emonc_ipc')->first();
+
+        $this->assertNotNull($section);
+        $this->assertSame(6, $section->questions()->count());
+        $this->assertSame(6, $section->questions()->where('is_scored', true)->count());
+    }
+
     public function test_seeder_is_idempotent(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);

@@ -35,6 +35,8 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
         $this->seedSectionC($type);
         $this->seedSectionD($type);
         $this->seedSectionE($type);
+        $this->seedSectionF($type);
+        $this->seedSectionG($type);
     }
 
     private function seedCategories(): void
@@ -416,5 +418,51 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
             'group' => $groupLabel,
             'order' => $this->nextOrder(),
         ]);
+    }
+
+    // ── F. Referral Systems (scored) ─────────────────────────────────────
+
+    private function seedSectionF(AssessmentType $type): void
+    {
+        $section = $this->upsertSection($type, 'emonc_referrals', 'F. Referral Systems', 'Confirm using the referral form or referral register, where available.', true, 6);
+
+        $questions = [
+            'Notified of, or notified about, a referral before the patient arrived in the receiving facility (most recent referral)',
+            'Does the maternity unit have access to a functional phone?',
+            'Do you have access to ambulance services available 24/7 for maternity referrals to higher-level facilities?',
+            'Was the most recent referral accompanied by a skilled health personnel?',
+        ];
+        foreach ($questions as $i => $text) {
+            $this->upsertQuestion($section, $this->yesNo('EMONC_F_'.($i + 1), $text, $this->nextOrder()));
+        }
+
+        $months = [
+            'JAN2025' => 'Jan 2025', 'FEB2025' => 'Feb 2025', 'MAR2025' => 'Mar 2025', 'APR2025' => 'Apr 2025',
+            'MAY2025' => 'May 2025', 'JUN2025' => 'Jun 2025', 'JUL2025' => 'Jul 2025', 'AUG2025' => 'Aug 2025',
+            'SEP2025' => 'Sep 2025', 'OCT2025' => 'Oct 2025', 'NOV2025' => 'Nov 2025', 'DEC2025' => 'Dec 2025',
+            'JAN2026' => 'Jan 2026', 'FEB2026' => 'Feb 2026', 'MAR2026' => 'Mar 2026',
+        ];
+        foreach ($months as $code => $label) {
+            $this->upsertQuestion($section, ['code' => "EMONC_F_REF_{$code}", 'text' => "Referrals out — {$label}", 'type' => 'number', 'order' => $this->nextOrder()]);
+        }
+    }
+
+    // ── G. Infection Prevention Control (scored) ────────────────────────────
+
+    private function seedSectionG(AssessmentType $type): void
+    {
+        $section = $this->upsertSection($type, 'emonc_ipc', 'G. Infection Prevention Control', null, true, 7);
+
+        $questions = [
+            'Is there clean running water/soap?',
+            'Is the waste segregated? (color-coded bins and liners)',
+            'Are antiseptics available?',
+            'Are there alcohol hand rubs?',
+            'Are disinfectants available?',
+            'Is there a functional facility for sterilization?',
+        ];
+        foreach ($questions as $i => $text) {
+            $this->upsertQuestion($section, $this->yesNo('EMONC_G_'.($i + 1), $text, $this->nextOrder()));
+        }
     }
 }
