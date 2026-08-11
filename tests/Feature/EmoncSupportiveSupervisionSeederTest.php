@@ -83,6 +83,36 @@ class EmoncSupportiveSupervisionSeederTest extends TestCase
         $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_D_27')->exists());
     }
 
+    public function test_section_e_kit_1_obstetric_hemorrhage_is_fully_seeded(): void
+    {
+        $this->seed(EmoncSupportiveSupervisionSeeder::class);
+
+        $section = AssessmentSection::where('code', 'emonc_emergency_kits')->first();
+        $this->assertNotNull($section);
+
+        $kit1Questions = $section->questions()->where('group', '1. Obstetric Hemorrhage Kit')->get();
+        // 1 parent + 14 sub-items + 1 completeness = 16
+        $this->assertCount(16, $kit1Questions);
+
+        $completeness = AssessmentQuestion::where('question_code', 'EMONC_E_K1_COMPLETE')->first();
+        $this->assertNotNull($completeness);
+        $this->assertSame('group_completeness', $completeness->question_type);
+        $this->assertSame('1. Obstetric Hemorrhage Kit', $completeness->group);
+
+        $this->assertTrue(AssessmentQuestion::where('question_code', 'EMONC_E_K1_PARENT')->exists());
+        $this->assertSame(14, AssessmentQuestion::where('question_code', 'like', 'EMONC_E_K1_%')->where('question_type', 'yes_no')->where('question_code', '!=', 'EMONC_E_K1_PARENT')->count());
+    }
+
+    public function test_section_e_kits_2_and_3_are_seeded(): void
+    {
+        $this->seed(EmoncSupportiveSupervisionSeeder::class);
+
+        $section = AssessmentSection::where('code', 'emonc_emergency_kits')->first();
+
+        $this->assertCount(20, $section->questions()->where('group', '2. Neonatal Resuscitation Kit')->get()); // 1 + 18 + 1
+        $this->assertCount(20, $section->questions()->where('group', '3. PET/Eclampsia Kit')->get()); // 1 + 18 + 1
+    }
+
     public function test_seeder_is_idempotent(): void
     {
         $this->seed(EmoncSupportiveSupervisionSeeder::class);

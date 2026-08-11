@@ -34,6 +34,7 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
         $this->seedSectionB($type);
         $this->seedSectionC($type);
         $this->seedSectionD($type);
+        $this->seedSectionE($type);
     }
 
     private function seedCategories(): void
@@ -265,5 +266,95 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
         foreach ($items as $i => $text) {
             $this->upsertQuestion($section, $this->yesNo('EMONC_D_'.($i + 1), $text, $this->nextOrder()));
         }
+    }
+
+    // ── E. Emergency Preparedness — Kits & SOPs (scored) ────────────────────
+
+    private function seedSectionE(AssessmentType $type): void
+    {
+        $section = $this->upsertSection($type, 'emonc_emergency_kits', 'E. Emergency Preparedness — Kits & SOPs', 'Kits with checklists, followed by SOPs/job aids.', true, 5);
+
+        $this->seedKit($section, 'EMONC_E_K1', '1. Obstetric Hemorrhage Kit', 'Obstetric Hemorrhage Kit', [
+            'Large bore cannulas',
+            'Oxytocin',
+            'Tranexamic acid',
+            'Misoprostol',
+            'Balloon tamponade (UBT or condom)',
+            'IV fluids',
+            'Giving sets',
+            '2-way Foleys catheters',
+            'Gynecological gloves',
+            'Specimen bottles',
+            'NASG',
+            'Blood loss monitoring chart',
+            'Calibrated drapes',
+            'MEOWS chart',
+        ]);
+
+        $this->seedKit($section, 'EMONC_E_K2', '2. Neonatal Resuscitation Kit', 'Neonatal Resuscitation Kit', [
+            'Resuscitation table with radiant warmer',
+            'Ambu bag (280ml, neonatal pre-term size 1/0)',
+            'Penguin sucker',
+            'Oral pharyngeal airway',
+            'Oxygen source',
+            'Non-rebreather mask',
+            'Suction catheter size 8 (preterm)',
+            'Suction catheter size 10 (all)',
+            'Suction catheter size 12 (meconium)',
+            'Assorted syringes & needles',
+            'Cannulas',
+            'Pulse oximeter',
+            'Stethoscope',
+            'Thermal blanket / plastic wrap for preterm',
+            'Cap to prevent heat loss',
+            'Dextrose solution (50%)',
+            'Adrenalin injection',
+            'Neonatal nasal prongs',
+        ]);
+
+        $this->seedKit($section, 'EMONC_E_K3', '3. PET/Eclampsia Kit', 'PET/Eclampsia Kit', [
+            'Magnesium sulphate 50% (3 ampoules)',
+            'Calcium gluconate',
+            'Patella hammer',
+            '20cc syringes',
+            '10cc syringes',
+            'Labetalol (oral and injectable)',
+            'Methyldopa',
+            'Nifedipine',
+            'Inj. hydralazine',
+            'Water for injection',
+            'Inj. lignocaine 2%',
+            '2-way Foleys catheter',
+            'Urine bag',
+            'Cannulas',
+            'Specimen bottles',
+            'Gloves',
+            'Nasal prongs',
+            'Magnesium Sulphate Toxicity Monitoring Chart',
+        ]);
+    }
+
+    /**
+     * Seeds one kit: a parent "kit available" yes/no, each of its sub-items
+     * (all sharing $groupLabel so DynamicFormBuilder renders them as one
+     * fieldset), and a trailing group_completeness question that
+     * DynamicScoringService derives from every other question in the group.
+     */
+    private function seedKit(AssessmentSection $section, string $codePrefix, string $groupLabel, string $parentText, array $items): void
+    {
+        $this->upsertQuestion($section, $this->yesNo("{$codePrefix}_PARENT", $parentText, $this->nextOrder(), $groupLabel));
+
+        foreach ($items as $i => $itemText) {
+            $this->upsertQuestion($section, $this->yesNo($codePrefix.'_'.($i + 1), $itemText, $this->nextOrder(), $groupLabel));
+        }
+
+        $this->upsertQuestion($section, [
+            'code' => "{$codePrefix}_COMPLETE",
+            'text' => "{$parentText} Completeness",
+            'type' => 'group_completeness',
+            'scored' => true,
+            'group' => $groupLabel,
+            'order' => $this->nextOrder(),
+        ]);
     }
 }
