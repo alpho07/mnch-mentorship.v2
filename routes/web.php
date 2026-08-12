@@ -126,6 +126,10 @@ Route::get('/enroll/{token}', [MenteeEnrollmentController::class, 'show'])
 Route::post('/enroll/{token}', [MenteeEnrollmentController::class, 'submit'])
     ->name('mentee.enroll.submit');
 
+// Public survey link (public/guest access)
+Route::get('/survey/{token}', [\App\Http\Controllers\SurveyController::class, 'show'])
+    ->name('survey.public.show');
+
 // Mentee authenticated routes
 Route::middleware(['auth', 'prevent-stale-cache'])->group(function () {
     Route::get('/my-class/{class}', [MenteeClassProgressController::class, 'show'])
