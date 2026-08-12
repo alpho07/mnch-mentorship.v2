@@ -42,12 +42,16 @@ class DynamicScoringService
         // special-cased per section. Conditions can reference a question in
         // a different section, so the resolver looks across the whole
         // assessment, not just this section's responses.
-        $questions = self::excludeConditionallyHiddenQuestions($assessmentId, $questions);
+        $responsesByCode = AssessmentQuestionResponse::query()
+            ->where('assessment_id', $assessmentId)
+            ->join('assessment_questions', 'assessment_questions.id', '=', 'assessment_question_responses.assessment_question_id')
+            ->pluck('assessment_question_responses.response_value', 'assessment_questions.question_code')
+            ->all();
+
+        $questions = \App\Services\FormKernel\ScoringEngine::excludeConditionallyHiddenQuestions($questions, $responsesByCode);
         // ─────────────────────────────────────────────────────────────────────
 
-        $totalQuestions = $questions->count();
-
-        if ($totalQuestions === 0) {
+        if ($questions->isEmpty()) {
             return;
         }
 
@@ -55,60 +59,14 @@ class DynamicScoringService
             ->whereIn('assessment_question_id', $questions->pluck('id'))
             ->get();
 
-        $totalScore = $responses->whereNotNull('score')->sum('score');
-        $maxScore = $totalQuestions;
-        $answeredQuestions = $responses->whereNotNull('response_value')->count();
-        $skippedQuestions = $totalQuestions - $answeredQuestions;
-        $percentage = $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 2) : 0;
+        $scoreData = \App\Services\FormKernel\ScoringEngine::calculateSectionScore($questions, $responses);
 
         AssessmentSectionScore::updateOrCreate(
             ['assessment_id' => $assessmentId, 'assessment_section_id' => $sectionId],
-            [
-                'total_score' => $totalScore,
-                'max_score' => $maxScore,
-                'percentage' => $percentage,
-                'grade' => self::calculateGrade($percentage),
-                'total_questions' => $totalQuestions,
-                'answered_questions' => $answeredQuestions,
-                'skipped_questions' => $skippedQuestions,
-            ]
+            $scoreData
         );
 
         self::recalculateOverallScore($assessmentId);
-    }
-
-    /**
-     * Excludes any scored question whose display_conditions evaluate to
-     * "hidden" given the assessment's actual submitted responses — a
-     * question that wouldn't have been shown on the form shouldn't count
-     * against the section's score. Questions with no display_conditions are
-     * always included (unconditional).
-     */
-    private static function excludeConditionallyHiddenQuestions(int $assessmentId, $questions): mixed
-    {
-        $conditional = $questions->filter(fn ($q) => ! empty($q->display_conditions));
-
-        if ($conditional->isEmpty()) {
-            return $questions;
-        }
-
-        // question_code => response_value map, built once, spanning the
-        // whole assessment (not just this section) since a condition can
-        // reference a question in a different section.
-        $responsesByCode = AssessmentQuestionResponse::query()
-            ->where('assessment_id', $assessmentId)
-            ->join('assessment_questions', 'assessment_questions.id', '=', 'assessment_question_responses.assessment_question_id')
-            ->pluck('assessment_question_responses.response_value', 'assessment_questions.question_code');
-
-        $valueResolver = fn (string $questionCode) => $responsesByCode[$questionCode] ?? null;
-
-        return $questions->filter(function ($question) use ($valueResolver) {
-            if (empty($question->display_conditions)) {
-                return true;
-            }
-
-            return ConditionalLogicEvaluator::isVisible($question->display_conditions, $valueResolver);
-        });
     }
 
     /**
@@ -128,35 +86,19 @@ class DynamicScoringService
             return;
         }
 
-        foreach ($completenessQuestions as $completenessQuestion) {
-            $siblings = $questions->filter(fn ($q) => $q->group === $completenessQuestion->group
-                && $q->id !== $completenessQuestion->id
-                && $q->question_type !== 'group_completeness');
+        $siblingIds = $questions->where('question_type', '!=', 'group_completeness')->pluck('id');
 
-            if ($siblings->isEmpty()) {
-                continue;
-            }
+        $responsesByQuestionId = AssessmentQuestionResponse::where('assessment_id', $assessmentId)
+            ->whereIn('assessment_question_id', $siblingIds)
+            ->get()
+            ->keyBy('assessment_question_id');
 
-            $siblingResponses = AssessmentQuestionResponse::where('assessment_id', $assessmentId)
-                ->whereIn('assessment_question_id', $siblings->pluck('id'))
-                ->get()
-                ->keyBy('assessment_question_id');
+        $updates = \App\Services\FormKernel\ScoringEngine::resolveGroupCompletenessResponses($questions, $responsesByQuestionId);
 
-            $allComplete = $siblings->every(function ($sibling) use ($siblingResponses) {
-                $response = $siblingResponses->get($sibling->id);
-
-                if (! $response || $response->score === null) {
-                    return false;
-                }
-
-                $maxForSibling = ! empty($sibling->scoring_map) ? max($sibling->scoring_map) : 1;
-
-                return (float) $response->score >= (float) $maxForSibling;
-            });
-
+        foreach ($updates as $update) {
             AssessmentQuestionResponse::updateOrCreate(
-                ['assessment_id' => $assessmentId, 'assessment_question_id' => $completenessQuestion->id],
-                ['response_value' => $allComplete ? 'Yes' : 'No', 'score' => $allComplete ? 1 : 0]
+                ['assessment_id' => $assessmentId, 'assessment_question_id' => $update['question_id']],
+                ['response_value' => $update['response_value'], 'score' => $update['score']]
             );
         }
     }
@@ -172,15 +114,12 @@ class DynamicScoringService
             return;
         }
 
-        $totalScore = $sectionScores->sum('total_score');
-        // Average of section percentages — each section weighted equally regardless of question count
-        $overallPercentage = round($sectionScores->avg('percentage'), 2);
-        $overallGrade = self::calculateGrade($overallPercentage);
+        $overall = \App\Services\FormKernel\ScoringEngine::calculateOverallScore($sectionScores);
 
         Assessment::where('id', $assessmentId)->update([
-            'overall_score' => $totalScore,
-            'overall_percentage' => $overallPercentage,
-            'overall_grade' => $overallGrade,
+            'overall_score' => $overall['total_score'],
+            'overall_percentage' => $overall['percentage'],
+            'overall_grade' => $overall['grade'],
         ]);
     }
 
@@ -204,14 +143,7 @@ class DynamicScoringService
      */
     protected static function calculateGrade(float $percentage): string
     {
-        if ($percentage >= 80) {
-            return 'green';
-        }
-        if ($percentage >= 50) {
-            return 'yellow';
-        }
-
-        return 'red';
+        return \App\Services\FormKernel\ScoringEngine::calculateGrade($percentage);
     }
 
     // ── Legacy / compatibility methods ────────────────────────────────────────
