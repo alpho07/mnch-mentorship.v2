@@ -72,9 +72,15 @@ class SurveyFormBuilder
      * a single-page fill-out (admin panel and public link both render the
      * whole survey at once; there's no per-section wizard in Phase 1).
      */
-    public static function buildForSurvey(Survey $survey, ?int $surveyResponseId = null): array
+    public static function buildForSurvey(Survey $survey, ?int $surveyResponseId = null, ?\App\Models\SurveyEvent $event = null): array
     {
         $sections = $survey->sections()->active()->orderBy('order')->get();
+
+        if ($event) {
+            $sections = $sections->filter(
+                fn (SurveySection $section) => $section->events->isEmpty() || $section->events->contains($event->id)
+            )->values();
+        }
 
         return $sections->map(fn (SurveySection $section) => Forms\Components\Section::make($section->name)
             ->description($section->description)
