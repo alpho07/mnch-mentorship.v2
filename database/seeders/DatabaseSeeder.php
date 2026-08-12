@@ -18,7 +18,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             // RolePermissionSeeder::class,
             // NationalMentorsSeeder::class, // Run after roles are created
-            MenteeSeeder::class,
             ProgramModulesSeeder::class,   // Programs + modules required for mentorship creation
             EmoncProgramSeeder::class,         // Maternal Health (EmONC) program, modules, and tracks
             AphModuleContentSeeder::class,     // APH quiz (15 Qs pre/post test) + EmONC video links
