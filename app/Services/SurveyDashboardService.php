@@ -114,6 +114,7 @@ class SurveyDashboardService
         [$chart, $data] = match ($question->question_type) {
             'select', 'radio', 'checkbox', 'cadre_select', 'yes_no', 'yes_no_partial', 'rating' => ['bar', static::buildBarData($question, $responseIds)],
             'group_completeness' => ['status_bar', static::buildStatusBarData($question, $responseIds)],
+            'number', 'proportion' => ['histogram', static::buildHistogramData($question, $responseIds)],
             default => [null, []],
         };
 
@@ -191,5 +192,45 @@ class SurveyDashboardService
             'complete' => $values->filter(fn ($v) => $v === 'Yes')->count(),
             'incomplete' => $values->filter(fn ($v) => $v === 'No')->count(),
         ];
+    }
+
+    protected static function buildHistogramData(SurveyQuestion $question, Collection $responseIds): array
+    {
+        $values = SurveyQuestionResponse::where('survey_question_id', $question->id)
+            ->whereIn('survey_response_id', $responseIds)
+            ->whereNotNull('response_value')
+            ->pluck('response_value')
+            ->filter(fn ($v) => is_numeric($v))
+            ->map(fn ($v) => (float) $v)
+            ->values();
+
+        if ($values->isEmpty()) {
+            return ['bins' => [], 'avg' => 0.0, 'min' => 0.0, 'max' => 0.0];
+        }
+
+        $min = $values->min();
+        $max = $values->max();
+        $avg = round($values->avg(), 2);
+
+        if ($max === $min) {
+            return ['bins' => [['range' => (string) $min, 'count' => $values->count()]], 'avg' => $avg, 'min' => $min, 'max' => $max];
+        }
+
+        $binCount = 5;
+        $binWidth = ($max - $min) / $binCount;
+        $bins = [];
+
+        for ($i = 0; $i < $binCount; $i++) {
+            $lower = $min + $i * $binWidth;
+            $upper = $i === $binCount - 1 ? $max : $min + ($i + 1) * $binWidth;
+
+            $count = $values->filter(function (float $v) use ($lower, $upper, $i, $binCount) {
+                return $i === $binCount - 1 ? ($v >= $lower && $v <= $upper) : ($v >= $lower && $v < $upper);
+            })->count();
+
+            $bins[] = ['range' => round($lower, 1).'–'.round($upper, 1), 'count' => $count];
+        }
+
+        return ['bins' => $bins, 'avg' => $avg, 'min' => $min, 'max' => $max];
     }
 }

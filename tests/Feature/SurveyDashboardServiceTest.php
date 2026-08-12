@@ -167,4 +167,48 @@ class SurveyDashboardServiceTest extends TestCase
         $this->assertSame('status_bar', $questionData['chart']);
         $this->assertSame(['complete' => 2, 'incomplete' => 1], $questionData['data']);
     }
+
+    public function test_number_question_bins_values_and_computes_avg_min_max(): void
+    {
+        $survey = Survey::create(['code' => 'DASH_HIST_TEST', 'name' => 'Dash Hist Test', 'is_active' => true]);
+        $section = SurveySection::create(['survey_id' => $survey->id, 'code' => 'main', 'name' => 'Main', 'order' => 1]);
+        $question = SurveyQuestion::create([
+            'survey_section_id' => $section->id, 'question_code' => 'HIST_Q1', 'question_text' => 'Age',
+            'question_type' => 'number',
+        ]);
+        foreach ([10, 20, 30, 40, 50] as $value) {
+            $response = SurveyResponse::create(['survey_id' => $survey->id, 'status' => 'submitted']);
+            SurveyQuestionResponse::create(['survey_response_id' => $response->id, 'survey_question_id' => $question->id, 'response_value' => (string) $value]);
+        }
+
+        $data = SurveyDashboardService::build($survey);
+        $questionData = $data['sections'][0]['questions'][0];
+
+        $this->assertSame('histogram', $questionData['chart']);
+        $this->assertSame(30.0, $questionData['data']['avg']);
+        $this->assertSame(10.0, $questionData['data']['min']);
+        $this->assertSame(50.0, $questionData['data']['max']);
+        $this->assertCount(5, $questionData['data']['bins']);
+        $this->assertSame(5, collect($questionData['data']['bins'])->sum('count'));
+    }
+
+    public function test_a_single_repeated_value_produces_one_bin_without_dividing_by_zero(): void
+    {
+        $survey = Survey::create(['code' => 'DASH_HIST_SINGLE_TEST', 'name' => 'Dash Hist Single Test', 'is_active' => true]);
+        $section = SurveySection::create(['survey_id' => $survey->id, 'code' => 'main', 'name' => 'Main', 'order' => 1]);
+        $question = SurveyQuestion::create([
+            'survey_section_id' => $section->id, 'question_code' => 'HIST_SINGLE_Q1', 'question_text' => 'Score',
+            'question_type' => 'proportion',
+        ]);
+        foreach ([25, 25] as $value) {
+            $response = SurveyResponse::create(['survey_id' => $survey->id, 'status' => 'submitted']);
+            SurveyQuestionResponse::create(['survey_response_id' => $response->id, 'survey_question_id' => $question->id, 'response_value' => (string) $value]);
+        }
+
+        $data = SurveyDashboardService::build($survey);
+        $bins = $data['sections'][0]['questions'][0]['data']['bins'];
+
+        $this->assertCount(1, $bins);
+        $this->assertSame(2, $bins[0]['count']);
+    }
 }
