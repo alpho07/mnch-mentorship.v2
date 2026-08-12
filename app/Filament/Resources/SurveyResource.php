@@ -146,6 +146,7 @@ class SurveyResource extends Resource
             'index' => Pages\ListSurveys::route('/'),
             'create' => Pages\CreateSurvey::route('/create'),
             'edit' => Pages\EditSurvey::route('/{record}/edit'),
+            'dashboard' => Pages\SurveyDashboard::route('/{record}/dashboard'),
         ];
     }
 
