@@ -27,14 +27,6 @@
     --shadow-md: 0 6px 20px rgba(2,6,23,.06);
     --fade: .25s cubic-bezier(.2,.6,.2,1);
   }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --bg:#0b1020; --card:#0f172a; --ink:#e5e7eb; --muted:#94a3b8; --line:#1f2937;
-      --brand-weak:#1e1b4b; --ring:rgba(99,102,241,.28);
-      --shadow-sm: 0 2px 10px rgba(0,0,0,.35); --shadow-md: 0 10px 30px rgba(0,0,0,.35);
-    }
-    .leaflet-container{ background:#0b1020; }
-  }
   @media (prefers-reduced-motion: reduce){
     *{ animation: none !important; transition: none !important }
   }
@@ -68,8 +60,6 @@
   .panel{ padding:1rem 1.1rem; display:flex; flex-direction:column; gap:.5rem }
   .panel-head{ display:flex; align-items:center; justify-content:space-between }
   .badge{ display:inline-flex; align-items:center; gap:.4rem; padding:.28rem .6rem; border-radius:999px; border:1px solid var(--line); background:var(--brand-weak); color:#3730a3; font: 700 .76rem/1 ui-sans-serif }
-  @media (prefers-color-scheme: dark){ .badge{ color:#c7d2fe; } }
-
   /* Toolbar (lightweight, focusable inputs) */
   .toolbar{ display:flex; gap:.6rem; align-items:flex-end; flex-wrap:wrap; margin-top: .6rem }
   .field{ display:grid; gap:.3rem }

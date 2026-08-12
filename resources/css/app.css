@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+/* This bundle has no dark-mode toggle, so `dark:` utilities must never
+   fire from the OS/browser's prefers-color-scheme — only from an
+   explicit `.dark` ancestor class, which nothing here ever sets. This
+   keeps the public frontend, mentee views, and certificates on light
+   mode regardless of device theme, matching the admin panel's
+   defaultThemeMode(Light) in AdminPanelProvider. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
