@@ -211,4 +211,53 @@ class SurveyDashboardServiceTest extends TestCase
         $this->assertCount(1, $bins);
         $this->assertSame(2, $bins[0]['count']);
     }
+
+    public function test_matrix_question_splits_each_row_into_column_counts_with_correct_neutral_index(): void
+    {
+        $survey = Survey::create(['code' => 'DASH_MATRIX_TEST', 'name' => 'Dash Matrix Test', 'is_active' => true]);
+        $section = SurveySection::create(['survey_id' => $survey->id, 'code' => 'main', 'name' => 'Main', 'order' => 1]);
+        $question = SurveyQuestion::create([
+            'survey_section_id' => $section->id, 'question_code' => 'MATRIX_Q1', 'question_text' => 'Rate the session',
+            'question_type' => 'matrix',
+            'options' => [
+                'columns' => ['Disagree', 'Neutral', 'Agree'],
+                'rows' => [
+                    ['key' => 'clarity', 'label' => 'The instructions were clear'],
+                    ['key' => 'pace', 'label' => 'The pace was right'],
+                ],
+            ],
+        ]);
+        $r1 = SurveyResponse::create(['survey_id' => $survey->id, 'status' => 'submitted']);
+        $r2 = SurveyResponse::create(['survey_id' => $survey->id, 'status' => 'submitted']);
+        SurveyQuestionResponse::create(['survey_response_id' => $r1->id, 'survey_question_id' => $question->id, 'response_value' => json_encode(['clarity' => 'Agree', 'pace' => 'Neutral'])]);
+        SurveyQuestionResponse::create(['survey_response_id' => $r2->id, 'survey_question_id' => $question->id, 'response_value' => json_encode(['clarity' => 'Agree', 'pace' => 'Disagree'])]);
+
+        $data = SurveyDashboardService::build($survey);
+        $questionData = $data['sections'][0]['questions'][0];
+
+        $this->assertSame('diverging_stack', $questionData['chart']);
+        $this->assertSame(['Disagree', 'Neutral', 'Agree'], $questionData['data']['columns']);
+        $this->assertSame(1, $questionData['data']['neutral_index']);
+        $this->assertSame('The instructions were clear', $questionData['data']['rows'][0]['label']);
+        $this->assertSame(['Disagree' => 0, 'Neutral' => 0, 'Agree' => 2], $questionData['data']['rows'][0]['counts']);
+        $this->assertSame(['Disagree' => 1, 'Neutral' => 1, 'Agree' => 0], $questionData['data']['rows'][1]['counts']);
+    }
+
+    public function test_matrix_neutral_index_for_an_even_column_count_sits_left_of_center(): void
+    {
+        $survey = Survey::create(['code' => 'DASH_MATRIX_EVEN_TEST', 'name' => 'Dash Matrix Even Test', 'is_active' => true]);
+        $section = SurveySection::create(['survey_id' => $survey->id, 'code' => 'main', 'name' => 'Main', 'order' => 1]);
+        SurveyQuestion::create([
+            'survey_section_id' => $section->id, 'question_code' => 'MATRIX_EVEN_Q1', 'question_text' => 'Rate it',
+            'question_type' => 'matrix',
+            'options' => [
+                'columns' => ['Strongly Disagree', 'Disagree', 'Agree', 'Strongly Agree'],
+                'rows' => [['key' => 'r1', 'label' => 'Row 1']],
+            ],
+        ]);
+
+        $data = SurveyDashboardService::build($survey);
+
+        $this->assertSame(1, $data['sections'][0]['questions'][0]['data']['neutral_index']);
+    }
 }

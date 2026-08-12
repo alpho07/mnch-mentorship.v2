@@ -115,6 +115,7 @@ class SurveyDashboardService
             'select', 'radio', 'checkbox', 'cadre_select', 'yes_no', 'yes_no_partial', 'rating' => ['bar', static::buildBarData($question, $responseIds)],
             'group_completeness' => ['status_bar', static::buildStatusBarData($question, $responseIds)],
             'number', 'proportion' => ['histogram', static::buildHistogramData($question, $responseIds)],
+            'matrix' => ['diverging_stack', static::buildDivergingStackData($question, $responseIds)],
             default => [null, []],
         };
 
@@ -232,5 +233,49 @@ class SurveyDashboardService
         }
 
         return ['bins' => $bins, 'avg' => $avg, 'min' => $min, 'max' => $max];
+    }
+
+    /**
+     * neutral_index = intdiv(count($columns) - 1, 2). For an odd column
+     * count this is the exact middle column (e.g. 3 columns -> index 1,
+     * the true center). For an even column count this is the column
+     * immediately left of center (e.g. 4 columns -> index 1; the diverging
+     * boundary sits between index 1 and index 2). Both cases use the same
+     * formula — no odd/even branching needed.
+     */
+    protected static function buildDivergingStackData(SurveyQuestion $question, Collection $responseIds): array
+    {
+        $config = is_array($question->options) ? $question->options : [];
+        $columns = $config['columns'] ?? [];
+        $rows = $config['rows'] ?? [];
+
+        $decodedResponses = SurveyQuestionResponse::where('survey_question_id', $question->id)
+            ->whereIn('survey_response_id', $responseIds)
+            ->whereNotNull('response_value')
+            ->pluck('response_value')
+            ->map(fn ($v) => json_decode($v, true))
+            ->filter(fn ($decoded) => is_array($decoded));
+
+        $rowsData = [];
+
+        foreach ($rows as $row) {
+            $counts = array_fill_keys($columns, 0);
+
+            foreach ($decodedResponses as $decoded) {
+                $answer = $decoded[$row['key']] ?? null;
+
+                if ($answer !== null && array_key_exists($answer, $counts)) {
+                    $counts[$answer]++;
+                }
+            }
+
+            $rowsData[] = ['label' => $row['label'], 'counts' => $counts];
+        }
+
+        return [
+            'rows' => $rowsData,
+            'columns' => $columns,
+            'neutral_index' => count($columns) > 0 ? intdiv(count($columns) - 1, 2) : 0,
+        ];
     }
 }
