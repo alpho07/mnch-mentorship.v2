@@ -136,6 +136,7 @@ class SurveyResource extends Resource
     {
         return [
             RelationManagers\SectionsRelationManager::class,
+            RelationManagers\EventsRelationManager::class,
         ];
     }
 
