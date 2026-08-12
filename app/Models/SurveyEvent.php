@@ -36,4 +36,19 @@ class SurveyEvent extends Model
     {
         return $query->orderBy('order');
     }
+
+    /**
+     * Scoped to (this event, subject_type, subject_id) — including the null/null
+     * "no subject" bucket, which every subject-less response to this event
+     * shares. Never user-entered; called once, at response-creation time.
+     */
+    public function nextInstanceNumberFor(?string $subjectType, ?int $subjectId): int
+    {
+        $max = $this->responses()
+            ->where('subject_type', $subjectType)
+            ->where('subject_id', $subjectId)
+            ->max('event_instance_number');
+
+        return ($max ?? 0) + 1;
+    }
 }
