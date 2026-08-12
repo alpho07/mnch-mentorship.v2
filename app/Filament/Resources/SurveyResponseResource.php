@@ -81,6 +81,8 @@ class SurveyResponseResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('survey.name')->label('Survey')->badge()->color('primary')->searchable(),
+                Tables\Columns\TextColumn::make('event.name')->label('Event')->badge()->color('gray')->placeholder('—'),
+                Tables\Columns\TextColumn::make('event_instance_number')->label('Instance #')->alignCenter()->placeholder('—'),
                 Tables\Columns\TextColumn::make('respondent_name')->label('Respondent')->searchable()->placeholder('—'),
                 Tables\Columns\TextColumn::make('status')->badge()->color(fn (string $state) => $state === 'submitted' ? 'success' : 'gray'),
                 Tables\Columns\TextColumn::make('overall_percentage')->label('Score')->suffix('%')->placeholder('—'),
@@ -88,7 +90,23 @@ class SurveyResponseResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('survey_id')->relationship('survey', 'name'),
+                Tables\Filters\SelectFilter::make('survey_event_id')->label('Event')->relationship('event', 'name'),
                 Tables\Filters\SelectFilter::make('status')->options(['draft' => 'Draft', 'submitted' => 'Submitted']),
+                Tables\Filters\Filter::make('subject')
+                    ->form([
+                        Forms\Components\TextInput::make('name')->label('Subject name contains'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        if (empty($data['name'])) {
+                            return $query;
+                        }
+
+                        return $query->whereHasMorph(
+                            'subject',
+                            [\App\Models\Facility::class, \App\Models\User::class, \App\Models\MentorshipClass::class],
+                            fn ($subQuery) => $subQuery->where('name', 'like', '%'.$data['name'].'%')
+                        );
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->label('Fill / View'),
