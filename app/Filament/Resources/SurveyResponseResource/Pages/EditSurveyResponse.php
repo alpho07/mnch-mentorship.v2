@@ -17,7 +17,7 @@ class EditSurveyResponse extends EditRecord
     public function form(Form $form): Form
     {
         return $form->schema(
-            SurveyFormBuilder::buildForSurvey($this->record->survey, $this->record->id)
+            SurveyFormBuilder::buildForSurvey($this->record->survey, $this->record->id, $this->record->event)
         );
     }
 
