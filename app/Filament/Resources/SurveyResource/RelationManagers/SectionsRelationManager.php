@@ -31,6 +31,13 @@ class SectionsRelationManager extends RelationManager
                 Forms\Components\Toggle::make('is_active')->default(true),
                 Forms\Components\Textarea::make('description')->rows(2)->columnSpan(2),
             ]),
+            Forms\Components\CheckboxList::make('events')
+                ->relationship('events', 'name')
+                ->label('Shown at events')
+                ->helperText('Leave all unchecked to show this section at every event. Check specific events to show it only at those.')
+                ->columns(2)
+                ->visible(fn () => $this->getOwnerRecord()->events()->exists())
+                ->columnSpanFull(),
         ]);
     }
 
