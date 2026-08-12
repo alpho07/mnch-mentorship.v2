@@ -260,4 +260,46 @@ class SurveyDashboardServiceTest extends TestCase
 
         $this->assertSame(1, $data['sections'][0]['questions'][0]['data']['neutral_index']);
     }
+
+    public function test_text_question_returns_up_to_20_most_recent_responses_newest_first(): void
+    {
+        $survey = Survey::create(['code' => 'DASH_LIST_TEST', 'name' => 'Dash List Test', 'is_active' => true]);
+        $section = SurveySection::create(['survey_id' => $survey->id, 'code' => 'main', 'name' => 'Main', 'order' => 1]);
+        $question = SurveyQuestion::create([
+            'survey_section_id' => $section->id, 'question_code' => 'LIST_Q1', 'question_text' => 'Feedback',
+            'question_type' => 'text',
+        ]);
+        $older = SurveyResponse::create(['survey_id' => $survey->id, 'status' => 'submitted', 'submitted_at' => now()->subDay()]);
+        $newer = SurveyResponse::create(['survey_id' => $survey->id, 'status' => 'submitted', 'submitted_at' => now()]);
+        SurveyQuestionResponse::create(['survey_response_id' => $older->id, 'survey_question_id' => $question->id, 'response_value' => 'Older feedback']);
+        SurveyQuestionResponse::create(['survey_response_id' => $newer->id, 'survey_question_id' => $question->id, 'response_value' => 'Newer feedback']);
+
+        $data = SurveyDashboardService::build($survey);
+        $questionData = $data['sections'][0]['questions'][0];
+
+        $this->assertSame('list', $questionData['chart']);
+        $this->assertSame(['Newer feedback', 'Older feedback'], $questionData['data']['responses']);
+    }
+
+    public function test_repeater_question_aggregates_row_count_and_flattens_rows_across_responses(): void
+    {
+        $survey = Survey::create(['code' => 'DASH_TABLE_TEST', 'name' => 'Dash Table Test', 'is_active' => true]);
+        $section = SurveySection::create(['survey_id' => $survey->id, 'code' => 'main', 'name' => 'Main', 'order' => 1]);
+        $question = SurveyQuestion::create([
+            'survey_section_id' => $section->id, 'question_code' => 'TABLE_Q1', 'question_text' => 'Action items',
+            'question_type' => 'repeater', 'options' => [['key' => 'plan', 'label' => 'Plan', 'type' => 'text']],
+        ]);
+        $r1 = SurveyResponse::create(['survey_id' => $survey->id, 'status' => 'submitted']);
+        $r2 = SurveyResponse::create(['survey_id' => $survey->id, 'status' => 'submitted']);
+        SurveyQuestionResponse::create(['survey_response_id' => $r1->id, 'survey_question_id' => $question->id, 'response_value' => json_encode([['plan' => 'Buy beds'], ['plan' => 'Train staff']])]);
+        SurveyQuestionResponse::create(['survey_response_id' => $r2->id, 'survey_question_id' => $question->id, 'response_value' => json_encode([['plan' => 'Fix generator']])]);
+
+        $data = SurveyDashboardService::build($survey);
+        $questionData = $data['sections'][0]['questions'][0];
+
+        $this->assertSame('table', $questionData['chart']);
+        $this->assertSame(3, $questionData['data']['row_count']);
+        $this->assertSame(2, $questionData['data']['response_count']);
+        $this->assertCount(3, $questionData['data']['rows']);
+    }
 }

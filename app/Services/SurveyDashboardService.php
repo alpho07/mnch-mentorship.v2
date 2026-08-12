@@ -116,6 +116,8 @@ class SurveyDashboardService
             'group_completeness' => ['status_bar', static::buildStatusBarData($question, $responseIds)],
             'number', 'proportion' => ['histogram', static::buildHistogramData($question, $responseIds)],
             'matrix' => ['diverging_stack', static::buildDivergingStackData($question, $responseIds)],
+            'repeater' => ['table', static::buildTableData($question, $responseIds)],
+            'text', 'short_text', 'email', 'phone' => ['list', static::buildListData($question, $responseIds)],
             default => [null, []],
         };
 
@@ -276,6 +278,58 @@ class SurveyDashboardService
             'rows' => $rowsData,
             'columns' => $columns,
             'neutral_index' => count($columns) > 0 ? intdiv(count($columns) - 1, 2) : 0,
+        ];
+    }
+
+    protected static function buildListData(SurveyQuestion $question, Collection $responseIds): array
+    {
+        $responses = SurveyQuestionResponse::where('survey_question_id', $question->id)
+            ->whereIn('survey_response_id', $responseIds)
+            ->whereNotNull('response_value')
+            ->where('response_value', '!=', '')
+            ->join('survey_responses', 'survey_responses.id', '=', 'survey_question_responses.survey_response_id')
+            ->orderByDesc('survey_responses.submitted_at')
+            ->limit(20)
+            ->pluck('survey_question_responses.response_value');
+
+        return ['responses' => $responses->all()];
+    }
+
+    /**
+     * Rows across every response are flattened into one list, capped at 50
+     * for page size — the response-level SurveyResponseResource remains the
+     * place to see any one response's full, uncapped repeater data.
+     */
+    protected static function buildTableData(SurveyQuestion $question, Collection $responseIds): array
+    {
+        $values = SurveyQuestionResponse::where('survey_question_id', $question->id)
+            ->whereIn('survey_response_id', $responseIds)
+            ->whereNotNull('response_value')
+            ->pluck('response_value');
+
+        $allRows = [];
+        $responseCount = 0;
+
+        foreach ($values as $value) {
+            $decoded = json_decode($value, true);
+
+            if (! is_array($decoded) || empty($decoded)) {
+                continue;
+            }
+
+            $responseCount++;
+
+            foreach ($decoded as $row) {
+                if (is_array($row)) {
+                    $allRows[] = $row;
+                }
+            }
+        }
+
+        return [
+            'row_count' => count($allRows),
+            'response_count' => $responseCount,
+            'rows' => array_slice($allRows, 0, 50),
         ];
     }
 }
