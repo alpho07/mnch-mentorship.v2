@@ -145,4 +145,26 @@ class SurveyDashboardServiceTest extends TestCase
 
         $this->assertSame(0, $counts['Yes']);
     }
+
+    public function test_group_completeness_question_splits_into_complete_and_incomplete_counts(): void
+    {
+        $survey = Survey::create(['code' => 'DASH_GC_TEST', 'name' => 'Dash GC Test', 'is_active' => true]);
+        $section = SurveySection::create(['survey_id' => $survey->id, 'code' => 'main', 'name' => 'Main', 'order' => 1]);
+        $question = SurveyQuestion::create([
+            'survey_section_id' => $section->id, 'question_code' => 'GC_Q1', 'question_text' => 'Kit complete?',
+            'question_type' => 'group_completeness',
+        ]);
+        $r1 = SurveyResponse::create(['survey_id' => $survey->id, 'status' => 'submitted']);
+        $r2 = SurveyResponse::create(['survey_id' => $survey->id, 'status' => 'submitted']);
+        $r3 = SurveyResponse::create(['survey_id' => $survey->id, 'status' => 'submitted']);
+        SurveyQuestionResponse::create(['survey_response_id' => $r1->id, 'survey_question_id' => $question->id, 'response_value' => 'Yes']);
+        SurveyQuestionResponse::create(['survey_response_id' => $r2->id, 'survey_question_id' => $question->id, 'response_value' => 'Yes']);
+        SurveyQuestionResponse::create(['survey_response_id' => $r3->id, 'survey_question_id' => $question->id, 'response_value' => 'No']);
+
+        $data = SurveyDashboardService::build($survey);
+        $questionData = $data['sections'][0]['questions'][0];
+
+        $this->assertSame('status_bar', $questionData['chart']);
+        $this->assertSame(['complete' => 2, 'incomplete' => 1], $questionData['data']);
+    }
 }

@@ -113,6 +113,7 @@ class SurveyDashboardService
     {
         [$chart, $data] = match ($question->question_type) {
             'select', 'radio', 'checkbox', 'cadre_select', 'yes_no', 'yes_no_partial', 'rating' => ['bar', static::buildBarData($question, $responseIds)],
+            'group_completeness' => ['status_bar', static::buildStatusBarData($question, $responseIds)],
             default => [null, []],
         };
 
@@ -178,5 +179,17 @@ class SurveyDashboardService
         }
 
         return collect($counts)->map(fn (int $count, string $label) => ['label' => $label, 'count' => $count])->values()->all();
+    }
+
+    protected static function buildStatusBarData(SurveyQuestion $question, Collection $responseIds): array
+    {
+        $values = SurveyQuestionResponse::where('survey_question_id', $question->id)
+            ->whereIn('survey_response_id', $responseIds)
+            ->pluck('response_value');
+
+        return [
+            'complete' => $values->filter(fn ($v) => $v === 'Yes')->count(),
+            'incomplete' => $values->filter(fn ($v) => $v === 'No')->count(),
+        ];
     }
 }
