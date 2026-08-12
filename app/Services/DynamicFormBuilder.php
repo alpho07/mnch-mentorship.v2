@@ -84,173 +84,22 @@ class DynamicFormBuilder
      */
     protected static function renderRuns(array $runs): array
     {
-        $fields = [];
-        $tableBuffer = [];
-        $tableTitle = null;
-
-        $flushTable = function () use (&$fields, &$tableBuffer, &$tableTitle) {
-            if ($tableBuffer !== []) {
-                $fields[] = static::buildTableFieldset($tableTitle, $tableBuffer);
-            }
-            $tableBuffer = [];
-            $tableTitle = null;
-        };
-
-        foreach ($runs as $run) {
-            if ($run['group'] === null) {
-                $flushTable();
-                array_push($fields, ...$run['fields']);
-
-                continue;
-            }
-
-            $parts = explode('|', $run['group']);
-
-            if (count($parts) !== 3) {
-                // A plain small/large group (no table-row convention) —
-                // unaffected by table merging.
-                $flushTable();
-                $fields[] = static::buildGroupFieldset($run['group'], $run['fields']);
-
-                continue;
-            }
-
-            [$title, $rowLabelHeader, $rowLabel] = $parts;
-
-            if ($tableTitle !== null && $tableTitle !== $title) {
-                $flushTable();
-            }
-
-            $tableTitle = $title;
-            $tableBuffer[] = ['header' => $rowLabelHeader, 'label' => $rowLabel, 'fields' => $run['fields']];
-        }
-
-        $flushTable();
-
-        return $fields;
+        return \App\Services\FormKernel\GroupedFieldRenderer::renderRuns($runs);
     }
 
-    /**
-     * A plain group: small groups (<=7 fields — a handful of details about
-     * one row, e.g. "Name"/"Contact", or a wider one-row summary like
-     * "Total + 6 department counts") lay out side by side, table-style.
-     * Larger groups (a kit's many checklist items — the smallest of which
-     * has 9 members, safely above this threshold) stay a single readable
-     * column — laying out 10+ fields side by side would be unusable.
-     */
     protected static function buildGroupFieldset(string $label, array $fields)
     {
-        $columns = count($fields) <= 7 ? count($fields) : 1;
-
-        if ($columns > 1) {
-            static::normalizeColumnSpans($fields);
-        }
-
-        $fieldset = Forms\Components\Fieldset::make($label)
-            ->schema($fields)
-            // Fieldset's own constructor already calls columns(2) (setting
-            // 'lg' => 2 internally), and columns() merges rather than
-            // replaces — so setting only 'default' here would leave that
-            // stale 'lg' => 2 in place. Every breakpoint must be set
-            // explicitly to fully override it and apply $columns at every
-            // width, not just >=1024px (which, behind this admin panel's
-            // sidebar, the content area frequently doesn't reach anyway).
-            ->columns(['default' => $columns, 'sm' => $columns, 'md' => $columns, 'lg' => $columns, 'xl' => $columns, '2xl' => $columns])
-            ->columnSpanFull();
-
-        // Only the compact, side-by-side groups (Person In Charge,
-        // Respondent) get the bordered "info table" look — a single-column
-        // kit checklist reads better as a plain list, not a 1-wide table.
-        if ($columns > 1) {
-            $fieldset->extraAttributes(['class' => 'aqs-info-table']);
-        }
-
-        return $fieldset;
+        return \App\Services\FormKernel\GroupedFieldRenderer::buildGroupFieldset($label, $fields);
     }
 
-    /**
-     * Some field builders (buildTextField(), for one) call
-     * ->columnSpanFull() unconditionally — correct for a field standing
-     * alone in the main form, but it overrides a table Fieldset's own
-     * column count, forcing every field back to full width regardless of
-     * how many columns were configured. Resetting to a single-column span
-     * here undoes that override so the fields actually sit side by side.
-     */
     protected static function normalizeColumnSpans(array $fields): void
     {
-        foreach ($fields as $field) {
-            if (method_exists($field, 'columnSpan')) {
-                $field->columnSpan(1);
-            }
-        }
+        \App\Services\FormKernel\GroupedFieldRenderer::normalizeColumnSpans($fields);
     }
 
-    /**
-     * Renders $rows as one table with a genuine, dedicated header row (row
-     * labels + each column's own field label, all styled via
-     * .aqs-header-cell) followed by one full data row per entry in $rows —
-     * every data row, including the first, has its own labels hidden and
-     * shows only its values. Earlier this let the first data row double as
-     * the header (its own visible label serving as the shared column
-     * title), which read wrong: that row's row-label cell showed its
-     * value (e.g. "Nurses") styled exactly like a column heading. This is
-     * how CadreMatrixSyncService's per-cadre Human Resources rows collapse
-     * into one table instead of N separate boxed groups.
-     */
     protected static function buildTableFieldset(string $title, array $rows)
     {
-        $cells = [];
-
-        // Header row: the row-label column's header (e.g. "Cadre") plus
-        // one header cell per data column, using the first row's fields
-        // purely to read off their label text before every field's own
-        // label gets hidden below.
-        $cells[] = Forms\Components\Placeholder::make('table_header_rowlabel_'.md5($title))
-            ->label($rows[0]['header'])
-            ->content('')
-            ->extraAttributes(['class' => 'aqs-header-cell']);
-
-        foreach ($rows[0]['fields'] as $field) {
-            $cells[] = Forms\Components\Placeholder::make('table_header_col_'.md5($title).'_'.count($cells))
-                ->label(method_exists($field, 'getLabel') ? $field->getLabel() : '')
-                ->content('')
-                ->extraAttributes(['class' => 'aqs-header-cell']);
-        }
-
-        foreach ($rows as $index => $row) {
-            $rowLabelCell = Forms\Components\Placeholder::make('table_row_label_'.md5($title.$row['label'].$index))
-                ->hiddenLabel()
-                ->content($row['label']);
-
-            $cells[] = $rowLabelCell;
-
-            foreach ($row['fields'] as $field) {
-                if (method_exists($field, 'hiddenLabel')) {
-                    $field->hiddenLabel();
-                }
-
-                // See normalizeColumnSpans() — undoes any per-field-type
-                // forced ->columnSpanFull() so the row's cells actually
-                // sit side by side under the shared header.
-                if (method_exists($field, 'columnSpan')) {
-                    $field->columnSpan(1);
-                }
-
-                $cells[] = $field;
-            }
-        }
-
-        $columnsPerRow = 1 + count($rows[0]['fields']);
-
-        return Forms\Components\Fieldset::make($title)
-            ->schema($cells)
-            // See buildGroupFieldset()'s comment — every breakpoint must be
-            // set explicitly, or Fieldset's own constructor default
-            // ('lg' => 2) survives the merge and this collapses to 1
-            // column below 1024px.
-            ->columns(['default' => $columnsPerRow, 'sm' => $columnsPerRow, 'md' => $columnsPerRow, 'lg' => $columnsPerRow, 'xl' => $columnsPerRow, '2xl' => $columnsPerRow])
-            ->extraAttributes(['class' => 'aqs-data-table'])
-            ->columnSpanFull();
+        return \App\Services\FormKernel\GroupedFieldRenderer::buildTableFieldset($title, $rows);
     }
 
     /**
