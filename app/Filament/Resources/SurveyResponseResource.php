@@ -41,7 +41,35 @@ class SurveyResponseResource extends Resource
                 ->options(fn () => Survey::active()->pluck('name', 'id'))
                 ->required()
                 ->searchable()
-                ->preload(),
+                ->preload()
+                ->live(),
+            Forms\Components\Select::make('survey_event_id')
+                ->label('Event')
+                ->options(fn (Forms\Get $get) => \App\Models\SurveyEvent::where('survey_id', $get('survey_id'))->ordered()->pluck('name', 'id'))
+                ->visible(fn (Forms\Get $get) => $get('survey_id') && \App\Models\SurveyEvent::where('survey_id', $get('survey_id'))->exists())
+                ->live()
+                ->helperText(fn (Forms\Get $get) => optional(\App\Models\SurveyEvent::find($get('survey_event_id')))->repeatable
+                    ? 'Repeatable — a new occurrence number is assigned automatically for the selected subject.'
+                    : null),
+            Forms\Components\Select::make('subject_type')
+                ->label('Subject type')
+                ->options([
+                    \App\Models\Facility::class => 'Facility',
+                    \App\Models\User::class => 'User',
+                    \App\Models\MentorshipClass::class => 'Mentorship Class',
+                ])
+                ->live()
+                ->visible(fn (Forms\Get $get) => filled($get('survey_event_id'))),
+            Forms\Components\Select::make('subject_id')
+                ->label('Subject')
+                ->options(fn (Forms\Get $get) => match ($get('subject_type')) {
+                    \App\Models\Facility::class => \App\Models\Facility::query()->pluck('name', 'id'),
+                    \App\Models\User::class => \App\Models\User::query()->pluck('name', 'id'),
+                    \App\Models\MentorshipClass::class => \App\Models\MentorshipClass::query()->pluck('name', 'id'),
+                    default => [],
+                })
+                ->searchable()
+                ->visible(fn (Forms\Get $get) => filled($get('subject_type'))),
             Forms\Components\TextInput::make('respondent_name')->maxLength(255),
             Forms\Components\TextInput::make('respondent_email')->email()->maxLength(255),
             Forms\Components\TextInput::make('respondent_contact')->maxLength(255),
