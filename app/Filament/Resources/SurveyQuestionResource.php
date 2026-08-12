@@ -67,7 +67,7 @@ class SurveyQuestionResource extends Resource
                     Forms\Components\Grid::make(3)->schema([
                         Forms\Components\Select::make('survey_section_id')
                             ->label('Section')
-                            ->options(fn () => SurveySection::where('is_active', true)->orderBy('order')->get()
+                            ->options(fn () => SurveySection::where('is_active', true)->whereHas('survey')->with('survey')->orderBy('order')->get()
                                 ->mapWithKeys(fn ($s) => [$s->id => "{$s->survey->name} — {$s->name}"]))
                             ->required()
                             ->searchable()
