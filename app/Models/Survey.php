@@ -32,6 +32,11 @@ class Survey extends Model
         return $this->hasMany(SurveyResponse::class);
     }
 
+    public function events(): HasMany
+    {
+        return $this->hasMany(SurveyEvent::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

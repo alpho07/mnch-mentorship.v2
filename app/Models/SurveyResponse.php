@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class SurveyResponse extends Model
 {
     protected $fillable = [
-        'survey_id', 'subject_type', 'subject_id', 'respondent_name',
+        'survey_id', 'survey_event_id', 'event_instance_number', 'subject_type', 'subject_id', 'respondent_name',
         'respondent_email', 'respondent_contact', 'status', 'submitted_at',
         'overall_score', 'overall_percentage', 'created_by',
     ];
@@ -24,6 +24,11 @@ class SurveyResponse extends Model
     public function survey(): BelongsTo
     {
         return $this->belongsTo(Survey::class);
+    }
+
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(SurveyEvent::class, 'survey_event_id');
     }
 
     public function subject(): MorphTo

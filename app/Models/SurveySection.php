@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SurveySection extends Model
@@ -30,6 +31,11 @@ class SurveySection extends Model
     public function sectionScores(): HasMany
     {
         return $this->hasMany(SurveySectionScore::class);
+    }
+
+    public function events(): BelongsToMany
+    {
+        return $this->belongsToMany(SurveyEvent::class, 'survey_event_sections');
     }
 
     public function scopeActive($query)
