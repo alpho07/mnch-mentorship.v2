@@ -6,6 +6,7 @@ use App\Filament\Resources\SurveyResource;
 use App\Models\Survey;
 use App\Models\SurveyEvent;
 use App\Services\SurveyDashboardService;
+use App\Services\SurveyInsightService;
 use Filament\Resources\Pages\Page;
 
 class SurveyDashboard extends Page
@@ -19,6 +20,10 @@ class SurveyDashboard extends Page
     public ?int $eventId = null;
 
     public array $dashboardData = [];
+
+    public ?string $summary = null;
+
+    public bool $generatingSummary = false;
 
     /**
      * Accepts Survey|int|string, not just int|string: in real panel usage
@@ -39,6 +44,14 @@ class SurveyDashboard extends Page
     public function updatedEventId(): void
     {
         $this->loadDashboardData();
+        $this->summary = null;
+    }
+
+    public function generateSummary(): void
+    {
+        $this->generatingSummary = true;
+        $this->summary = SurveyInsightService::summarize($this->dashboardData);
+        $this->generatingSummary = false;
     }
 
     protected function loadDashboardData(): void

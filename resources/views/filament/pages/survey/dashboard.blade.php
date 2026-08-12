@@ -15,6 +15,23 @@
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">{{ $data['response_count'] }} submitted response(s)</p>
         </div>
 
+        {{-- AI summary --}}
+        <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">AI Summary</h3>
+                <button type="button" wire:click="generateSummary" wire:loading.attr="disabled" wire:target="generateSummary"
+                        class="fi-btn fi-btn-color-primary inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-primary-600 disabled:opacity-50">
+                    <span wire:loading.remove wire:target="generateSummary">Generate Summary</span>
+                    <span wire:loading wire:target="generateSummary">Generating…</span>
+                </button>
+            </div>
+            @if ($summary)
+                <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">{{ $summary }}</p>
+            @else
+                <p class="text-sm text-slate-400">No summary generated yet.</p>
+            @endif
+        </div>
+
         {{-- Event dropdown --}}
         @if ($events->isNotEmpty())
             <div class="flex items-center gap-3">
