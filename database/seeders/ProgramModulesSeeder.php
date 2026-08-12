@@ -51,13 +51,14 @@ class ProgramModulesSeeder extends Seeder
         foreach ($modules as $index => $moduleData) {
             $totalTime = collect($moduleData['sessions'])->sum('time_minutes');
 
-            $module = ProgramModule::create([
-                'program_id' => $program->id,
-                'name' => $moduleData['module'],
-                'order_sequence' => $index + 1,
-                'total_time_minutes' => $totalTime,
-                'is_active' => true,
-            ]);
+            $module = ProgramModule::firstOrCreate(
+                ['program_id' => $program->id, 'name' => $moduleData['module']],
+                [
+                    'order_sequence' => $index + 1,
+                    'total_time_minutes' => $totalTime,
+                    'is_active' => true,
+                ]
+            );
 
             $this->createSessions($module, $moduleData['sessions']);
         }
@@ -82,13 +83,14 @@ class ProgramModulesSeeder extends Seeder
         foreach ($modules as $index => $moduleData) {
             $totalTime = collect($moduleData['sessions'])->sum('time_minutes');
 
-            $module = ProgramModule::create([
-                'program_id' => $program->id,
-                'name' => $moduleData['module'],
-                'order_sequence' => $index + 1,
-                'total_time_minutes' => $totalTime,
-                'is_active' => true,
-            ]);
+            $module = ProgramModule::firstOrCreate(
+                ['program_id' => $program->id, 'name' => $moduleData['module']],
+                [
+                    'order_sequence' => $index + 1,
+                    'total_time_minutes' => $totalTime,
+                    'is_active' => true,
+                ]
+            );
 
             $this->createSessions($module, $moduleData['sessions']);
         }
@@ -107,14 +109,15 @@ class ProgramModulesSeeder extends Seeder
                 );
             }
 
-            $session = ModuleSession::create([
-                'program_module_id' => $module->id,
-                'name' => $sessionData['session'],
-                'time_minutes' => $sessionData['time_minutes'],
-                'methodology_id' => $methodology?->id,
-                'order_sequence' => $index + 1,
-                'is_active' => true,
-            ]);
+            $session = ModuleSession::firstOrCreate(
+                ['program_module_id' => $module->id, 'name' => $sessionData['session']],
+                [
+                    'time_minutes' => $sessionData['time_minutes'],
+                    'methodology_id' => $methodology?->id,
+                    'order_sequence' => $index + 1,
+                    'is_active' => true,
+                ]
+            );
 
             if (!empty($sessionData['materials'])) {
                 $this->createMaterials($session, $sessionData['materials']);
@@ -125,9 +128,10 @@ class ProgramModulesSeeder extends Seeder
     private function createMaterials(ModuleSession $session, array $materials): void
     {
         foreach ($materials as $material) {
-            SessionMaterial::create([
+            SessionMaterial::firstOrCreate([
                 'module_session_id' => $session->id,
                 'material_name' => $material,
+            ], [
                 'quantity' => 1,
                 'is_required' => true,
             ]);

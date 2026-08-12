@@ -285,7 +285,7 @@ class AphModuleContentSeeder extends Seeder
             'Obstructed Labour' => [
                 ['title' => 'Obstructed and Prolonged Labour', 'url' => 'https://www.youtube.com/watch?v=eM7P3GsxDF8'],
             ],
-            'Partograph Use' => [
+            'Labour Care Guide' => [
                 ['title' => 'Labour Care Guide — Partograph and Monitoring', 'url' => 'https://www.youtube.com/watch?v=4TSVQtIx-ZU'],
             ],
         ];
