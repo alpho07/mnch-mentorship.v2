@@ -105,6 +105,10 @@ class SurveyResource extends Resource
                 Tables\Filters\TernaryFilter::make('is_active')->default(true),
             ])
             ->actions([
+                Tables\Actions\Action::make('dashboard')
+                    ->label('Dashboard')
+                    ->icon('heroicon-o-chart-bar')
+                    ->url(fn (Survey $record): string => static::getUrl('dashboard', ['record' => $record])),
                 Tables\Actions\Action::make('get_link')
                     ->label('Get Link')
                     ->icon('heroicon-o-link')

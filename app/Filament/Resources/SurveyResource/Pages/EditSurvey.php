@@ -12,6 +12,12 @@ class EditSurvey extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [Actions\DeleteAction::make()];
+        return [
+            Actions\Action::make('dashboard')
+                ->label('Dashboard')
+                ->icon('heroicon-o-chart-bar')
+                ->url(fn () => SurveyResource::getUrl('dashboard', ['record' => $this->record])),
+            Actions\DeleteAction::make(),
+        ];
     }
 }
