@@ -69,26 +69,44 @@ class GroupedFieldRenderer
 
     /**
      * A plain group: small groups (<=7 fields) lay out side by side,
-     * table-style. Larger groups stay a single readable column.
+     * table-style, in a plain Fieldset (its <legend> already gets the
+     * blue table-header banner via .aqs-info-table). Larger groups (a
+     * kit's many checklist items) stay a single readable column, but
+     * render as a collapsible Section instead — Fieldset has no native
+     * collapse support, and a checklist with 9-20+ items benefits from
+     * being collapsible. Its header gets the same banner look via
+     * .aqs-kit-section, targeting Section's own header markup instead of
+     * a <legend>.
      */
     public static function buildGroupFieldset(string $label, array $fields)
     {
-        $columns = count($fields) <= 7 ? count($fields) : 1;
+        $isLargeGroup = count($fields) > 7;
 
-        if ($columns > 1) {
-            static::normalizeColumnSpans($fields);
+        if (! $isLargeGroup) {
+            $columns = count($fields);
+
+            if ($columns > 1) {
+                static::normalizeColumnSpans($fields);
+            }
+
+            $fieldset = Forms\Components\Fieldset::make($label)
+                ->schema($fields)
+                ->columns(['default' => $columns, 'sm' => $columns, 'md' => $columns, 'lg' => $columns, 'xl' => $columns, '2xl' => $columns])
+                ->columnSpanFull();
+
+            if ($columns > 1) {
+                $fieldset->extraAttributes(['class' => 'aqs-info-table']);
+            }
+
+            return $fieldset;
         }
 
-        $fieldset = Forms\Components\Fieldset::make($label)
+        return Forms\Components\Section::make($label)
             ->schema($fields)
-            ->columns(['default' => $columns, 'sm' => $columns, 'md' => $columns, 'lg' => $columns, 'xl' => $columns, '2xl' => $columns])
-            ->columnSpanFull();
-
-        if ($columns > 1) {
-            $fieldset->extraAttributes(['class' => 'aqs-info-table']);
-        }
-
-        return $fieldset;
+            ->collapsible()
+            ->collapsed(false)
+            ->columnSpanFull()
+            ->extraAttributes(['class' => 'aqs-kit-section']);
     }
 
     /**

@@ -129,7 +129,10 @@ class DynamicFormBuilderGroupingTest extends TestCase
     {
         // 9 — above the <=7 small-group threshold, matching the smallest
         // real "large" group (the Assisted Vacuum Delivery kit: 1 parent +
-        // 7 items + 1 completeness = 9).
+        // 7 items + 1 completeness = 9). Large groups render as a
+        // collapsible Section (not a Fieldset — Fieldset has no native
+        // collapse support), single column, banner-styled header via the
+        // aqs-kit-section CSS class.
         $section = $this->makeSection('large_group_section_test');
         for ($i = 1; $i <= 9; $i++) {
             $this->makeYesNo($section, "LARGE_Q{$i}", $i, 'Big Kit');
@@ -138,8 +141,9 @@ class DynamicFormBuilderGroupingTest extends TestCase
         $fields = DynamicFormBuilder::buildForSection($section->id);
 
         $this->assertCount(1, $fields);
-        $this->assertInstanceOf(Fieldset::class, $fields[0]);
-        $this->assertSame(1, $fields[0]->getColumns('default'));
+        $this->assertInstanceOf(\Filament\Forms\Components\Section::class, $fields[0]);
+        $this->assertSame('Big Kit', $fields[0]->getHeading());
+        $this->assertTrue($fields[0]->isCollapsible());
     }
 
     private function makeText(AssessmentSection $section, string $questionCode, int $order, ?string $group): AssessmentQuestion

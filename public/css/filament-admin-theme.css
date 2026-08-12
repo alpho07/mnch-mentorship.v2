@@ -847,4 +847,22 @@ textarea.fi-input:focus,
     border-color: rgba(255, 255, 255, 0.15);
     background: transparent;
 }
+
+/* Large single-column groups (kit checklists etc.) — same blue
+   table-header banner as .aqs-info-table/.aqs-data-table's <legend>, but
+   targeting Filament Section's own header markup (GroupedFieldRenderer::
+   buildGroupFieldset()'s Section branch) instead of a <legend>. */
+.aqs-kit-section > .fi-section-header {
+    background: #1e3a5f;
+    border-radius: 0.5rem 0.5rem 0 0;
+    padding: 0.5rem 1rem !important;
+}
+.aqs-kit-section > .fi-section-header .fi-section-header-heading {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+.aqs-kit-section > .fi-section-header button svg {
+    color: #fff;
+}
 .guide-btn-create:hover { background: #15803d; }
