@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Survey;
+use App\Models\SurveyEvent;
 use App\Models\SurveyQuestion;
 use App\Models\SurveyQuestionResponse;
 use App\Models\SurveyResponse;
@@ -301,5 +302,65 @@ class SurveyDashboardServiceTest extends TestCase
         $this->assertSame(3, $questionData['data']['row_count']);
         $this->assertSame(2, $questionData['data']['response_count']);
         $this->assertCount(3, $questionData['data']['rows']);
+    }
+
+    public function test_numeric_question_gets_a_trend_line_across_events_when_no_event_is_selected(): void
+    {
+        $survey = Survey::create(['code' => 'DASH_TREND_TEST', 'name' => 'Dash Trend Test', 'is_active' => true]);
+        $baseline = SurveyEvent::create(['survey_id' => $survey->id, 'code' => 'baseline', 'name' => 'Baseline', 'order' => 1]);
+        $followup = SurveyEvent::create(['survey_id' => $survey->id, 'code' => 'followup', 'name' => 'Follow-up', 'order' => 2]);
+        $section = SurveySection::create(['survey_id' => $survey->id, 'code' => 'main', 'name' => 'Main', 'order' => 1]);
+        $question = SurveyQuestion::create(['survey_section_id' => $section->id, 'question_code' => 'TREND_Q1', 'question_text' => 'Score', 'question_type' => 'number']);
+        $r1 = SurveyResponse::create(['survey_id' => $survey->id, 'survey_event_id' => $baseline->id, 'status' => 'submitted']);
+        $r2 = SurveyResponse::create(['survey_id' => $survey->id, 'survey_event_id' => $followup->id, 'status' => 'submitted']);
+        SurveyQuestionResponse::create(['survey_response_id' => $r1->id, 'survey_question_id' => $question->id, 'response_value' => '10']);
+        SurveyQuestionResponse::create(['survey_response_id' => $r2->id, 'survey_question_id' => $question->id, 'response_value' => '20']);
+
+        $data = SurveyDashboardService::build($survey);
+        $trend = $data['sections'][0]['questions'][0]['trend'];
+
+        $this->assertSame(['Baseline', 'Follow-up'], $trend['labels']);
+        $this->assertSame([10.0, 20.0], $trend['values']);
+    }
+
+    public function test_repeatable_event_instances_are_averaged_into_one_trend_point(): void
+    {
+        $survey = Survey::create(['code' => 'DASH_TREND_AVG_TEST', 'name' => 'Dash Trend Avg Test', 'is_active' => true]);
+        $followup = SurveyEvent::create(['survey_id' => $survey->id, 'code' => 'followup', 'name' => 'Follow-up', 'order' => 1, 'repeatable' => true]);
+        $section = SurveySection::create(['survey_id' => $survey->id, 'code' => 'main', 'name' => 'Main', 'order' => 1]);
+        $question = SurveyQuestion::create(['survey_section_id' => $section->id, 'question_code' => 'TREND_AVG_Q1', 'question_text' => 'Score', 'question_type' => 'number']);
+        $r1 = SurveyResponse::create(['survey_id' => $survey->id, 'survey_event_id' => $followup->id, 'event_instance_number' => 1, 'status' => 'submitted']);
+        $r2 = SurveyResponse::create(['survey_id' => $survey->id, 'survey_event_id' => $followup->id, 'event_instance_number' => 2, 'status' => 'submitted']);
+        SurveyQuestionResponse::create(['survey_response_id' => $r1->id, 'survey_question_id' => $question->id, 'response_value' => '10']);
+        SurveyQuestionResponse::create(['survey_response_id' => $r2->id, 'survey_question_id' => $question->id, 'response_value' => '30']);
+
+        $data = SurveyDashboardService::build($survey);
+        $trend = $data['sections'][0]['questions'][0]['trend'];
+
+        $this->assertSame(['Follow-up'], $trend['labels']);
+        $this->assertSame([20.0], $trend['values']);
+    }
+
+    public function test_trend_is_null_when_a_specific_event_is_selected(): void
+    {
+        $survey = Survey::create(['code' => 'DASH_TREND_NULL_TEST', 'name' => 'Dash Trend Null Test', 'is_active' => true]);
+        $baseline = SurveyEvent::create(['survey_id' => $survey->id, 'code' => 'baseline', 'name' => 'Baseline', 'order' => 1]);
+        $section = SurveySection::create(['survey_id' => $survey->id, 'code' => 'main', 'name' => 'Main', 'order' => 1]);
+        SurveyQuestion::create(['survey_section_id' => $section->id, 'question_code' => 'TREND_NULL_Q1', 'question_text' => 'Score', 'question_type' => 'number']);
+
+        $data = SurveyDashboardService::build($survey, $baseline);
+
+        $this->assertNull($data['sections'][0]['questions'][0]['trend']);
+    }
+
+    public function test_trend_is_null_for_a_non_longitudinal_survey(): void
+    {
+        $survey = Survey::create(['code' => 'DASH_TREND_NONE_TEST', 'name' => 'Dash Trend None Test', 'is_active' => true]);
+        $section = SurveySection::create(['survey_id' => $survey->id, 'code' => 'main', 'name' => 'Main', 'order' => 1]);
+        SurveyQuestion::create(['survey_section_id' => $section->id, 'question_code' => 'TREND_NONE_Q1', 'question_text' => 'Score', 'question_type' => 'number']);
+
+        $data = SurveyDashboardService::build($survey);
+
+        $this->assertNull($data['sections'][0]['questions'][0]['trend']);
     }
 }

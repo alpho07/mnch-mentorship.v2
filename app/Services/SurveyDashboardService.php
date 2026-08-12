@@ -121,13 +121,19 @@ class SurveyDashboardService
             default => [null, []],
         };
 
+        $trend = null;
+
+        if (! $event && in_array($question->question_type, ['number', 'proportion', 'rating'], true) && $survey->events()->exists()) {
+            $trend = static::buildTrendData($question, $survey);
+        }
+
         return [
             'id' => $question->id,
             'text' => $question->question_text,
             'type' => $question->question_type,
             'chart' => $chart,
             'data' => $data,
-            'trend' => null,
+            'trend' => $trend,
         ];
     }
 
@@ -279,6 +285,43 @@ class SurveyDashboardService
             'columns' => $columns,
             'neutral_index' => count($columns) > 0 ? intdiv(count($columns) - 1, 2) : 0,
         ];
+    }
+
+    /**
+     * One point per event, x-axis = event order. A repeatable event's
+     * multiple instances (across all subjects) are averaged into that one
+     * point, per the approved Phase 3 design — never one point per
+     * instance. An event with zero submitted responses for this question
+     * is skipped entirely (no fake zero on the line) rather than plotted
+     * as 0.
+     */
+    protected static function buildTrendData(SurveyQuestion $question, Survey $survey): array
+    {
+        $labels = [];
+        $values = [];
+
+        foreach ($survey->events()->ordered()->get() as $event) {
+            $responseIds = SurveyResponse::where('survey_id', $survey->id)
+                ->where('survey_event_id', $event->id)
+                ->submitted()
+                ->pluck('id');
+
+            $vals = SurveyQuestionResponse::where('survey_question_id', $question->id)
+                ->whereIn('survey_response_id', $responseIds)
+                ->whereNotNull('response_value')
+                ->pluck('response_value')
+                ->filter(fn ($v) => is_numeric($v))
+                ->map(fn ($v) => (float) $v);
+
+            if ($vals->isEmpty()) {
+                continue;
+            }
+
+            $labels[] = $event->name;
+            $values[] = round($vals->avg(), 2);
+        }
+
+        return ['labels' => $labels, 'values' => $values];
     }
 
     protected static function buildListData(SurveyQuestion $question, Collection $responseIds): array
