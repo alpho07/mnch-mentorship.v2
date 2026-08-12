@@ -80,13 +80,27 @@ class EditSection extends EditRecord
 
     protected function loadSavedResponses(): array
     {
-        $responses = AssessmentQuestionResponse::where('assessment_id', $this->record->id)->get();
+        $responses = AssessmentQuestionResponse::where('assessment_id', $this->record->id)
+            ->with('question')
+            ->get();
 
         $data = [];
 
         foreach ($responses as $resp) {
             $fieldName = "question_response_{$resp->assessment_question_id}";
-            $data[$fieldName] = $resp->response_value;
+            $responseValue = $resp->response_value;
+
+            // repeater/checkbox store their answer as a JSON-encoded array
+            // in response_value (see DynamicFormBuilder::saveResponses()) —
+            // Filament's Repeater/CheckboxList need the decoded array as
+            // their state, not the raw JSON string, or hydration blows up
+            // trying to foreach() over a string.
+            if (in_array($resp->question?->question_type, ['repeater', 'checkbox'], true) && is_string($responseValue)) {
+                $decoded = json_decode($responseValue, true);
+                $responseValue = is_array($decoded) ? $decoded : [];
+            }
+
+            $data[$fieldName] = $responseValue;
 
             if ($resp->explanation) {
                 $data[$fieldName.'_explanation'] = $resp->explanation;
