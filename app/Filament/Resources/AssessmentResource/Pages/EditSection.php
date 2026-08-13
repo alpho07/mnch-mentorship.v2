@@ -132,6 +132,10 @@ class EditSection extends EditRecord
             $fields = $this->insertManageCadresAction($fields);
         }
 
+        $type = $this->record->assessmentType;
+        $sectionName = $type ? $type->interpolate($this->section->name) : $this->section->name;
+        $sectionDescription = $type ? $type->interpolate($this->section->description) : $this->section->description;
+
         return $form->schema([
             Forms\Components\View::make('filament.pages.assessment.section-chrome')
                 ->viewData(fn () => [
@@ -139,8 +143,8 @@ class EditSection extends EditRecord
                     'currentKey' => $this->section->code,
                 ])
                 ->columnSpanFull(),
-            Forms\Components\Section::make("{$this->section->name} Assessment")
-                ->description($this->section->description)
+            Forms\Components\Section::make("{$sectionName} Assessment")
+                ->description($sectionDescription)
                 ->icon('heroicon-o-clipboard-document-check')
                 ->extraAttributes(['class' => 'aqs'])
                 ->schema($fields)

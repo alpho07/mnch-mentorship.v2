@@ -50,4 +50,17 @@ class AssessmentType extends Model
     {
         return $query->where('is_active', true);
     }
+
+    public function interpolate(?string $text): ?string
+    {
+        if ($text === null || ! str_contains($text, '{{')) {
+            return $text;
+        }
+
+        $parameters = $this->metadata['parameters'] ?? [];
+
+        return preg_replace_callback('/\{\{(\w+)\}\}/', function (array $matches) use ($parameters) {
+            return $parameters[$matches[1]] ?? $matches[0];
+        }, $text);
+    }
 }

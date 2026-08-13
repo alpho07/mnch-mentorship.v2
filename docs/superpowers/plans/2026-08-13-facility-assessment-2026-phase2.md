@@ -158,18 +158,9 @@ In `app/Filament/Resources/AssessmentResource/Pages/EditSection.php`, in `form()
     }
 ```
 
-- [ ] **Step 7: Add the admin KeyValue field**
+- [ ] **Step 7: SKIPPED — admin UI deferred**
 
-In `app/Filament/Resources/AssessmentTypeResource.php`, locate the `form()` method's schema array and add, near the existing `description`/`metadata`-adjacent fields:
-
-```php
-                Forms\Components\KeyValue::make('metadata.parameters')
-                    ->label('Template Parameters')
-                    ->helperText('Reference these in section/question text as {{key}}. An unset key stays visible as {{key}} on the rendered page, so a missing parameter is obvious.')
-                    ->keyLabel('Parameter')
-                    ->valueLabel('Value')
-                    ->reorderable(false),
-```
+`AssessmentTypeResource`'s form already has a `Forms\Components\KeyValue::make('metadata')` bound to the *entire* `metadata` column (editing it as one flat key-value map). Adding a second field targeting the nested `metadata.parameters` sub-array risks the existing field's flat KeyValue dehydration silently dropping or corrupting that nested structure on the next save — for both 2025 and 2026 templates, since it's the same shared resource. Rather than guess at Filament's exact field-processing order to avoid that, this step is deferred: the seeder (Task 1) sets `metadata.parameters` directly at the DB level via `AssessmentType::firstOrCreate()`, which is all Phase 2 needs to function. A safe admin-editable UI (e.g. a dedicated `Repeater` with custom `afterStateHydrated`/`dehydrateStateUsing` that reads/writes only the `parameters` sub-key, leaving the rest of `metadata` untouched) is a follow-up, not required for this plan.
 
 - [ ] **Step 8: Run the full assessment test suite**
 

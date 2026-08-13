@@ -132,6 +132,13 @@ class DynamicFormBuilder
     {
         $fieldName = "question_response_{$question->id}";
 
+        $type = $question->section?->assessmentType;
+        if ($type && (str_contains($question->question_text ?? '', '{{') || str_contains($question->help_text ?? '', '{{'))) {
+            $question = clone $question;
+            $question->question_text = $type->interpolate($question->question_text);
+            $question->help_text = $type->interpolate($question->help_text);
+        }
+
         // NBU & Paediatric questions
         if (in_array($question->question_code, ['INFRA_NBU', 'INFRA_PAED'])) {
             return static::buildUnitCapacityField($question, $fieldName, $existingResponse);
