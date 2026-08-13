@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
@@ -10,6 +11,7 @@ use Illuminate\Support\Str;
 class AssessmentDepartment extends Model {
 
     protected $fillable = [
+        'assessment_type_id',
         'name',
         'slug',
         'color',
@@ -36,6 +38,10 @@ class AssessmentDepartment extends Model {
     // ==========================================
     // RELATIONSHIPS
     // ==========================================
+
+    public function assessmentType(): BelongsTo {
+        return $this->belongsTo(AssessmentType::class);
+    }
 
     /**
      * Commodities applicable to this department

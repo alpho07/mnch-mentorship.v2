@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class MainCadre extends Model {
-    
+
     protected $table ='assessment_cadres';
 
     protected $fillable = [
+        'assessment_type_id',
         'name',
         'code',
         'description',
@@ -36,6 +38,10 @@ class MainCadre extends Model {
     // ==========================================
     // RELATIONSHIPS
     // ==========================================
+
+    public function assessmentType(): BelongsTo {
+        return $this->belongsTo(AssessmentType::class);
+    }
 
     public function humanResourceResponses(): HasMany {
         return $this->hasMany(HumanResourceResponse::class);

@@ -216,27 +216,25 @@ return new class extends Migration
             $table->unique(['assessment_type_id', 'code']);
         });
 
-        Schema::table('assessment_questions', function (Blueprint $table) {
-            $table->dropUnique('assessment_questions_question_code_unique');
-        });
         // question_code's scope key is its section's assessment_type_id, one
         // join away — not a column on this table — so a plain composite
         // unique isn't expressible here. Uniqueness of question_code WITHIN
-        // a template is enforced at the application level in Task where
-        // Phase 2's seeder writes questions (each seeder run scopes its own
-        // codes), matching how AssessmentSectionResource/AssessmentQuestionResource
+        // a template is enforced at the application level where Phase 2's
+        // seeder writes questions (each seeder run scopes its own codes),
+        // matching how AssessmentSectionResource/AssessmentQuestionResource
         // already validate section codes without a matching DB constraint
-        // for cross-template scoping. A supporting non-unique index keeps
-        // the still-frequent lookups by code fast.
+        // for cross-template scoping. The original creation migration
+        // already added a plain (non-unique) index on question_code
+        // alongside the unique one (see 2025_12_01_064532_create_assessment_questions_table.php:56),
+        // so lookups by code stay fast without adding a second index here.
         Schema::table('assessment_questions', function (Blueprint $table) {
-            $table->index('question_code');
+            $table->dropUnique('assessment_questions_question_code_unique');
         });
     }
 
     public function down(): void
     {
         Schema::table('assessment_questions', function (Blueprint $table) {
-            $table->dropIndex(['question_code']);
             $table->unique('question_code');
         });
         Schema::table('assessment_sections', function (Blueprint $table) {
