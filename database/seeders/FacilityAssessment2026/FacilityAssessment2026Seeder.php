@@ -50,7 +50,7 @@ class FacilityAssessment2026Seeder extends Seeder
             HealthProductsSeeder::class,
             InformationSystemsSeeder::class,
             QualityOfCareSeeder::class,
-            // IndicatorsSeeder::class, // Task 9
+            IndicatorsSeeder::class,
         ]);
 
         $this->command->info('✓ Facility Readiness Assessment 2026 seeded.');
