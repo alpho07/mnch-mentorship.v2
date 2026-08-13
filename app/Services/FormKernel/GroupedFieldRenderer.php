@@ -138,7 +138,7 @@ class GroupedFieldRenderer
 
         foreach ($rows[0]['fields'] as $field) {
             $cells[] = Forms\Components\Placeholder::make('table_header_col_'.md5($title).'_'.count($cells))
-                ->label(method_exists($field, 'getLabel') ? $field->getLabel() : '')
+                ->label(static::resolveFieldLabel($field))
                 ->content('')
                 ->extraAttributes(['class' => 'aqs-header-cell']);
         }
@@ -170,5 +170,31 @@ class GroupedFieldRenderer
             ->columns(['default' => $columnsPerRow, 'sm' => $columnsPerRow, 'md' => $columnsPerRow, 'lg' => $columnsPerRow, 'xl' => $columnsPerRow, '2xl' => $columnsPerRow])
             ->extraAttributes(['class' => 'aqs-data-table'])
             ->columnSpanFull();
+    }
+
+    /**
+     * A column's built field may be a bare Field (its own ->getLabel() is
+     * the answer) or a layout component like Group (yes_no's Radio +
+     * conditional Textarea) whose own getLabel() exists but returns null —
+     * Groups don't carry a semantic label themselves. Falls through to the
+     * first child component with a real label in that case, recursively,
+     * so nested layout components resolve correctly too.
+     */
+    private static function resolveFieldLabel($field): string
+    {
+        if (method_exists($field, 'getLabel') && filled($field->getLabel())) {
+            return $field->getLabel();
+        }
+
+        if (method_exists($field, 'getChildComponents')) {
+            foreach ($field->getChildComponents() as $child) {
+                $label = static::resolveFieldLabel($child);
+                if (filled($label)) {
+                    return $label;
+                }
+            }
+        }
+
+        return '';
     }
 }
