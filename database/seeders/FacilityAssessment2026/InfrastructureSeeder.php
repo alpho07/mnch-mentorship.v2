@@ -21,8 +21,15 @@ class InfrastructureSeeder extends Seeder
         $triageChecklist = AssessmentChecklist::where('assessment_type_id', $type->id)->where('title', 'Triage requirements')->first();
 
         $order = 0;
-        $create = function (array $attrs) use ($section, &$order) {
+        // Counts only the top-level questions this closure creates (not
+        // bedCountPair's Functional/Non-Functional sub-fields, which stay
+        // grouped under their parent's number rather than getting their
+        // own) — separate from $order, which threads through both.
+        $number = 0;
+        $create = function (array $attrs) use ($section, &$order, &$number) {
             $order++;
+            $number++;
+            $attrs['question_text'] = "{$number}. {$attrs['question_text']}";
             AssessmentQuestion::updateOrCreate(
                 ['assessment_section_id' => $section->id, 'question_code' => $attrs['question_code']],
                 array_merge([

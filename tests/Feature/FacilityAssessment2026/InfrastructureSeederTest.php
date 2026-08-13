@@ -98,4 +98,17 @@ class InfrastructureSeederTest extends TestCase
         $q = AssessmentQuestion::where('question_code', 'INFRA_SEPARATE_NBU_PAED')->firstOrFail();
         $this->assertSame(['No'], $q->requires_explanation_on);
     }
+
+    public function test_top_level_questions_are_numbered_but_bed_pair_fields_are_not(): void
+    {
+        $this->makeType();
+        $this->seed(InfrastructureSeeder::class);
+
+        $this->assertSame('1. Do you have a newborn unit?', AssessmentQuestion::where('question_code', 'INFRA_HAS_NBU')->value('question_text'));
+        $this->assertSame('13. Is there a triage area in the outpatient department?', AssessmentQuestion::where('question_code', 'INFRA_TRIAGE')->value('question_text'));
+
+        // Bed-pair sub-fields stay grouped under their parent's number
+        // rather than getting their own.
+        $this->assertSame('No. Functional', AssessmentQuestion::where('question_code', 'INFRA_NBU_GENERAL_FUNCTIONAL')->value('question_text'));
+    }
 }

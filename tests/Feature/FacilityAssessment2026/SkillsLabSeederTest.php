@@ -22,13 +22,13 @@ class SkillsLabSeederTest extends TestCase
         return $type;
     }
 
-    public function test_seeds_21_questions(): void
+    public function test_seeds_22_questions(): void
     {
         $type = $this->makeType();
         $this->seed(SkillsLabSeeder::class);
 
         $section = AssessmentSection::where('assessment_type_id', $type->id)->where('code', 'skills_lab')->first();
-        $this->assertSame(21, $section->questions()->count());
+        $this->assertSame(22, $section->questions()->count());
     }
 
     public function test_yes_branch_questions_are_gated_on_skills_has_lab(): void
@@ -66,5 +66,57 @@ class SkillsLabSeederTest extends TestCase
 
         $q = AssessmentQuestion::where('question_code', 'SKILLS_YES_LOCKABLE_STORE')->firstOrFail();
         $this->assertSame('Skills Lab Checklist Requirements', $q->checklist->title);
+    }
+
+    public function test_monthly_reports_additionally_requires_biomed_maintenance(): void
+    {
+        $this->makeType();
+        $this->seed(SkillsLabSeeder::class);
+
+        $q = AssessmentQuestion::where('question_code', 'SKILLS_YES_MONTHLY_REPORTS')->firstOrFail();
+        $this->assertSame('and', $q->display_conditions['operator']);
+        $this->assertSame(
+            [
+                ['question_code' => 'SKILLS_HAS_LAB', 'operator' => 'equals', 'value' => 'Yes'],
+                ['question_code' => 'SKILLS_YES_BIOMED_MAINTENANCE', 'operator' => 'equals', 'value' => 'Yes'],
+            ],
+            $q->display_conditions['conditions']
+        );
+    }
+
+    public function test_questions_are_numbered_in_one_continuous_sequence(): void
+    {
+        $this->makeType();
+        $this->seed(SkillsLabSeeder::class);
+
+        $this->assertSame('1. Is there a functional skills lab?', AssessmentQuestion::where('question_code', 'SKILLS_HAS_LAB')->value('question_text'));
+        $this->assertSame('20. Newborn Anne Manikin that can be intubated and has an umbilicus for UVC insertion?', AssessmentQuestion::where('question_code', 'SKILLS_YES_MANIKIN_ANNE')->value('question_text'));
+        $this->assertSame('22. Is there a lockable storage area for the equipment to be used in skills teaching and simulation?', AssessmentQuestion::where('question_code', 'SKILLS_NO_LOCKABLE_STORAGE')->value('question_text'));
+    }
+
+    public function test_power_backup_is_a_yes_no_gate_with_a_reason_on_no(): void
+    {
+        $this->makeType();
+        $this->seed(SkillsLabSeeder::class);
+
+        $q = AssessmentQuestion::where('question_code', 'SKILLS_YES_POWER_BACKUP')->firstOrFail();
+        $this->assertSame('yes_no', $q->question_type);
+        $this->assertSame('3. Is there a power back up system?', $q->question_text);
+        $this->assertSame(['No'], $q->requires_explanation_on);
+        $this->assertSame('Reason', $q->explanation_label);
+    }
+
+    public function test_power_backup_type_dropdown_only_shows_once_power_backup_is_yes(): void
+    {
+        $this->makeType();
+        $this->seed(SkillsLabSeeder::class);
+
+        $q = AssessmentQuestion::where('question_code', 'SKILLS_YES_POWER_BACKUP_TYPE')->firstOrFail();
+        $this->assertSame('multi_select', $q->question_type);
+        $this->assertSame(['Generator', 'Solar', 'Other'], $q->options);
+        $this->assertSame(
+            ['question_code' => 'SKILLS_YES_POWER_BACKUP', 'operator' => 'equals', 'value' => 'Yes'],
+            $q->display_conditions
+        );
     }
 }

@@ -38,6 +38,7 @@ class QuestionFieldBuilder
             'number' => static::buildNumberField($question, $fieldName, $response),
             'text' => static::buildTextField($question, $fieldName, $response),
             'select' => static::buildSelectField($question, $fieldName, $response),
+            'multi_select' => static::buildMultiSelectField($question, $fieldName, $response),
             'radio' => static::buildRadioField($question, $fieldName, $response),
             'group_completeness' => static::buildGroupCompletenessField($question, $fieldName, $response),
             'repeater' => static::buildRepeaterField($question, $fieldName, $response),
@@ -80,7 +81,9 @@ class QuestionFieldBuilder
                 Forms\Components\Actions\Action::make("checklist_{$question->id}")
                     ->label('View checklist')
                     ->icon('heroicon-o-clipboard-document-list')
-                    ->color('gray')
+                    ->color('info')
+                    ->button()
+                    ->outlined()
                     ->modalHeading($question->checklist?->title ?? 'Checklist')
                     ->modalContent(fn () => view('filament.assessment.checklist-modal', [
                         'checklist' => $question->checklist,
@@ -242,6 +245,41 @@ class QuestionFieldBuilder
             ->required($question->is_required)
             ->searchable()
             ->default($response?->response_value)
+            ->helperText($question->help_text)
+            ->live();
+    }
+
+    /**
+     * A multi-select dropdown — same options shape as buildSelectField, but
+     * lets more than one answer be picked (e.g. a facility running both a
+     * generator and solar backup). Stored as a JSON array in
+     * response_value, same shape read back here — see saveResponses()'s
+     * matching multi_select branch for the write side.
+     */
+    public static function buildMultiSelectField(AssessmentQuestion|SurveyQuestion $question, string $fieldName, AssessmentQuestionResponse|SurveyQuestionResponse|null $response)
+    {
+        $options = $question->options;
+        if (is_string($options)) {
+            $options = json_decode($options, true) ?? [];
+        }
+
+        $optionsArray = is_array($options) ? array_combine($options, $options) : [];
+
+        $selected = [];
+        if ($response?->response_value) {
+            $decoded = json_decode($response->response_value, true);
+            if (is_array($decoded)) {
+                $selected = $decoded;
+            }
+        }
+
+        return Forms\Components\Select::make($fieldName)
+            ->label($question->question_text)
+            ->options($optionsArray)
+            ->multiple()
+            ->required($question->is_required)
+            ->searchable()
+            ->default($selected)
             ->helperText($question->help_text)
             ->live();
     }

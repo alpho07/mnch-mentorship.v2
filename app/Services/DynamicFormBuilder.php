@@ -369,6 +369,13 @@ class DynamicFormBuilder
                 $responseValue = json_encode(array_values($responseValue ?? []));
             }
 
+            // Multi-select — Filament's Select::multiple() submits an
+            // array of the chosen option values; store it as one JSON
+            // blob, same shape read back by buildMultiSelectField() above.
+            if ($question->question_type === 'multi_select') {
+                $responseValue = json_encode(array_values($responseValue ?? []));
+            }
+
             // NBU/Paediatric metadata
             if (in_array($question->question_code, ['INFRA_NBU', 'INFRA_PAED'])) {
                 if ($responseValue === 'Yes') {
@@ -387,12 +394,12 @@ class DynamicFormBuilder
                 }
             }
 
-            // Score — mortality_three_month and repeater are data-only,
-            // never scored regardless of the question's is_scored flag
-            // (neither a 3-count value nor a row array has a meaningful
-            // scoring_map entry).
+            // Score — mortality_three_month, repeater, and multi_select are
+            // data-only, never scored regardless of the question's
+            // is_scored flag (none of a 3-count value, a row array, or a
+            // set of picked options has a meaningful scoring_map entry).
             $score = null;
-            if (! in_array($question->question_type, ['mortality_three_month', 'repeater'], true) && $question->is_scored && $question->scoring_map) {
+            if (! in_array($question->question_type, ['mortality_three_month', 'repeater', 'multi_select'], true) && $question->is_scored && $question->scoring_map) {
                 $score = $question->scoring_map[$responseValue] ?? 0;
             }
 

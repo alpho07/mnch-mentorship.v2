@@ -205,9 +205,18 @@ class AssessmentPdfReportService {
         return [
             // Simple structure for HTML
             'responses' => $responses->map(function ($response) {
+                $displayValue = $response->response_value ?? 'N/A';
+
+                if ($response->question->question_type === 'multi_select' && $displayValue !== 'N/A') {
+                    $selected = json_decode($displayValue, true);
+                    if (is_array($selected)) {
+                        $displayValue = $selected === [] ? 'N/A' : implode(', ', $selected);
+                    }
+                }
+
                 return [
                     'question' => $response->question->question_text,
-                    'response' => $response->response_value ?? 'N/A',
+                    'response' => $displayValue,
                     'score' => $response->score ?? 0,
                     'explanation' => $response->explanation,
                 ];
