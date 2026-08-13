@@ -14,7 +14,7 @@ class AssessmentTypeInterpolateTest extends TestCase
     {
         $type = AssessmentType::create([
             'name' => 'Interp Test', 'code' => 'INTERP_TEST', 'is_active' => true,
-            'metadata' => ['parameters' => ['timeline' => 'Neonates 7-28 days']],
+            'template_parameters' => ['timeline' => 'Neonates 7-28 days'],
         ]);
 
         $this->assertSame('Select agreed timelines: Neonates 7-28 days', $type->interpolate('Select agreed timelines: {{timeline}}'));

@@ -30,14 +30,14 @@ class FacilityAssessment2026Seeder extends Seeder
                 'version' => '2026',
                 'category_id' => $category?->id,
                 'is_active' => true,
-                'metadata' => ['parameters' => ['quality_of_care_timeline' => 'Neonates 7–28 days']],
+                'template_parameters' => ['quality_of_care_timeline' => 'Neonates 7–28 days'],
             ]
         );
 
-        // Existing rows (a re-run) won't have their metadata re-applied by
+        // Existing rows (a re-run) won't have their attributes re-applied by
         // firstOrCreate — keep the parameter in sync explicitly.
-        if (($type->metadata['parameters']['quality_of_care_timeline'] ?? null) !== 'Neonates 7–28 days') {
-            $type->update(['metadata' => ['parameters' => ['quality_of_care_timeline' => 'Neonates 7–28 days']]]);
+        if (($type->template_parameters['quality_of_care_timeline'] ?? null) !== 'Neonates 7–28 days') {
+            $type->update(['template_parameters' => ['quality_of_care_timeline' => 'Neonates 7–28 days']]);
         }
 
         $this->call([

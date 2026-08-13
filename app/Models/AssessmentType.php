@@ -20,6 +20,7 @@ class AssessmentType extends Model
         'is_active',
         'validity_period_days',
         'metadata',
+        'template_parameters',
         'period_start',
         'period_end',
     ];
@@ -27,6 +28,7 @@ class AssessmentType extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'metadata' => 'array',
+        'template_parameters' => 'array',
         'period_start' => 'date',
         'period_end' => 'date',
     ];
@@ -57,7 +59,7 @@ class AssessmentType extends Model
             return $text;
         }
 
-        $parameters = $this->metadata['parameters'] ?? [];
+        $parameters = $this->template_parameters ?? [];
 
         return preg_replace_callback('/\{\{(\w+)\}\}/', function (array $matches) use ($parameters) {
             return $parameters[$matches[1]] ?? $matches[0];

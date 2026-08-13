@@ -21,7 +21,7 @@ class FacilityAssessment2026SeederTest extends TestCase
         $this->assertNotNull($type);
         $this->assertSame('2026', $type->version);
         $this->assertTrue($type->is_active);
-        $this->assertSame('Neonates 7–28 days', $type->metadata['parameters']['quality_of_care_timeline'] ?? null);
+        $this->assertSame('Neonates 7–28 days', $type->template_parameters['quality_of_care_timeline'] ?? null);
     }
 
     public function test_creates_facility_profile_and_bed_capacity_as_empty_informational_sections(): void

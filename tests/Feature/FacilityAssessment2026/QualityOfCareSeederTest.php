@@ -17,7 +17,7 @@ class QualityOfCareSeederTest extends TestCase
     {
         return AssessmentType::create([
             'name' => 'QoC Test', 'code' => 'STANDARD_FACILITY_ASSESSMENT_2026', 'is_active' => true,
-            'metadata' => ['parameters' => ['quality_of_care_timeline' => 'Neonates 7–28 days']],
+            'template_parameters' => ['quality_of_care_timeline' => 'Neonates 7–28 days'],
         ]);
     }
 
