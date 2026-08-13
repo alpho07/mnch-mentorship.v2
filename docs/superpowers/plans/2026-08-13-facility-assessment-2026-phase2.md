@@ -1656,7 +1656,7 @@ git commit -m "feat: seed the 2026 Health Products departments, categories, and 
 - Test: `tests/Feature/FacilityAssessment2026/InformationSystemsSeederTest.php`
 
 **Interfaces:**
-- Produces: `information_systems` section, 61 questions: 2 (doc type + paper-based availability) + 44 (22 MoH forms × Available/Complete) + 3 (KHIS upload, KHIS responsible, uses-EMR gate) + 7 (5 EMR reports + EMR access + EMR KHIS upload) + 5 (attendance register, assessment records, feedback mechanism, mentorship data entry, internet).
+- Produces: `information_systems` section, 65 questions: 2 (doc type + paper-based availability) + 48 (24 MoH forms × Available/Complete) + 3 (KHIS upload, KHIS responsible, uses-EMR gate) + 7 (5 EMR reports + EMR access + EMR KHIS upload) + 5 (attendance register, assessment records, feedback mechanism, mentorship data entry, internet).
 
 - [ ] **Step 1: Write the failing test**
 
