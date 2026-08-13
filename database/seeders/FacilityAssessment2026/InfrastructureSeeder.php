@@ -37,17 +37,17 @@ class InfrastructureSeeder extends Seeder
             );
         };
 
-        $create(['question_code' => 'INFRA_HAS_NBU', 'question_text' => 'Do you have a newborn unit (If yes show entry for bed capacity under newborn unit below)']);
+        $create(['question_code' => 'INFRA_HAS_NBU', 'question_text' => 'Do you have a newborn unit?']);
         $order = $this->bedCountPair($section, $order, 'INFRA_NBU_GENERAL', 'General NBU beds', 'INFRA_HAS_NBU');
         $order = $this->bedCountPair($section, $order, 'INFRA_NBU_KMC', 'KMC beds', 'INFRA_HAS_NBU');
 
-        $create(['question_code' => 'INFRA_HAS_PAED', 'question_text' => 'Do you have a paediatric unit (If yes show entry for bed capacity under pediatric unit below)']);
+        $create(['question_code' => 'INFRA_HAS_PAED', 'question_text' => 'Do you have a paediatric unit?']);
         $order = $this->bedCountPair($section, $order, 'INFRA_PAED_GENERAL', 'General ward beds', 'INFRA_HAS_PAED');
 
-        $create(['question_code' => 'INFRA_HAS_NICU', 'question_text' => 'Do you have a NICU (If yes show entry for bed capacity under NICU)']);
+        $create(['question_code' => 'INFRA_HAS_NICU', 'question_text' => 'Do you have a NICU?']);
         $order = $this->bedCountPair($section, $order, 'INFRA_NICU', 'NICU Beds', 'INFRA_HAS_NICU');
 
-        $create(['question_code' => 'INFRA_HAS_PICU', 'question_text' => 'Do you have a PICU (If yes show entry for bed capacity under PICU)']);
+        $create(['question_code' => 'INFRA_HAS_PICU', 'question_text' => 'Do you have a PICU?']);
         $order = $this->bedCountPair($section, $order, 'INFRA_PICU', 'PICU Beds', 'INFRA_HAS_PICU');
 
         $create(['question_code' => 'INFRA_SEPARATE_NBU_PAED', 'question_text' => 'Is there a separate newborn and paediatric unit']);
