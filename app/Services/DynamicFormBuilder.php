@@ -75,8 +75,8 @@ class DynamicFormBuilder
                 continue;
             }
 
-            if ($question->indent_level > 0 && method_exists($field, 'extraAttributes')) {
-                $field->extraAttributes(['style' => 'margin-left: 1.5rem;'], merge: true);
+            if ($question->indent_level > 0 && method_exists($field, 'extraFieldWrapperAttributes')) {
+                $field->extraFieldWrapperAttributes(['style' => 'margin-left: 1.5rem;'], merge: true);
             }
 
             if (! $started || $question->group !== $currentGroup) {

@@ -61,4 +61,24 @@ class AssessmentLineItemQuestionsTest extends TestCase
         $response->assertSee('b) Fr-8', false);
         $response->assertSee('c) Fr-10', false);
     }
+
+    public function test_indented_number_question_gets_extra_field_wrapper_style_not_extra_attributes(): void
+    {
+        $type = AssessmentType::create(['name' => 'Indent Wrapper Test', 'code' => 'INDENT_WRAPPER_TEST', 'is_active' => true]);
+        $section = AssessmentSection::create([
+            'assessment_type_id' => $type->id, 'name' => 'Infrastructure', 'code' => 'infrastructure_wrap',
+            'section_type' => AssessmentSection::KIND_QUESTION_GROUP, 'order' => 1, 'is_active' => true,
+        ]);
+        AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'INDENT_NUMBER_Q',
+            'question_text' => 'Bed count', 'question_type' => 'number', 'indent_level' => 1,
+            'order' => 1, 'is_active' => true,
+        ]);
+
+        $fields = \App\Services\DynamicFormBuilder::buildForSection($section->id, null);
+        $field = $fields[0];
+
+        $this->assertSame(['style' => 'margin-left: 1.5rem;'], $field->getExtraFieldWrapperAttributes());
+        $this->assertArrayNotHasKey('style', $field->getExtraAttributes());
+    }
 }
