@@ -39,7 +39,9 @@ class EditHumanResources extends EditRecord
                 ->modalDescription('Select which cadres are present at this facility. Unchecked cadres will be hidden from the form — any data already entered for them is preserved.')
                 ->modalSubmitActionLabel('Save Selection')
                 ->fillForm(function () {
-                    $allCadreIds = MainCadre::where('is_active', true)->pluck('id')->toArray();
+                    $allCadreIds = MainCadre::where('is_active', true)
+                        ->where('assessment_type_id', $this->record->assessment_type_id)
+                        ->pluck('id')->toArray();
                     $excludedIds = $this->record->excluded_cadre_ids ?? $this->defaultExcludedCadreIds();
 
                     return [
@@ -50,12 +52,16 @@ class EditHumanResources extends EditRecord
                     Forms\Components\CheckboxList::make('included_cadre_ids')
                         ->label('Cadres')
                         ->helperText('Uncheck any cadre not applicable to this facility.')
-                        ->options(fn () => MainCadre::where('is_active', true)->orderBy('order')->pluck('name', 'id')->toArray())
+                        ->options(fn () => MainCadre::where('is_active', true)
+                            ->where('assessment_type_id', $this->record->assessment_type_id)
+                            ->orderBy('order')->pluck('name', 'id')->toArray())
                         ->bulkToggleable()
                         ->columns(2),
                 ])
                 ->action(function (array $data) {
-                    $allCadreIds = MainCadre::where('is_active', true)->pluck('id')->toArray();
+                    $allCadreIds = MainCadre::where('is_active', true)
+                        ->where('assessment_type_id', $this->record->assessment_type_id)
+                        ->pluck('id')->toArray();
                     $includedIds = array_map('intval', $data['included_cadre_ids'] ?? []);
                     $excludedIds = array_values(array_diff($allCadreIds, $includedIds));
 
@@ -132,6 +138,7 @@ class EditHumanResources extends EditRecord
     private function defaultExcludedCadreIds(): array
     {
         return MainCadre::where('is_active', true)
+            ->where('assessment_type_id', $this->record->assessment_type_id)
             ->where('name', 'Others')
             ->pluck('id')
             ->toArray();
@@ -142,6 +149,7 @@ class EditHumanResources extends EditRecord
         $excludedIds = $this->record->excluded_cadre_ids ?? $this->defaultExcludedCadreIds();
 
         $cadres = MainCadre::where('is_active', true)
+            ->where('assessment_type_id', $this->record->assessment_type_id)
             ->when(! empty($excludedIds), fn ($q) => $q->whereNotIn('id', $excludedIds))
             ->orderBy('order')
             ->get();

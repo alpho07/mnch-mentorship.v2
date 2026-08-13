@@ -69,10 +69,13 @@ class EditHealthProducts extends EditRecord
     public function form(Form $form): Form
     {
         $departments = AssessmentDepartment::where('is_active', true)
+            ->where('assessment_type_id', $this->record->assessment_type_id)
             ->orderBy('order')
             ->get();
 
-        $categories = CommodityCategory::orderBy('order')->get();
+        $categories = CommodityCategory::where('assessment_type_id', $this->record->assessment_type_id)
+            ->orderBy('order')
+            ->get();
 
         return $form->schema([
             Forms\Components\Tabs::make('Departments')

@@ -22,8 +22,12 @@ class CommodityScoringService {
             return;
         }
 
-        // Get all categories
-        $categories = CommodityCategory::orderBy('order')->get();
+        // Get all categories belonging to the same template as this
+        // department — never the global list, or a 2025-scoped assessment
+        // would score against 2026 categories (and vice versa).
+        $categories = CommodityCategory::where('assessment_type_id', $department->assessment_type_id)
+            ->orderBy('order')
+            ->get();
 
         foreach ($categories as $category) {
             $this->recalculateDepartmentCategoryScore($assessmentId, $departmentId, $category->id);
