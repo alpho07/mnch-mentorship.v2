@@ -16,20 +16,32 @@ class HealthProductsSeeder extends Seeder
 
     private const NICU_GATE = ['question_code' => 'INFRA_HAS_NICU', 'operator' => 'equals', 'value' => 'Yes'];
 
+    private const PICU_GATE = ['question_code' => 'INFRA_HAS_PICU', 'operator' => 'equals', 'value' => 'Yes'];
+
+    private const NICU_OR_PICU_GATE = ['operator' => 'or', 'conditions' => [self::NICU_GATE, self::PICU_GATE]];
+
+    private const SKILLS_LAB_GATE = ['question_code' => 'SKILLS_HAS_LAB', 'operator' => 'equals', 'value' => 'Yes'];
+
     /**
      * Category => ordered list of rows. A row is either:
      *   - a plain string (single commodity, no split)
      *   - [groupLabel, [item, item, ...]] (split into lettered/indented commodities)
-     *   - [name, 'nicu'] (single commodity, individually NICU-gated)
-     *   - [groupLabel, [item, ...], 'nicu'] (split AND NICU-gated on every item)
+     *   - [name, gateFlag] (single commodity, individually gated — see GATE_FLAGS)
+     *   - [groupLabel, [item, ...], gateFlag] (split AND gated on every item)
+     * Within a split group's item list, an item is either a plain string, or
+     * [name, 'no_nbu'] to exclude that one item from the NBU/Newborn
+     * department while every other item in the group still applies there.
      */
     private const CATEGORIES = [
         'AIRWAY' => [
             'Functional suction machine (including ability for pressure adjustment)',
-            ['Suction catheters size', ['Fr-6', 'Fr-8', 'Fr-10', 'Fr12']],
+            ['Suction catheters size', ['Fr-6', 'Fr-8', 'Fr-10', 'Fr-12']],
             'Penguin Sucker',
             ['Oropharyngeal Airway of appropriate sizes', ['00', '0', '1', '2', '3', '4']],
-            ['ETT', ['2.5', '3.0', '3.5', '4.0', '4.5', '5.0', '5.5', '6.0'], 'nicu'],
+            // Sizes 4.0 and up are for PICU-age patients, not newborns —
+            // excluded from NBU specifically; the group as a whole only
+            // shows at all once NICU or PICU is confirmed available.
+            ['ETT', ['2.5', '3.0', '3.5', ['4.0', 'no_nbu'], ['4.5', 'no_nbu'], ['5.0', 'no_nbu'], ['5.5', 'no_nbu'], ['6.0', 'no_nbu']], 'nicu_or_picu'],
             ['Magill forceps', 'nicu'],
             ['Umbilical vein catheters', 'nicu'],
             ['Umbilical artery catheters', 'nicu'],
@@ -102,10 +114,10 @@ class HealthProductsSeeder extends Seeder
             'TEO',
             'Chlorhexidine digluconate 7.1%',
             'Caffeine citrate',
-            ['surfactant', 'nicu'],
+            ['surfactant', 'nicu_or_picu'],
             ['Preterm supplements', ['Multivitamins', 'Vitamin D 400 IU', 'Folate tabs', 'Iron', 'Calcium']],
             'Phenobarbital',
-            ['Midazolam', 'nicu'],
+            ['Midazolam', 'nicu_or_picu'],
             'Diazepam',
             'Leviteracetam',
             'Phenytoin',
@@ -129,8 +141,8 @@ class HealthProductsSeeder extends Seeder
             'Resomal',
             'Zinc sulphate/ORS-copack',
             ['Therapeutic feeds', ['F75', 'F100', 'RUTF']],
-            ['Insulin', ['Soluble insulin', 'long acting insulin']],
-            ['Salbutamol respirator solution', ['Salbutamol inhaler']],
+            ['Insulin', ['Soluble insulin', ['long acting insulin', 'no_nbu']]],
+            ['Salbutamol respirator solution', [['Salbutamol inhaler', 'no_nbu']]],
             'Prednisone',
             'Budesonide inhaler',
             'Ipratropium bromide',
@@ -165,9 +177,27 @@ class HealthProductsSeeder extends Seeder
 
         $departments = collect(self::DEPARTMENTS)->map(fn ($name, $order) => AssessmentDepartment::updateOrCreate(
             ['assessment_type_id' => $type->id, 'slug' => Str::slug($name)],
-            ['name' => $name, 'order' => $order + 1, 'is_active' => true]
+            [
+                'name' => $name,
+                'order' => $order + 1,
+                'is_active' => true,
+                'display_conditions' => $name === 'Skills lab' ? self::SKILLS_LAB_GATE : null,
+            ]
         ));
         $departmentIds = $departments->pluck('id')->all();
+        $nbuId = $departments->firstWhere('name', 'NBU')?->id;
+        $departmentIdsExcludingNbu = array_values(array_diff($departmentIds, [$nbuId]));
+
+        // One-time cleanup: 'Fr12' was renamed to 'Fr-12', and the 'ETT'
+        // group label was briefly renamed to 'ETT (Size 2 - Size4)' then
+        // reverted back to plain 'ETT' — createCommodity()'s natural key
+        // includes name/group_label, so each rename creates a new row via
+        // updateOrCreate rather than updating the old one, leaving the
+        // stale rows orphaned on any environment that ran an earlier
+        // revision of this seeder.
+        Commodity::whereIn('commodity_category_id', CommodityCategory::where('assessment_type_id', $type->id)->pluck('id'))
+            ->where(fn ($q) => $q->where('name', 'Fr12')->orWhere('group_label', 'ETT (Size 2 - Size4)'))
+            ->delete();
 
         $categoryOrder = 0;
         foreach (self::CATEGORIES as $categoryName => $rows) {
@@ -179,7 +209,7 @@ class HealthProductsSeeder extends Seeder
 
             $order = 0;
             foreach ($rows as $row) {
-                $order = $this->seedRow($category, $row, $order, $departmentIds);
+                $order = $this->seedRow($category, $row, $order, $departmentIds, $departmentIdsExcludingNbu);
             }
         }
 
@@ -187,7 +217,7 @@ class HealthProductsSeeder extends Seeder
         $this->command->info("  ✓ health_products: 5 departments, 8 categories, {$commodityCount} commodities.");
     }
 
-    private function seedRow(CommodityCategory $category, mixed $row, int $order, array $departmentIds): int
+    private function seedRow(CommodityCategory $category, mixed $row, int $order, array $departmentIds, array $departmentIdsExcludingNbu): int
     {
         // Single item, plain: 'Name'
         if (is_string($row)) {
@@ -196,22 +226,44 @@ class HealthProductsSeeder extends Seeder
             return $order;
         }
 
-        // Single item, NICU-gated: ['Name', 'nicu']
-        if (count($row) === 2 && $row[1] === 'nicu') {
-            $this->createCommodity($category, $row[0], null, 0, ++$order, self::NICU_GATE, $departmentIds);
+        // Single item, gated: ['Name', 'nicu'|'picu'|'nicu_or_picu']
+        if (count($row) === 2 && is_string($row[1]) && $this->isGateFlag($row[1])) {
+            $this->createCommodity($category, $row[0], null, 0, ++$order, $this->gateFor($row[1]), $departmentIds);
 
             return $order;
         }
 
-        // Split group: [groupLabel, [items]] or [groupLabel, [items], 'nicu']
+        // Split group: [groupLabel, [items]] or [groupLabel, [items], gateFlag]
         [$groupLabel, $items] = $row;
-        $nicuGated = ($row[2] ?? null) === 'nicu';
+        $gate = isset($row[2]) && $this->isGateFlag($row[2]) ? $this->gateFor($row[2]) : null;
 
         foreach ($items as $item) {
-            $this->createCommodity($category, $item, $groupLabel, 1, ++$order, $nicuGated ? self::NICU_GATE : null, $departmentIds);
+            if (is_array($item)) {
+                [$itemName, $itemFlag] = $item;
+                $itemDepartmentIds = $itemFlag === 'no_nbu' ? $departmentIdsExcludingNbu : $departmentIds;
+            } else {
+                $itemName = $item;
+                $itemDepartmentIds = $departmentIds;
+            }
+
+            $this->createCommodity($category, $itemName, $groupLabel, 1, ++$order, $gate, $itemDepartmentIds);
         }
 
         return $order;
+    }
+
+    private function isGateFlag(string $value): bool
+    {
+        return in_array($value, ['nicu', 'picu', 'nicu_or_picu'], true);
+    }
+
+    private function gateFor(string $flag): array
+    {
+        return match ($flag) {
+            'nicu' => self::NICU_GATE,
+            'picu' => self::PICU_GATE,
+            'nicu_or_picu' => self::NICU_OR_PICU_GATE,
+        };
     }
 
     private function createCommodity(CommodityCategory $category, string $name, ?string $groupLabel, int $indentLevel, int $order, ?array $displayConditions, array $departmentIds): void

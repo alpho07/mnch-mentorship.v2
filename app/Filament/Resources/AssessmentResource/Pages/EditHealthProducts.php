@@ -145,16 +145,31 @@ class EditHealthProducts extends EditRecord
             );
 
             $rows = [];
+            // Numbers each top-level item — a standalone commodity, or a
+            // lettered group as one unit (its a)/b)/c) members share the
+            // group header's number rather than getting their own) —
+            // restarting at 1 for every category, same idea as the
+            // checklist modal's per-group item numbering.
+            $number = 0;
             foreach ($annotated as ['item' => $commodity, 'letter' => $letter, 'is_group_start' => $isGroupStart]) {
                 if ($isGroupStart) {
+                    $number++;
                     $rows[] = Forms\Components\Placeholder::make("group_header_{$dept->id}_{$commodity->id}")
                         ->label('')
-                        ->content($commodity->group_label)
+                        ->content("{$number}. {$commodity->group_label}")
                         ->extraAttributes(['class' => 'font-semibold'])
                         ->columnSpanFull();
+                } elseif ($letter === null) {
+                    $number++;
                 }
 
-                $label = $letter !== null ? "{$letter}) {$commodity->name}" : $commodity->name;
+                if ($letter !== null) {
+                    $label = "{$letter}) {$commodity->name}";
+                } elseif ($isGroupStart) {
+                    $label = $commodity->name;
+                } else {
+                    $label = "{$number}. {$commodity->name}";
+                }
                 $rowStyle = $commodity->indent_level > 0 ? ['style' => 'margin-left: 1.5rem;'] : [];
 
                 $rows[] = Forms\Components\Grid::make(2)
@@ -169,17 +184,14 @@ class EditHealthProducts extends EditRecord
                             ->options([
                                 1 => 'Available',
                                 0 => 'Not Available',
-                                'na' => 'Not Applicable',
                             ])
                             ->colors([
                                 1 => 'success',
                                 0 => 'danger',
-                                'na' => 'gray',
                             ])
                             ->icons([
                                 1 => 'heroicon-o-check-circle',
                                 0 => 'heroicon-o-x-circle',
-                                'na' => 'heroicon-o-minus-circle',
                             ])
                             ->inline()
                             ->columnSpan(1),
