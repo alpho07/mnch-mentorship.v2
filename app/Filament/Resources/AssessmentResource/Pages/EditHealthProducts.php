@@ -82,6 +82,12 @@ class EditHealthProducts extends EditRecord
             ->filter(fn (CommodityCategory $cat) => $this->isBlockVisible($cat->display_conditions, $responsesByCode));
 
         return $form->schema([
+            Forms\Components\View::make('filament.pages.assessment.section-chrome')
+                ->viewData(fn () => [
+                    'sections' => $this->getAllSections(),
+                    'currentKey' => $this->section->code,
+                ])
+                ->columnSpanFull(),
             Forms\Components\Tabs::make('Departments')
                 ->tabs(
                     $departments->map(function ($dept) use ($categories, $responsesByCode) {
