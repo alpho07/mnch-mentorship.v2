@@ -112,7 +112,7 @@ class EditHumanResources extends EditRecord
     {
         $responses = HumanResourceResponse::where('assessment_id', $this->record->id)->get();
 
-        $data = [];
+        $data = ['tots_count' => $this->record->tots_count];
 
         foreach ($responses as $response) {
             $prefix = "hr_{$response->cadre_id}_";
@@ -155,6 +155,12 @@ class EditHumanResources extends EditRecord
             ->get();
 
         return $form->schema([
+            Forms\Components\TextInput::make('tots_count')
+                ->label('No of TOTs in the facility')
+                ->numeric()
+                ->integer()
+                ->minValue(0)
+                ->columnSpanFull(),
             Forms\Components\Section::make('Human Resources Assessment')
                 ->description('Enter staff training counts for each cadre')
                 ->schema(
@@ -208,6 +214,9 @@ class EditHumanResources extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $this->record->update(['tots_count' => $data['tots_count'] ?? null]);
+        unset($data['tots_count']);
+
         $cadres = MainCadre::where('is_active', true)
             ->where('assessment_type_id', $this->record->assessment_type_id)
             ->get();

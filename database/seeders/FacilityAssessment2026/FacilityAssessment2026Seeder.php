@@ -46,7 +46,7 @@ class FacilityAssessment2026Seeder extends Seeder
             InfrastructureSeeder::class,
             BedCapacitySeeder::class,
             SkillsLabSeeder::class,
-            // HumanResourcesSeeder::class, // Task 5
+            HumanResourcesSeeder::class,
             // HealthProductsSeeder::class, // Task 6
             // InformationSystemsSeeder::class, // Task 7
             // QualityOfCareSeeder::class, // Task 8
