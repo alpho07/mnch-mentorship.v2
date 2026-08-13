@@ -75,6 +75,21 @@ class QuestionFieldBuilder
             ->live()
             ->default($response?->response_value);
 
+        if ($question instanceof AssessmentQuestion && $question->checklist_id) {
+            $field->hintAction(
+                Forms\Components\Actions\Action::make("checklist_{$question->id}")
+                    ->label('View checklist')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->color('gray')
+                    ->modalHeading($question->checklist?->title ?? 'Checklist')
+                    ->modalContent(fn () => view('filament.assessment.checklist-modal', [
+                        'checklist' => $question->checklist,
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Close')
+            );
+        }
+
         if ($question->help_text) {
             $field->helperText($question->help_text);
         }

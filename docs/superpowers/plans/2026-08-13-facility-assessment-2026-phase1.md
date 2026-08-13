@@ -1658,11 +1658,11 @@ class AssessmentChecklistTest extends TestCase
             'is_active' => true,
         ]);
 
-        $field = QuestionFieldBuilder::buildField($question, null);
+        $field = QuestionFieldBuilder::buildField($question->fresh(), null);
         $radio = $field->getChildComponents()[0];
 
         $this->assertCount(1, $radio->getHintActions());
-        $this->assertSame('checklist_'.$question->id, $radio->getHintActions()[0]->getName());
+        $this->assertArrayHasKey('checklist_'.$question->id, $radio->getHintActions());
     }
 
     public function test_a_question_without_a_checklist_has_no_hint_action(): void
@@ -1681,7 +1681,7 @@ class AssessmentChecklistTest extends TestCase
             'is_active' => true,
         ]);
 
-        $field = QuestionFieldBuilder::buildField($question, null);
+        $field = QuestionFieldBuilder::buildField($question->fresh(), null);
         $radio = $field->getChildComponents()[0];
 
         $this->assertCount(0, $radio->getHintActions());

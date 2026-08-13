@@ -13,6 +13,7 @@ class AssessmentQuestion extends Model
         'question_code',
         'question_text',
         'help_text',
+        'checklist_id',
         'question_type',
         'options',
         'is_required',
@@ -56,6 +57,11 @@ class AssessmentQuestion extends Model
     public function responses(): HasMany
     {
         return $this->hasMany(AssessmentQuestionResponse::class, 'assessment_question_id');
+    }
+
+    public function checklist(): BelongsTo
+    {
+        return $this->belongsTo(AssessmentChecklist::class, 'checklist_id');
     }
 
     /**
