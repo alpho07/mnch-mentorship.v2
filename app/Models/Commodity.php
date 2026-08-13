@@ -12,6 +12,8 @@ class Commodity extends Model {
     protected $fillable = [
         'commodity_category_id',
         'name',
+        'group_label',
+        'indent_level',
         'description',
         'order',
         'is_active',
@@ -19,6 +21,7 @@ class Commodity extends Model {
     protected $casts = [
         'is_active' => 'boolean',
         'order' => 'integer',
+        'indent_level' => 'integer',
     ];
 
     // ==========================================

@@ -105,40 +105,58 @@ class EditHealthProducts extends EditRecord
                 return null;
             }
 
+            $annotated = \App\Services\FormKernel\LineItemGrouper::annotate(
+                $commodities->all(),
+                fn (Commodity $c) => $c->group_label,
+                fn (Commodity $c) => $c->indent_level,
+            );
+
+            $rows = [];
+            foreach ($annotated as ['item' => $commodity, 'letter' => $letter, 'is_group_start' => $isGroupStart]) {
+                if ($isGroupStart) {
+                    $rows[] = Forms\Components\Placeholder::make("group_header_{$dept->id}_{$commodity->id}")
+                        ->label('')
+                        ->content($commodity->group_label)
+                        ->extraAttributes(['class' => 'font-semibold'])
+                        ->columnSpanFull();
+                }
+
+                $label = $letter !== null ? "{$letter}) {$commodity->name}" : $commodity->name;
+                $rowStyle = $commodity->indent_level > 0 ? ['style' => 'margin-left: 1.5rem;'] : [];
+
+                $rows[] = Forms\Components\Grid::make(2)
+                    ->schema([
+                        Forms\Components\Placeholder::make("label_{$dept->id}_{$commodity->id}")
+                            ->label('')
+                            ->content($label)
+                            ->extraAttributes($rowStyle)
+                            ->columnSpan(1),
+                        Forms\Components\ToggleButtons::make("commodities.{$dept->id}.{$commodity->id}")
+                            ->label('')
+                            ->options([
+                                1 => 'Available',
+                                0 => 'Not Available',
+                                'na' => 'Not Applicable',
+                            ])
+                            ->colors([
+                                1 => 'success',
+                                0 => 'danger',
+                                'na' => 'gray',
+                            ])
+                            ->icons([
+                                1 => 'heroicon-o-check-circle',
+                                0 => 'heroicon-o-x-circle',
+                                'na' => 'heroicon-o-minus-circle',
+                            ])
+                            ->inline()
+                            ->columnSpan(1),
+                    ])
+                    ->columns(2);
+            }
+
             return Forms\Components\Section::make($category->name)
                 ->description("({$commodities->count()} items)")
-                ->schema([
-                    Forms\Components\Grid::make(2)
-                        ->schema($commodities->map(function ($commodity) use ($dept) {
-                            return Forms\Components\Grid::make(2)
-                                ->schema([
-                                    Forms\Components\Placeholder::make("label_{$dept->id}_{$commodity->id}")
-                                        ->label('')
-                                        ->content($commodity->name)
-                                        ->columnSpan(1),
-                                    Forms\Components\ToggleButtons::make("commodities.{$dept->id}.{$commodity->id}")
-                                        ->label('')
-                                        ->options([
-                                            1 => 'Available',
-                                            0 => 'Not Available',
-                                            'na' => 'Not Applicable',
-                                        ])
-                                        ->colors([
-                                            1 => 'success',
-                                            0 => 'danger',
-                                            'na' => 'gray',
-                                        ])
-                                        ->icons([
-                                            1 => 'heroicon-o-check-circle',
-                                            0 => 'heroicon-o-x-circle',
-                                            'na' => 'heroicon-o-minus-circle',
-                                        ])
-                                        ->inline()
-                                        ->columnSpan(1),
-                                ])
-                                ->columns(2);
-                        })->toArray()),
-                ])
+                ->schema([Forms\Components\Grid::make(2)->schema($rows)])
                 ->collapsible();
         })->filter()->values()->toArray();
     }
