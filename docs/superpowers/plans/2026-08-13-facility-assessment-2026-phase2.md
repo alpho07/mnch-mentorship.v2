@@ -1263,7 +1263,7 @@ git commit -m "feat: seed the 2026 Human Resources cadre list with per-cell N/A 
 
 **Interfaces:**
 - Consumes: `INFRA_HAS_NICU` (Task 3).
-- Produces: `health_products` section, 5 `AssessmentDepartment`, 8 `CommodityCategory`, 156 `Commodity` rows (40 AIRWAY + 33 CIRCULATION + 8 DISABILITY + 4 EXPOSURE + 12 IPC + 4 NUTRITION + 45 MEDICINE/DRUGS + 14 OTHERS — recounted directly against the `CATEGORIES` array below, one commodity per split-list item), every commodity attached to all 5 departments.
+- Produces: `health_products` section, 5 `AssessmentDepartment`, 8 `CommodityCategory`, 160 `Commodity` rows (40 AIRWAY + 33 CIRCULATION + 8 DISABILITY + 4 EXPOSURE + 12 IPC + 4 NUTRITION + 45 MEDICINE/DRUGS + 14 OTHERS — verified directly against the seeded data), every commodity attached to all 5 departments. CIRCULATION's 33 includes "Stethoscope" as two distinct rows (it's listed twice in the source spreadsheet, rows 133 and 150) — the natural key includes `order` specifically so this doesn't collapse into one on re-seed.
 
 - [ ] **Step 1: Write the failing test**
 
