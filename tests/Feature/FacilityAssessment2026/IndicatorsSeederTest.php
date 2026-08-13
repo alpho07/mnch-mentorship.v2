@@ -47,4 +47,22 @@ class IndicatorsSeederTest extends TestCase
             $this->assertSame(['question_code' => 'INFOSYS_EMR_ACCESS', 'operator' => 'equals', 'value' => 'Yes'], $q->display_conditions);
         }
     }
+
+    public function test_newborn_and_paediatric_questions_are_split_into_separate_groups(): void
+    {
+        $this->makeType();
+        $this->seed(IndicatorsSeeder::class);
+
+        $newbornCount = AssessmentQuestion::where('group', 'Newborn Indicators')->count();
+        $paedCount = AssessmentQuestion::where('group', 'Paediatric Indicators')->count();
+
+        $this->assertSame(14, $newbornCount);
+        $this->assertSame(15, $paedCount);
+
+        $admissions = AssessmentQuestion::where('question_code', 'IND_NEWBORN_ADMISSIONS')->firstOrFail();
+        $this->assertSame('Newborn Indicators', $admissions->group);
+
+        $paedAdmissions = AssessmentQuestion::where('question_code', 'IND_PAED_ADMISSIONS')->firstOrFail();
+        $this->assertSame('Paediatric Indicators', $paedAdmissions->group);
+    }
 }

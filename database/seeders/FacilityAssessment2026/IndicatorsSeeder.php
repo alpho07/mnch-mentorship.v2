@@ -56,20 +56,36 @@ class IndicatorsSeeder extends Seeder
         );
 
         $order = 0;
-        foreach ([...self::NEWBORN, ...self::PAEDIATRIC] as [$code, $text, $indent]) {
-            $order++;
-            AssessmentQuestion::updateOrCreate(
-                ['assessment_section_id' => $section->id, 'question_code' => $code],
-                [
-                    'question_text' => $text,
-                    'question_type' => 'number',
-                    'is_scored' => false,
-                    'indent_level' => $indent,
-                    'display_conditions' => in_array($code, ['IND_NEWBORN_O2SAT_TAKEN', 'IND_NEWBORN_HEADTOTOE'], true) ? self::EMR_GATE : null,
-                    'order' => $order,
-                    'is_active' => true,
-                ]
-            );
+        $groups = [
+            'Newborn Indicators' => self::NEWBORN,
+            'Paediatric Indicators' => self::PAEDIATRIC,
+        ];
+
+        foreach ($groups as $groupLabel => $questions) {
+            foreach ($questions as [$code, $text, $indent]) {
+                $order++;
+                AssessmentQuestion::updateOrCreate(
+                    ['assessment_section_id' => $section->id, 'question_code' => $code],
+                    [
+                        'question_text' => $text,
+                        'question_type' => 'number',
+                        'is_scored' => false,
+                        'indent_level' => $indent,
+                        // Every question in one half shares this group, so
+                        // they render as one collapsible "Newborn
+                        // Indicators"/"Paediatric Indicators" section
+                        // (buildGroupFieldset()'s >7-fields path) instead
+                        // of one long mixed list — the indent-level-1 items
+                        // within each half are never consecutive to each
+                        // other, so LineItemGrouper still letters none of
+                        // them, same as before this change.
+                        'group' => $groupLabel,
+                        'display_conditions' => in_array($code, ['IND_NEWBORN_O2SAT_TAKEN', 'IND_NEWBORN_HEADTOTOE'], true) ? self::EMR_GATE : null,
+                        'order' => $order,
+                        'is_active' => true,
+                    ]
+                );
+            }
         }
 
         $this->command->info("  ✓ newborn_paediatric_indicators: {$order} questions (unscored).");
