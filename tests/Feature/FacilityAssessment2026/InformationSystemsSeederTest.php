@@ -81,25 +81,31 @@ class InformationSystemsSeederTest extends TestCase
         $this->assertSame('Completeness', $complete->question_text);
     }
 
-    public function test_emr_report_questions_are_gated_on_uses_emr_and_indented(): void
+    public function test_emr_report_questions_are_gated_on_doc_type_and_indented(): void
     {
         $this->makeType();
         $this->seed(InformationSystemsSeeder::class);
 
+        $expected = ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'intersects', 'value' => ['EMR']];
+
         $q = AssessmentQuestion::where('question_code', 'INFOSYS_EMR_REPORT_711')->firstOrFail();
-        $this->assertSame(['question_code' => 'INFOSYS_USES_EMR', 'operator' => 'equals', 'value' => 'Yes'], $q->display_conditions);
+        $this->assertSame($expected, $q->display_conditions);
         $this->assertSame(1, $q->indent_level);
 
         $access = AssessmentQuestion::where('question_code', 'INFOSYS_EMR_ACCESS')->firstOrFail();
+        $this->assertSame($expected, $access->display_conditions);
         $this->assertSame(1, $access->indent_level);
+
+        $khisUpload = AssessmentQuestion::where('question_code', 'INFOSYS_EMR_KHIS_UPLOAD')->firstOrFail();
+        $this->assertSame($expected, $khisUpload->display_conditions);
     }
 
-    public function test_attendance_register_assessment_records_and_paper_avail_complete_are_deactivated(): void
+    public function test_attendance_register_assessment_records_paper_avail_complete_and_uses_emr_are_deactivated(): void
     {
         $this->makeType();
         $this->seed(InformationSystemsSeeder::class);
 
-        foreach (['INFOSYS_ATTENDANCE_REGISTER', 'INFOSYS_ASSESSMENT_RECORDS', 'INFOSYS_PAPER_AVAIL_COMPLETE'] as $code) {
+        foreach (['INFOSYS_ATTENDANCE_REGISTER', 'INFOSYS_ASSESSMENT_RECORDS', 'INFOSYS_PAPER_AVAIL_COMPLETE', 'INFOSYS_USES_EMR'] as $code) {
             $q = AssessmentQuestion::where('question_code', $code)->firstOrFail();
             $this->assertFalse($q->is_active);
         }
