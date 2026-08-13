@@ -90,12 +90,14 @@ class EditSection extends EditRecord
             $fieldName = "question_response_{$resp->assessment_question_id}";
             $responseValue = $resp->response_value;
 
-            // repeater/checkbox store their answer as a JSON-encoded array
-            // in response_value (see DynamicFormBuilder::saveResponses()) —
-            // Filament's Repeater/CheckboxList need the decoded array as
-            // their state, not the raw JSON string, or hydration blows up
-            // trying to foreach() over a string.
-            if (in_array($resp->question?->question_type, ['repeater', 'checkbox'], true) && is_string($responseValue)) {
+            // repeater/checkbox/multi_select store their answer as a
+            // JSON-encoded array in response_value (see
+            // DynamicFormBuilder::saveResponses()) — Filament's
+            // Repeater/CheckboxList/multiple-Select need the decoded array
+            // as their state, not the raw JSON string, or hydration blows
+            // up (or silently shows nothing selected) trying to treat a
+            // string as an array.
+            if (in_array($resp->question?->question_type, ['repeater', 'checkbox', 'multi_select'], true) && is_string($responseValue)) {
                 $decoded = json_decode($responseValue, true);
                 $responseValue = is_array($decoded) ? $decoded : [];
             }
