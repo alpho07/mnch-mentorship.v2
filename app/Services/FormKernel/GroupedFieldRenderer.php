@@ -47,7 +47,7 @@ class GroupedFieldRenderer
 
             if (count($parts) !== 3) {
                 $flushTable();
-                $fields[] = static::buildGroupFieldset($run['group'], $run['fields']);
+                $fields[] = static::buildGroupFieldset($run['group'], $run['fields'], $run['visible'] ?? null);
 
                 continue;
             }
@@ -77,8 +77,16 @@ class GroupedFieldRenderer
      * being collapsible. Its header gets the same banner look via
      * .aqs-kit-section, targeting Section's own header markup instead of
      * a <legend>.
+     *
+     * $visible, when given (a Closure or bool — whatever Filament's own
+     * ->visible() accepts), is applied to the returned wrapper itself, not
+     * just its child fields — without it, a group whose every field shares
+     * one hidden-by-default condition (e.g. bed-capacity counts gated on
+     * "Do you have a newborn unit") would render as an empty box with just
+     * a legend before that condition is met, since each field hides
+     * individually but the wrapper doesn't know to.
      */
-    public static function buildGroupFieldset(string $label, array $fields)
+    public static function buildGroupFieldset(string $label, array $fields, $visible = null)
     {
         $isLargeGroup = count($fields) > 7;
 
@@ -98,15 +106,25 @@ class GroupedFieldRenderer
                 $fieldset->extraAttributes(['class' => 'aqs-info-table']);
             }
 
+            if ($visible !== null) {
+                $fieldset->visible($visible);
+            }
+
             return $fieldset;
         }
 
-        return Forms\Components\Section::make($label)
+        $section = Forms\Components\Section::make($label)
             ->schema($fields)
             ->collapsible()
             ->collapsed(false)
             ->columnSpanFull()
             ->extraAttributes(['class' => 'aqs-kit-section']);
+
+        if ($visible !== null) {
+            $section->visible($visible);
+        }
+
+        return $section;
     }
 
     /**

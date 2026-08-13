@@ -65,21 +65,28 @@ class InfrastructureSeeder extends Seeder
 
     /**
      * A Functional/Non-Functional pair of number questions, both
-     * conditionally visible only when $gatingCode = Yes, both indented
-     * under their gating question. Returns the updated $order counter.
+     * conditionally visible only when $gatingCode = Yes. Shares one
+     * `group` value ("General NBU beds" etc.) so GroupedFieldRenderer
+     * renders them side by side in a single Fieldset with that name as
+     * its legend, rather than as two separate full-width rows stacked on
+     * top of each other. `indent_level` stays 0 here — the Fieldset box
+     * itself is the visual nesting cue; the flat margin-left indent is
+     * for ungrouped line items, and combining both would double up.
+     * Returns the updated $order counter.
      */
     private function bedCountPair(AssessmentSection $section, int $order, string $codePrefix, string $label, string $gatingCode): int
     {
-        foreach (['FUNCTIONAL' => 'Functional', 'NONFUNCTIONAL' => 'Non-Functional'] as $suffix => $variantLabel) {
+        foreach (['FUNCTIONAL' => 'No. Functional', 'NONFUNCTIONAL' => 'No. Non-Functional'] as $suffix => $variantLabel) {
             $order++;
             AssessmentQuestion::updateOrCreate(
                 ['assessment_section_id' => $section->id, 'question_code' => "{$codePrefix}_{$suffix}"],
                 [
-                    'question_text' => "{$label} ({$variantLabel})",
+                    'question_text' => $variantLabel,
                     'question_type' => 'number',
                     'is_scored' => false,
                     'display_conditions' => ['question_code' => $gatingCode, 'operator' => 'equals', 'value' => 'Yes'],
-                    'indent_level' => 1,
+                    'group' => $label,
+                    'indent_level' => 0,
                     'order' => $order,
                     'is_active' => true,
                 ]

@@ -84,8 +84,20 @@ class DynamicFormBuilder
                     $runs[] = $currentRun;
                 }
                 $currentGroup = $question->group;
-                $currentRun = ['group' => $currentGroup, 'fields' => []];
+                // Tracks whether every question pushed into this run shares
+                // the exact same display_conditions — if so, the whole
+                // group's Fieldset gets that same visibility below, so an
+                // ungated group (e.g. bed-capacity counts before "Do you
+                // have a newborn unit" is answered) doesn't show up as an
+                // empty box with just a legend. Sibling questions with
+                // differing (or no) conditions fall back to null — mixed
+                // visibility within one group isn't hideable at the group
+                // level, only per-field (which each field already has via
+                // buildFieldForQuestion's own applyConditionalLogic call).
+                $currentRun = ['group' => $currentGroup, 'fields' => [], 'sharedConditions' => $question->display_conditions];
                 $started = true;
+            } elseif ($currentRun['sharedConditions'] !== $question->display_conditions) {
+                $currentRun['sharedConditions'] = null;
             }
 
             $currentRun['fields'][] = $field;
@@ -94,6 +106,14 @@ class DynamicFormBuilder
         if ($currentRun !== null) {
             $runs[] = $currentRun;
         }
+
+        foreach ($runs as &$run) {
+            if ($run['group'] !== null && ! empty($run['sharedConditions'])) {
+                $run['visible'] = static::buildVisibilityClosure($run['sharedConditions']);
+            }
+            unset($run['sharedConditions']);
+        }
+        unset($run);
 
         return static::renderRuns($runs);
     }
@@ -402,7 +422,22 @@ class DynamicFormBuilder
      */
     protected static function applyConditionalLogic($field, array $conditionalLogic)
     {
-        return $field->visible(function (Forms\Get $get) use ($conditionalLogic) {
+        return $field->visible(static::buildVisibilityClosure($conditionalLogic));
+    }
+
+    /**
+     * The same visible()-closure logic applyConditionalLogic() applies to
+     * an individual field, extracted so buildForSection() can also apply
+     * it to a whole group's Fieldset — every question sharing one `group`
+     * value with identical display_conditions gets ONE shared closure on
+     * the group wrapper, so an entirely-ungated group (e.g. bed-capacity
+     * counts before their gating Yes/No is answered) doesn't render as an
+     * empty box with just a legend while its individually-hidden fields
+     * sit invisible inside it.
+     */
+    protected static function buildVisibilityClosure(array $conditionalLogic): \Closure
+    {
+        return function (Forms\Get $get) use ($conditionalLogic) {
             return ConditionalLogicEvaluator::isVisible($conditionalLogic, function (string $questionCode) use ($get) {
                 $parentQuestion = AssessmentQuestion::where('question_code', $questionCode)->first();
 
@@ -412,6 +447,6 @@ class DynamicFormBuilder
 
                 return $get("question_response_{$parentQuestion->id}");
             });
-        });
+        };
     }
 }

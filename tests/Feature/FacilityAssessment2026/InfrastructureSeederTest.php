@@ -45,11 +45,25 @@ class InfrastructureSeederTest extends TestCase
 
         $nbuBeds = AssessmentQuestion::where('question_code', 'INFRA_NBU_GENERAL_FUNCTIONAL')->firstOrFail();
         $this->assertSame(['question_code' => 'INFRA_HAS_NBU', 'operator' => 'equals', 'value' => 'Yes'], $nbuBeds->display_conditions);
-        $this->assertSame(1, $nbuBeds->indent_level);
         $this->assertSame('number', $nbuBeds->question_type);
 
         $picuBeds = AssessmentQuestion::where('question_code', 'INFRA_PICU_FUNCTIONAL')->firstOrFail();
         $this->assertSame(['question_code' => 'INFRA_HAS_PICU', 'operator' => 'equals', 'value' => 'Yes'], $picuBeds->display_conditions);
+    }
+
+    public function test_bed_capacity_pairs_share_a_group_for_side_by_side_grid_layout(): void
+    {
+        $this->makeType();
+        $this->seed(InfrastructureSeeder::class);
+
+        $functional = AssessmentQuestion::where('question_code', 'INFRA_NBU_GENERAL_FUNCTIONAL')->firstOrFail();
+        $nonFunctional = AssessmentQuestion::where('question_code', 'INFRA_NBU_GENERAL_NONFUNCTIONAL')->firstOrFail();
+
+        $this->assertSame('General NBU beds', $functional->group);
+        $this->assertSame('General NBU beds', $nonFunctional->group);
+        $this->assertSame('No. Functional', $functional->question_text);
+        $this->assertSame('No. Non-Functional', $nonFunctional->question_text);
+        $this->assertSame(0, $functional->indent_level);
     }
 
     public function test_ort_questions_link_the_ort_corner_checklist(): void
