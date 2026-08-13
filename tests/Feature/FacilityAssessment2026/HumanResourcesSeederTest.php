@@ -59,15 +59,24 @@ class HumanResourcesSeederTest extends TestCase
         );
     }
 
-    public function test_clinical_officer_and_maternity_and_midwifery_cadres_are_only_trained_in_comprehensive_and_essential_newborn_care(): void
+    public function test_maternity_and_midwifery_cadres_are_only_trained_in_comprehensive_and_essential_newborn_care(): void
     {
         $this->makeType();
         $this->seed(HumanResourcesSeeder::class);
 
-        foreach (['Clinical officer', 'Maternity theatre anaesthetists', 'Maternity theatre nurses', 'Midwives', 'Post natal ward nurses'] as $name) {
+        foreach (['Maternity theatre anaesthetists', 'Maternity theatre nurses', 'Midwives', 'Post natal ward nurses'] as $name) {
             $cadre = MainCadre::where('name', $name)->firstOrFail();
             $this->assertEqualsCanonicalizing(['etat_plus', 'imnci', 'type_1_diabetes'], $cadre->na_training_columns, "{$name} should hide ETAT+, IMNCI, and Type 1 Diabetes");
         }
+    }
+
+    public function test_clinical_officer_has_all_training_areas(): void
+    {
+        $this->makeType();
+        $this->seed(HumanResourcesSeeder::class);
+
+        $cadre = MainCadre::where('name', 'Clinical officer')->firstOrFail();
+        $this->assertEmpty($cadre->na_training_columns ?? []);
     }
 
     public function test_neonatologist_has_no_na_columns(): void

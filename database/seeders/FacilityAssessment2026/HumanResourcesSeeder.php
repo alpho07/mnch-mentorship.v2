@@ -18,9 +18,9 @@ class HumanResourcesSeeder extends Seeder
         ['General nurses-paediatric', []],
         ['Paediatric nurses', []],
         ['Clinical officer paediatric', []],
+        ['Clinical officer', []],
         // Only trained in Comprehensive Newborn Care and Essential Newborn
-        // Care — ETAT+, IMNCI, and Type 1 Diabetes are N/A for these 5.
-        ['Clinical officer', ['etat_plus', 'imnci', 'type_1_diabetes']],
+        // Care — ETAT+, IMNCI, and Type 1 Diabetes are N/A for these 4.
         ['Maternity theatre anaesthetists', ['etat_plus', 'imnci', 'type_1_diabetes']],
         ['Maternity theatre nurses', ['etat_plus', 'imnci', 'type_1_diabetes']],
         ['Midwives', ['etat_plus', 'imnci', 'type_1_diabetes']],
