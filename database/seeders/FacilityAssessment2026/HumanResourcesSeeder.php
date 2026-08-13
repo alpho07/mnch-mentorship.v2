@@ -18,11 +18,19 @@ class HumanResourcesSeeder extends Seeder
         ['General nurses-paediatric', []],
         ['Paediatric nurses', []],
         ['Clinical officer paediatric', []],
-        ['Clinical officer', []],
-        ['Maternity theatre anaesthetists', ['comprehensive_newborn_care', 'imnci', 'type_1_diabetes']],
-        ['Maternity theatre nurses', ['comprehensive_newborn_care', 'imnci', 'type_1_diabetes']],
-        ['Midwives', ['comprehensive_newborn_care', 'imnci', 'type_1_diabetes']],
-        ['Post natal ward nurses', ['comprehensive_newborn_care', 'imnci', 'type_1_diabetes']],
+        // Only trained in Comprehensive Newborn Care and Essential Newborn
+        // Care — ETAT+, IMNCI, and Type 1 Diabetes are N/A for these 5.
+        ['Clinical officer', ['etat_plus', 'imnci', 'type_1_diabetes']],
+        ['Maternity theatre anaesthetists', ['etat_plus', 'imnci', 'type_1_diabetes']],
+        ['Maternity theatre nurses', ['etat_plus', 'imnci', 'type_1_diabetes']],
+        ['Midwives', ['etat_plus', 'imnci', 'type_1_diabetes']],
+        ['Post natal ward nurses', ['etat_plus', 'imnci', 'type_1_diabetes']],
+        // Reports per-area training counts like any other cadre, but has
+        // no meaningful "total staff" figure of its own — 'total_in_facility'
+        // is a na_training_columns sentinel MainCadre::hidesTotalInFacility()
+        // reads, not one of the five real TRAINING_COLUMNS. Kept last so it
+        // renders at the bottom of the matrix, after every real cadre.
+        ['No of TOTs', ['total_in_facility']],
     ];
 
     public function run(): void
@@ -41,6 +49,6 @@ class HumanResourcesSeeder extends Seeder
             );
         }
 
-        $this->command->info('  ✓ human_resources: 13 cadres seeded (tots_count captured on the Assessment record directly).');
+        $this->command->info('  ✓ human_resources: 14 cadres seeded (incl. ToTs, no total-in-facility column).');
     }
 }

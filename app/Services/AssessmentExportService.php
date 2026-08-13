@@ -163,7 +163,7 @@ class AssessmentExportService {
         foreach ($responses as $response) {
             $rows[] = [
                 $response->cadre->name,
-                $response->total_in_facility ?? 0,
+                $this->hrCell($response, 'total_in_facility'),
                 $this->hrCell($response, 'etat_plus'),
                 $this->hrCell($response, 'comprehensive_newborn_care'),
                 $this->hrCell($response, 'imnci'),

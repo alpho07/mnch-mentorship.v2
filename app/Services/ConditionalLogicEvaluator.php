@@ -102,12 +102,13 @@ class ConditionalLogicEvaluator
             return $actualValue === ($showIf['value'] ?? null);
         }
 
-        // Every real call site already guards `empty($conditions)` before
-        // calling isVisible() at all, so a genuinely-absent condition never
-        // reaches here — only a non-empty but unrecognized/malformed shape
-        // does (e.g. a single condition missing its question_code key).
-        // Fail closed like everywhere else in this method, not open.
-        return false;
+        // A genuinely empty/absent conditions array means "no conditions at
+        // all" — always visible, the documented contract of this method.
+        // Anything else reaching here is a non-empty but unrecognized or
+        // malformed shape (e.g. a single condition missing its
+        // question_code key) — fail closed like everywhere else in this
+        // method, not open.
+        return empty($conditions);
     }
 
     private static function evaluateCondition($actualValue, $expectedValue, string $operator): bool

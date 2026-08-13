@@ -37,7 +37,6 @@ class Assessment extends Model
         'trained_marked_by',
         'trained_marked_at',
         'excluded_cadre_ids',
-        'tots_count',
         'is_locked',
         'locked_at',
         'locked_by',

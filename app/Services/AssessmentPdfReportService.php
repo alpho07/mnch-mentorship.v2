@@ -247,7 +247,7 @@ class AssessmentPdfReportService {
             'responses' => $responses->map(function ($response) {
                 return [
                     'cadre' => $response?->cadre?->name,
-                    'total_in_facility' => $response->total_in_facility ?? 0,
+                    'total_in_facility' => $this->hrCell($response, 'total_in_facility'),
                     'etat_plus' => $this->hrCell($response, 'etat_plus'),
                     'comprehensive_newborn_care' => $this->hrCell($response, 'comprehensive_newborn_care'),
                     'imnci' => $this->hrCell($response, 'imnci'),
@@ -265,7 +265,7 @@ class AssessmentPdfReportService {
             'by_cadre' => $responses->map(function ($response) {
                 return [
                     'cadre' => $response?->cadre?->name,
-                    'total' => $response->total_in_facility ?? 0,
+                    'total' => $this->hrCell($response, 'total_in_facility'),
                     'etat_plus' => $this->hrCell($response, 'etat_plus'),
                     'comprehensive_nb' => $this->hrCell($response, 'comprehensive_newborn_care'),
                     'imnci' => $this->hrCell($response, 'imnci'),

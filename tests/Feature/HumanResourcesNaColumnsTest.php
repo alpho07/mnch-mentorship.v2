@@ -77,4 +77,64 @@ class HumanResourcesNaColumnsTest extends TestCase
         $this->assertNull($response->imnci);
         $this->assertNull($response->type_1_diabetes);
     }
+
+    public function test_a_cadre_that_hides_total_in_facility_still_saves_and_reloads_its_training_areas(): void
+    {
+        $assessor = $this->makeAssessor();
+        $type = AssessmentType::create(['name' => 'HR ToTs Test', 'code' => 'HR_TOTS_TEST', 'is_active' => true]);
+        AssessmentSection::create([
+            'assessment_type_id' => $type->id, 'name' => 'Human Resources', 'code' => 'human_resources',
+            'section_type' => AssessmentSection::KIND_HUMAN_RESOURCES, 'order' => 1, 'is_active' => true,
+        ]);
+        $tots = MainCadre::create([
+            'assessment_type_id' => $type->id,
+            'name' => 'No of TOTs',
+            'code' => 'no_of_tots',
+            'is_active' => true,
+            'order' => 1,
+            'na_training_columns' => ['total_in_facility'],
+        ]);
+        $facility = Facility::factory()->create();
+        $assessment = Assessment::create([
+            'facility_id' => $facility->id, 'assessment_type_id' => $type->id,
+            'assessment_type' => 'baseline', 'assessment_date' => now(), 'assessor_id' => $assessor->id,
+        ]);
+
+        $url = AssessmentResource::getUrl('edit-human-resources', ['record' => $assessment->id]);
+        $rendered = $this->get($url);
+        $rendered->assertOk();
+        $rendered->assertDontSee("hr_{$tots->id}_total_in_facility");
+        foreach (MainCadre::TRAINING_COLUMNS as $column) {
+            $rendered->assertSee("hr_{$tots->id}_{$column}", escape: false);
+        }
+
+        Livewire::test(EditHumanResources::class, ['record' => $assessment->id])
+            ->fillForm([
+                "hr_{$tots->id}_etat_plus" => 4,
+                "hr_{$tots->id}_comprehensive_newborn_care" => 3,
+                "hr_{$tots->id}_imnci" => 2,
+                "hr_{$tots->id}_type_1_diabetes" => 1,
+                "hr_{$tots->id}_essential_newborn_care" => 5,
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $response = HumanResourceResponse::where('assessment_id', $assessment->id)->where('cadre_id', $tots->id)->first();
+
+        $this->assertNotNull($response);
+        $this->assertNull($response->total_in_facility);
+        $this->assertSame(4, $response->etat_plus);
+        $this->assertSame(3, $response->comprehensive_newborn_care);
+        $this->assertSame(2, $response->imnci);
+        $this->assertSame(1, $response->type_1_diabetes);
+        $this->assertSame(5, $response->essential_newborn_care);
+
+        // Reload — the form's default() state (via loadSavedResponses) must
+        // show the saved training-area counts back.
+        Livewire::test(EditHumanResources::class, ['record' => $assessment->id])
+            ->assertFormSet([
+                "hr_{$tots->id}_etat_plus" => 4,
+                "hr_{$tots->id}_essential_newborn_care" => 5,
+            ]);
+    }
 }

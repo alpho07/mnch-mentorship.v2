@@ -71,4 +71,14 @@ class MainCadre extends Model {
     public function isColumnNotApplicable(string $column): bool {
         return in_array($column, $this->na_training_columns ?? [], true);
     }
+
+    /**
+     * 'total_in_facility' isn't one of the five TRAINING_COLUMNS, but reuses
+     * the same na_training_columns array as a sentinel — set for cadre-like
+     * rows (e.g. ToTs) that report per-area training counts without a
+     * meaningful "total staff" figure of their own.
+     */
+    public function hidesTotalInFacility(): bool {
+        return $this->isColumnNotApplicable('total_in_facility');
+    }
 }

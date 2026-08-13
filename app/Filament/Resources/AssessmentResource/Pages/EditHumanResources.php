@@ -112,7 +112,7 @@ class EditHumanResources extends EditRecord
     {
         $responses = HumanResourceResponse::where('assessment_id', $this->record->id)->get();
 
-        $data = ['tots_count' => $this->record->tots_count];
+        $data = [];
 
         foreach ($responses as $response) {
             $prefix = "hr_{$response->cadre_id}_";
@@ -155,11 +155,11 @@ class EditHumanResources extends EditRecord
             ->get();
 
         return $form->schema([
-            Forms\Components\TextInput::make('tots_count')
-                ->label('No of TOTs in the facility')
-                ->numeric()
-                ->integer()
-                ->minValue(0)
+            Forms\Components\View::make('filament.pages.assessment.section-chrome')
+                ->viewData(fn () => [
+                    'sections' => $this->getAllSections(),
+                    'currentKey' => $this->section->code,
+                ])
                 ->columnSpanFull(),
             Forms\Components\Section::make('Human Resources Assessment')
                 ->description('Enter staff training counts for each cadre')
@@ -174,8 +174,10 @@ class EditHumanResources extends EditRecord
                             'essential_newborn_care' => 'Essential Newborn Care',
                         ];
 
-                        $schema = [
-                            Forms\Components\TextInput::make("hr_{$cadre->id}_total_in_facility")
+                        $schema = [];
+
+                        if (! $cadre->hidesTotalInFacility()) {
+                            $schema[] = Forms\Components\TextInput::make("hr_{$cadre->id}_total_in_facility")
                                 ->label('Total Staff in Facility')
                                 ->helperText('Total number of this cadre working at the facility')
                                 ->numeric()
@@ -183,13 +185,15 @@ class EditHumanResources extends EditRecord
                                 ->minValue(0)
                                 ->default(0)
                                 ->required()
-                                ->columnSpanFull(),
-                        ];
+                                ->columnSpanFull();
+                        }
 
                         if (! empty($visibleColumns)) {
                             $schema[] = Forms\Components\Placeholder::make("hr_{$cadre->id}_divider")
                                 ->label('Trained in '.count($visibleColumns).' Area'.(count($visibleColumns) === 1 ? '' : 's'))
-                                ->content('Enter how many of the total staff above are trained in each programme:')
+                                ->content($cadre->hidesTotalInFacility()
+                                    ? 'Enter the count trained in each programme:'
+                                    : 'Enter how many of the total staff above are trained in each programme:')
                                 ->columnSpanFull();
 
                             $schema[] = Forms\Components\Grid::make(count($visibleColumns))
@@ -214,9 +218,6 @@ class EditHumanResources extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $this->record->update(['tots_count' => $data['tots_count'] ?? null]);
-        unset($data['tots_count']);
-
         $cadres = MainCadre::where('is_active', true)
             ->where('assessment_type_id', $this->record->assessment_type_id)
             ->get();
@@ -224,11 +225,13 @@ class EditHumanResources extends EditRecord
         foreach ($cadres as $cadre) {
             $prefix = "hr_{$cadre->id}_";
 
-            // total_in_facility always renders regardless of na_training_columns
-            // (see form() above), so it's the reliable "was this cadre on the
-            // submitted form at all" sentinel — etat_plus alone could be
-            // legitimately absent now if it's this cadre's only N/A column.
-            if (! isset($data["{$prefix}total_in_facility"])) {
+            // At least one field for an included cadre always renders —
+            // total_in_facility, or (for a cadre that hides it, like ToTs)
+            // at least one training column — so "any hr_{id}_* key present"
+            // reliably distinguishes an included cadre from one excluded
+            // via Manage Cadres, whose fields never rendered at all.
+            $hasAnyFieldForCadre = collect($data)->keys()->contains(fn ($key) => str_starts_with($key, $prefix));
+            if (! $hasAnyFieldForCadre) {
                 continue;
             }
 
@@ -238,7 +241,7 @@ class EditHumanResources extends EditRecord
                     'cadre_id' => $cadre->id,
                 ],
                 [
-                    'total_in_facility' => (int) ($data["{$prefix}total_in_facility"] ?? 0),
+                    'total_in_facility' => $cadre->hidesTotalInFacility() ? null : (int) ($data["{$prefix}total_in_facility"] ?? 0),
                     'etat_plus' => $this->trainingColumnValue($cadre, 'etat_plus', $data, $prefix),
                     'comprehensive_newborn_care' => $this->trainingColumnValue($cadre, 'comprehensive_newborn_care', $data, $prefix),
                     'imnci' => $this->trainingColumnValue($cadre, 'imnci', $data, $prefix),
