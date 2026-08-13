@@ -49,7 +49,7 @@ class FacilityAssessment2026Seeder extends Seeder
             HumanResourcesSeeder::class,
             HealthProductsSeeder::class,
             InformationSystemsSeeder::class,
-            // QualityOfCareSeeder::class, // Task 8
+            QualityOfCareSeeder::class,
             // IndicatorsSeeder::class, // Task 9
         ]);
 
