@@ -98,7 +98,7 @@ class InformationSystemsSeeder extends Seeder
 
         $create(['question_code' => 'INFOSYS_DOC_TYPE', 'question_text' => 'What type of documentation is the facility using', 'question_type' => 'multi_select', 'options' => ['Paper based', 'EMR', 'Hybrid'], 'is_scored' => false, 'scoring_map' => null]);
         $create(['question_code' => 'INFOSYS_EMR_DATA_MGMT', 'question_text' => 'How is data managed?', 'question_type' => 'text', 'is_scored' => false, 'scoring_map' => null, 'display_conditions' => self::EMR_DOC_TYPE_GATE]);
-        $create(['question_code' => 'INFOSYS_PAPER_AVAIL_COMPLETE', 'question_text' => 'If paper based/Hybrid ask about the availability and completeness of standardized data collection and summary tools', 'display_conditions' => self::DATA_TOOLS_GATE]);
+        $createInactive(['question_code' => 'INFOSYS_PAPER_AVAIL_COMPLETE', 'question_text' => 'If paper based/Hybrid ask about the availability and completeness of standardized data collection and summary tools']);
 
         foreach (self::MOH_FORMS as [$codePrefix, $formName]) {
             $group = "Data Collection Tools & Registers|Form|{$formName}";
@@ -123,6 +123,6 @@ class InformationSystemsSeeder extends Seeder
         $create(['question_code' => 'INFOSYS_MENTORSHIP_DATA_ENTRY', 'question_text' => 'Is there a person responsible for mentorship data entry into the electronic platform?']);
         $create(['question_code' => 'INFOSYS_INTERNET', 'question_text' => 'Is there internet Availability?']);
 
-        $this->command->info("  ✓ information_systems: {$order} questions ({$number} numbered top-level, incl. 24 MoH-form Available/Completeness pairs, 2 deactivated).");
+        $this->command->info("  ✓ information_systems: {$order} questions ({$number} numbered top-level, incl. 24 MoH-form Available/Completeness pairs, 3 deactivated).");
     }
 }

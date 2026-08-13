@@ -64,9 +64,6 @@ class InformationSystemsSeederTest extends TestCase
 
         $expected = ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'intersects', 'value' => ['Paper based', 'Hybrid']];
 
-        $intro = AssessmentQuestion::where('question_code', 'INFOSYS_PAPER_AVAIL_COMPLETE')->firstOrFail();
-        $this->assertSame($expected, $intro->display_conditions);
-
         $available = AssessmentQuestion::where('question_code', 'MOH_204A_AVAILABLE')->firstOrFail();
         $this->assertSame($expected, $available->display_conditions);
     }
@@ -97,12 +94,12 @@ class InformationSystemsSeederTest extends TestCase
         $this->assertSame(1, $access->indent_level);
     }
 
-    public function test_attendance_register_and_assessment_records_are_deactivated(): void
+    public function test_attendance_register_assessment_records_and_paper_avail_complete_are_deactivated(): void
     {
         $this->makeType();
         $this->seed(InformationSystemsSeeder::class);
 
-        foreach (['INFOSYS_ATTENDANCE_REGISTER', 'INFOSYS_ASSESSMENT_RECORDS'] as $code) {
+        foreach (['INFOSYS_ATTENDANCE_REGISTER', 'INFOSYS_ASSESSMENT_RECORDS', 'INFOSYS_PAPER_AVAIL_COMPLETE'] as $code) {
             $q = AssessmentQuestion::where('question_code', $code)->firstOrFail();
             $this->assertFalse($q->is_active);
         }
