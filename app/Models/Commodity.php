@@ -17,11 +17,13 @@ class Commodity extends Model {
         'description',
         'order',
         'is_active',
+        'display_conditions',
     ];
     protected $casts = [
         'is_active' => 'boolean',
         'order' => 'integer',
         'indent_level' => 'integer',
+        'display_conditions' => 'array',
     ];
 
     // ==========================================

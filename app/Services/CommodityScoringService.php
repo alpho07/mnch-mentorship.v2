@@ -41,12 +41,34 @@ class CommodityScoringService {
      * Recalculate score for a department × category combination
      */
     public function recalculateDepartmentCategoryScore(int $assessmentId, int $departmentId, int $categoryId): void {
+        $department = AssessmentDepartment::find($departmentId);
+        $category = CommodityCategory::find($categoryId);
+        $responsesByCode = $this->responsesByQuestionCode($assessmentId);
+
+        if (!$department || !$category
+            || !$this->isBlockVisible($department->display_conditions, $responsesByCode)
+            || !$this->isBlockVisible($category->display_conditions, $responsesByCode)) {
+            // A block that's now hidden (or was deleted) must not leave a
+            // stale score row behind — getDepartmentSummary()/
+            // getHealthProductsSummary() read AssessmentDepartmentScore
+            // directly and would otherwise keep reporting a percentage for
+            // a section the assessor can no longer even see.
+            AssessmentDepartmentScore::where('assessment_id', $assessmentId)
+                ->where('assessment_department_id', $departmentId)
+                ->where('commodity_category_id', $categoryId)
+                ->delete();
+
+            return;
+        }
+
         // Get all applicable commodities for this department and category
         $applicableCommodities = Commodity::where('commodity_category_id', $categoryId)
                 ->where('is_active', true)
                 ->whereHas('applicableDepartments', function ($query) use ($departmentId) {
                     $query->where('assessment_department_id', $departmentId);
                 })
+                ->get()
+                ->filter(fn (Commodity $c) => $this->isBlockVisible($c->display_conditions, $responsesByCode))
                 ->pluck('id');
 
         if ($applicableCommodities->isEmpty()) {
@@ -249,5 +271,24 @@ class CommodityScoringService {
                     ]
             );
         }
+    }
+
+    private function responsesByQuestionCode(int $assessmentId): array {
+        return \App\Models\AssessmentQuestionResponse::query()
+            ->where('assessment_id', $assessmentId)
+            ->join('assessment_questions', 'assessment_questions.id', '=', 'assessment_question_responses.assessment_question_id')
+            ->pluck('assessment_question_responses.response_value', 'assessment_questions.question_code')
+            ->all();
+    }
+
+    private function isBlockVisible(?array $conditions, array $responsesByCode): bool {
+        if (empty($conditions)) {
+            return true;
+        }
+
+        return \App\Services\ConditionalLogicEvaluator::isVisible(
+            $conditions,
+            fn (string $code) => $responsesByCode[$code] ?? null
+        );
     }
 }

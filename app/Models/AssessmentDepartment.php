@@ -18,10 +18,12 @@ class AssessmentDepartment extends Model {
         'icon',
         'order',
         'is_active',
+        'display_conditions',
     ];
     protected $casts = [
         'is_active' => 'boolean',
         'order' => 'integer',
+        'display_conditions' => 'array',
     ];
 
     protected static function boot() {

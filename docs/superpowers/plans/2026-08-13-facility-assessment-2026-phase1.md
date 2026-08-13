@@ -2013,14 +2013,19 @@ class AssessmentDisplayConditionsBlockTest extends TestCase
             'assessment_id' => $assessment->id, 'assessment_question_id' => $gateQuestion->id, 'response_value' => 'No',
         ]);
 
-        $page = new \App\Filament\Resources\AssessmentResource\Pages\EditSection;
-        $page->record = $assessment;
-        $page->mount($assessment->id);
+        // Hit the (still-visible) gate_section page — its section-nav strip
+        // is built from HasSectionNavigation::getAllSections(), so the
+        // presence/absence of each section's own edit URL in the rendered
+        // HTML proves whether it was included, without needing a route
+        // context to instantiate EditSection directly (its mount() requires
+        // a real routed sectionCode param).
+        $gateUrl = AssessmentResource::getUrl('edit-section', ['record' => $assessment->id, 'sectionCode' => $gateSection->code]);
+        $extraUrl = AssessmentResource::getUrl('edit-section', ['record' => $assessment->id, 'sectionCode' => $hiddenSection->code]);
 
-        $sections = (new \ReflectionMethod($page, 'getAllSections'))->invoke($page);
-
-        $this->assertArrayHasKey('gate_section', $sections);
-        $this->assertArrayNotHasKey('extra_section', $sections);
+        $response = $this->get($gateUrl);
+        $response->assertOk();
+        $response->assertSee($gateUrl, false);
+        $response->assertDontSee($extraUrl, false);
     }
 }
 ```

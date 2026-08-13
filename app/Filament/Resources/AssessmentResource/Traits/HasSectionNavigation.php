@@ -20,6 +20,23 @@ trait HasSectionNavigation
             ->orderBy('order')
             ->get() ?? collect();
 
+        $responsesByCode = \App\Models\AssessmentQuestionResponse::query()
+            ->where('assessment_id', $this->record->id)
+            ->join('assessment_questions', 'assessment_questions.id', '=', 'assessment_question_responses.assessment_question_id')
+            ->pluck('assessment_question_responses.response_value', 'assessment_questions.question_code')
+            ->all();
+
+        $sections = $sections->filter(function (\App\Models\AssessmentSection $section) use ($responsesByCode) {
+            if (empty($section->display_conditions)) {
+                return true;
+            }
+
+            return \App\Services\ConditionalLogicEvaluator::isVisible(
+                $section->display_conditions,
+                fn (string $code) => $responsesByCode[$code] ?? null
+            );
+        });
+
         $result = [];
 
         foreach ($sections as $section) {

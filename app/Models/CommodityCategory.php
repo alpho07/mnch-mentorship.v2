@@ -16,9 +16,11 @@ class CommodityCategory extends Model {
         'order',
         'icon',
         'description',
+        'display_conditions',
     ];
     protected $casts = [
         'order' => 'integer',
+        'display_conditions' => 'array',
     ];
 
     protected static function boot() {

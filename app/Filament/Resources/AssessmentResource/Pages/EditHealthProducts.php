@@ -68,21 +68,25 @@ class EditHealthProducts extends EditRecord
 
     public function form(Form $form): Form
     {
+        $responsesByCode = $this->responsesByQuestionCode();
+
         $departments = AssessmentDepartment::where('is_active', true)
             ->where('assessment_type_id', $this->record->assessment_type_id)
             ->orderBy('order')
-            ->get();
+            ->get()
+            ->filter(fn (AssessmentDepartment $dept) => $this->isBlockVisible($dept->display_conditions, $responsesByCode));
 
         $categories = CommodityCategory::where('assessment_type_id', $this->record->assessment_type_id)
             ->orderBy('order')
-            ->get();
+            ->get()
+            ->filter(fn (CommodityCategory $cat) => $this->isBlockVisible($cat->display_conditions, $responsesByCode));
 
         return $form->schema([
             Forms\Components\Tabs::make('Departments')
                 ->tabs(
-                    $departments->map(function ($dept) use ($categories) {
+                    $departments->map(function ($dept) use ($categories, $responsesByCode) {
                         return Forms\Components\Tabs\Tab::make($dept->name)
-                            ->schema($this->buildCategorySections($dept, $categories));
+                            ->schema($this->buildCategorySections($dept, $categories, $responsesByCode));
                     })->toArray()
                 )
                 ->columnSpanFull()
@@ -90,16 +94,39 @@ class EditHealthProducts extends EditRecord
         ]);
     }
 
-    private function buildCategorySections($dept, $categories): array
+    private function responsesByQuestionCode(): array
     {
-        return $categories->map(function ($category) use ($dept) {
+        return \App\Models\AssessmentQuestionResponse::query()
+            ->where('assessment_id', $this->record->id)
+            ->join('assessment_questions', 'assessment_questions.id', '=', 'assessment_question_responses.assessment_question_id')
+            ->pluck('assessment_question_responses.response_value', 'assessment_questions.question_code')
+            ->all();
+    }
+
+    private function isBlockVisible(?array $conditions, array $responsesByCode): bool
+    {
+        if (empty($conditions)) {
+            return true;
+        }
+
+        return \App\Services\ConditionalLogicEvaluator::isVisible(
+            $conditions,
+            fn (string $code) => $responsesByCode[$code] ?? null
+        );
+    }
+
+    private function buildCategorySections($dept, $categories, array $responsesByCode): array
+    {
+        return $categories->map(function ($category) use ($dept, $responsesByCode) {
             $commodities = Commodity::where('commodity_category_id', $category->id)
                 ->where('is_active', true)
                 ->whereHas('applicableDepartments', function ($q) use ($dept) {
                     $q->where('assessment_department_id', $dept->id);
                 })
                 ->orderBy('order')
-                ->get();
+                ->get()
+                ->filter(fn (Commodity $c) => $this->isBlockVisible($c->display_conditions, $responsesByCode))
+                ->values();
 
             if ($commodities->isEmpty()) {
                 return null;

@@ -37,11 +37,13 @@ class AssessmentSection extends Model
         'color',
         'order',
         'is_active',
+        'display_conditions',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'is_scored' => 'boolean',
+        'display_conditions' => 'array',
     ];
 
     public function assessmentType(): BelongsTo
