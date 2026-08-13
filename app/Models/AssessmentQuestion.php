@@ -25,6 +25,7 @@ class AssessmentQuestion extends Model
         'is_scored',
         'order',
         'group',
+        'indent_level',
         'is_active',
     ];
 
@@ -37,6 +38,7 @@ class AssessmentQuestion extends Model
         'scoring_map' => 'array',
         'is_required' => 'boolean',
         'is_scored' => 'boolean',
+        'indent_level' => 'integer',
         'is_active' => 'boolean',
     ];
 

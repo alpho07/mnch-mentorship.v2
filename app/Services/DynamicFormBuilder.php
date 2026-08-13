@@ -27,6 +27,20 @@ class DynamicFormBuilder
             ];
         }
 
+        // Letter (a, b, c, ...) any question that's part of a genuine
+        // multi-item split (indent_level >= 1, sharing `group` with its
+        // run) — see LineItemGrouper. The letter is baked into a CLONED
+        // question's question_text before field-building, since the built
+        // Filament field's shape varies by question_type (e.g. yes_no
+        // returns a Group with no top-level ->label()) and every
+        // QuestionFieldBuilder method already reads $question->question_text
+        // uniformly.
+        $annotated = \App\Services\FormKernel\LineItemGrouper::annotate(
+            $questions->all(),
+            fn (AssessmentQuestion $q) => $q->group,
+            fn (AssessmentQuestion $q) => $q->indent_level,
+        );
+
         // First pass: collapse consecutive same-`group` questions into
         // "runs" — one run per group occurrence, carrying its built fields
         // alongside the raw `group` string (parsed by buildGroupedField()
@@ -41,7 +55,7 @@ class DynamicFormBuilder
         // very first question so its run always gets initialized.
         $started = false;
 
-        foreach ($questions as $question) {
+        foreach ($annotated as ['item' => $question, 'letter' => $letter]) {
             $existingResponse = null;
 
             if ($assessmentId) {
@@ -50,10 +64,19 @@ class DynamicFormBuilder
                     ->first();
             }
 
+            if ($letter !== null) {
+                $question = clone $question;
+                $question->question_text = "{$letter}) {$question->question_text}";
+            }
+
             $field = static::buildFieldForQuestion($question, $existingResponse);
 
             if (! $field) {
                 continue;
+            }
+
+            if ($question->indent_level > 0 && method_exists($field, 'extraAttributes')) {
+                $field->extraAttributes(['style' => 'margin-left: 1.5rem;'], merge: true);
             }
 
             if (! $started || $question->group !== $currentGroup) {
