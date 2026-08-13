@@ -41,7 +41,7 @@ class FacilityAssessment2026Seeder extends Seeder
         }
 
         $this->call([
-            // ChecklistsSeeder::class, // Task 2
+            ChecklistsSeeder::class,
             FacilityProfileSeeder::class,
             // InfrastructureSeeder::class, // Task 3
             BedCapacitySeeder::class,
