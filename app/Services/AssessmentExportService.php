@@ -164,11 +164,11 @@ class AssessmentExportService {
             $rows[] = [
                 $response->cadre->name,
                 $response->total_in_facility ?? 0,
-                $response->etat_plus ?? 0,
-                $response->comprehensive_newborn_care ?? 0,
-                $response->imnci ?? 0,
-                $response->type_1_diabetes ?? 0,
-                $response->essential_newborn_care ?? 0,
+                $this->hrCell($response, 'etat_plus'),
+                $this->hrCell($response, 'comprehensive_newborn_care'),
+                $this->hrCell($response, 'imnci'),
+                $this->hrCell($response, 'type_1_diabetes'),
+                $this->hrCell($response, 'essential_newborn_care'),
             ];
         }
 
@@ -187,6 +187,10 @@ class AssessmentExportService {
         }
 
         return $rows;
+    }
+
+    private function hrCell($response, string $column) {
+        return $response->cadre?->isColumnNotApplicable($column) ? 'N/A' : ($response->{$column} ?? 0);
     }
 
     protected function getCommodityRows(Assessment $assessment): array {

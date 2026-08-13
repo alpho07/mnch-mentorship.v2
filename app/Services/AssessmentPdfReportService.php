@@ -239,11 +239,11 @@ class AssessmentPdfReportService {
                 return [
                     'cadre' => $response?->cadre?->name,
                     'total_in_facility' => $response->total_in_facility ?? 0,
-                    'etat_plus' => $response->etat_plus ?? 0,
-                    'comprehensive_newborn_care' => $response->comprehensive_newborn_care ?? 0,
-                    'imnci' => $response->imnci ?? 0,
-                    'type_1_diabetes' => $response->type_1_diabetes ?? 0,
-                    'essential_newborn_care' => $response->essential_newborn_care ?? 0,
+                    'etat_plus' => $this->hrCell($response, 'etat_plus'),
+                    'comprehensive_newborn_care' => $this->hrCell($response, 'comprehensive_newborn_care'),
+                    'imnci' => $this->hrCell($response, 'imnci'),
+                    'type_1_diabetes' => $this->hrCell($response, 'type_1_diabetes'),
+                    'essential_newborn_care' => $this->hrCell($response, 'essential_newborn_care'),
                 ];
             })->toArray(),
             // Detailed structure for PDF
@@ -257,14 +257,18 @@ class AssessmentPdfReportService {
                 return [
                     'cadre' => $response?->cadre?->name,
                     'total' => $response->total_in_facility ?? 0,
-                    'etat_plus' => $response->etat_plus ?? 0,
-                    'comprehensive_nb' => $response->comprehensive_newborn_care ?? 0,
-                    'imnci' => $response->imnci ?? 0,
-                    'diabetes' => $response->type_1_diabetes ?? 0,
-                    'essential_nb' => $response->essential_newborn_care ?? 0,
+                    'etat_plus' => $this->hrCell($response, 'etat_plus'),
+                    'comprehensive_nb' => $this->hrCell($response, 'comprehensive_newborn_care'),
+                    'imnci' => $this->hrCell($response, 'imnci'),
+                    'diabetes' => $this->hrCell($response, 'type_1_diabetes'),
+                    'essential_nb' => $this->hrCell($response, 'essential_newborn_care'),
                 ];
             })->toArray(),
         ];
+    }
+
+    private function hrCell($response, string $column) {
+        return $response->cadre?->isColumnNotApplicable($column) ? 'N/A' : ($response->{$column} ?? 0);
     }
 
     /**

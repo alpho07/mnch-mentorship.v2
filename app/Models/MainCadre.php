@@ -11,6 +11,13 @@ class MainCadre extends Model {
 
     protected $table ='assessment_cadres';
 
+    /**
+     * The five fixed training-program columns, in the same order
+     * EditHumanResources renders them — used to validate na_training_columns
+     * values and by the export/PDF services to know which key means what.
+     */
+    public const TRAINING_COLUMNS = ['etat_plus', 'comprehensive_newborn_care', 'imnci', 'type_1_diabetes', 'essential_newborn_care'];
+
     protected $fillable = [
         'assessment_type_id',
         'name',
@@ -18,10 +25,12 @@ class MainCadre extends Model {
         'description',
         'order',
         'is_active',
+        'na_training_columns',
     ];
     protected $casts = [
         'is_active' => 'boolean',
         'order' => 'integer',
+        'na_training_columns' => 'array',
     ];
 
     protected static function boot() {
@@ -57,5 +66,9 @@ class MainCadre extends Model {
 
     public function scopeOrdered($query) {
         return $query->orderBy('order');
+    }
+
+    public function isColumnNotApplicable(string $column): bool {
+        return in_array($column, $this->na_training_columns ?? [], true);
     }
 }

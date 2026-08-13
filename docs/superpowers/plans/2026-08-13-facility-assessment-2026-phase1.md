@@ -1258,6 +1258,7 @@ class HumanResourcesNaColumnsTest extends TestCase
             ->fillForm([
                 "hr_{$cadre->id}_total_in_facility" => 3,
                 "hr_{$cadre->id}_etat_plus" => 2,
+                "hr_{$cadre->id}_essential_newborn_care" => 1,
             ])
             ->call('save')
             ->assertHasNoFormErrors();

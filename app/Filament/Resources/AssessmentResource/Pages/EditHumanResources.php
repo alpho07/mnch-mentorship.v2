@@ -159,66 +159,46 @@ class EditHumanResources extends EditRecord
                 ->description('Enter staff training counts for each cadre')
                 ->schema(
                     $cadres->map(function ($cadre) {
-                        return Forms\Components\Section::make($cadre->name)
-                            ->schema([
-                                // Total staff row — spans full width, visually distinct
-                                Forms\Components\TextInput::make("hr_{$cadre->id}_total_in_facility")
-                                    ->label('Total Staff in Facility')
-                                    ->helperText('Total number of this cadre working at the facility')
+                        $visibleColumns = array_diff(MainCadre::TRAINING_COLUMNS, $cadre->na_training_columns ?? []);
+                        $columnLabels = [
+                            'etat_plus' => 'ETAT+',
+                            'comprehensive_newborn_care' => 'Comprehensive Newborn Care',
+                            'imnci' => 'IMNCI',
+                            'type_1_diabetes' => 'Type 1 Diabetes',
+                            'essential_newborn_care' => 'Essential Newborn Care',
+                        ];
+
+                        $schema = [
+                            Forms\Components\TextInput::make("hr_{$cadre->id}_total_in_facility")
+                                ->label('Total Staff in Facility')
+                                ->helperText('Total number of this cadre working at the facility')
+                                ->numeric()
+                                ->integer()
+                                ->minValue(0)
+                                ->default(0)
+                                ->required()
+                                ->columnSpanFull(),
+                        ];
+
+                        if (! empty($visibleColumns)) {
+                            $schema[] = Forms\Components\Placeholder::make("hr_{$cadre->id}_divider")
+                                ->label('Trained in '.count($visibleColumns).' Area'.(count($visibleColumns) === 1 ? '' : 's'))
+                                ->content('Enter how many of the total staff above are trained in each programme:')
+                                ->columnSpanFull();
+
+                            $schema[] = Forms\Components\Grid::make(count($visibleColumns))
+                                ->schema(collect($visibleColumns)->map(fn ($column) => Forms\Components\TextInput::make("hr_{$cadre->id}_{$column}")
+                                    ->label($columnLabels[$column])
                                     ->numeric()
                                     ->integer()
                                     ->minValue(0)
                                     ->default(0)
-                                    ->required()
-                                    ->columnSpanFull(),
-                                Forms\Components\Placeholder::make("hr_{$cadre->id}_divider")
-                                    ->label('Trained in 5 Areas')
-                                    ->content('Enter how many of the total staff above are trained in each programme:')
-                                    ->columnSpanFull(),
-                                Forms\Components\Grid::make(5)
-                                    ->schema([
-                                        Forms\Components\TextInput::make("hr_{$cadre->id}_etat_plus")
-                                            ->label('ETAT+')
-                                            ->numeric()
-                                            ->integer()
-                                            ->minValue(0)
-                                            ->default(0)
-                                            ->required(),
+                                    ->required())->all())
+                                ->columns(count($visibleColumns));
+                        }
 
-                                        Forms\Components\TextInput::make("hr_{$cadre->id}_comprehensive_newborn_care")
-                                            ->label('Comprehensive Newborn Care')
-                                            ->numeric()
-                                            ->integer()
-                                            ->minValue(0)
-                                            ->default(0)
-                                            ->required(),
-
-                                        Forms\Components\TextInput::make("hr_{$cadre->id}_imnci")
-                                            ->label('IMNCI')
-                                            ->numeric()
-                                            ->integer()
-                                            ->minValue(0)
-                                            ->default(0)
-                                            ->required(),
-
-                                        Forms\Components\TextInput::make("hr_{$cadre->id}_type_1_diabetes")
-                                            ->label('Type 1 Diabetes')
-                                            ->numeric()
-                                            ->integer()
-                                            ->minValue(0)
-                                            ->default(0)
-                                            ->required(),
-
-                                        Forms\Components\TextInput::make("hr_{$cadre->id}_essential_newborn_care")
-                                            ->label('Essential Newborn Care')
-                                            ->numeric()
-                                            ->integer()
-                                            ->minValue(0)
-                                            ->default(0)
-                                            ->required(),
-                                    ])
-                                    ->columns(5),
-                            ])
+                        return Forms\Components\Section::make($cadre->name)
+                            ->schema($schema)
                             ->collapsible()
                             ->collapsed(false);
                     })->toArray()
@@ -228,13 +208,18 @@ class EditHumanResources extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $cadres = MainCadre::where('is_active', true)->get();
+        $cadres = MainCadre::where('is_active', true)
+            ->where('assessment_type_id', $this->record->assessment_type_id)
+            ->get();
 
         foreach ($cadres as $cadre) {
             $prefix = "hr_{$cadre->id}_";
 
-            // Check if any field exists for this cadre
-            if (! isset($data["{$prefix}etat_plus"])) {
+            // total_in_facility always renders regardless of na_training_columns
+            // (see form() above), so it's the reliable "was this cadre on the
+            // submitted form at all" sentinel — etat_plus alone could be
+            // legitimately absent now if it's this cadre's only N/A column.
+            if (! isset($data["{$prefix}total_in_facility"])) {
                 continue;
             }
 
@@ -245,11 +230,11 @@ class EditHumanResources extends EditRecord
                 ],
                 [
                     'total_in_facility' => (int) ($data["{$prefix}total_in_facility"] ?? 0),
-                    'etat_plus' => (int) ($data["{$prefix}etat_plus"] ?? 0),
-                    'comprehensive_newborn_care' => (int) ($data["{$prefix}comprehensive_newborn_care"] ?? 0),
-                    'imnci' => (int) ($data["{$prefix}imnci"] ?? 0),
-                    'type_1_diabetes' => (int) ($data["{$prefix}type_1_diabetes"] ?? 0),
-                    'essential_newborn_care' => (int) ($data["{$prefix}essential_newborn_care"] ?? 0),
+                    'etat_plus' => $this->trainingColumnValue($cadre, 'etat_plus', $data, $prefix),
+                    'comprehensive_newborn_care' => $this->trainingColumnValue($cadre, 'comprehensive_newborn_care', $data, $prefix),
+                    'imnci' => $this->trainingColumnValue($cadre, 'imnci', $data, $prefix),
+                    'type_1_diabetes' => $this->trainingColumnValue($cadre, 'type_1_diabetes', $data, $prefix),
+                    'essential_newborn_care' => $this->trainingColumnValue($cadre, 'essential_newborn_care', $data, $prefix),
                 ]
             );
         }
@@ -266,6 +251,15 @@ class EditHumanResources extends EditRecord
         }
 
         return $data;
+    }
+
+    private function trainingColumnValue(MainCadre $cadre, string $column, array $data, string $prefix): ?int
+    {
+        if ($cadre->isColumnNotApplicable($column)) {
+            return null;
+        }
+
+        return (int) ($data["{$prefix}{$column}"] ?? 0);
     }
 
     protected function getCurrentSectionKey(): string
