@@ -619,7 +619,7 @@ git commit -m "feat: seed the 3 Facility Readiness Assessment 2026 checklists"
 - Test: `tests/Feature/FacilityAssessment2026/InfrastructureSeederTest.php`
 
 **Interfaces:**
-- Produces: `infrastructure` section with 14 gating/plain yes_no questions + 16 bed-capacity number questions = 30 questions. Question codes `INFRA_HAS_NBU`, `INFRA_HAS_PAED`, `INFRA_HAS_NICU`, `INFRA_HAS_PICU` are consumed by Task 4 (Skills Lab), Task 6 (Health Products NICU-gating), and Task 9 (Indicators).
+- Produces: `infrastructure` section with 13 gating/plain yes_no questions (4 unit-gates + 9 plain) + 10 bed-capacity number questions (NBU General ×2 + NBU KMC ×2 + Paediatric General ×2 + NICU ×2 + PICU ×2 — NBU is the only unit with two bed-count groups) = 23 questions. Question codes `INFRA_HAS_NBU`, `INFRA_HAS_PAED`, `INFRA_HAS_NICU`, `INFRA_HAS_PICU` are consumed by Task 4 (Skills Lab), Task 6 (Health Products NICU-gating), and Task 9 (Indicators).
 
 - [ ] **Step 1: Write the failing test**
 
