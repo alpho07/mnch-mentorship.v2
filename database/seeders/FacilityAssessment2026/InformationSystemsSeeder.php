@@ -44,6 +44,14 @@ class InformationSystemsSeeder extends Seeder
         ['INFOSYS_EMR_REPORT_D1', 'D1 -Death Notification'],
     ];
 
+    // INFOSYS_DOC_TYPE is multi_select — a facility can be both paper based
+    // and EMR at once (that's what "Hybrid" means) — so these gates use
+    // 'intersects' (any picked option overlaps the list) rather than
+    // 'equals'/'in', which only work against a single scalar answer.
+    private const DATA_TOOLS_GATE = ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'intersects', 'value' => ['Paper based', 'Hybrid']];
+
+    private const EMR_DOC_TYPE_GATE = ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'intersects', 'value' => ['EMR']];
+
     public function run(): void
     {
         $type = AssessmentType::where('code', 'STANDARD_FACILITY_ASSESSMENT_2026')->firstOrFail();
@@ -53,21 +61,49 @@ class InformationSystemsSeeder extends Seeder
         );
 
         $order = 0;
-        $create = function (array $attrs) use ($section, &$order) {
+        // Counts only the top-level questions $create() makes — not the
+        // MoH-form Available/Completeness table rows ($createGrouped),
+        // which stay grouped under their own table rather than getting
+        // individual numbers, matching Infrastructure/Skills Lab/Health
+        // Products' established numbering convention.
+        $number = 0;
+        $create = function (array $attrs) use ($section, &$order, &$number) {
             $order++;
+            $number++;
+            $attrs['question_text'] = "{$number}. {$attrs['question_text']}";
             AssessmentQuestion::updateOrCreate(
                 ['assessment_section_id' => $section->id, 'question_code' => $attrs['question_code']],
-                array_merge(['question_type' => 'yes_no', 'is_scored' => true, 'scoring_map' => ['Yes' => 1, 'No' => 0], 'requires_explanation_on' => ['No'], 'order' => $order, 'is_active' => true], $attrs)
+                array_merge(['question_type' => 'yes_no', 'is_scored' => true, 'scoring_map' => ['Yes' => 1, 'No' => 0], 'requires_explanation_on' => ['No'], 'order' => $order, 'is_active' => true, 'indent_level' => 0], $attrs)
             );
         };
 
-        $create(['question_code' => 'INFOSYS_DOC_TYPE', 'question_text' => 'What type of documentation is the facility using', 'question_type' => 'select', 'options' => ['Paper based', 'EMR', 'Hybrid'], 'scoring_map' => null]);
-        $create(['question_code' => 'INFOSYS_PAPER_AVAIL_COMPLETE', 'question_text' => 'If paper based/Hybrid ask about the availability and completeness of standardized data collection and summary tools', 'display_conditions' => ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'in', 'value' => ['Paper based', 'Hybrid']]]);
+        // Deactivated rather than conditionally hidden — "Does not appear
+        // in baseline" turned out to just mean these two don't belong in
+        // this template at all, not a per-assessment-type visibility rule.
+        $createInactive = function (array $attrs) use ($section, &$order) {
+            $order++;
+            AssessmentQuestion::updateOrCreate(
+                ['assessment_section_id' => $section->id, 'question_code' => $attrs['question_code']],
+                array_merge(['question_type' => 'yes_no', 'is_scored' => true, 'scoring_map' => ['Yes' => 1, 'No' => 0], 'requires_explanation_on' => ['No'], 'order' => $order, 'is_active' => false, 'indent_level' => 0], $attrs)
+            );
+        };
+
+        $createGrouped = function (array $attrs) use ($section, &$order) {
+            $order++;
+            AssessmentQuestion::updateOrCreate(
+                ['assessment_section_id' => $section->id, 'question_code' => $attrs['question_code']],
+                array_merge(['question_type' => 'yes_no', 'is_scored' => true, 'scoring_map' => ['Yes' => 1, 'No' => 0], 'requires_explanation_on' => ['No'], 'order' => $order, 'is_active' => true, 'indent_level' => 0], $attrs)
+            );
+        };
+
+        $create(['question_code' => 'INFOSYS_DOC_TYPE', 'question_text' => 'What type of documentation is the facility using', 'question_type' => 'multi_select', 'options' => ['Paper based', 'EMR', 'Hybrid'], 'is_scored' => false, 'scoring_map' => null]);
+        $create(['question_code' => 'INFOSYS_EMR_DATA_MGMT', 'question_text' => 'How is data managed?', 'question_type' => 'text', 'is_scored' => false, 'scoring_map' => null, 'display_conditions' => self::EMR_DOC_TYPE_GATE]);
+        $create(['question_code' => 'INFOSYS_PAPER_AVAIL_COMPLETE', 'question_text' => 'If paper based/Hybrid ask about the availability and completeness of standardized data collection and summary tools', 'display_conditions' => self::DATA_TOOLS_GATE]);
 
         foreach (self::MOH_FORMS as [$codePrefix, $formName]) {
             $group = "Data Collection Tools & Registers|Form|{$formName}";
-            $create(['question_code' => "{$codePrefix}_AVAILABLE", 'question_text' => 'Available', 'group' => $group]);
-            $create(['question_code' => "{$codePrefix}_COMPLETE", 'question_text' => 'Complete', 'group' => $group]);
+            $createGrouped(['question_code' => "{$codePrefix}_AVAILABLE", 'question_text' => 'Available', 'group' => $group, 'display_conditions' => self::DATA_TOOLS_GATE]);
+            $createGrouped(['question_code' => "{$codePrefix}_COMPLETE", 'question_text' => 'Completeness', 'group' => $group, 'display_conditions' => self::DATA_TOOLS_GATE]);
         }
 
         $create(['question_code' => 'INFOSYS_KHIS_UPLOAD', 'question_text' => 'Is data uploaded to KHIS']);
@@ -76,17 +112,17 @@ class InformationSystemsSeeder extends Seeder
 
         $emrCondition = ['question_code' => 'INFOSYS_USES_EMR', 'operator' => 'equals', 'value' => 'Yes'];
         foreach (self::EMR_REPORTS as [$code, $reportName]) {
-            $create(['question_code' => $code, 'question_text' => "Does the EMR generate the following Reports: {$reportName}", 'display_conditions' => $emrCondition]);
+            $create(['question_code' => $code, 'question_text' => "Does the EMR generate the following Reports: {$reportName}", 'display_conditions' => $emrCondition, 'indent_level' => 1]);
         }
-        $create(['question_code' => 'INFOSYS_EMR_ACCESS', 'question_text' => 'Does the EMR allow access to the patient records to verify Information', 'display_conditions' => $emrCondition]);
-        $create(['question_code' => 'INFOSYS_EMR_KHIS_UPLOAD', 'question_text' => 'Is data uploaded to KHIS', 'display_conditions' => $emrCondition]);
+        $create(['question_code' => 'INFOSYS_EMR_ACCESS', 'question_text' => 'Does the EMR allow access to the patient records to verify Information', 'display_conditions' => $emrCondition, 'indent_level' => 1]);
+        $create(['question_code' => 'INFOSYS_EMR_KHIS_UPLOAD', 'question_text' => 'Is data uploaded to KHIS', 'display_conditions' => $emrCondition, 'indent_level' => 1]);
 
-        $create(['question_code' => 'INFOSYS_ATTENDANCE_REGISTER', 'question_text' => 'Is there an upto date attendance register showing the date, time, mentees name & contact, and skills to be taught? (check)', 'help_text' => 'Does Not appear in baseline']);
-        $create(['question_code' => 'INFOSYS_ASSESSMENT_RECORDS', 'question_text' => 'Is there an upto date record of all assessments done - which mentees, which area of assessment, by whom, recommendations after assessments (check)', 'help_text' => 'Does Not appear in baseline']);
+        $createInactive(['question_code' => 'INFOSYS_ATTENDANCE_REGISTER', 'question_text' => 'Is there an upto date attendance register showing the date, time, mentees name & contact, and skills to be taught? (check)']);
+        $createInactive(['question_code' => 'INFOSYS_ASSESSMENT_RECORDS', 'question_text' => 'Is there an upto date record of all assessments done - which mentees, which area of assessment, by whom, recommendations after assessments (check)']);
         $create(['question_code' => 'INFOSYS_FEEDBACK_MECHANISM', 'question_text' => 'Is there a mechanism to collect feedback on the mentorship program(feedback forms,compliment / complaint register)']);
         $create(['question_code' => 'INFOSYS_MENTORSHIP_DATA_ENTRY', 'question_text' => 'Is there a person responsible for mentorship data entry into the electronic platform?']);
         $create(['question_code' => 'INFOSYS_INTERNET', 'question_text' => 'Is there internet Availability?']);
 
-        $this->command->info("  ✓ information_systems: {$order} questions (incl. 24 MoH-form Available/Complete pairs).");
+        $this->command->info("  ✓ information_systems: {$order} questions ({$number} numbered top-level, incl. 24 MoH-form Available/Completeness pairs, 2 deactivated).");
     }
 }

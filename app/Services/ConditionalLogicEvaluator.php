@@ -37,7 +37,7 @@ class ConditionalLogicEvaluator
                     continue;
                 }
 
-                $actualValue = $valueResolver($questionCode);
+                $actualValue = static::normalizeValue($valueResolver($questionCode));
 
                 if (static::evaluateCondition($actualValue, $condition['value'] ?? null, $condition['operator'] ?? 'equals')) {
                     return true;
@@ -56,7 +56,7 @@ class ConditionalLogicEvaluator
                     return false;
                 }
 
-                $actualValue = $valueResolver($questionCode);
+                $actualValue = static::normalizeValue($valueResolver($questionCode));
 
                 if (! static::evaluateCondition($actualValue, $condition['value'] ?? null, $condition['operator'] ?? 'equals')) {
                     return false;
@@ -74,10 +74,10 @@ class ConditionalLogicEvaluator
                 return true;
             }
 
-            $actualValue = $valueResolver($questionCode);
+            $actualValue = static::normalizeValue($valueResolver($questionCode));
 
             // CRITICAL: no value yet means hidden/excluded by default.
-            if ($actualValue === null || $actualValue === '') {
+            if ($actualValue === null || $actualValue === '' || $actualValue === []) {
                 return false;
             }
 
@@ -118,9 +118,34 @@ class ConditionalLogicEvaluator
             'not_equals' => $actualValue !== $expectedValue,
             'in' => is_array($expectedValue) && in_array($actualValue, $expectedValue),
             'not_in' => is_array($expectedValue) && ! in_array($actualValue, $expectedValue),
+            // For a multi_select question's answer (an array of picked
+            // options) — true if any picked option appears in $expectedValue.
+            'intersects' => is_array($actualValue) && is_array($expectedValue) && array_intersect($actualValue, $expectedValue) !== [],
             'greater_than' => is_numeric($actualValue) && is_numeric($expectedValue) && $actualValue > $expectedValue,
             'less_than' => is_numeric($actualValue) && is_numeric($expectedValue) && $actualValue < $expectedValue,
             default => false, // CRITICAL: default to false (hide) for safety
         };
+    }
+
+    /**
+     * A multi_select question's answer is a plain array while a Filament
+     * form is live (Get resolves current field state directly), but a
+     * JSON-encoded string once read back from a persisted response_value
+     * (DynamicScoringService, HasSectionNavigation — see
+     * DynamicFormBuilder::saveResponses()'s multi_select branch for the
+     * write side). Decoding here means every operator above works the same
+     * regardless of which context resolved the value.
+     */
+    private static function normalizeValue(mixed $value): mixed
+    {
+        if (is_string($value) && str_starts_with(trim($value), '[')) {
+            $decoded = json_decode($value, true);
+
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return $value;
     }
 }

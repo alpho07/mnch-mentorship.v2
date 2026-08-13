@@ -49,4 +49,29 @@ class ConditionalLogicEvaluatorTest extends TestCase
         $resolver = fn (string $code) => ['A' => 'Yes', 'B' => 'Yes'][$code] ?? null;
         $this->assertTrue(ConditionalLogicEvaluator::isVisible($conditions, $resolver));
     }
+
+    public function test_intersects_shows_when_a_multi_select_answer_overlaps_the_expected_list(): void
+    {
+        $conditions = ['question_code' => 'DOC_TYPE', 'operator' => 'intersects', 'value' => ['Paper based', 'Hybrid']];
+
+        $this->assertTrue(ConditionalLogicEvaluator::isVisible($conditions, fn () => ['Paper based']));
+        $this->assertTrue(ConditionalLogicEvaluator::isVisible($conditions, fn () => ['EMR', 'Hybrid']));
+        $this->assertFalse(ConditionalLogicEvaluator::isVisible($conditions, fn () => ['EMR']));
+        $this->assertFalse(ConditionalLogicEvaluator::isVisible($conditions, fn () => []));
+    }
+
+    /**
+     * A multi_select answer resolved from a persisted response_value
+     * (DynamicScoringService, HasSectionNavigation) comes back as the raw
+     * JSON string saveResponses() stored, not a decoded array — must
+     * evaluate identically to the live-form array case.
+     */
+    public function test_intersects_decodes_a_json_encoded_multi_select_value(): void
+    {
+        $conditions = ['question_code' => 'DOC_TYPE', 'operator' => 'intersects', 'value' => ['Paper based', 'Hybrid']];
+
+        $this->assertTrue(ConditionalLogicEvaluator::isVisible($conditions, fn () => '["Paper based"]'));
+        $this->assertFalse(ConditionalLogicEvaluator::isVisible($conditions, fn () => '["EMR"]'));
+        $this->assertFalse(ConditionalLogicEvaluator::isVisible($conditions, fn () => '[]'));
+    }
 }

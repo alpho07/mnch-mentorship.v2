@@ -46,4 +46,43 @@ class GroupedFieldRendererTest extends TestCase
 
         $this->assertSame('Count', $headerCell->getLabel());
     }
+
+    public function test_table_fieldset_accepts_a_shared_visibility_closure(): void
+    {
+        $rows = [
+            ['header' => 'Form', 'label' => 'MoH 204 A', 'fields' => [TextInput::make('q1')->label('Available')]],
+        ];
+
+        $hiddenFieldset = GroupedFieldRenderer::buildTableFieldset('Data Collection Tools', $rows, fn () => false);
+        $this->assertFalse($hiddenFieldset->isVisible());
+
+        $visibleFieldset = GroupedFieldRenderer::buildTableFieldset('Data Collection Tools', $rows, fn () => true);
+        $this->assertTrue($visibleFieldset->isVisible());
+
+        $defaultFieldset = GroupedFieldRenderer::buildTableFieldset('Data Collection Tools', $rows);
+        $this->assertTrue($defaultFieldset->isVisible());
+    }
+
+    public function test_render_runs_applies_the_first_rows_visible_closure_to_the_whole_table(): void
+    {
+        $visible = fn () => false;
+
+        $runs = [
+            [
+                'group' => 'Data Collection Tools & Registers|Form|Form A',
+                'fields' => [TextInput::make('q1')->label('Available')],
+                'visible' => $visible,
+            ],
+            [
+                'group' => 'Data Collection Tools & Registers|Form|Form B',
+                'fields' => [TextInput::make('q2')->label('Available')],
+                'visible' => $visible,
+            ],
+        ];
+
+        $fields = GroupedFieldRenderer::renderRuns($runs);
+
+        $this->assertCount(1, $fields);
+        $this->assertFalse($fields[0]->isVisible());
+    }
 }

@@ -26,13 +26,15 @@ class GroupedFieldRenderer
         $fields = [];
         $tableBuffer = [];
         $tableTitle = null;
+        $tableVisible = null;
 
-        $flushTable = function () use (&$fields, &$tableBuffer, &$tableTitle) {
+        $flushTable = function () use (&$fields, &$tableBuffer, &$tableTitle, &$tableVisible) {
             if ($tableBuffer !== []) {
-                $fields[] = static::buildTableFieldset($tableTitle, $tableBuffer);
+                $fields[] = static::buildTableFieldset($tableTitle, $tableBuffer, $tableVisible);
             }
             $tableBuffer = [];
             $tableTitle = null;
+            $tableVisible = null;
         };
 
         foreach ($runs as $run) {
@@ -59,6 +61,12 @@ class GroupedFieldRenderer
             }
 
             $tableTitle = $title;
+            // Every row feeding into one table is expected to share the
+            // same condition (e.g. every MoH-form row gated on the same
+            // documentation-type answer) — carried forward from whichever
+            // row sets it first, same "one shared closure for the whole
+            // wrapper" idea buildGroupFieldset() already uses.
+            $tableVisible ??= $run['visible'] ?? null;
             $tableBuffer[] = ['header' => $rowLabelHeader, 'label' => $rowLabel, 'fields' => $run['fields']];
         }
 
@@ -143,9 +151,12 @@ class GroupedFieldRenderer
 
     /**
      * Renders $rows as one table with a genuine, dedicated header row
-     * followed by one full data row per entry in $rows.
+     * followed by one full data row per entry in $rows. $visible, when
+     * given, hides the whole table at once (e.g. the MoH-form registers
+     * table only when the facility's documentation type includes paper or
+     * hybrid) — same idea as buildGroupFieldset()'s own $visible param.
      */
-    public static function buildTableFieldset(string $title, array $rows)
+    public static function buildTableFieldset(string $title, array $rows, $visible = null)
     {
         $cells = [];
 
@@ -183,11 +194,17 @@ class GroupedFieldRenderer
 
         $columnsPerRow = 1 + count($rows[0]['fields']);
 
-        return Forms\Components\Fieldset::make($title)
+        $fieldset = Forms\Components\Fieldset::make($title)
             ->schema($cells)
             ->columns(['default' => $columnsPerRow, 'sm' => $columnsPerRow, 'md' => $columnsPerRow, 'lg' => $columnsPerRow, 'xl' => $columnsPerRow, '2xl' => $columnsPerRow])
             ->extraAttributes(['class' => 'aqs-data-table'])
             ->columnSpanFull();
+
+        if ($visible !== null) {
+            $fieldset->visible($visible);
+        }
+
+        return $fieldset;
     }
 
     /**
