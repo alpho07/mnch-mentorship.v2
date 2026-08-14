@@ -110,6 +110,51 @@ class AssessmentReportGenerationTest extends TestCase
     }
 
     /**
+     * Regression: "No. Available" was computed as etat_plus +
+     * comprehensive_newborn_care + imnci + type_1_diabetes +
+     * essential_newborn_care instead of the cadre's own independently-
+     * entered total_in_facility. A worker trained in more than one area
+     * (the normal case, not an edge case) got counted once per training
+     * column they qualify for, inflating "available" headcount past the
+     * real total — e.g. a cadre with 5 staff, 3 ETAT+-trained and
+     * 4 IMNCI-trained, showed "Available: 7" instead of the true 5.
+     */
+    public function test_no_available_uses_the_cadres_own_headcount_not_the_sum_of_overlapping_training_columns(): void
+    {
+        $facility = Facility::factory()->create();
+        $assessor = User::factory()->create(['name' => 'HR Double Count Assessor']);
+        $assessment = $this->makeAssessment($assessor, $facility);
+
+        $cadre = MainCadre::create([
+            'assessment_type_id' => $assessment->assessment_type_id,
+            'name' => 'Neonatologist', 'code' => 'neonatologist_dbl_count_test', 'is_active' => true, 'order' => 1,
+        ]);
+        HumanResourceResponse::create([
+            'assessment_id' => $assessment->id,
+            'cadre_id' => $cadre->id,
+            'total_in_facility' => 5,
+            'etat_plus' => 3,
+            'comprehensive_newborn_care' => 0,
+            'imnci' => 4,
+            'type_1_diabetes' => 0,
+            'essential_newborn_care' => 0,
+        ]);
+
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($assessment);
+
+        // The row's "No. Available" cell must show 5 (the real headcount),
+        // never 7 (3 + 4, double-counting the overlap between ETAT+ and IMNCI).
+        $this->assertMatchesRegularExpression(
+            '/Neonatologist\s*<\/td>\s*<td[^>]*>\s*5\s*<\/td>/',
+            $html
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/Neonatologist\s*<\/td>\s*<td[^>]*>\s*7\s*<\/td>/',
+            $html
+        );
+    }
+
+    /**
      * Regression: getInfrastructureDetails()/getSkillsLabDetails()/
      * getInformationSystemsDetails()/getQualityOfCareDetails() looked up
      * their section by code alone (AssessmentSection::where('code', ...)

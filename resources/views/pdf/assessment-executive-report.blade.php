@@ -631,18 +631,24 @@
                                 // display, but sum only the numeric ones
                                 // (is_numeric('N/A') is false), or "int + string"
                                 // throws the moment any cadre has an N/A column.
+                                $totalDisplay = $hr['total_in_facility'] ?? 0;
                                 $etatDisplay = $hr['etat_plus'] ?? 0;
                                 $compNBDisplay = $hr['comprehensive_newborn_care'] ?? 0;
                                 $imnciDisplay = $hr['imnci'] ?? 0;
                                 $diabetesDisplay = $hr['type_1_diabetes'] ?? 0;
                                 $essNBDisplay = $hr['essential_newborn_care'] ?? 0;
 
+                                // No. Available is the cadre's own independently-
+                                // entered headcount, never the sum of the training
+                                // columns — the same worker can be trained in more
+                                // than one area, so adding those together
+                                // double-counts them.
+                                $available = is_numeric($totalDisplay) ? $totalDisplay : 0;
                                 $etat = is_numeric($etatDisplay) ? $etatDisplay : 0;
                                 $compNB = is_numeric($compNBDisplay) ? $compNBDisplay : 0;
                                 $imnci = is_numeric($imnciDisplay) ? $imnciDisplay : 0;
                                 $diabetes = is_numeric($diabetesDisplay) ? $diabetesDisplay : 0;
                                 $essNB = is_numeric($essNBDisplay) ? $essNBDisplay : 0;
-                                $available = $etat + $compNB + $imnci + $diabetes + $essNB;
 
                                 $totalAvailable += $available;
                                 $totalEtat += $etat;
@@ -653,7 +659,7 @@
                             @endphp
                             <tr>
                                 <td class="bold">{{ $hr['cadre'] ?? '-' }}</td>
-                                <td class="center bold">{{ $available }}</td>
+                                <td class="center bold">{{ $totalDisplay }}</td>
                                 <td class="center">{{ $etatDisplay }}</td>
                                 <td class="center">{{ $compNBDisplay }}</td>
                                 <td class="center">{{ $imnciDisplay }}</td>
