@@ -92,12 +92,45 @@ class EditHealthProducts extends EditRecord
                 ->tabs(
                     $departments->map(function ($dept) use ($categories, $responsesByCode) {
                         return Forms\Components\Tabs\Tab::make($dept->name)
-                            ->schema($this->buildCategorySections($dept, $categories, $responsesByCode));
+                            ->schema([
+                                Forms\Components\Actions::make([
+                                    Forms\Components\Actions\Action::make("save_dept_{$dept->id}")
+                                        ->label("Save {$dept->name}")
+                                        ->icon('heroicon-o-check-circle')
+                                        ->color('success')
+                                        ->action(fn () => $this->saveDepartmentTab($dept->id)),
+                                ])->columnSpanFull(),
+                                ...$this->buildCategorySections($dept, $categories, $responsesByCode),
+                            ]);
                     })->toArray()
                 )
                 ->columnSpanFull()
                 ->contained(false),
         ]);
+    }
+
+    /**
+     * Save just one department's commodities without touching the rest of
+     * the form or navigating away — lets an assessor save progress
+     * department-by-department instead of always submitting all
+     * departments (up to ~800 commodities for a large facility) at once.
+     */
+    public function saveDepartmentTab(int $departmentId): void
+    {
+        $payload = $this->data['commodities'][$departmentId] ?? [];
+
+        $this->persistCommodityResponses([$departmentId => $payload]);
+
+        app(\App\Services\CommodityScoringService::class)
+            ->recalculateDepartmentScore($this->record->id, $departmentId);
+
+        $departmentName = AssessmentDepartment::find($departmentId)?->name ?? 'Department';
+
+        Notification::make()
+            ->title("{$departmentName} saved")
+            ->success()
+            ->duration(2500)
+            ->send();
     }
 
     private function responsesByQuestionCode(): array
@@ -210,23 +243,9 @@ class EditHealthProducts extends EditRecord
     {
         $payload = $data['commodities'] ?? [];
 
-        foreach ($payload as $departmentId => $commodityEntries) {
-            foreach ($commodityEntries as $commodityId => $value) {
-                $isNotApplicable = $value === 'na';
+        $this->persistCommodityResponses($payload);
 
-                AssessmentCommodityResponse::updateOrCreate(
-                    [
-                        'assessment_id' => $this->record->id,
-                        'assessment_department_id' => $departmentId,
-                        'commodity_id' => $commodityId,
-                    ],
-                    [
-                        'available' => $isNotApplicable ? false : (bool) $value,
-                        'not_applicable' => $isNotApplicable,
-                    ]
-                );
-            }
-
+        foreach (array_keys($payload) as $departmentId) {
             app(\App\Services\CommodityScoringService::class)
                 ->recalculateDepartmentScore($this->record->id, $departmentId);
         }
@@ -239,6 +258,53 @@ class EditHealthProducts extends EditRecord
         unset($data['commodities']);
 
         return $data;
+    }
+
+    /**
+     * Bulk-upserts commodity responses in one query instead of one
+     * updateOrCreate() per commodity. AssessmentCommodityResponse's
+     * `saved` model event recalculates the whole department's score on
+     * every row — fine for a single live-form toggle, but with hundreds
+     * of commodities saved together that meant a full department rescore
+     * per row instead of once per department, which is what turned a
+     * single Save click into a 30-second-plus timeout. upsert() bypasses
+     * Eloquent events entirely, so the score column is set here to match
+     * what the model's `saving` event would have computed.
+     *
+     * @param  array<int, array<int, mixed>>  $payload  [departmentId => [commodityId => 1|0|'na']]
+     */
+    private function persistCommodityResponses(array $payload): void
+    {
+        $now = now();
+        $rows = [];
+
+        foreach ($payload as $departmentId => $commodityEntries) {
+            foreach ($commodityEntries as $commodityId => $value) {
+                $isNotApplicable = $value === 'na';
+                $available = $isNotApplicable ? false : (bool) $value;
+
+                $rows[] = [
+                    'assessment_id' => $this->record->id,
+                    'assessment_department_id' => $departmentId,
+                    'commodity_id' => $commodityId,
+                    'available' => $available,
+                    'not_applicable' => $isNotApplicable,
+                    'score' => ($isNotApplicable || ! $available) ? 0 : 1,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        if (empty($rows)) {
+            return;
+        }
+
+        AssessmentCommodityResponse::upsert(
+            $rows,
+            ['assessment_id', 'commodity_id', 'assessment_department_id'],
+            ['available', 'not_applicable', 'score', 'updated_at']
+        );
     }
 
     protected function getCurrentSectionKey(): string
