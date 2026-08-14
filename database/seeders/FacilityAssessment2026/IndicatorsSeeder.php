@@ -12,7 +12,7 @@ class IndicatorsSeeder extends Seeder
     private const EMR_GATE = ['question_code' => 'INFOSYS_EMR_ACCESS', 'operator' => 'equals', 'value' => 'Yes'];
 
     private const NEWBORN = [
-        ['IND_NEWBORN_ADMISSIONS', 'Total number of newborn admissions for the last Quarter (Current agreed period)', 0],
+        ['IND_NEWBORN_ADMISSIONS', 'Total number of newborn admissions for the last complete month', 0],
         ['IND_NEWBORN_HYPOTHERMIA', 'Total number of newborns with hypothermia at admission (temp <36.5)', 0],
         ['IND_NEWBORN_O2SAT_TAKEN', 'Total number of newborns who had their oxygen saturation taken at admission (sample 30 newborn files)', 1],
         ['IND_NEWBORN_RBS_TAKEN', 'Total number of admitted newborns who had their RBS taken at admission (sample 30 newborn files)', 0],
