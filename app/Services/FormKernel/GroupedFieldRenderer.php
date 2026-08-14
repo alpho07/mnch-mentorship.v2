@@ -180,9 +180,7 @@ class GroupedFieldRenderer
             $cells[] = $rowLabelCell;
 
             foreach ($row['fields'] as $field) {
-                if (method_exists($field, 'hiddenLabel')) {
-                    $field->hiddenLabel();
-                }
+                static::hideFieldLabel($field);
 
                 if (method_exists($field, 'columnSpan')) {
                     $field->columnSpan(1);
@@ -231,5 +229,30 @@ class GroupedFieldRenderer
         }
 
         return '';
+    }
+
+    /**
+     * A table cell's built field may be a bare Field (its own
+     * ->hiddenLabel() suppresses the repeated "Available"/"Completeness"
+     * text on every row) or a layout component like Group (yes_no's Radio
+     * + conditional Textarea). Group also responds to hiddenLabel(), but
+     * calling only that was a no-op — Group never renders a label of its
+     * own, so the call succeeded and did nothing while the inner Radio's
+     * genuine label kept rendering on every single row instead of just
+     * the header. Always recurses into child components too, regardless
+     * of whether the wrapper itself has hiddenLabel(), so nested leaf
+     * fields get suppressed as well.
+     */
+    private static function hideFieldLabel($field): void
+    {
+        if (method_exists($field, 'hiddenLabel')) {
+            $field->hiddenLabel();
+        }
+
+        if (method_exists($field, 'getChildComponents')) {
+            foreach ($field->getChildComponents() as $child) {
+                static::hideFieldLabel($child);
+            }
+        }
     }
 }

@@ -29,6 +29,37 @@ class GroupedFieldRendererTest extends TestCase
         $this->assertSame('Available', $headerCell->getLabel());
     }
 
+    /**
+     * Regression: a yes_no question's built field is a Group wrapping
+     * [Radio, conditional explanation Textarea]. Group does respond to
+     * hiddenLabel(), but it never renders a label of its own, so calling
+     * only that was a no-op — the inner Radio's genuine label
+     * ("Available"/"Completeness") kept rendering on every single data
+     * row instead of just once in the header.
+     */
+    public function test_data_row_labels_are_hidden_even_when_the_field_is_a_group_wrapper(): void
+    {
+        $radio = Radio::make('question_response_1')->label('Available');
+        $group = Group::make([$radio]);
+
+        $rows = [
+            [
+                'header' => 'Form',
+                'label' => 'MoH 204 A',
+                'fields' => [Radio::make('header_only')->label('Available')],
+            ],
+            [
+                'header' => 'Form',
+                'label' => 'NCD Register',
+                'fields' => [$group],
+            ],
+        ];
+
+        GroupedFieldRenderer::buildTableFieldset('Data Collection Tools', $rows);
+
+        $this->assertTrue($radio->isLabelHidden());
+    }
+
     public function test_table_header_still_resolves_label_from_a_bare_field(): void
     {
         $input = TextInput::make('question_response_2')->label('Count');
