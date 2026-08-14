@@ -2,11 +2,18 @@
 
 namespace Tests\Feature\FacilityAssessment2026;
 
+use App\Filament\Resources\AssessmentResource;
+use App\Models\Assessment;
 use App\Models\AssessmentQuestion;
+use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentSection;
 use App\Models\AssessmentType;
+use App\Models\Facility;
+use App\Models\User;
 use Database\Seeders\FacilityAssessment2026\InformationSystemsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class InformationSystemsSeederTest extends TestCase
@@ -62,7 +69,11 @@ class InformationSystemsSeederTest extends TestCase
         $this->makeType();
         $this->seed(InformationSystemsSeeder::class);
 
-        $expected = ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'intersects', 'value' => ['Paper based', 'Hybrid']];
+        // Every doc-type option is included — an EMR-only facility still
+        // keeps physical registers/MoH forms and needs to record their
+        // availability/completeness too, so this must show regardless of
+        // which doc type was picked, not just Paper based/Hybrid.
+        $expected = ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'intersects', 'value' => ['Paper based', 'Hybrid', 'EMR']];
 
         $available = AssessmentQuestion::where('question_code', 'MOH_204A_AVAILABLE')->firstOrFail();
         $this->assertSame($expected, $available->display_conditions);
@@ -119,5 +130,43 @@ class InformationSystemsSeederTest extends TestCase
         $this->assertSame('1. What type of documentation is the facility using', AssessmentQuestion::where('question_code', 'INFOSYS_DOC_TYPE')->value('question_text'));
         $this->assertSame('2. How is data managed?', AssessmentQuestion::where('question_code', 'INFOSYS_EMR_DATA_MGMT')->value('question_text'));
         $this->assertSame('Available', AssessmentQuestion::where('question_code', 'MOH_204A_AVAILABLE')->value('question_text'));
+    }
+
+    /**
+     * Regression: the MoH-form Available/Completeness rows were gated to
+     * only ['Paper based', 'Hybrid'] doc types — an EMR-only facility
+     * (a very common real answer) never saw the register table at all,
+     * even though it still keeps physical registers. The gate now
+     * includes 'EMR' too.
+     */
+    public function test_moh_form_rows_still_show_when_doc_type_is_emr_only(): void
+    {
+        $type = $this->makeType();
+        $this->seed(InformationSystemsSeeder::class);
+
+        $user = User::factory()->create(['name' => 'EMR Gate Assessor']);
+        Role::firstOrCreate(['name' => 'assessor', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'view_any_assessment', 'guard_name' => 'web']);
+        $user->givePermissionTo('view_any_assessment');
+        $user->assignRole('assessor');
+        $this->actingAs($user);
+
+        $facility = Facility::factory()->create();
+        $assessment = Assessment::create([
+            'facility_id' => $facility->id, 'assessment_type_id' => $type->id,
+            'assessment_type' => 'baseline', 'assessment_date' => now(), 'assessor_id' => $user->id,
+        ]);
+
+        $docType = AssessmentQuestion::where('question_code', 'INFOSYS_DOC_TYPE')->firstOrFail();
+        AssessmentQuestionResponse::create([
+            'assessment_id' => $assessment->id, 'assessment_question_id' => $docType->id,
+            'response_value' => json_encode(['EMR']),
+        ]);
+
+        $url = AssessmentResource::getUrl('edit-section', ['record' => $assessment->id, 'sectionCode' => 'information_systems']);
+        $response = $this->get($url);
+
+        $response->assertOk();
+        $response->assertSee('MoH 204 A: Out- Patient register', false);
     }
 }
