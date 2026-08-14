@@ -105,10 +105,19 @@ class InfrastructureSeederTest extends TestCase
         $this->seed(InfrastructureSeeder::class);
 
         $this->assertSame('1. Do you have a newborn unit?', AssessmentQuestion::where('question_code', 'INFRA_HAS_NBU')->value('question_text'));
-        $this->assertSame('13. Is there a triage area in the outpatient department?', AssessmentQuestion::where('question_code', 'INFRA_TRIAGE')->value('question_text'));
+        $this->assertSame('12. Is there a triage area in the outpatient department?', AssessmentQuestion::where('question_code', 'INFRA_TRIAGE')->value('question_text'));
 
         // Bed-pair sub-fields stay grouped under their parent's number
         // rather than getting their own.
         $this->assertSame('No. Functional', AssessmentQuestion::where('question_code', 'INFRA_NBU_GENERAL_FUNCTIONAL')->value('question_text'));
+    }
+
+    public function test_nebulization_corner_question_is_deactivated(): void
+    {
+        $this->makeType();
+        $this->seed(InfrastructureSeeder::class);
+
+        $q = AssessmentQuestion::where('question_code', 'INFRA_NEBULIZATION')->firstOrFail();
+        $this->assertFalse($q->is_active);
     }
 }

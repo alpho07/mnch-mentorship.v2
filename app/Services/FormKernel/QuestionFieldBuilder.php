@@ -32,6 +32,7 @@ class QuestionFieldBuilder
         $fieldName = "question_response_{$question->id}";
 
         return match ($question->question_type) {
+            'heading' => static::buildHeadingField($question, $fieldName),
             'yes_no' => static::buildYesNoField($question, $fieldName, $response),
             'yes_no_partial' => static::buildYesNoPartialField($question, $fieldName, $response),
             'proportion' => static::buildProportionField($question, $fieldName, $response),
@@ -55,6 +56,22 @@ class QuestionFieldBuilder
             'matrix' => static::buildMatrixField($question, $fieldName, $response),
             default => null,
         };
+    }
+
+    /**
+     * Pure informational text, no input — e.g. a descriptive title placed
+     * before a group of indicator questions. Never produces a response:
+     * DynamicFormBuilder::saveResponses() skips any question whose field
+     * name isn't present in the submitted form data, and this field has
+     * no wire:model binding to submit one.
+     */
+    public static function buildHeadingField(AssessmentQuestion|SurveyQuestion $question, string $fieldName)
+    {
+        return Forms\Components\Placeholder::make($fieldName)
+            ->label('')
+            ->content($question->question_text)
+            ->extraAttributes(['class' => 'font-semibold'])
+            ->columnSpanFull();
     }
 
     public static function buildYesNoField(AssessmentQuestion|SurveyQuestion $question, string $fieldName, AssessmentQuestionResponse|SurveyQuestionResponse|null $response)

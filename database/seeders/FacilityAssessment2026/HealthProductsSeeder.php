@@ -68,7 +68,7 @@ class HealthProductsSeeder extends Seeder
             // Row 112: whole group excluded from Theatre; sizes 4.5-6.0
             // additionally excluded from NBU ("N/A in newborn 4.5 to 6" —
             // 4.0 is not listed, so it stays applicable there).
-            ['ETT', [
+            ['Endotracheal Tubes (size 2 –size 4)', [
                 '2.5', '3.0', '3.5', '4.0',
                 ['4.5', ['exclude' => ['NBU']]],
                 ['5.0', ['exclude' => ['NBU']]],
@@ -225,6 +225,48 @@ class HealthProductsSeeder extends Seeder
             'Kidney dish',
             ['Bed/ couch and Linen', ['exclude' => ['NBU']]],
             ['Food colour- red and green', ['exclude' => ['NBU', 'Maternity', 'Theatre', 'Paediatric ward', 'Paediatric outpatient']]],
+        ],
+        // The following 3 categories aren't in the source spreadsheet's
+        // Health Products matrix at all — they mirror the ChecklistsSeeder
+        // reference content (shown as a read-only "View checklist" popup
+        // on a single gate question) as real, individually answerable
+        // commodities, scoped to one department each.
+        'SKILLS LAB EQUIPMENT' => [
+            ['EQUIPMENT', [
+                'neonatal manikin with inflatable lungs',
+                'preterm manikin with open nares and mouth for OGT ,NGT  and CPAP demonstration',
+                'mama breast',
+                'Radiant Warmer',
+                'Suction Machine',
+            ], ['only' => ['Skills lab']]],
+            ['STATIONERY', [
+                'Flip charts',
+                'White board markers',
+            ], ['only' => ['Skills lab']]],
+        ],
+        'TRIAGE' => [
+            ['Triage', [
+                'Table', 'Chairs', 'Paediatric stethoscopes', 'Vital signs monitor', 'Digital thermometer',
+                'Handheld pulse oximeter with infant and paediatrics probes',
+                'BP machines with a range of cuff sizes (newborns, infants, older children and adolescents)',
+                'Weighing scales (infant and older children)', 'Stadiometer', 'Tape measures (MUAC tapes, Breslow tapes)',
+                'Examination couch', 'Heating source', 'Computer', 'Storage cabinets', 'Hand washing point',
+                'Alcohol-based hand rub (isopropyl alcohol 75%-500ml)', 'Disposable hand towels',
+            ], ['only' => ['Paediatric outpatient']]],
+        ],
+        // "Paediatric Inpatient" in the request maps to the existing
+        // 'Paediatric ward' department — the same list already seeded as
+        // the ORT Corner checklist's reference content.
+        'ORT CORNER' => [
+            ['ORT Corner', [
+                'Clean spoons', 'Plastic buckets (with lids for infection prevention)',
+                'Buckets – for storing cups, spoons,', 'Small plastic cups (50-100ml & 100-200ml & 500mls)',
+                '1 litre Calibrated measuring jars', 'Table Trays', 'Wash Basins', 'Water boiling equipment',
+                'Waste Bin', 'Functinal Wall Clock', 'Table- for mixing ORS', 'Benches/chair(s), comfortable seats',
+                'Hand Washing Facility/Point e.g. tippy taps and new technologies and soap', 'Safe water source',
+                'Chlorine for disinfection', 'Low osmolarity ORS/Zinc copack /Resomal',
+                'ORT monitoring tools (Register, summary sheets etc)',
+            ], ['only' => ['Paediatric ward']]],
         ],
     ];
 

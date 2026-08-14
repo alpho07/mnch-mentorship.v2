@@ -22,13 +22,36 @@ class SkillsLabSeederTest extends TestCase
         return $type;
     }
 
-    public function test_seeds_22_questions(): void
+    public function test_seeds_23_questions(): void
     {
         $type = $this->makeType();
         $this->seed(SkillsLabSeeder::class);
 
         $section = AssessmentSection::where('assessment_type_id', $type->id)->where('code', 'skills_lab')->first();
-        $this->assertSame(22, $section->questions()->count());
+        $this->assertSame(23, $section->questions()->count());
+    }
+
+    public function test_handwash_sink_question_mentions_clean_running_water(): void
+    {
+        $this->makeType();
+        $this->seed(SkillsLabSeeder::class);
+
+        $q = AssessmentQuestion::where('question_code', 'SKILLS_YES_HANDWASH_SINK')->firstOrFail();
+        $this->assertStringContainsString('clean running water', $q->question_text);
+    }
+
+    public function test_fire_exits_and_extinguishers_are_separate_questions(): void
+    {
+        $this->makeType();
+        $this->seed(SkillsLabSeeder::class);
+
+        $exits = AssessmentQuestion::where('question_code', 'SKILLS_YES_FIRE_EXITS')->firstOrFail();
+        $extinguishers = AssessmentQuestion::where('question_code', 'SKILLS_YES_FIRE_EXTINGUISHERS')->firstOrFail();
+
+        $this->assertStringContainsString('fire exits?', $exits->question_text);
+        $this->assertStringNotContainsString('extinguishers', $exits->question_text);
+        $this->assertStringContainsString('fire extinguishers?', $extinguishers->question_text);
+        $this->assertSame(['question_code' => 'SKILLS_HAS_LAB', 'operator' => 'equals', 'value' => 'Yes'], $extinguishers->display_conditions);
     }
 
     public function test_yes_branch_questions_are_gated_on_skills_has_lab(): void
@@ -90,8 +113,8 @@ class SkillsLabSeederTest extends TestCase
         $this->seed(SkillsLabSeeder::class);
 
         $this->assertSame('1. Is there a functional skills lab?', AssessmentQuestion::where('question_code', 'SKILLS_HAS_LAB')->value('question_text'));
-        $this->assertSame('20. Newborn Anne Manikin that can be intubated and has an umbilicus for UVC insertion?', AssessmentQuestion::where('question_code', 'SKILLS_YES_MANIKIN_ANNE')->value('question_text'));
-        $this->assertSame('22. Is there a lockable storage area for the equipment to be used in skills teaching and simulation?', AssessmentQuestion::where('question_code', 'SKILLS_NO_LOCKABLE_STORAGE')->value('question_text'));
+        $this->assertSame('21. Newborn Anne Manikin that can be intubated and has an umbilicus for UVC insertion?', AssessmentQuestion::where('question_code', 'SKILLS_YES_MANIKIN_ANNE')->value('question_text'));
+        $this->assertSame('23. Is there a lockable storage area for the equipment to be used in skills teaching and simulation?', AssessmentQuestion::where('question_code', 'SKILLS_NO_LOCKABLE_STORAGE')->value('question_text'));
     }
 
     public function test_power_backup_is_a_yes_no_gate_with_a_reason_on_no(): void

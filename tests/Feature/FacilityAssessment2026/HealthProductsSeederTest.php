@@ -43,16 +43,80 @@ class HealthProductsSeederTest extends TestCase
         return $type;
     }
 
-    public function test_seeds_7_departments_and_9_categories(): void
+    public function test_seeds_7_departments_and_12_categories(): void
     {
         $type = $this->makeType();
         $this->seed(HealthProductsSeeder::class);
 
         $this->assertSame(7, AssessmentDepartment::where('assessment_type_id', $type->id)->count());
-        $this->assertSame(9, CommodityCategory::where('assessment_type_id', $type->id)->count());
+        $this->assertSame(12, CommodityCategory::where('assessment_type_id', $type->id)->count());
         $this->assertTrue(AssessmentDepartment::where('assessment_type_id', $type->id)->where('name', 'Paediatric outpatient')->exists());
         $this->assertTrue(AssessmentDepartment::where('assessment_type_id', $type->id)->where('name', 'Laboratory')->exists());
         $this->assertTrue(CommodityCategory::where('assessment_type_id', $type->id)->where('name', 'LABORATORY')->exists());
+    }
+
+    /**
+     * Promoted from ChecklistsSeeder's read-only "Skills Lab Checklist
+     * Requirements" reference content into real, individually answerable
+     * commodities scoped to the Skills lab department alone.
+     */
+    public function test_skills_lab_equipment_category_is_scoped_to_skills_lab_only(): void
+    {
+        $this->makeType();
+        $this->seed(HealthProductsSeeder::class);
+
+        $category = CommodityCategory::where('name', 'SKILLS LAB EQUIPMENT')->firstOrFail();
+        $items = Commodity::where('commodity_category_id', $category->id)->get();
+        $this->assertCount(7, $items);
+        $this->assertTrue($items->contains('name', 'mama breast'));
+        $this->assertTrue($items->contains('name', 'Radiant Warmer'));
+        $this->assertTrue($items->contains('name', 'Flip charts'));
+
+        foreach ($items as $item) {
+            $departments = $item->applicableDepartments()->pluck('name');
+            $this->assertSame(['Skills lab'], $departments->all());
+        }
+    }
+
+    /**
+     * Promoted from ChecklistsSeeder's "Triage requirements" reference
+     * content, scoped to the Paediatric outpatient department alone.
+     */
+    public function test_triage_category_is_scoped_to_paediatric_outpatient_only(): void
+    {
+        $this->makeType();
+        $this->seed(HealthProductsSeeder::class);
+
+        $category = CommodityCategory::where('name', 'TRIAGE')->firstOrFail();
+        $items = Commodity::where('commodity_category_id', $category->id)->get();
+        $this->assertCount(17, $items);
+        $this->assertTrue($items->contains('name', 'Stadiometer'));
+
+        foreach ($items as $item) {
+            $departments = $item->applicableDepartments()->pluck('name');
+            $this->assertSame(['Paediatric outpatient'], $departments->all());
+        }
+    }
+
+    /**
+     * Promoted from ChecklistsSeeder's "ORT Corner checklist" reference
+     * content, scoped to the Paediatric ward department alone ("Paediatric
+     * Inpatient" in the source request maps to that existing department).
+     */
+    public function test_ort_corner_category_is_scoped_to_paediatric_ward_only(): void
+    {
+        $this->makeType();
+        $this->seed(HealthProductsSeeder::class);
+
+        $category = CommodityCategory::where('name', 'ORT CORNER')->firstOrFail();
+        $items = Commodity::where('commodity_category_id', $category->id)->get();
+        $this->assertCount(17, $items);
+        $this->assertTrue($items->contains('name', 'Clean spoons'));
+
+        foreach ($items as $item) {
+            $departments = $item->applicableDepartments()->pluck('name');
+            $this->assertSame(['Paediatric ward'], $departments->all());
+        }
     }
 
     public function test_suction_catheters_split_into_4_lettered_commodities(): void
@@ -77,7 +141,7 @@ class HealthProductsSeederTest extends TestCase
         $this->makeType();
         $this->seed(HealthProductsSeeder::class);
 
-        $items = Commodity::where('group_label', 'ETT')->get()->keyBy('name');
+        $items = Commodity::where('group_label', 'Endotracheal Tubes (size 2 –size 4)')->get()->keyBy('name');
         $this->assertCount(8, $items);
         $this->assertTrue($items->every(fn ($c) => $c->display_conditions === null));
 

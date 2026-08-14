@@ -12,6 +12,7 @@ class IndicatorsSeeder extends Seeder
     private const EMR_GATE = ['question_code' => 'INFOSYS_EMR_ACCESS', 'operator' => 'equals', 'value' => 'Yes'];
 
     private const NEWBORN = [
+        ['IND_NEWBORN_HEADING', 'Newborn Inpatient Files (sample 30 newborn inpatient files) (Newborns admitted in the newborn unit)', 0],
         ['IND_NEWBORN_ADMISSIONS', 'Total number of newborn admissions for the last complete month', 0],
         ['IND_NEWBORN_HYPOTHERMIA', 'Total number of newborns with hypothermia at admission (temp <36.5)', 0],
         ['IND_NEWBORN_O2SAT_TAKEN', 'Total number of newborns who had their oxygen saturation taken at admission (sample 30 newborn files)', 1],
@@ -29,6 +30,7 @@ class IndicatorsSeeder extends Seeder
     ];
 
     private const PAEDIATRIC = [
+        ['IND_PAED_HEADING', 'Paediatric Inpatient Files (sample 30 paediatric inpatient files) (Children admitted in the paediatric ward)', 0],
         ['IND_PAED_ADMISSIONS', 'Total number of paediatric admissions for the last complete month) (Paediatric admission file)', 0],
         ['IND_PAED_O2SAT_TAKEN', 'How many had an oxygen saturation taken at admission?', 0],
         ['IND_PAED_HYPOXEMIA', 'Of these, how many had an oxygen saturation less than <90%?', 1],
@@ -61,14 +63,21 @@ class IndicatorsSeeder extends Seeder
             'Paediatric Indicators' => self::PAEDIATRIC,
         ];
 
+        $headingCodes = ['IND_NEWBORN_HEADING', 'IND_PAED_HEADING'];
+
         foreach ($groups as $groupLabel => $questions) {
             foreach ($questions as [$code, $text, $indent]) {
                 $order++;
+                $isHeading = in_array($code, $headingCodes, true);
                 AssessmentQuestion::updateOrCreate(
                     ['assessment_section_id' => $section->id, 'question_code' => $code],
                     [
                         'question_text' => $text,
-                        'question_type' => 'number',
+                        // A pure descriptive title placed before its
+                        // group's indicator questions — no input, never
+                        // produces a response (see
+                        // QuestionFieldBuilder::buildHeadingField()).
+                        'question_type' => $isHeading ? 'heading' : 'number',
                         'is_scored' => false,
                         'indent_level' => $indent,
                         // Every question in one half shares this group, so

@@ -14,11 +14,12 @@ class SkillsLabSeeder extends Seeder
         ['SKILLS_YES_POWER_OUTLETS', 'Does the Skills lab have at least 4 power outlets?', 'yes_no'],
         ['SKILLS_YES_POWER_BACKUP', 'Is there a power back up system?', 'yes_no'],
         ['SKILLS_YES_POWER_BACKUP_TYPE', 'Specify the power back up type', 'multi_select'],
-        ['SKILLS_YES_HANDWASH_SINK', 'Does the skills lab have at least 1 hand washing sink with running water and soap?', 'yes_no'],
+        ['SKILLS_YES_HANDWASH_SINK', 'Does the skills lab have at least 1 hand washing sink with clean running water and soap?', 'yes_no'],
         ['SKILLS_YES_VENTILATED', 'Is the space well ventilated?', 'yes_no'],
         ['SKILLS_YES_WELL_LIT', 'Is the space well lit?', 'yes_no'],
         ['SKILLS_YES_LOCKABLE_STORE', 'Does the skills lab have a lockable store or cabinet to safely maintain the skills lab essential supplies and equipment?', 'yes_no'],
-        ['SKILLS_YES_FIRE_EXITS', 'Are there clearly marked fire exits and fire extinguishers?', 'yes_no'],
+        ['SKILLS_YES_FIRE_EXITS', 'Are there clearly marked fire exits?', 'yes_no'],
+        ['SKILLS_YES_FIRE_EXTINGUISHERS', 'Are there clearly marked fire extinguishers?', 'yes_no'],
         ['SKILLS_YES_OFFICER_IN_CHARGE', 'Is there an officer in charge of the skills lab?', 'yes_no'],
         ['SKILLS_YES_BIOMED_MAINTENANCE', 'Is there a biomed assigned to do planned preventive maintainance and corrective maintainance?', 'yes_no'],
         ['SKILLS_YES_MONTHLY_REPORTS', 'Are there upto date monthly/quaterly reports showing activities/events held in the skills lab?', 'select'],
@@ -136,6 +137,6 @@ class SkillsLabSeeder extends Seeder
             );
         }
 
-        $this->command->info('  ✓ skills_lab: 22 questions (1 gate + 19 yes-branch + 2 no-branch).');
+        $this->command->info('  ✓ skills_lab: 23 questions (1 gate + 20 yes-branch + 2 no-branch).');
     }
 }

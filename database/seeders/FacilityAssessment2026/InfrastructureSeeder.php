@@ -44,6 +44,24 @@ class InfrastructureSeeder extends Seeder
             );
         };
 
+        // Deactivated rather than deleted outright — preserves any response
+        // already recorded on a live assessment instead of orphaning it.
+        $createInactive = function (array $attrs) use ($section, &$order) {
+            $order++;
+            AssessmentQuestion::updateOrCreate(
+                ['assessment_section_id' => $section->id, 'question_code' => $attrs['question_code']],
+                array_merge([
+                    'question_type' => 'yes_no',
+                    'is_scored' => true,
+                    'scoring_map' => ['Yes' => 1, 'No' => 0],
+                    'requires_explanation_on' => ['No'],
+                    'order' => $order,
+                    'is_active' => false,
+                    'indent_level' => 0,
+                ], $attrs)
+            );
+        };
+
         $create(['question_code' => 'INFRA_HAS_NBU', 'question_text' => 'Do you have a newborn unit?']);
         $order = $this->bedCountPair($section, $order, 'INFRA_NBU_GENERAL', 'General NBU beds', 'INFRA_HAS_NBU');
         $order = $this->bedCountPair($section, $order, 'INFRA_NBU_KMC', 'KMC beds', 'INFRA_HAS_NBU');
@@ -64,10 +82,10 @@ class InfrastructureSeeder extends Seeder
         $create(['question_code' => 'INFRA_ORT_OUTPATIENT', 'question_text' => 'Is there a functional Oral Rehydration Therapy (ORT) corner in the outpatient department?', 'checklist_id' => $ortChecklist?->id]);
         $create(['question_code' => 'INFRA_ORT_INPATIENT', 'question_text' => 'Is there a functional Oral Rehydration Therapy (ORT) corner in the inpatient department?', 'checklist_id' => $ortChecklist?->id]);
         $create(['question_code' => 'INFRA_ORT_REGISTER', 'question_text' => 'Is there an updated Oral Rehydration Therapy (ORT) corner register?(Observe availability and functionality)?']);
-        $create(['question_code' => 'INFRA_NEBULIZATION', 'question_text' => 'Is there a nebulization corner?']);
+        $createInactive(['question_code' => 'INFRA_NEBULIZATION', 'question_text' => 'Is there a nebulization corner?']);
         $create(['question_code' => 'INFRA_TRIAGE', 'question_text' => 'Is there a triage area in the outpatient department?', 'checklist_id' => $triageChecklist?->id]);
 
-        $this->command->info('  ✓ infrastructure: 30 questions (14 gating/plain + 16 bed-capacity).');
+        $this->command->info('  ✓ infrastructure: 23 questions (22 active, 1 deactivated: nebulization corner).');
     }
 
     /**

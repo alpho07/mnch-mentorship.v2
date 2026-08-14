@@ -33,6 +33,21 @@ class QuestionFieldBuilderNewTypesTest extends TestCase
         $this->assertInstanceOf(\Filament\Forms\Components\DatePicker::class, $field);
     }
 
+    /**
+     * Pure informational text (e.g. a title placed before a group of
+     * questions) — a Placeholder, not an input, so it never has anything
+     * to submit back.
+     */
+    public function test_heading_field_builds_a_placeholder_with_no_input(): void
+    {
+        $question = $this->makeQuestion('heading', ['question_text' => 'Section title text']);
+
+        $field = QuestionFieldBuilder::buildField($question, null);
+
+        $this->assertInstanceOf(\Filament\Forms\Components\Placeholder::class, $field);
+        $this->assertSame('Section title text', $field->getContent());
+    }
+
     public function test_datetime_field_builds_a_datetime_picker(): void
     {
         $field = QuestionFieldBuilder::buildField($this->makeQuestion('datetime'), null);
