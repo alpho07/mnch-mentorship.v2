@@ -152,7 +152,7 @@ class AssessmentPdfReportService {
      * Get infrastructure details
      */
     protected function getInfrastructureDetails(Assessment $assessment): array {
-        $sectionId = AssessmentSection::where('code', 'infrastructure')->value('id');
+        $sectionId = AssessmentSection::where('code', 'infrastructure')->where('assessment_type_id', $assessment->assessment_type_id)->value('id');
 
         $responses = $assessment->questionResponses()
                 ->whereHas('question', function ($q) use ($sectionId) {
@@ -191,7 +191,7 @@ class AssessmentPdfReportService {
      * Get skills lab details
      */
     protected function getSkillsLabDetails(Assessment $assessment): array {
-        $sectionId = AssessmentSection::where('code', 'skills_lab')->value('id');
+        $sectionId = AssessmentSection::where('code', 'skills_lab')->where('assessment_type_id', $assessment->assessment_type_id)->value('id');
 
         $responses = $assessment->questionResponses()
                 ->whereHas('question', function ($q) use ($sectionId) {
@@ -346,7 +346,7 @@ class AssessmentPdfReportService {
      * Get information systems details
      */
     protected function getInformationSystemsDetails(Assessment $assessment): array {
-        $sectionId = AssessmentSection::where('code', 'information_systems')->value('id');
+        $sectionId = AssessmentSection::where('code', 'information_systems')->where('assessment_type_id', $assessment->assessment_type_id)->value('id');
 
         $responses = $assessment->questionResponses()
                 ->whereHas('question', function ($q) use ($sectionId) {
@@ -391,7 +391,7 @@ class AssessmentPdfReportService {
      * Get quality of care details
      */
     protected function getQualityOfCareDetails(Assessment $assessment): array {
-        $sectionId = AssessmentSection::where('code', 'quality_of_care')->value('id');
+        $sectionId = AssessmentSection::where('code', 'quality_of_care')->where('assessment_type_id', $assessment->assessment_type_id)->value('id');
 
         $responses = $assessment->questionResponses()
                 ->whereHas('question', function ($q) use ($sectionId) {

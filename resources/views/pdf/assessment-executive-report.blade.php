@@ -563,11 +563,22 @@
                     <tbody>
                         @foreach($humanResourcesDetails['responses'] as $hr)
                             @php
-                                $etat = $hr['etat_plus'] ?? 0;
-                                $compNB = $hr['comprehensive_newborn_care'] ?? 0;
-                                $imnci = $hr['imnci'] ?? 0;
-                                $diabetes = $hr['type_1_diabetes'] ?? 0;
-                                $essNB = $hr['essential_newborn_care'] ?? 0;
+                                // hrCell() returns the string 'N/A' for a cadre's
+                                // inapplicable training columns — keep that for
+                                // display, but sum only the numeric ones
+                                // (is_numeric('N/A') is false), or "int + string"
+                                // throws the moment any cadre has an N/A column.
+                                $etatDisplay = $hr['etat_plus'] ?? 0;
+                                $compNBDisplay = $hr['comprehensive_newborn_care'] ?? 0;
+                                $imnciDisplay = $hr['imnci'] ?? 0;
+                                $diabetesDisplay = $hr['type_1_diabetes'] ?? 0;
+                                $essNBDisplay = $hr['essential_newborn_care'] ?? 0;
+
+                                $etat = is_numeric($etatDisplay) ? $etatDisplay : 0;
+                                $compNB = is_numeric($compNBDisplay) ? $compNBDisplay : 0;
+                                $imnci = is_numeric($imnciDisplay) ? $imnciDisplay : 0;
+                                $diabetes = is_numeric($diabetesDisplay) ? $diabetesDisplay : 0;
+                                $essNB = is_numeric($essNBDisplay) ? $essNBDisplay : 0;
                                 $available = $etat + $compNB + $imnci + $diabetes + $essNB;
 
                                 $totalAvailable += $available;
@@ -580,11 +591,11 @@
                             <tr>
                                 <td class="bold">{{ $hr['cadre'] ?? '-' }}</td>
                                 <td class="center bold">{{ $available }}</td>
-                                <td class="center">{{ $etat }}</td>
-                                <td class="center">{{ $compNB }}</td>
-                                <td class="center">{{ $imnci }}</td>
-                                <td class="center">{{ $diabetes }}</td>
-                                <td class="center">{{ $essNB }}</td>
+                                <td class="center">{{ $etatDisplay }}</td>
+                                <td class="center">{{ $compNBDisplay }}</td>
+                                <td class="center">{{ $imnciDisplay }}</td>
+                                <td class="center">{{ $diabetesDisplay }}</td>
+                                <td class="center">{{ $essNBDisplay }}</td>
                             </tr>
                         @endforeach
                     </tbody>
