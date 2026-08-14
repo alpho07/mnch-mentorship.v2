@@ -146,29 +146,61 @@ $percentage=0;
     @endif
 
     {{-- Information Systems Details --}}
-    @if(!empty($informationSystemsDetails['responses']))
+    @if(!empty($informationSystemsDetails['responses']) || !empty($informationSystemsDetails['data_tools_table']))
         <div class="section" style="margin-bottom: 32px; page-break-inside: avoid;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Information Systems</h2>
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                <thead>
-                    <tr>
-                        <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db;">Question</th>
-                        <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">Response</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($informationSystemsDetails['responses'] as $detail)
+            @if(!empty($informationSystemsDetails['responses']))
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <thead>
                         <tr>
-                            <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $detail['question'] }}</td>
-                            <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
-                                    {{ $detail['response'] }}
-                                </span>
-                            </td>
+                            <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db;">Question</th>
+                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">Response</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach($informationSystemsDetails['responses'] as $detail)
+                            <tr>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $detail['question'] }}</td>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
+                                    <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
+                                        {{ $detail['response'] }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
+            @if(!empty($informationSystemsDetails['data_tools_table']))
+                <h3 style="color: #374151; margin-top: 20px; margin-bottom: 12px;">Data Collection Tools & Registers — Availability &amp; Completeness</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <thead>
+                        <tr>
+                            <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db;">Form / Register</th>
+                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">Available</th>
+                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">Complete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($informationSystemsDetails['data_tools_table'] as $row)
+                            <tr>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $row['form'] }}</td>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
+                                    <span class="badge badge-{{ $row['available'] === 'Yes' ? 'green' : 'red' }}">
+                                        {{ $row['available'] }}
+                                    </span>
+                                </td>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
+                                    <span class="badge badge-{{ $row['completeness'] === 'Yes' ? 'green' : 'red' }}">
+                                        {{ $row['completeness'] }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
         </div>
     @endif
 

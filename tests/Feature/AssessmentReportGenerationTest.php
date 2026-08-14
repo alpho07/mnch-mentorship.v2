@@ -299,6 +299,56 @@ class AssessmentReportGenerationTest extends TestCase
         );
     }
 
+    /**
+     * Regression: the 24 MoH-form Available/Completeness pairs in
+     * Information Systems share a "Data Collection Tools & Registers|Form|
+     * {formName}" group, but both questions in a pair use the bare text
+     * "Available"/"Completeness" — dumped flat, that's 48 rows saying
+     * "Available: Yes" / "Completeness: No" with no indication of which
+     * form each belongs to. They now render as their own table, one row
+     * per form, with Available/Complete as columns.
+     */
+    public function test_information_systems_data_tools_render_as_a_form_by_form_table(): void
+    {
+        $facility = Facility::factory()->create();
+        $assessor = User::factory()->create(['name' => 'InfoSys Assessor']);
+        $assessment = $this->makeAssessment($assessor, $facility);
+
+        $section = AssessmentSection::create([
+            'assessment_type_id' => $assessment->assessment_type_id, 'name' => 'Information System and Record Keeping For Monitoring', 'code' => 'information_systems',
+            'section_type' => AssessmentSection::KIND_QUESTION_GROUP, 'order' => 1, 'is_active' => true,
+        ]);
+        $docType = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'INFOSYS_DOC_TYPE', 'question_text' => '1. What type of documentation is the facility using',
+            'question_type' => 'multi_select', 'order' => 1, 'is_active' => true,
+        ]);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $docType->id, 'response_value' => 'Paper based']);
+
+        $group = 'Data Collection Tools & Registers|Form|MoH 333: Maternity Register';
+        $available = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'MOH_333_AVAILABLE', 'question_text' => 'Available',
+            'question_type' => 'yes_no', 'group' => $group, 'order' => 2, 'is_active' => true,
+        ]);
+        $complete = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'MOH_333_COMPLETE', 'question_text' => 'Completeness',
+            'question_type' => 'yes_no', 'group' => $group, 'order' => 3, 'is_active' => true,
+        ]);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $available->id, 'response_value' => 'Yes']);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $complete->id, 'response_value' => 'No']);
+
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($assessment);
+
+        $this->assertStringContainsString('Data Collection Tools & Registers', $html);
+        // One row for the form, not two rows of bare "Available"/"Completeness".
+        $this->assertMatchesRegularExpression(
+            '/MoH 333: Maternity Register<\/td>\s*<td[^>]*>.*?Yes.*?<\/td>\s*<td[^>]*>.*?No.*?<\/td>/s',
+            $html
+        );
+
+        $pdf = app(AssessmentPdfReportService::class)->generateExecutiveReport($assessment);
+        $this->assertStringStartsWith('%PDF', $pdf->output());
+    }
+
     public function test_csv_export_contains_the_expected_section_headers(): void
     {
         $facility = Facility::factory()->create(['name' => 'Nakuru Level 4 Hospital']);

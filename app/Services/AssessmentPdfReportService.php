@@ -371,9 +371,36 @@ class AssessmentPdfReportService {
                 ->with('question')
                 ->get();
 
+        // The 24 MoH-form Available/Completeness pairs share a
+        // "Data Collection Tools & Registers|Form|{formName}" group and
+        // both use the bare question text "Available"/"Completeness" —
+        // dumped into the same flat question/response list as everything
+        // else, that's 48 identical-looking rows with no indication of
+        // which form each belongs to. Pulled out into their own
+        // form-by-form table instead.
+        $grouped = $responses->filter(fn ($r) => $r->question->group !== null)
+            ->sortBy(fn ($r) => $r->question->order);
+        $ungrouped = $responses->filter(fn ($r) => $r->question->group === null);
+
+        $dataToolsTable = $grouped
+            ->groupBy(fn ($r) => last(explode('|', $r->question->group)))
+            ->map(function ($pair, $formName) {
+                $available = $pair->first(fn ($r) => str_ends_with($r->question->question_code, '_AVAILABLE'));
+                $complete = $pair->first(fn ($r) => str_ends_with($r->question->question_code, '_COMPLETE'));
+
+                return [
+                    'form' => $formName,
+                    'available' => $available?->response_value ?? 'N/A',
+                    'completeness' => $complete?->response_value ?? 'N/A',
+                ];
+            })
+            ->values()
+            ->toArray();
+
         return [
-            // Simple structure for HTML
-            'responses' => $responses->map(function ($response) {
+            // Simple structure for HTML (ungrouped questions only — the
+            // grouped MoH-form pairs render via data_tools_table instead)
+            'responses' => $ungrouped->map(function ($response) {
                 $isMortality = $response->question->question_type === 'mortality_three_month';
                 $displayValue = $response->response_value ?? 'N/A';
 
@@ -397,7 +424,8 @@ class AssessmentPdfReportService {
                     'explanation' => $response->explanation,
                     'is_mortality' => $isMortality,
                 ];
-            })->toArray(),
+            })->values()->toArray(),
+            'data_tools_table' => $dataToolsTable,
             // For PDF (all responses)
             'all_responses' => $responses,
         ];

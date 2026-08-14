@@ -513,29 +513,61 @@
         @endif
 
         {{-- Information Systems Details --}}
-        @if(!empty($informationSystemsDetails['responses']))
+        @if(!empty($informationSystemsDetails['responses']) || !empty($informationSystemsDetails['data_tools_table']))
             <div class="section">
                 <h2 class="section-title">Information Systems</h2>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Question</th>
-                            <th class="center" style="width: 15%;">Response</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($informationSystemsDetails['responses'] as $detail)
+                @if(!empty($informationSystemsDetails['responses']))
+                    <table class="data-table">
+                        <thead>
                             <tr>
-                                <td>{{ $detail['question'] }}</td>
-                                <td class="center">
-                                    <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
-                                        {{ $detail['response'] }}
-                                    </span>
-                                </td>
+                                <th>Question</th>
+                                <th class="center" style="width: 15%;">Response</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach($informationSystemsDetails['responses'] as $detail)
+                                <tr>
+                                    <td>{{ $detail['question'] }}</td>
+                                    <td class="center">
+                                        <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
+                                            {{ $detail['response'] }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+
+                @if(!empty($informationSystemsDetails['data_tools_table']))
+                    <h3 class="subsection-title">Data Collection Tools & Registers — Availability &amp; Completeness</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Form / Register</th>
+                                <th class="center" style="width: 15%;">Available</th>
+                                <th class="center" style="width: 15%;">Complete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($informationSystemsDetails['data_tools_table'] as $row)
+                                <tr>
+                                    <td>{{ $row['form'] }}</td>
+                                    <td class="center">
+                                        <span class="badge badge-{{ $row['available'] === 'Yes' ? 'green' : 'red' }}">
+                                            {{ $row['available'] }}
+                                        </span>
+                                    </td>
+                                    <td class="center">
+                                        <span class="badge badge-{{ $row['completeness'] === 'Yes' ? 'green' : 'red' }}">
+                                            {{ $row['completeness'] }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
             </div>
         @endif
 
