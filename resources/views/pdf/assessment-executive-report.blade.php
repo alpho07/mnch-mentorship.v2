@@ -470,9 +470,13 @@
                             <tr>
                                 <td>{{ $detail['question'] }}</td>
                                 <td class="center">
-                                    <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
+                                    @if($detail['is_number'] ?? false)
                                         {{ $detail['response'] }}
-                                    </span>
+                                    @else
+                                        <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
+                                            {{ $detail['response'] }}
+                                        </span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -695,6 +699,53 @@
                         </thead>
                         <tbody>
                             @foreach(array_merge($qualityOfCareDetails['newborn_stats_array'] ?? [], $qualityOfCareDetails['paed_stats_array'] ?? []) as $stat)
+                                <tr>
+                                    <td class="stat-label">{{ $stat['question'] }}</td>
+                                    <td class="stat-value">{{ $stat['response'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+            </div>
+        @endif
+
+        {{-- Newborn & Paediatric Indicators --}}
+        @if(!empty($indicatorsDetails['newborn_array']) || !empty($indicatorsDetails['paediatric_array']))
+            <div class="section">
+                <h2 class="section-title">Newborn & Paediatric Indicators</h2>
+
+                @if(!empty($indicatorsDetails['newborn_array']))
+                    <h3 class="subsection-title">Newborn Indicators</h3>
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Indicator</th>
+                                <th class="center" style="width: 25%;">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($indicatorsDetails['newborn_array'] as $stat)
+                                <tr>
+                                    <td class="stat-label">{{ $stat['question'] }}</td>
+                                    <td class="stat-value">{{ $stat['response'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+
+                @if(!empty($indicatorsDetails['paediatric_array']))
+                    <h3 class="subsection-title">Paediatric Indicators</h3>
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Indicator</th>
+                                <th class="center" style="width: 25%;">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($indicatorsDetails['paediatric_array'] as $stat)
                                 <tr>
                                     <td class="stat-label">{{ $stat['question'] }}</td>
                                     <td class="stat-value">{{ $stat['response'] }}</td>

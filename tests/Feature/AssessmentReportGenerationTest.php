@@ -161,6 +161,75 @@ class AssessmentReportGenerationTest extends TestCase
         $this->assertStringNotContainsString('Question from the other template', $html);
     }
 
+    public function test_indicators_section_renders_split_by_newborn_and_paediatric_group(): void
+    {
+        $facility = Facility::factory()->create();
+        $assessor = User::factory()->create(['name' => 'Indicators Assessor']);
+        $assessment = $this->makeAssessment($assessor, $facility);
+
+        $section = AssessmentSection::create([
+            'assessment_type_id' => $assessment->assessment_type_id, 'name' => 'Newborn & Paediatric Indicators', 'code' => 'newborn_paediatric_indicators',
+            'section_type' => AssessmentSection::KIND_QUESTION_GROUP, 'order' => 1, 'is_active' => true,
+        ]);
+        $newbornQ = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'IND_NEWBORN_TEST', 'question_text' => 'Total newborn admissions',
+            'question_type' => 'number', 'group' => 'Newborn Indicators', 'order' => 1, 'is_active' => true,
+        ]);
+        $paedQ = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'IND_PAED_TEST', 'question_text' => 'Total paediatric admissions',
+            'question_type' => 'number', 'group' => 'Paediatric Indicators', 'order' => 2, 'is_active' => true,
+        ]);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $newbornQ->id, 'response_value' => '12']);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $paedQ->id, 'response_value' => '7']);
+
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($assessment);
+
+        $this->assertStringContainsString('Newborn & Paediatric Indicators', $html);
+        $this->assertStringContainsString('Total newborn admissions', $html);
+        $this->assertStringContainsString('Total paediatric admissions', $html);
+
+        $pdf = app(AssessmentPdfReportService::class)->generateExecutiveReport($assessment);
+        $this->assertStringStartsWith('%PDF', $pdf->output());
+    }
+
+    /**
+     * Regression: a bed-count response (question_type 'number', e.g. "No.
+     * Functional" = "2") went through the same green/red Yes/No badge
+     * logic every other Infrastructure response does, showing a plain
+     * positive count in a misleading red "bad answer" badge. Also, every
+     * bed-pair sub-question shares the exact same text ("No. Functional")
+     * across every unit (NBU, KMC, NICU, PICU), so the report needs the
+     * question's group prefixed to tell them apart outside the live
+     * form's table structure.
+     */
+    public function test_bed_count_responses_show_the_plain_number_with_unit_context_not_a_yes_no_badge(): void
+    {
+        $facility = Facility::factory()->create();
+        $assessor = User::factory()->create(['name' => 'Bed Count Assessor']);
+        $assessment = $this->makeAssessment($assessor, $facility);
+
+        $section = AssessmentSection::create([
+            'assessment_type_id' => $assessment->assessment_type_id, 'name' => 'Infrastructure', 'code' => 'infrastructure',
+            'section_type' => AssessmentSection::KIND_QUESTION_GROUP, 'order' => 1, 'is_active' => true,
+        ]);
+        $question = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'INFRA_NBU_GENERAL_FUNCTIONAL_TEST',
+            'question_text' => 'No. Functional', 'question_type' => 'number', 'group' => 'General NBU beds',
+            'order' => 1, 'is_active' => true,
+        ]);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $question->id, 'response_value' => '2']);
+
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($assessment);
+
+        $this->assertStringContainsString('General NBU beds — No. Functional', $html);
+        // The whole row — label cell through to the plain "2", with no
+        // badge span in between (unlike every Yes/No row in the same table).
+        $this->assertMatchesRegularExpression(
+            '/General NBU beds — No\. Functional<\/td>\s*<td[^>]*>\s*2\s*<\/td>/',
+            $html
+        );
+    }
+
     public function test_csv_export_contains_the_expected_section_headers(): void
     {
         $facility = Facility::factory()->create(['name' => 'Nakuru Level 4 Hospital']);

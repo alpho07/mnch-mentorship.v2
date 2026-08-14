@@ -103,9 +103,13 @@ $percentage=0;
                         <tr>
                             <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $detail['question'] }}</td>
                             <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
+                                @if($detail['is_number'] ?? false)
                                     {{ $detail['response'] }}
-                                </span>
+                                @else
+                                    <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
+                                        {{ $detail['response'] }}
+                                    </span>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -351,6 +355,37 @@ $totalEssNB = 0;
                 <h3 style="color: #374151; margin-bottom: 12px;">Care Statistics</h3>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
                     @foreach(array_merge($qualityOfCareDetails['newborn_stats_array'] ?? [], $qualityOfCareDetails['paed_stats_array'] ?? []) as $stat)
+                        <div style="background: #f9fafb; padding: 12px; border-radius: 4px;">
+                            <p style="color: #6b7280; font-size: 12px; margin: 0;">{{ $stat['question'] }}</p>
+                            <p style="color: #1f2937; font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">{{ $stat['response'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    @endif
+
+    {{-- Newborn & Paediatric Indicators --}}
+    @if(!empty($indicatorsDetails['newborn_array']) || !empty($indicatorsDetails['paediatric_array']))
+        <div class="section" style="margin-bottom: 32px;">
+            <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Newborn & Paediatric Indicators</h2>
+
+            @if(!empty($indicatorsDetails['newborn_array']))
+                <h3 style="color: #374151; margin-bottom: 12px;">Newborn Indicators</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                    @foreach($indicatorsDetails['newborn_array'] as $stat)
+                        <div style="background: #f9fafb; padding: 12px; border-radius: 4px;">
+                            <p style="color: #6b7280; font-size: 12px; margin: 0;">{{ $stat['question'] }}</p>
+                            <p style="color: #1f2937; font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">{{ $stat['response'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            @if(!empty($indicatorsDetails['paediatric_array']))
+                <h3 style="color: #374151; margin-bottom: 12px;">Paediatric Indicators</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                    @foreach($indicatorsDetails['paediatric_array'] as $stat)
                         <div style="background: #f9fafb; padding: 12px; border-radius: 4px;">
                             <p style="color: #6b7280; font-size: 12px; margin: 0;">{{ $stat['question'] }}</p>
                             <p style="color: #1f2937; font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">{{ $stat['response'] }}</p>

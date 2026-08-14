@@ -79,6 +79,7 @@ class AssessmentPdfReportService {
         $healthProductsData = $this->getHealthProductsDetails($assessment);
         $informationSystemsData = $this->getInformationSystemsDetails($assessment);
         $qualityOfCareData = $this->getQualityOfCareDetails($assessment);
+        $indicatorsData = $this->getIndicatorsDetails($assessment);
 
         return [
             'assessment' => $assessment,
@@ -93,6 +94,7 @@ class AssessmentPdfReportService {
             'healthProducts' => $healthProductsData,
             'informationSystems' => $informationSystemsData,
             'qualityOfCare' => $qualityOfCareData,
+            'indicators' => $indicatorsData,
             // New names for HTML view
             'infrastructureDetails' => $infrastructureData,
             'skillsLabDetails' => $skillsLabData,
@@ -100,6 +102,7 @@ class AssessmentPdfReportService {
             'healthProductsDetails' => $healthProductsData,
             'informationSystemsDetails' => $informationSystemsData,
             'qualityOfCareDetails' => $qualityOfCareData,
+            'indicatorsDetails' => $indicatorsData,
         ];
     }
 
@@ -168,9 +171,22 @@ class AssessmentPdfReportService {
         return [
             // Simple structure for HTML
             'responses' => $responses->map(function ($response) {
+                // Bed-count sub-questions ("No. Functional"/"No. Non-Functional")
+                // share that exact same text across every unit (NBU, KMC, NICU,
+                // PICU) — prefix with the question's group (e.g. "KMC beds") so
+                // each row is identifiable on its own, without the surrounding
+                // table structure the live form uses to disambiguate them.
+                $label = $response->question->group
+                    ? "{$response->question->group} — {$response->question->question_text}"
+                    : $response->question->question_text;
+
                 return [
-                    'question' => $response->question->question_text,
+                    'question' => $label,
                     'response' => $response->response_value ?? 'N/A',
+                    // A 'number' response (bed counts) isn't a Yes/No answer —
+                    // the green/red badge styling would otherwise mislabel a
+                    // plain count like "2" as a bad/"No" answer.
+                    'is_number' => $response->question->question_type === 'number',
                     'score' => $response->score ?? 0,
                     'explanation' => $response->explanation,
                 ];
@@ -472,6 +488,36 @@ class AssessmentPdfReportService {
             'select_array' => $selectArray,
             'newborn_stats_array' => $newbornStatsArray,
             'paed_stats_array' => $paedStatsArray,
+        ];
+    }
+
+    /**
+     * Get newborn & paediatric indicators details — split by the same
+     * "Newborn Indicators"/"Paediatric Indicators" group IndicatorsSeeder
+     * tags each question with, matching the two collapsible sections the
+     * live form renders.
+     */
+    protected function getIndicatorsDetails(Assessment $assessment): array {
+        $sectionId = AssessmentSection::where('code', 'newborn_paediatric_indicators')->where('assessment_type_id', $assessment->assessment_type_id)->value('id');
+
+        $responses = $assessment->questionResponses()
+                ->whereHas('question', function ($q) use ($sectionId) {
+                    $q->where('assessment_section_id', $sectionId);
+                })
+                ->with('question')
+                ->get();
+
+        $toArray = fn ($collection) => $collection->map(function ($response) {
+                    return [
+                        'question' => $response->question->question_text,
+                        'response' => $response->response_value ?? '0',
+                    ];
+                })->values()->toArray();
+
+        return [
+            'newborn_array' => $toArray($responses->filter(fn ($r) => $r->question->group === 'Newborn Indicators')),
+            'paediatric_array' => $toArray($responses->filter(fn ($r) => $r->question->group === 'Paediatric Indicators')),
+            'all_responses' => $responses,
         ];
     }
 
