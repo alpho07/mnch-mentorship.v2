@@ -502,7 +502,7 @@ class AssessmentPdfReportService {
         ['Proportion of newborns who had their oxygen saturation taken at admission', 'IND_NEWBORN_O2SAT_TAKEN', 'IND_NEWBORN_ADMISSIONS'],
         ['Proportion of newborns who had their RBS taken at admission', 'IND_NEWBORN_RBS_TAKEN', 'IND_NEWBORN_ADMISSIONS'],
         ['Proportion of newborns who had their temperature taken at admission', 'IND_NEWBORN_HEADTOTOE', 'IND_NEWBORN_ADMISSIONS'],
-        ['Proportion of newborns with hypothermia at admission (temp <36.5)', 'IND_NEWBORN_HYPOTHERMIA', 'IND_NEWBORN_HEADTOTOE'],
+        ['Proportion of newborns with hypothermia at admission (temp <36.5)', 'IND_NEWBORN_HYPOTHERMIA', 'IND_NEWBORN_ADMISSIONS'],
         ['Proportion of newborns who had a diagnosis of birth asphyxia', 'IND_NEWBORN_BIRTH_ASPHYXIA', 'IND_NEWBORN_ADMISSIONS'],
         ['Proportion of newborns <34 weeks admitted in the last complete month', 'IND_NEWBORN_LT34_ADMISSIONS', 'IND_NEWBORN_ADMISSIONS'],
         ['Proportion of newborns <34 weeks initiated on caffeine citrate', 'IND_NEWBORN_LT34_CAFFEINE', 'IND_NEWBORN_LT34_ADMISSIONS'],
@@ -554,10 +554,18 @@ class AssessmentPdfReportService {
 
         $responsesByCode = $responses->keyBy('question.question_code');
 
+        // Admissions is the denominator for almost every other proportion
+        // below it, so it's shown first as a plain count rather than a
+        // computed percentage — there's nothing to divide it by.
+        $admissionsRow = [[
+            'question' => 'Total number of newborn admissions for the last complete month',
+            'response' => $responsesByCode->get('IND_NEWBORN_ADMISSIONS')?->response_value ?? 'N/A',
+        ]];
+
         return [
             'newborn_array' => $toArray($responses->filter(fn ($r) => $r->question->group === 'Newborn Indicators')),
             'paediatric_array' => $toArray($responses->filter(fn ($r) => $r->question->group === 'Paediatric Indicators')),
-            'newborn_proportions_array' => $this->computeProportions(self::NEWBORN_PROPORTIONS, $responsesByCode),
+            'newborn_proportions_array' => array_merge($admissionsRow, $this->computeProportions(self::NEWBORN_PROPORTIONS, $responsesByCode)),
             'paediatric_proportions_array' => $this->computeProportions(self::PAEDIATRIC_PROPORTIONS, $responsesByCode),
             'all_responses' => $responses,
         ];

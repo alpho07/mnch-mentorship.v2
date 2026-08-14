@@ -218,7 +218,7 @@ class AssessmentReportGenerationTest extends TestCase
             'assessment_section_id' => $section->id, 'question_code' => 'IND_NEWBORN_BIRTH_ASPHYXIA', 'question_text' => 'Newborns diagnosed with birth asphyxia',
             'question_type' => 'number', 'group' => 'Newborn Indicators', 'order' => 2, 'is_active' => true,
         ]);
-        // IND_NEWBORN_HEADTOTOE (the denominator for the "temperature
+        // IND_NEWBORN_HEADTOTOE (the numerator for the "temperature
         // taken" proportion) is deliberately left unanswered here.
         AssessmentQuestion::create([
             'assessment_section_id' => $section->id, 'question_code' => 'IND_NEWBORN_HEADTOTOE', 'question_text' => 'Newborns with head to toe exam',
@@ -235,14 +235,25 @@ class AssessmentReportGenerationTest extends TestCase
         $html = app(AssessmentPdfReportService::class)->generateHtmlReport($assessment);
 
         $this->assertStringContainsString('Newborn Proportions', $html);
+        // Admissions itself leads the table as a plain count, not a percentage.
+        $this->assertMatchesRegularExpression(
+            '/Total number of newborn admissions for the last complete month<\/td>\s*<td[^>]*>\s*200\s*<\/td>/',
+            $html
+        );
         // 50/200 = 25.0%
         $this->assertMatchesRegularExpression(
             '/diagnosis of birth asphyxia<\/td>\s*<td[^>]*>\s*25\.0% \(50\/200\)\s*<\/td>/',
             $html
         );
-        // Hypothermia's denominator (head-to-toe exam) was never answered.
+        // Hypothermia's denominator is admissions (30/200 = 15.0%), not the
+        // head-to-toe exam count.
         $this->assertMatchesRegularExpression(
-            '/hypothermia at admission \(temp &lt;36\.5\)<\/td>\s*<td[^>]*>\s*N\/A\s*<\/td>/',
+            '/hypothermia at admission \(temp &lt;36\.5\)<\/td>\s*<td[^>]*>\s*15\.0% \(30\/200\)\s*<\/td>/',
+            $html
+        );
+        // Temperature-taken's numerator (head-to-toe exam) was never answered.
+        $this->assertMatchesRegularExpression(
+            '/temperature taken at admission<\/td>\s*<td[^>]*>\s*N\/A\s*<\/td>/',
             $html
         );
 
