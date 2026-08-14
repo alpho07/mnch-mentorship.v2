@@ -101,6 +101,10 @@ class QuestionFieldBuilder
 
         $requiresExplanationOn = $question->requires_explanation_on ?? ['No', 'Partially'];
         $requiresExplanationOn = static::normalizeExplanationArray($requiresExplanationOn);
+        // Selecting "No" must never surface the comments box, regardless
+        // of what's configured in requires_explanation_on — only other
+        // triggering values (e.g. "Partially") still show it.
+        $requiresExplanationOn = array_diff($requiresExplanationOn, ['No']);
 
         $explanationField = Forms\Components\Textarea::make("{$fieldName}_explanation")
             ->label($question->explanation_label ?? 'Comments/Recommendations/Remarks')
