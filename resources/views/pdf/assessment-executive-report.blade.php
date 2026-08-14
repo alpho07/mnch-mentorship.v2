@@ -754,6 +754,46 @@
                         </tbody>
                     </table>
                 @endif
+
+                @if(!empty($indicatorsDetails['newborn_proportions_array']))
+                    <h3 class="subsection-title">Newborn Proportions</h3>
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Proportion</th>
+                                <th class="center" style="width: 25%;">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($indicatorsDetails['newborn_proportions_array'] as $item)
+                                <tr>
+                                    <td class="stat-label">{{ $item['question'] }}</td>
+                                    <td class="stat-value">{{ $item['response'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+
+                @if(!empty($indicatorsDetails['paediatric_proportions_array']))
+                    <h3 class="subsection-title">Paediatric Proportions</h3>
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Proportion</th>
+                                <th class="center" style="width: 25%;">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($indicatorsDetails['paediatric_proportions_array'] as $item)
+                                <tr>
+                                    <td class="stat-label">{{ $item['question'] }}</td>
+                                    <td class="stat-value">{{ $item['response'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
             </div>
         @endif
 

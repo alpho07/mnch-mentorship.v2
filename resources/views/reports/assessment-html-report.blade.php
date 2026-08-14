@@ -384,7 +384,7 @@ $totalEssNB = 0;
 
             @if(!empty($indicatorsDetails['paediatric_array']))
                 <h3 style="color: #374151; margin-bottom: 12px;">Paediatric Indicators</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px;">
                     @foreach($indicatorsDetails['paediatric_array'] as $stat)
                         <div style="background: #f9fafb; padding: 12px; border-radius: 4px;">
                             <p style="color: #6b7280; font-size: 12px; margin: 0;">{{ $stat['question'] }}</p>
@@ -392,6 +392,34 @@ $totalEssNB = 0;
                         </div>
                     @endforeach
                 </div>
+            @endif
+
+            @if(!empty($indicatorsDetails['newborn_proportions_array']))
+                <h3 style="color: #374151; margin-bottom: 12px;">Newborn Proportions</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
+                    <tbody>
+                        @foreach($indicatorsDetails['newborn_proportions_array'] as $item)
+                            <tr>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $item['question'] }}</td>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center; width: 160px; font-weight: 600;">{{ $item['response'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
+            @if(!empty($indicatorsDetails['paediatric_proportions_array']))
+                <h3 style="color: #374151; margin-bottom: 12px;">Paediatric Proportions</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <tbody>
+                        @foreach($indicatorsDetails['paediatric_proportions_array'] as $item)
+                            <tr>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $item['question'] }}</td>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center; width: 160px; font-weight: 600;">{{ $item['response'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             @endif
         </div>
     @endif

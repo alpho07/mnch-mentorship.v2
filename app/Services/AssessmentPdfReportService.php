@@ -492,6 +492,44 @@ class AssessmentPdfReportService {
     }
 
     /**
+     * [label, numerator question_code, denominator question_code] — the
+     * source spreadsheet's own "REPORTING PROPORTIONAL NEWBORN INDICATORS"
+     * table, which computes each proportion from the raw counts entered
+     * above it rather than asking a separate question. Every pair here
+     * maps cleanly to an existing IND_NEWBORN_* question.
+     */
+    private const NEWBORN_PROPORTIONS = [
+        ['Proportion of newborns who had their oxygen saturation taken at admission', 'IND_NEWBORN_O2SAT_TAKEN', 'IND_NEWBORN_ADMISSIONS'],
+        ['Proportion of newborns who had their RBS taken at admission', 'IND_NEWBORN_RBS_TAKEN', 'IND_NEWBORN_ADMISSIONS'],
+        ['Proportion of newborns who had their temperature taken at admission', 'IND_NEWBORN_HEADTOTOE', 'IND_NEWBORN_ADMISSIONS'],
+        ['Proportion of newborns with hypothermia at admission (temp <36.5)', 'IND_NEWBORN_HYPOTHERMIA', 'IND_NEWBORN_HEADTOTOE'],
+        ['Proportion of newborns who had a diagnosis of birth asphyxia', 'IND_NEWBORN_BIRTH_ASPHYXIA', 'IND_NEWBORN_ADMISSIONS'],
+        ['Proportion of newborns <34 weeks admitted in the last complete month', 'IND_NEWBORN_LT34_ADMISSIONS', 'IND_NEWBORN_ADMISSIONS'],
+        ['Proportion of newborns <34 weeks initiated on caffeine citrate', 'IND_NEWBORN_LT34_CAFFEINE', 'IND_NEWBORN_LT34_ADMISSIONS'],
+        ['Proportion of mothers with preterm newborns <34 weeks gestation who received at least one dose of antenatal corticosteroids', 'IND_NEWBORN_ANTENATAL_CORTICOSTEROIDS', 'IND_NEWBORN_LT34_ADMISSIONS'],
+        ['Proportion of newborns <32 weeks admitted in the last complete month', 'IND_NEWBORN_LT32_ADMISSIONS', 'IND_NEWBORN_ADMISSIONS'],
+        ['Proportion of newborns <32 weeks initiated on CPAP', 'IND_NEWBORN_LT32_CPAP', 'IND_NEWBORN_LT32_ADMISSIONS'],
+        ['Proportion of newborns < 2500g initiated on KMC', 'IND_NEWBORN_LT2500G_KMC', 'IND_NEWBORN_ADMISSIONS'],
+        ['Proportion of newborns initiated on KMC within 2 hours after birth', 'IND_NEWBORN_KMC_WITHIN_2HRS', 'IND_NEWBORN_LT2500G_KMC'],
+        ['Proportion of newborns initiated on KMC during their hospital stay', 'IND_NEWBORN_KMC_DURING_STAY', 'IND_NEWBORN_ADMISSIONS'],
+    ];
+
+    /**
+     * Same idea for paediatric — but only these 2 of the spreadsheet's 11
+     * paediatric proportions have a denominator that was ever captured as
+     * its own indicator question. The other 9 need a denominator like
+     * "admitted with severe pneumonia", "diagnosed with diarrhoea",
+     * "attending outpatient department", or "active Type 1 DM diagnosis" —
+     * none of which IndicatorsSeeder's raw paediatric questions capture
+     * even approximately, so computing them would mean dividing by the
+     * wrong (much broader) population. Left out rather than guessed.
+     */
+    private const PAEDIATRIC_PROPORTIONS = [
+        ['Proportion of children under 5 years admitted with an RBS measurement', 'IND_PAED_RBS', 'IND_PAED_ADMISSIONS'],
+        ['Proportion of children under 5 years screened for malnutrition (inpatient)', 'IND_PAED_MALNUTRITION_INPATIENT', 'IND_PAED_ADMISSIONS'],
+    ];
+
+    /**
      * Get newborn & paediatric indicators details — split by the same
      * "Newborn Indicators"/"Paediatric Indicators" group IndicatorsSeeder
      * tags each question with, matching the two collapsible sections the
@@ -514,11 +552,43 @@ class AssessmentPdfReportService {
                     ];
                 })->values()->toArray();
 
+        $responsesByCode = $responses->keyBy('question.question_code');
+
         return [
             'newborn_array' => $toArray($responses->filter(fn ($r) => $r->question->group === 'Newborn Indicators')),
             'paediatric_array' => $toArray($responses->filter(fn ($r) => $r->question->group === 'Paediatric Indicators')),
+            'newborn_proportions_array' => $this->computeProportions(self::NEWBORN_PROPORTIONS, $responsesByCode),
+            'paediatric_proportions_array' => $this->computeProportions(self::PAEDIATRIC_PROPORTIONS, $responsesByCode),
             'all_responses' => $responses,
         ];
+    }
+
+    /**
+     * @param  array<int, array{0: string, 1: string, 2: string}>  $definitions  [label, numerator code, denominator code]
+     * @param  \Illuminate\Support\Collection  $responsesByCode  Keyed by question_code.
+     */
+    private function computeProportions(array $definitions, $responsesByCode): array {
+        $result = [];
+
+        foreach ($definitions as [$label, $numeratorCode, $denominatorCode]) {
+            $numerator = $responsesByCode->get($numeratorCode)?->response_value;
+            $denominator = $responsesByCode->get($denominatorCode)?->response_value;
+
+            // Both counts must actually be answered, and the denominator
+            // must be a real population (0 admissions means "not
+            // applicable this period", not "0%") — otherwise show N/A
+            // rather than a misleading computed value.
+            if (! is_numeric($numerator) || ! is_numeric($denominator) || (float) $denominator <= 0) {
+                $result[] = ['question' => $label, 'response' => 'N/A'];
+
+                continue;
+            }
+
+            $percentage = number_format(((float) $numerator / (float) $denominator) * 100, 1);
+            $result[] = ['question' => $label, 'response' => "{$percentage}% ({$numerator}/{$denominator})"];
+        }
+
+        return $result;
     }
 
     /**

@@ -193,6 +193,64 @@ class AssessmentReportGenerationTest extends TestCase
     }
 
     /**
+     * The source spreadsheet's "REPORTING PROPORTIONAL NEWBORN INDICATORS"
+     * table computes rates from the raw counts already captured, rather
+     * than asking a separate question — verifies both a computable pair
+     * (both counts answered) and an uncomputable one (denominator missing)
+     * resolve correctly, using the real IND_NEWBORN_* question codes
+     * AssessmentPdfReportService::NEWBORN_PROPORTIONS references.
+     */
+    public function test_newborn_proportions_are_computed_from_the_raw_indicator_counts(): void
+    {
+        $facility = Facility::factory()->create();
+        $assessor = User::factory()->create(['name' => 'Proportions Assessor']);
+        $assessment = $this->makeAssessment($assessor, $facility);
+
+        $section = AssessmentSection::create([
+            'assessment_type_id' => $assessment->assessment_type_id, 'name' => 'Newborn & Paediatric Indicators', 'code' => 'newborn_paediatric_indicators',
+            'section_type' => AssessmentSection::KIND_QUESTION_GROUP, 'order' => 1, 'is_active' => true,
+        ]);
+        $admissions = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'IND_NEWBORN_ADMISSIONS', 'question_text' => 'Total newborn admissions',
+            'question_type' => 'number', 'group' => 'Newborn Indicators', 'order' => 1, 'is_active' => true,
+        ]);
+        $birthAsphyxia = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'IND_NEWBORN_BIRTH_ASPHYXIA', 'question_text' => 'Newborns diagnosed with birth asphyxia',
+            'question_type' => 'number', 'group' => 'Newborn Indicators', 'order' => 2, 'is_active' => true,
+        ]);
+        // IND_NEWBORN_HEADTOTOE (the denominator for the "temperature
+        // taken" proportion) is deliberately left unanswered here.
+        AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'IND_NEWBORN_HEADTOTOE', 'question_text' => 'Newborns with head to toe exam',
+            'question_type' => 'number', 'group' => 'Newborn Indicators', 'order' => 3, 'is_active' => true,
+        ]);
+        $hypothermia = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'IND_NEWBORN_HYPOTHERMIA', 'question_text' => 'Newborns with hypothermia',
+            'question_type' => 'number', 'group' => 'Newborn Indicators', 'order' => 4, 'is_active' => true,
+        ]);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $admissions->id, 'response_value' => '200']);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $birthAsphyxia->id, 'response_value' => '50']);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $hypothermia->id, 'response_value' => '30']);
+
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($assessment);
+
+        $this->assertStringContainsString('Newborn Proportions', $html);
+        // 50/200 = 25.0%
+        $this->assertMatchesRegularExpression(
+            '/diagnosis of birth asphyxia<\/td>\s*<td[^>]*>\s*25\.0% \(50\/200\)\s*<\/td>/',
+            $html
+        );
+        // Hypothermia's denominator (head-to-toe exam) was never answered.
+        $this->assertMatchesRegularExpression(
+            '/hypothermia at admission \(temp &lt;36\.5\)<\/td>\s*<td[^>]*>\s*N\/A\s*<\/td>/',
+            $html
+        );
+
+        $pdf = app(AssessmentPdfReportService::class)->generateExecutiveReport($assessment);
+        $this->assertStringStartsWith('%PDF', $pdf->output());
+    }
+
+    /**
      * Regression: a bed-count response (question_type 'number', e.g. "No.
      * Functional" = "2") went through the same green/red Yes/No badge
      * logic every other Infrastructure response does, showing a plain
