@@ -168,29 +168,41 @@ class AssessmentPdfReportService {
         $nbuResponse = $responses->where('question.question_code', 'INFRA_NBU')->first();
         $paedResponse = $responses->where('question.question_code', 'INFRA_PAED')->first();
 
-        return [
-            // Simple structure for HTML
-            'responses' => $responses->map(function ($response) {
-                // Bed-count sub-questions ("No. Functional"/"No. Non-Functional")
-                // share that exact same text across every unit (NBU, KMC, NICU,
-                // PICU) — prefix with the question's group (e.g. "KMC beds") so
-                // each row is identifiable on its own, without the surrounding
-                // table structure the live form uses to disambiguate them.
-                $label = $response->question->group
-                    ? "{$response->question->group} — {$response->question->question_text}"
-                    : $response->question->question_text;
+        // Bed-count sub-questions (question_type 'number', sharing a
+        // 'group' like "KMC beds") pulled into their own Unit/Functional/
+        // Non-Functional table instead of two flat rows per unit mixed in
+        // with the rest of the yes/no infrastructure questions.
+        $bedResponses = $responses->filter(fn ($r) => $r->question->question_type === 'number' && $r->question->group !== null);
+        $otherResponses = $responses->reject(fn ($r) => $r->question->question_type === 'number' && $r->question->group !== null);
 
+        $bedsTable = $bedResponses->groupBy('question.group')->map(function ($pair, $unitName) {
+            $functional = $pair->first(fn ($r) => str_ends_with($r->question->question_code, '_FUNCTIONAL'));
+            $nonFunctional = $pair->first(fn ($r) => str_ends_with($r->question->question_code, '_NONFUNCTIONAL'));
+            $functionalValue = $functional?->response_value;
+            $nonFunctionalValue = $nonFunctional?->response_value;
+
+            return [
+                'unit' => $unitName,
+                'functional' => $functionalValue ?? 'N/A',
+                'non_functional' => $nonFunctionalValue ?? 'N/A',
+                'total' => (is_numeric($functionalValue) ? (float) $functionalValue : 0)
+                    + (is_numeric($nonFunctionalValue) ? (float) $nonFunctionalValue : 0),
+            ];
+        })->values()->toArray();
+
+        return [
+            // Simple structure for HTML — bed counts excluded, shown via
+            // beds_table instead.
+            'responses' => $otherResponses->map(function ($response) {
                 return [
-                    'question' => $label,
+                    'question' => $response->question->question_text,
                     'response' => $response->response_value ?? 'N/A',
-                    // A 'number' response (bed counts) isn't a Yes/No answer —
-                    // the green/red badge styling would otherwise mislabel a
-                    // plain count like "2" as a bad/"No" answer.
                     'is_number' => $response->question->question_type === 'number',
                     'score' => $response->score ?? 0,
                     'explanation' => $response->explanation,
                 ];
-            })->toArray(),
+            })->values()->toArray(),
+            'beds_table' => $bedsTable,
             // Detailed structure for PDF
             'has_nbu' => $nbuResponse?->response_value === 'Yes',
             'nbu_beds' => $nbuResponse?->metadata['nicu_beds'] ?? 0,

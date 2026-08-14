@@ -271,7 +271,14 @@ class AssessmentReportGenerationTest extends TestCase
      * question's group prefixed to tell them apart outside the live
      * form's table structure.
      */
-    public function test_bed_count_responses_show_the_plain_number_with_unit_context_not_a_yes_no_badge(): void
+    /**
+     * Bed-count rows (question_type 'number', shared 'group' per unit)
+     * render as their own "Bed Capacity" table — Unit / No. Functional /
+     * No. Non-Functional columns, one row per unit — rather than two flat
+     * "{unit} — No. Functional"/"{unit} — No. Non-Functional" rows mixed
+     * into the general Infrastructure Question/Response table.
+     */
+    public function test_bed_counts_render_as_their_own_unit_functional_non_functional_table(): void
     {
         $facility = Facility::factory()->create();
         $assessor = User::factory()->create(['name' => 'Bed Count Assessor']);
@@ -281,22 +288,44 @@ class AssessmentReportGenerationTest extends TestCase
             'assessment_type_id' => $assessment->assessment_type_id, 'name' => 'Infrastructure', 'code' => 'infrastructure',
             'section_type' => AssessmentSection::KIND_QUESTION_GROUP, 'order' => 1, 'is_active' => true,
         ]);
-        $question = AssessmentQuestion::create([
-            'assessment_section_id' => $section->id, 'question_code' => 'INFRA_NBU_GENERAL_FUNCTIONAL_TEST',
+        $gateQ = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'INFRA_HAS_NBU_TEST',
+            'question_text' => 'Do you have a newborn unit?', 'question_type' => 'yes_no',
+            'order' => 0, 'is_active' => true,
+        ]);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $gateQ->id, 'response_value' => 'Yes']);
+        $functionalQ = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'INFRA_NBU_GENERAL_FUNCTIONAL',
             'question_text' => 'No. Functional', 'question_type' => 'number', 'group' => 'General NBU beds',
             'order' => 1, 'is_active' => true,
         ]);
-        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $question->id, 'response_value' => '2']);
+        $nonFunctionalQ = AssessmentQuestion::create([
+            'assessment_section_id' => $section->id, 'question_code' => 'INFRA_NBU_GENERAL_NONFUNCTIONAL',
+            'question_text' => 'No. Non-Functional', 'question_type' => 'number', 'group' => 'General NBU beds',
+            'order' => 2, 'is_active' => true,
+        ]);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $functionalQ->id, 'response_value' => '2']);
+        AssessmentQuestionResponse::create(['assessment_id' => $assessment->id, 'assessment_question_id' => $nonFunctionalQ->id, 'response_value' => '1']);
 
         $html = app(AssessmentPdfReportService::class)->generateHtmlReport($assessment);
 
-        $this->assertStringContainsString('General NBU beds — No. Functional', $html);
-        // The whole row — label cell through to the plain "2", with no
-        // badge span in between (unlike every Yes/No row in the same table).
+        $this->assertStringContainsString('Bed Capacity', $html);
+        // One row: unit name, then plain "2", "1", and a Total of 3.
         $this->assertMatchesRegularExpression(
-            '/General NBU beds — No\. Functional<\/td>\s*<td[^>]*>\s*2\s*<\/td>/',
+            '/General NBU beds<\/td>\s*<td[^>]*>\s*2\s*<\/td>\s*<td[^>]*>\s*1\s*<\/td>\s*<td[^>]*>\s*3\s*<\/td>/',
             $html
         );
+        $this->assertStringNotContainsString('General NBU beds — No. Functional', $html);
+
+        // Bed Capacity comes after the plain Question/Response table, not before it.
+        $this->assertLessThan(
+            strpos($html, 'Bed Capacity'),
+            strpos($html, 'Do you have a newborn unit?'),
+            'The Infrastructure questions table should render before the Bed Capacity table'
+        );
+
+        $pdf = app(AssessmentPdfReportService::class)->generateExecutiveReport($assessment);
+        $this->assertStringStartsWith('%PDF', $pdf->output());
     }
 
     /**

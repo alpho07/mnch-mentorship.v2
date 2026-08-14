@@ -455,33 +455,60 @@
         </div>
 
         {{-- Infrastructure Details --}}
-        @if(!empty($infrastructureDetails['responses']))
+        @if(!empty($infrastructureDetails['responses']) || !empty($infrastructureDetails['beds_table']))
             <div class="section">
                 <h2 class="section-title">Infrastructure</h2>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Question</th>
-                            <th class="center" style="width: 15%;">Response</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($infrastructureDetails['responses'] as $detail)
+
+                @if(!empty($infrastructureDetails['responses']))
+                    <table class="data-table">
+                        <thead>
                             <tr>
-                                <td>{{ $detail['question'] }}</td>
-                                <td class="center">
-                                    @if($detail['is_number'] ?? false)
-                                        {{ $detail['response'] }}
-                                    @else
-                                        <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
-                                            {{ $detail['response'] }}
-                                        </span>
-                                    @endif
-                                </td>
+                                <th>Question</th>
+                                <th class="center" style="width: 15%;">Response</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach($infrastructureDetails['responses'] as $detail)
+                                <tr>
+                                    <td>{{ $detail['question'] }}</td>
+                                    <td class="center">
+                                        @if($detail['is_number'] ?? false)
+                                            {{ $detail['response'] }}
+                                        @else
+                                            <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
+                                                {{ $detail['response'] }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+
+                @if(!empty($infrastructureDetails['beds_table']))
+                    <h3 class="subsection-title">Bed Capacity</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Unit</th>
+                                <th class="center" style="width: 18%;">No. Functional</th>
+                                <th class="center" style="width: 18%;">No. Non-Functional</th>
+                                <th class="center" style="width: 14%;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($infrastructureDetails['beds_table'] as $bed)
+                                <tr>
+                                    <td>{{ $bed['unit'] }}</td>
+                                    <td class="center">{{ $bed['functional'] }}</td>
+                                    <td class="center">{{ $bed['non_functional'] }}</td>
+                                    <td class="center bold">{{ $bed['total'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
             </div>
         @endif
 

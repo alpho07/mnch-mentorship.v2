@@ -88,33 +88,60 @@ $percentage=0;
     </div>
 
     {{-- Infrastructure Details --}}
-    @if(!empty($infrastructureDetails['responses']))
+    @if(!empty($infrastructureDetails['responses']) || !empty($infrastructureDetails['beds_table']))
         <div class="section" style="margin-bottom: 32px; page-break-inside: avoid;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Infrastructure</h2>
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                <thead>
-                    <tr>
-                        <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db;">Question</th>
-                        <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">Response</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($infrastructureDetails['responses'] as $detail)
+
+            @if(!empty($infrastructureDetails['responses']))
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
+                    <thead>
                         <tr>
-                            <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $detail['question'] }}</td>
-                            <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                @if($detail['is_number'] ?? false)
-                                    {{ $detail['response'] }}
-                                @else
-                                    <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
-                                        {{ $detail['response'] }}
-                                    </span>
-                                @endif
-                            </td>
+                            <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db;">Question</th>
+                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">Response</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach($infrastructureDetails['responses'] as $detail)
+                            <tr>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $detail['question'] }}</td>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
+                                    @if($detail['is_number'] ?? false)
+                                        {{ $detail['response'] }}
+                                    @else
+                                        <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
+                                            {{ $detail['response'] }}
+                                        </span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
+            @if(!empty($infrastructureDetails['beds_table']))
+                <h3 style="color: #374151; margin-bottom: 12px;">Bed Capacity</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <thead>
+                        <tr>
+                            <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db;">Unit</th>
+                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">No. Functional</th>
+                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 130px;">No. Non-Functional</th>
+                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 100px;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($infrastructureDetails['beds_table'] as $bed)
+                            <tr>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $bed['unit'] }}</td>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">{{ $bed['functional'] }}</td>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">{{ $bed['non_functional'] }}</td>
+                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center; font-weight: 600;">{{ $bed['total'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
         </div>
     @endif
 
