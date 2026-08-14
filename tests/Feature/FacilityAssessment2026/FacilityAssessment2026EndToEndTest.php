@@ -63,17 +63,22 @@ class FacilityAssessment2026EndToEndTest extends TestCase
         $manikinAnne = AssessmentQuestion::where('question_code', 'SKILLS_YES_MANIKIN_ANNE')->firstOrFail();
         $this->assertNull(AssessmentQuestionResponse::where('assessment_id', $assessment->id)->where('assessment_question_id', $manikinAnne->id)->first());
 
-        // Health Products: the NICU-gated AIRWAY items (ETT, Magill forceps,
-        // UVC, UAC) don't render while HAS_NICU=No.
+        // Health Products: 'surfactant' has two rows — one unconditional,
+        // attached to the NBU and Maternity departments (2 tabs), and one
+        // scoped to the Skills lab tab alone, gated on HAS_NICU. Every
+        // department tab renders in the same page (Filament Tabs doesn't
+        // lazy-load), so the unconditional row alone accounts for 2
+        // occurrences regardless of the gate; a 3rd appears once the
+        // Skills-lab-scoped row also becomes visible.
         $hpUrl = AssessmentResource::getUrl('edit-health-products', ['record' => $assessment->id]);
         $hpResponse = $this->get($hpUrl);
         $hpResponse->assertOk();
-        $hpResponse->assertDontSee('Magill forceps');
+        $this->assertSame(2, substr_count($hpResponse->getContent(), 'surfactant'));
 
-        // Flip HAS_NICU to Yes — the same page must now show it.
+        // Flip HAS_NICU to Yes — the Skills-lab-scoped row must now also render.
         AssessmentQuestionResponse::where('assessment_id', $assessment->id)->where('assessment_question_id', $hasNicu->id)->update(['response_value' => 'Yes']);
         $hpResponseAfter = $this->get($hpUrl);
         $hpResponseAfter->assertOk();
-        $hpResponseAfter->assertSee('Magill forceps');
+        $this->assertSame(3, substr_count($hpResponseAfter->getContent(), 'surfactant'));
     }
 }
