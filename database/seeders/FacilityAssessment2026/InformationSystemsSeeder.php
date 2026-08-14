@@ -120,7 +120,10 @@ class InformationSystemsSeeder extends Seeder
             $create(['question_code' => $code, 'question_text' => "Does the EMR generate the following Reports: {$reportName}", 'display_conditions' => self::EMR_DOC_TYPE_GATE, 'indent_level' => 1]);
         }
         $create(['question_code' => 'INFOSYS_EMR_ACCESS', 'question_text' => 'Does the EMR allow access to the patient records to verify Information', 'display_conditions' => self::EMR_DOC_TYPE_GATE, 'indent_level' => 1]);
-        $create(['question_code' => 'INFOSYS_EMR_KHIS_UPLOAD', 'question_text' => 'Is data uploaded to KHIS', 'display_conditions' => self::EMR_DOC_TYPE_GATE, 'indent_level' => 1]);
+        // Redundant with INFOSYS_KHIS_UPLOAD above, which already asks the
+        // identical question unconditionally — deactivated rather than
+        // shown twice with the exact same wording.
+        $createInactive(['question_code' => 'INFOSYS_EMR_KHIS_UPLOAD', 'question_text' => 'Is data uploaded to KHIS', 'display_conditions' => self::EMR_DOC_TYPE_GATE, 'indent_level' => 1]);
 
         $createInactive(['question_code' => 'INFOSYS_ATTENDANCE_REGISTER', 'question_text' => 'Is there an upto date attendance register showing the date, time, mentees name & contact, and skills to be taught? (check)']);
         $createInactive(['question_code' => 'INFOSYS_ASSESSMENT_RECORDS', 'question_text' => 'Is there an upto date record of all assessments done - which mentees, which area of assessment, by whom, recommendations after assessments (check)']);
@@ -128,6 +131,6 @@ class InformationSystemsSeeder extends Seeder
         $create(['question_code' => 'INFOSYS_MENTORSHIP_DATA_ENTRY', 'question_text' => 'Is there a person responsible for mentorship data entry into the electronic platform?']);
         $create(['question_code' => 'INFOSYS_INTERNET', 'question_text' => 'Is there internet Availability?']);
 
-        $this->command->info("  ✓ information_systems: {$order} questions ({$number} numbered top-level, incl. 24 MoH-form Available/Completeness pairs, 4 deactivated).");
+        $this->command->info("  ✓ information_systems: {$order} questions ({$number} numbered top-level, incl. 24 MoH-form Available/Completeness pairs, 5 deactivated).");
     }
 }

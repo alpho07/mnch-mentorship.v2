@@ -103,9 +103,25 @@ class InformationSystemsSeederTest extends TestCase
         $access = AssessmentQuestion::where('question_code', 'INFOSYS_EMR_ACCESS')->firstOrFail();
         $this->assertSame($expected, $access->display_conditions);
         $this->assertSame(1, $access->indent_level);
+    }
 
-        $khisUpload = AssessmentQuestion::where('question_code', 'INFOSYS_EMR_KHIS_UPLOAD')->firstOrFail();
-        $this->assertSame($expected, $khisUpload->display_conditions);
+    /**
+     * INFOSYS_EMR_KHIS_UPLOAD asked the exact same question as
+     * INFOSYS_KHIS_UPLOAD ("Is data uploaded to KHIS"), just gated on EMR
+     * — the general question already covers it unconditionally, so
+     * showing both read as a duplicate question on the live form.
+     */
+    public function test_emr_khis_upload_is_deactivated_as_a_duplicate_of_the_general_khis_upload_question(): void
+    {
+        $this->makeType();
+        $this->seed(InformationSystemsSeeder::class);
+
+        $q = AssessmentQuestion::where('question_code', 'INFOSYS_EMR_KHIS_UPLOAD')->firstOrFail();
+        $this->assertFalse($q->is_active);
+
+        $general = AssessmentQuestion::where('question_code', 'INFOSYS_KHIS_UPLOAD')->firstOrFail();
+        $this->assertTrue($general->is_active);
+        $this->assertNull($general->display_conditions);
     }
 
     public function test_attendance_register_assessment_records_paper_avail_complete_and_uses_emr_are_deactivated(): void
