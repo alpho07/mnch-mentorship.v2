@@ -14,6 +14,7 @@ class SkillsLabSeeder extends Seeder
         ['SKILLS_YES_POWER_OUTLETS', 'Does the Skills lab have at least 4 power outlets?', 'yes_no'],
         ['SKILLS_YES_POWER_BACKUP', 'Is there a power back up system?', 'yes_no'],
         ['SKILLS_YES_POWER_BACKUP_TYPE', 'Specify the power back up type', 'multi_select'],
+        ['SKILLS_YES_POWER_BACKUP_TYPE_OTHER', 'Please specify the other power back up type', 'text'],
         ['SKILLS_YES_HANDWASH_SINK', 'Does the skills lab have at least 1 hand washing sink with clean running water and soap?', 'yes_no'],
         ['SKILLS_YES_VENTILATED', 'Is the space well ventilated?', 'yes_no'],
         ['SKILLS_YES_WELL_LIT', 'Is the space well lit?', 'yes_no'],
@@ -76,9 +77,13 @@ class SkillsLabSeeder extends Seeder
                 // system itself is confirmed present — gated on that
                 // question alone (it's already only reachable once the lab
                 // gate is Yes, so re-checking the lab gate too is redundant).
+                // The "specify other" box only makes sense once "Other" is
+                // actually one of the picked back-up types — 'intersects'
+                // because the dropdown is multi_select, not a single value.
                 'display_conditions' => match ($code) {
                     'SKILLS_YES_MONTHLY_REPORTS' => ['operator' => 'and', 'conditions' => [$yesCondition, $biomedCondition]],
                     'SKILLS_YES_POWER_BACKUP_TYPE' => ['question_code' => 'SKILLS_YES_POWER_BACKUP', 'operator' => 'equals', 'value' => 'Yes'],
+                    'SKILLS_YES_POWER_BACKUP_TYPE_OTHER' => ['question_code' => 'SKILLS_YES_POWER_BACKUP_TYPE', 'operator' => 'intersects', 'value' => ['Other']],
                     default => $yesCondition,
                 },
                 'order' => $order++,
@@ -137,6 +142,6 @@ class SkillsLabSeeder extends Seeder
             );
         }
 
-        $this->command->info('  ✓ skills_lab: 23 questions (1 gate + 20 yes-branch + 2 no-branch).');
+        $this->command->info('  ✓ skills_lab: 24 questions (1 gate + 21 yes-branch + 2 no-branch).');
     }
 }

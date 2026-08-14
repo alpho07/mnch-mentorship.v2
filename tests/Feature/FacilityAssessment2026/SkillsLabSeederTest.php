@@ -22,13 +22,26 @@ class SkillsLabSeederTest extends TestCase
         return $type;
     }
 
-    public function test_seeds_23_questions(): void
+    public function test_seeds_24_questions(): void
     {
         $type = $this->makeType();
         $this->seed(SkillsLabSeeder::class);
 
         $section = AssessmentSection::where('assessment_type_id', $type->id)->where('code', 'skills_lab')->first();
-        $this->assertSame(23, $section->questions()->count());
+        $this->assertSame(24, $section->questions()->count());
+    }
+
+    public function test_power_backup_type_other_box_only_shows_when_other_is_selected(): void
+    {
+        $this->makeType();
+        $this->seed(SkillsLabSeeder::class);
+
+        $q = AssessmentQuestion::where('question_code', 'SKILLS_YES_POWER_BACKUP_TYPE_OTHER')->firstOrFail();
+        $this->assertSame('text', $q->question_type);
+        $this->assertSame(
+            ['question_code' => 'SKILLS_YES_POWER_BACKUP_TYPE', 'operator' => 'intersects', 'value' => ['Other']],
+            $q->display_conditions
+        );
     }
 
     public function test_handwash_sink_question_mentions_clean_running_water(): void
@@ -113,8 +126,8 @@ class SkillsLabSeederTest extends TestCase
         $this->seed(SkillsLabSeeder::class);
 
         $this->assertSame('1. Is there a functional skills lab?', AssessmentQuestion::where('question_code', 'SKILLS_HAS_LAB')->value('question_text'));
-        $this->assertSame('21. Newborn Anne Manikin that can be intubated and has an umbilicus for UVC insertion?', AssessmentQuestion::where('question_code', 'SKILLS_YES_MANIKIN_ANNE')->value('question_text'));
-        $this->assertSame('23. Is there a lockable storage area for the equipment to be used in skills teaching and simulation?', AssessmentQuestion::where('question_code', 'SKILLS_NO_LOCKABLE_STORAGE')->value('question_text'));
+        $this->assertSame('22. Newborn Anne Manikin that can be intubated and has an umbilicus for UVC insertion?', AssessmentQuestion::where('question_code', 'SKILLS_YES_MANIKIN_ANNE')->value('question_text'));
+        $this->assertSame('24. Is there a lockable storage area for the equipment to be used in skills teaching and simulation?', AssessmentQuestion::where('question_code', 'SKILLS_NO_LOCKABLE_STORAGE')->value('question_text'));
     }
 
     public function test_power_backup_is_a_yes_no_gate_with_a_reason_on_no(): void
