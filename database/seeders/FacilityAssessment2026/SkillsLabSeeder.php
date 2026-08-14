@@ -2,7 +2,6 @@
 
 namespace Database\Seeders\FacilityAssessment2026;
 
-use App\Models\AssessmentChecklist;
 use App\Models\AssessmentQuestion;
 use App\Models\AssessmentSection;
 use App\Models\AssessmentType;
@@ -46,8 +45,6 @@ class SkillsLabSeeder extends Seeder
             ['assessment_type_id' => $type->id, 'code' => 'skills_lab'],
             ['name' => 'Skills Lab', 'section_type' => AssessmentSection::KIND_QUESTION_GROUP, 'is_scored' => true, 'order' => 4, 'is_active' => true]
         );
-        $checklist = AssessmentChecklist::where('assessment_type_id', $type->id)->where('title', 'Skills Lab Checklist Requirements')->first();
-
         // $order also numbers each top-level question's text ("1. ", "2. ",
         // ...) in one continuous sequence across the gate, yes-branch,
         // Anne manikin, and no-branch questions — every updateOrCreate
@@ -86,14 +83,17 @@ class SkillsLabSeeder extends Seeder
                     'SKILLS_YES_POWER_BACKUP_TYPE_OTHER' => ['question_code' => 'SKILLS_YES_POWER_BACKUP_TYPE', 'operator' => 'intersects', 'value' => ['Other']],
                     default => $yesCondition,
                 },
+                // The "View checklist" hint button this used to show on
+                // the lockable-store question is gone — its content is
+                // now real, answerable Health Products commodities (the
+                // SKILLS LAB EQUIPMENT category) instead of a read-only
+                // reference popup.
+                'checklist_id' => null,
                 'order' => $order++,
                 'is_active' => true,
             ];
             if (in_array($questionType, ['select', 'multi_select'], true)) {
                 $attrs['options'] = $code === 'SKILLS_YES_POWER_BACKUP_TYPE' ? ['Generator', 'Solar', 'Other'] : ['Monthly', 'Quarterly', 'Both'];
-            }
-            if ($code === 'SKILLS_YES_LOCKABLE_STORE') {
-                $attrs['checklist_id'] = $checklist?->id;
             }
             if ($code === 'SKILLS_YES_POWER_BACKUP') {
                 $attrs['requires_explanation_on'] = ['No'];

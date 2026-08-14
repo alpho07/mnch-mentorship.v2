@@ -2,7 +2,6 @@
 
 namespace Database\Seeders\FacilityAssessment2026;
 
-use App\Models\AssessmentChecklist;
 use App\Models\AssessmentQuestion;
 use App\Models\AssessmentSection;
 use App\Models\AssessmentType;
@@ -17,9 +16,6 @@ class InfrastructureSeeder extends Seeder
             ['assessment_type_id' => $type->id, 'code' => 'infrastructure'],
             ['name' => 'Infrastructure', 'section_type' => AssessmentSection::KIND_QUESTION_GROUP, 'is_scored' => true, 'order' => 2, 'is_active' => true]
         );
-        $ortChecklist = AssessmentChecklist::where('assessment_type_id', $type->id)->where('title', 'ORT Corner checklist')->first();
-        $triageChecklist = AssessmentChecklist::where('assessment_type_id', $type->id)->where('title', 'Triage requirements')->first();
-
         $order = 0;
         // Counts only the top-level questions this closure creates (not
         // bedCountPair's Functional/Non-Functional sub-fields, which stay
@@ -37,6 +33,12 @@ class InfrastructureSeeder extends Seeder
                     'is_scored' => true,
                     'scoring_map' => ['Yes' => 1, 'No' => 0],
                     'requires_explanation_on' => ['No'],
+                    // The "View checklist" hint button this used to show
+                    // for the ORT/Triage gate questions is gone — their
+                    // content is now real, answerable Health Products
+                    // commodities (ORT CORNER / TRIAGE categories) instead
+                    // of a read-only reference popup.
+                    'checklist_id' => null,
                     'order' => $order,
                     'is_active' => true,
                     'indent_level' => 0,
@@ -79,11 +81,11 @@ class InfrastructureSeeder extends Seeder
         $create(['question_code' => 'INFRA_SEPARATE_OPD', 'question_text' => 'Are newborns and paediatrics patients seen separately from the adults in the outpatient department?']);
         $create(['question_code' => 'INFRA_RESUS_LABOUR', 'question_text' => 'Is there a warm functional newborn resuscitation area in labour ward with: Complete resuscitation tray with an updated checklist, Radiant warmer, suction machine?']);
         $create(['question_code' => 'INFRA_RESUS_THEATRE', 'question_text' => 'Is there a warm functional newborn resuscitation area in maternity theater?']);
-        $create(['question_code' => 'INFRA_ORT_OUTPATIENT', 'question_text' => 'Is there a functional Oral Rehydration Therapy (ORT) corner in the outpatient department?', 'checklist_id' => $ortChecklist?->id]);
-        $create(['question_code' => 'INFRA_ORT_INPATIENT', 'question_text' => 'Is there a functional Oral Rehydration Therapy (ORT) corner in the inpatient department?', 'checklist_id' => $ortChecklist?->id]);
+        $create(['question_code' => 'INFRA_ORT_OUTPATIENT', 'question_text' => 'Is there a functional Oral Rehydration Therapy (ORT) corner in the outpatient department?']);
+        $create(['question_code' => 'INFRA_ORT_INPATIENT', 'question_text' => 'Is there a functional Oral Rehydration Therapy (ORT) corner in the inpatient department?']);
         $create(['question_code' => 'INFRA_ORT_REGISTER', 'question_text' => 'Is there an updated Oral Rehydration Therapy (ORT) corner register?(Observe availability and functionality)?']);
         $createInactive(['question_code' => 'INFRA_NEBULIZATION', 'question_text' => 'Is there a nebulization corner?']);
-        $create(['question_code' => 'INFRA_TRIAGE', 'question_text' => 'Is there a triage area in the outpatient department?', 'checklist_id' => $triageChecklist?->id]);
+        $create(['question_code' => 'INFRA_TRIAGE', 'question_text' => 'Is there a triage area in the outpatient department?']);
 
         $this->command->info('  ✓ infrastructure: 23 questions (22 active, 1 deactivated: nebulization corner).');
     }

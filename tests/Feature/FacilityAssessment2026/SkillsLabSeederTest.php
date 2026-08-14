@@ -95,13 +95,19 @@ class SkillsLabSeederTest extends TestCase
         $this->assertSame(['question_code' => 'SKILLS_HAS_LAB', 'operator' => 'equals', 'value' => 'No'], $q->display_conditions);
     }
 
-    public function test_lockable_store_question_links_the_skills_lab_checklist(): void
+    /**
+     * The "View checklist" hint button this question used to show is
+     * gone — its content is now real, answerable Health Products
+     * commodities (the SKILLS LAB EQUIPMENT category) instead of a
+     * read-only reference popup.
+     */
+    public function test_lockable_store_question_no_longer_links_a_checklist(): void
     {
         $this->makeType();
         $this->seed(SkillsLabSeeder::class);
 
         $q = AssessmentQuestion::where('question_code', 'SKILLS_YES_LOCKABLE_STORE')->firstOrFail();
-        $this->assertSame('Skills Lab Checklist Requirements', $q->checklist->title);
+        $this->assertNull($q->checklist_id);
     }
 
     public function test_monthly_reports_additionally_requires_biomed_maintenance(): void

@@ -66,28 +66,22 @@ class InfrastructureSeederTest extends TestCase
         $this->assertSame(0, $functional->indent_level);
     }
 
-    public function test_ort_questions_link_the_ort_corner_checklist(): void
+    /**
+     * The "View checklist" hint button these questions used to show is
+     * gone — their content is now real, answerable Health Products
+     * commodities (ORT CORNER / TRIAGE categories) instead of a read-only
+     * reference popup.
+     */
+    public function test_ort_and_triage_questions_no_longer_link_a_checklist(): void
     {
         $this->makeType();
         $this->seed(ChecklistsSeeder::class);
         $this->seed(InfrastructureSeeder::class);
 
-        $outpatient = AssessmentQuestion::where('question_code', 'INFRA_ORT_OUTPATIENT')->firstOrFail();
-        $inpatient = AssessmentQuestion::where('question_code', 'INFRA_ORT_INPATIENT')->firstOrFail();
-
-        $this->assertNotNull($outpatient->checklist_id);
-        $this->assertSame($outpatient->checklist_id, $inpatient->checklist_id);
-        $this->assertSame('ORT Corner checklist', $outpatient->checklist->title);
-    }
-
-    public function test_triage_question_links_the_triage_checklist(): void
-    {
-        $this->makeType();
-        $this->seed(ChecklistsSeeder::class);
-        $this->seed(InfrastructureSeeder::class);
-
-        $triage = AssessmentQuestion::where('question_code', 'INFRA_TRIAGE')->firstOrFail();
-        $this->assertSame('Triage requirements', $triage->checklist->title);
+        foreach (['INFRA_ORT_OUTPATIENT', 'INFRA_ORT_INPATIENT', 'INFRA_TRIAGE'] as $code) {
+            $q = AssessmentQuestion::where('question_code', $code)->firstOrFail();
+            $this->assertNull($q->checklist_id, "{$code} should no longer link a checklist");
+        }
     }
 
     public function test_no_questions_require_explanation_except_on_no(): void
