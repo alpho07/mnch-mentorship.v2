@@ -48,11 +48,9 @@ class InformationSystemsSeeder extends Seeder
     // and EMR at once (that's what "Hybrid" means) — so these gates use
     // 'intersects' (any picked option overlaps the list) rather than
     // 'equals'/'in', which only work against a single scalar answer.
-    // Every option is listed here (not just 'Paper based'/'Hybrid') — an
-    // EMR-only facility still keeps physical registers/MoH forms and needs
-    // to record their availability/completeness too, so this table must
-    // show for any doc-type answer, not disappear once EMR is selected.
-    private const DATA_TOOLS_GATE = ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'intersects', 'value' => ['Paper based', 'Hybrid', 'EMR']];
+    // EMR-only facilities don't get this table — physical register
+    // availability/completeness is only tracked for Paper based/Hybrid.
+    private const DATA_TOOLS_GATE = ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'intersects', 'value' => ['Paper based', 'Hybrid']];
 
     private const EMR_DOC_TYPE_GATE = ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'intersects', 'value' => ['EMR']];
 

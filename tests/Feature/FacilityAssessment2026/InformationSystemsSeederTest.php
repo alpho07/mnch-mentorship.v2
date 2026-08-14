@@ -69,11 +69,8 @@ class InformationSystemsSeederTest extends TestCase
         $this->makeType();
         $this->seed(InformationSystemsSeeder::class);
 
-        // Every doc-type option is included — an EMR-only facility still
-        // keeps physical registers/MoH forms and needs to record their
-        // availability/completeness too, so this must show regardless of
-        // which doc type was picked, not just Paper based/Hybrid.
-        $expected = ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'intersects', 'value' => ['Paper based', 'Hybrid', 'EMR']];
+        // EMR-only facilities don't get this table — only Paper based/Hybrid.
+        $expected = ['question_code' => 'INFOSYS_DOC_TYPE', 'operator' => 'intersects', 'value' => ['Paper based', 'Hybrid']];
 
         $available = AssessmentQuestion::where('question_code', 'MOH_204A_AVAILABLE')->firstOrFail();
         $this->assertSame($expected, $available->display_conditions);
@@ -133,13 +130,10 @@ class InformationSystemsSeederTest extends TestCase
     }
 
     /**
-     * Regression: the MoH-form Available/Completeness rows were gated to
-     * only ['Paper based', 'Hybrid'] doc types — an EMR-only facility
-     * (a very common real answer) never saw the register table at all,
-     * even though it still keeps physical registers. The gate now
-     * includes 'EMR' too.
+     * EMR-only facilities don't get the MoH-form Available/Completeness
+     * table — it's only shown for Paper based/Hybrid doc types.
      */
-    public function test_moh_form_rows_still_show_when_doc_type_is_emr_only(): void
+    public function test_moh_form_rows_are_hidden_when_doc_type_is_emr_only(): void
     {
         $type = $this->makeType();
         $this->seed(InformationSystemsSeeder::class);
@@ -161,6 +155,37 @@ class InformationSystemsSeederTest extends TestCase
         AssessmentQuestionResponse::create([
             'assessment_id' => $assessment->id, 'assessment_question_id' => $docType->id,
             'response_value' => json_encode(['EMR']),
+        ]);
+
+        $url = AssessmentResource::getUrl('edit-section', ['record' => $assessment->id, 'sectionCode' => 'information_systems']);
+        $response = $this->get($url);
+
+        $response->assertOk();
+        $response->assertDontSee('MoH 204 A: Out- Patient register', false);
+    }
+
+    public function test_moh_form_rows_show_when_doc_type_is_paper_based(): void
+    {
+        $type = $this->makeType();
+        $this->seed(InformationSystemsSeeder::class);
+
+        $user = User::factory()->create(['name' => 'Paper Gate Assessor']);
+        Role::firstOrCreate(['name' => 'assessor', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'view_any_assessment', 'guard_name' => 'web']);
+        $user->givePermissionTo('view_any_assessment');
+        $user->assignRole('assessor');
+        $this->actingAs($user);
+
+        $facility = Facility::factory()->create();
+        $assessment = Assessment::create([
+            'facility_id' => $facility->id, 'assessment_type_id' => $type->id,
+            'assessment_type' => 'baseline', 'assessment_date' => now(), 'assessor_id' => $user->id,
+        ]);
+
+        $docType = AssessmentQuestion::where('question_code', 'INFOSYS_DOC_TYPE')->firstOrFail();
+        AssessmentQuestionResponse::create([
+            'assessment_id' => $assessment->id, 'assessment_question_id' => $docType->id,
+            'response_value' => json_encode(['Paper based']),
         ]);
 
         $url = AssessmentResource::getUrl('edit-section', ['record' => $assessment->id, 'sectionCode' => 'information_systems']);
