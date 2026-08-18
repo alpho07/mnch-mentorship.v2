@@ -25,7 +25,7 @@ use Filament\Tables\Table;
  * Programs; this page is deliberately just the on/off switch.
  *
  * Also controls whether the "New Mentorship" / "New Mentorship Guided
- * Setup" buttons on the mentorships list are usable — see Setting and
+ * Setup" buttons on the mentorships list are shown at all — see Setting and
  * ListMentorshipTrainings::getHeaderActions().
  */
 class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Contracts\HasTable
@@ -92,7 +92,7 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
                     ]),
 
                 Forms\Components\Section::make('Mentorship Creation Methods')
-                    ->description('Turn a method off to disable its button on the Mentorships page (shown greyed out with a tooltip) and block the page directly. Anyone already partway through a guided setup can still finish it.')
+                    ->description('Turn a method off to hide its button on the Mentorships page entirely and block the page directly. Anyone already partway through a guided setup can still finish it.')
                     ->icon('heroicon-o-cursor-arrow-rays')
                     ->schema([
                         Forms\Components\Toggle::make('new_mentorship_button_enabled')

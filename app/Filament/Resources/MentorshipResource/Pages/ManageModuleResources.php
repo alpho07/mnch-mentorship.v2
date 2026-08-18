@@ -5,6 +5,7 @@ namespace App\Filament\Resources\MentorshipResource\Pages;
 use App\Filament\Resources\MentorshipTrainingResource;
 use App\Models\ClassModule;
 use App\Models\MentorshipClass;
+use App\Models\ModuleRubric;
 use App\Models\ProgramModule;
 use App\Models\Resource;
 use App\Models\Training;
@@ -30,6 +31,8 @@ class ManageModuleResources extends Page
 
     public bool $isEmonc = false;
 
+    public ?ModuleRubric $moduleRubric = null;
+
     public function mount(Training $training, MentorshipClass $class, ClassModule $module): void
     {
         $this->training = $training->load('program');
@@ -43,6 +46,10 @@ class ManageModuleResources extends Page
         ]);
         $this->programModule = $module->programModule;
         $this->isEmonc = $this->detectEmonc();
+        $this->moduleRubric = ModuleRubric::where('program_module_id', $this->programModule->id)
+            ->where('is_active', true)
+            ->orderBy('order_sequence')
+            ->first();
     }
 
     private function detectEmonc(): bool
@@ -100,6 +107,10 @@ class ManageModuleResources extends Page
         $postTests = $this->programModule->quizzes->filter(fn ($q) => $q->isPostTest());
         $resources = $this->programModule->resources;
 
+        $objectives = $this->programModule->objectives ?? [];
+        $equipment = $this->moduleRubric->equipment_supplies ?? [];
+        $debriefQuestions = $this->moduleRubric->debrief_questions ?? [];
+
         return [
             'introduction' => [
                 'title' => 'Introduction',
@@ -108,6 +119,12 @@ class ManageModuleResources extends Page
                 'items' => $introductions,
                 'has_description' => filled($this->programModule->description),
             ],
+            'learning_objectives' => [
+                'title' => 'Learning Objectives',
+                'icon' => 'heroicon-o-academic-cap',
+                'count' => count($objectives),
+                'items' => $objectives,
+            ],
             'pre_test' => [
                 'title' => 'Pre-Test',
                 'icon' => 'heroicon-o-clipboard-document-check',
@@ -115,16 +132,28 @@ class ManageModuleResources extends Page
                 'items' => $preTests,
             ],
             'video' => [
-                'title' => 'Hands-on Videos',
+                'title' => 'Learning Video',
                 'icon' => 'heroicon-o-video-camera',
                 'count' => $videos->count(),
                 'items' => $videos,
             ],
             'case_scenario' => [
-                'title' => 'Case Scenarios',
+                'title' => 'Case Scenario',
                 'icon' => 'heroicon-o-document-text',
                 'count' => $caseScenarios->count(),
                 'items' => $caseScenarios,
+            ],
+            'equipment' => [
+                'title' => 'Equipment & Materials Needed',
+                'icon' => 'heroicon-o-wrench-screwdriver',
+                'count' => count($equipment),
+                'items' => $equipment,
+            ],
+            'debrief' => [
+                'title' => 'Debrief',
+                'icon' => 'heroicon-o-chat-bubble-left-right',
+                'count' => count($debriefQuestions),
+                'items' => $debriefQuestions,
             ],
             'post_test' => [
                 'title' => 'Post-Test',

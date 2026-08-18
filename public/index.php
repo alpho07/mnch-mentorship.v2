@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
+//die("MNCH Mentorship system is currently under Maintenance. Sorry for any inconvenicnces. ");
+
 define('LARAVEL_START', microtime(true));
 
 // Determine if the application is in maintenance mode...

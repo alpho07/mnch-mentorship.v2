@@ -645,13 +645,74 @@ function DeleteConfirmModal({ assessment, onCancel, onConfirmed }) {
 }
 
 // ── Main screen ───────────────────────────────────────────────────────────────
-export function AssessmentDetailScreen({ assessment, sections, onBack, onContinue, onViewReport, onDelete }) {
+function TeamTab({ assessment, onTeamUpdated }) {
+    const [team, setTeam] = useState({ lead_assessor: assessment.lead_assessor, team_members: assessment.team_members ?? [], can_manage_team: assessment.can_manage_team });
+    const [eligible, setEligible] = useState([]);
+    const [selected, setSelected] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        let active = true;
+        api.assessments.team(assessment.id)
+            .then(data => { if (active) setTeam(data); })
+            .catch(() => { if (active) setError('Unable to load team members.'); })
+            .finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
+    }, [assessment.id]);
+
+    useEffect(() => {
+        if (!team.can_manage_team) return;
+        api.assessments.eligibleTeamMembers(assessment.id)
+            .then(data => setEligible(Array.isArray(data?.data) ? data.data : []))
+            .catch(() => {});
+    }, [assessment.id, team.can_manage_team]);
+
+    const addMembers = async () => {
+        if (!selected.length) return;
+        setSaving(true); setError(null);
+        try {
+            const updated = await api.assessments.addTeamMembers(assessment.id, selected);
+            setTeam(updated);
+            setSelected([]);
+            setEligible(prev => prev.filter(member => !selected.includes(member.id)));
+            onTeamUpdated?.({ ...assessment, ...updated });
+        } catch (e) {
+            setError(e?.message ?? 'Could not add team members.');
+        } finally { setSaving(false); }
+    };
+
+    const lead = team.lead_assessor ?? { name: assessment.assessor_name, email: assessment.assessor_contact };
+    const people = team.team_members ?? [];
+
+    return <div style={{ display: 'grid', gap: 14 }}>
+        <div style={{ background: 'white', borderRadius: T.radius, padding: 16, border: `1px solid ${T.border}` }}>
+            <div style={{ color: T.textMuted, fontSize: 11, fontWeight: 800, letterSpacing: .7, textTransform: 'uppercase', marginBottom: 10 }}>Lead Assessor</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: T.text }}>{lead?.name || 'Not assigned'}</div>
+            {lead?.email && <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>{lead.email}</div>}
+        </div>
+        <div style={{ background: 'white', borderRadius: T.radius, padding: 16, border: `1px solid ${T.border}` }}>
+            <div style={{ color: T.textMuted, fontSize: 11, fontWeight: 800, letterSpacing: .7, textTransform: 'uppercase', marginBottom: 8 }}>Team Members</div>
+            {loading ? <div style={{ color: T.textMuted, fontSize: 13 }}>Loading team…</div> : people.length ? people.map(member => <div key={member.id} style={{ padding: '10px 0', borderTop: `1px solid ${T.borderLight}` }}><div style={{ fontWeight: 700, color: T.text }}>{member.name}</div><div style={{ fontSize: 12, color: T.textMuted }}>{member.email}</div></div>) : <div style={{ color: T.textMuted, fontSize: 13 }}>No additional team members.</div>}
+        </div>
+        {team.can_manage_team && <div style={{ background: 'white', borderRadius: T.radius, padding: 16, border: `1px solid ${T.border}` }}>
+            <div style={{ color: T.textMuted, fontSize: 11, fontWeight: 800, letterSpacing: .7, textTransform: 'uppercase', marginBottom: 8 }}>Other Potential Members</div>
+            {eligible.map(member => <label key={member.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 0', borderTop: `1px solid ${T.borderLight}`, cursor: 'pointer' }}><input type="checkbox" checked={selected.includes(member.id)} onChange={() => setSelected(prev => prev.includes(member.id) ? prev.filter(id => id !== member.id) : [...prev, member.id])} /><span><strong style={{ color: T.text }}>{member.name}</strong><small style={{ display: 'block', color: T.textMuted }}>{member.email}</small></span></label>)}
+            {!eligible.length && <div style={{ color: T.textMuted, fontSize: 13 }}>No other eligible assessors are available.</div>}
+            {error && <div style={{ color: T.danger, fontSize: 12, marginTop: 8 }}>{error}</div>}
+            <button disabled={!selected.length || saving} onClick={addMembers} style={{ width: '100%', marginTop: 14, padding: 12, border: 'none', borderRadius: 12, background: selected.length ? T.gradientPrimary : T.border, color: 'white', fontWeight: 800, cursor: selected.length ? 'pointer' : 'default' }}>{saving ? 'Adding…' : 'Add Selected Members'}</button>
+        </div>}
+    </div>;
+}
+
+export function AssessmentDetailScreen({ assessment, sections, onBack, onContinue, onViewReport, onDelete, onTeamUpdated }) {
     const [tab, setTab] = useState("overview");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const tabs = assessment.status === "completed"
-        ? ["overview", "responses", "report"]
-        : ["overview", "responses"];
+        ? ["overview", "responses", "team", "report"]
+        : ["overview", "responses", "team"];
     const headerPct = calcOverallFromSections(assessment.section_scores ?? {}) ?? assessment.overall_percentage;
     const headerGrade = headerPct != null ? calcGrade(headerPct) : assessment.overall_grade;
 
@@ -748,6 +809,7 @@ export function AssessmentDetailScreen({ assessment, sections, onBack, onContinu
             <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 20px", background: T.bg }}>
                 {tab === "overview" && <OverviewTab assessment={assessment} sections={sections ?? []} />}
                 {tab === "responses" && <ResponsesTab assessment={assessment} sections={sections ?? []} />}
+                {tab === "team" && <TeamTab assessment={assessment} onTeamUpdated={onTeamUpdated} />}
                 {tab === "report" && <ReportPreviewTab assessment={assessment} onViewFull={onViewReport} />}
             </div>
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { T } from "../constants.js";
 import api from "../services/api.service.js";
 
+const TEAL = "#0097A7";
 
 const STATUS_COLORS = {
     active:    "#10B981",
@@ -49,7 +50,7 @@ function DonutChart({ segments, size = 130, strokeWidth = 17 }) {
 }
 
 // ── SVG Area / Line Sparkline ─────────────────────────────────────────────────
-function AreaChart({ data, height = 68, color = T.primary }) {
+function AreaChart({ data, height = 68, color = TEAL }) {
     if (!data || data.length < 2) return null;
     const max = Math.max(...data.map(d => d.value), 1);
     const W = 280;
@@ -222,12 +223,12 @@ export function MentorshipReportsScreen({ user }) {
         // Auto insights
         const insights = [];
         if (total === 0) {
-            insights.push({ icon: "📋", text: "No mentorship data yet. Create your first mentorship to see analytics here.", accent: T.primary });
+            insights.push({ icon: "📋", text: "No mentorship data yet. Create your first mentorship to see analytics here.", accent: TEAL });
         } else {
             if (byStatus.active > 0)
                 insights.push({ icon: "✅", text: `${activeRate}% of mentorships are currently active — ${byStatus.active} of ${total} ongoing.`, accent: "#10B981" });
             if (programs.length > 0)
-                insights.push({ icon: "📚", text: `"${programs[0].name}" is the most common program with ${programs[0].count} mentorship${programs[0].count !== 1 ? "s" : ""}.`, accent: T.primary });
+                insights.push({ icon: "📚", text: `"${programs[0].name}" is the most common program with ${programs[0].count} mentorship${programs[0].count !== 1 ? "s" : ""}.`, accent: TEAL });
             if (counties.length > 0)
                 insights.push({ icon: "📍", text: `${counties.length} ${counties.length === 1 ? "county" : "counties"} covered. ${counties[0].name} leads with ${counties[0].count} mentorship${counties[0].count !== 1 ? "s" : ""}.`, accent: "#6366F1" });
             if (recentMonths > 0)
@@ -236,7 +237,7 @@ export function MentorshipReportsScreen({ user }) {
                 insights.push({ icon: "⏳", text: `${byStatus.draft} mentorship${byStatus.draft !== 1 ? "s" : ""} still in draft — consider activating ${byStatus.draft !== 1 ? "them" : "it"}.`, accent: "#F59E0B" });
             if (byStatus.completed > 0)
                 insights.push({ icon: "🎓", text: `${completedRate}% overall completion rate — ${byStatus.completed} mentorship${byStatus.completed !== 1 ? "s" : ""} fully completed.`, accent: "#6366F1" });
-            insights.push({ icon: "🏫", text: `Average of ${avgClasses} class${avgClasses !== "1.0" ? "es" : ""} per mentorship (${totalClasses} total).`, accent: T.primary });
+            insights.push({ icon: "🏫", text: `Average of ${avgClasses} class${avgClasses !== "1.0" ? "es" : ""} per mentorship (${totalClasses} total).`, accent: TEAL });
             if (programs.length > 1)
                 insights.push({ icon: "🔍", text: `${programs.length} programs are active. Consider consolidating focus if spread too thin.`, accent: "#9CA3AF" });
         }
@@ -275,8 +276,8 @@ export function MentorshipReportsScreen({ user }) {
                 borderRadius: "0 0 28px 28px", margin: "0 6px",
                 position: "relative", overflow: "hidden",
             }}>
-                <div style={{ position: "absolute", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,106,245,0.20) 0%, transparent 70%)", top: -60, right: -60 }} />
-                <div style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "radial-gradient(circle, rgba(108,99,255,0.14) 0%, transparent 70%)", bottom: -20, left: -20 }} />
+                <div style={{ position: "absolute", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(38,198,218,0.14) 0%, transparent 70%)", top: -60, right: -60 }} />
+                <div style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,131,143,0.1) 0%, transparent 70%)", bottom: -20, left: -20 }} />
 
                 <div style={{ color: "white", fontSize: 22, fontWeight: 800, letterSpacing: -0.3 }}>Mentorship Reports</div>
                 <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, marginTop: 3, fontWeight: 500 }}>
@@ -287,7 +288,7 @@ export function MentorshipReportsScreen({ user }) {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginTop: 18 }}>
                     {[
                         { label: "Total",    value: stats.total,                    glow: "rgba(255,255,255,0.2)"  },
-                        { label: "Active",   value: stats.byStatus.active    ?? 0,  glow: "rgba(79,106,245,0.35)" },
+                        { label: "Active",   value: stats.byStatus.active    ?? 0,  glow: "rgba(16,185,129,0.35)" },
                         { label: "Done",     value: stats.byStatus.completed ?? 0,  glow: "rgba(99,102,241,0.35)" },
                         { label: "Classes",  value: stats.totalClasses,             glow: "rgba(245,158,11,0.35)" },
                     ].map(k => (
@@ -306,7 +307,7 @@ export function MentorshipReportsScreen({ user }) {
             <div style={{ padding: "16px 14px 88px", display: "flex", flexDirection: "column", gap: 14 }}>
 
                 {stats.total === 0 ? (
-                    <Insight icon="📋" text="No mentorship data yet. Create your first mentorship to see analytics here." accent={T.primary} />
+                    <Insight icon="📋" text="No mentorship data yet. Create your first mentorship to see analytics here." accent={TEAL} />
                 ) : (<>
 
                     {/* ── Status breakdown ─────────────────────────────────────── */}
@@ -354,7 +355,7 @@ export function MentorshipReportsScreen({ user }) {
 
                     {/* ── Timeline ─────────────────────────────────────────────── */}
                     <Card title="Activity Timeline" subtitle="Mentorships started — last 6 months">
-                        <AreaChart data={stats.months} height={72} color={T.primary} />
+                        <AreaChart data={stats.months} height={72} color={TEAL} />
 
                         {/* Month labels + values */}
                         <div style={{ display: "flex", marginTop: 8 }}>
@@ -362,7 +363,7 @@ export function MentorshipReportsScreen({ user }) {
                                 <div key={m.key} style={{ flex: 1, textAlign: "center" }}>
                                     <div style={{
                                         fontSize: 14, fontWeight: 700,
-                                        color: m.value > 0 ? T.primary : T.textMuted,
+                                        color: m.value > 0 ? TEAL : T.textMuted,
                                         lineHeight: 1,
                                     }}>{m.value > 0 ? m.value : "–"}</div>
                                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 3 }}>{m.label}</div>
@@ -378,7 +379,7 @@ export function MentorshipReportsScreen({ user }) {
                                     <div key={m.key} style={{
                                         flex: 1, height: 24, borderRadius: 6,
                                         background: m.value > 0
-                                            ? `rgba(79,106,245,${0.15 + intensity * 0.75})`
+                                            ? `rgba(0,151,167,${0.15 + intensity * 0.75})`
                                             : "#F0F4F6",
                                         display: "flex", alignItems: "center", justifyContent: "center",
                                     }} />
@@ -416,15 +417,15 @@ export function MentorshipReportsScreen({ user }) {
 
                     {/* ── Avg classes card ────────────────────────────────────── */}
                     <div style={{ background: T.card, borderRadius: T.radius, padding: "14px 16px", boxShadow: T.shadowCard, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 16 }}>
-                        <div style={{ width: 50, height: 50, borderRadius: 14, background: `${T.primary}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.primary} strokeWidth="2">
+                        <div style={{ width: 50, height: 50, borderRadius: 14, background: `${TEAL}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEAL} strokeWidth="2">
                                 <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
                                 <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
                             </svg>
                         </div>
                         <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 12, color: T.textSub, fontWeight: 600 }}>Avg Classes per Mentorship</div>
-                            <div style={{ fontSize: 26, fontWeight: 800, color: T.primary, lineHeight: 1.1, marginTop: 2 }}>{stats.avgClasses}</div>
+                            <div style={{ fontSize: 26, fontWeight: 800, color: TEAL, lineHeight: 1.1, marginTop: 2 }}>{stats.avgClasses}</div>
                         </div>
                         <div style={{ textAlign: "right" }}>
                             <div style={{ fontSize: 18, fontWeight: 800, color: T.text }}>{stats.totalClasses}</div>

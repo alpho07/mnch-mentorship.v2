@@ -67,7 +67,12 @@ $certifiedCount = collect($programs)->where('is_certified', true)->count();
                 </div>
                 <span style="font-size:14px;font-weight:800;color:#111827;white-space:nowrap;">{{ $p['percent'] }}%</span>
             </div>
-            <p style="font-size:12px;color:#6b7280;margin:0 0 14px;">{{ $p['modules_done'] }} of {{ $p['modules_total'] }} modules taught to completion</p>
+            <p style="font-size:12px;color:#6b7280;margin:0 0 14px;">
+                {{ $p['modules_done'] }} of {{ $p['modules_total'] }} modules taught to completion
+                @if(($p['tracks_total'] ?? 0) > 0)
+                    <span style="margin:0 4px;opacity:0.4;">·</span>{{ $p['tracks_done'] }} of {{ $p['tracks_total'] }} tracks taught to completion
+                @endif
+            </p>
 
             @if($p['is_certified'])
             <a href="{{ $p['cert_url'] }}" target="_blank"

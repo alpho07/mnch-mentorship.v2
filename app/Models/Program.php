@@ -16,6 +16,7 @@ class Program extends Model
         'description',
         'is_active',
         'visible_to_roles',
+        'certificate_scope',
     ];
 
     protected $casts = [
@@ -44,6 +45,39 @@ class Program extends Model
         return $this->programModules()->whereNull('parent_id');
     }
 
+    /**
+     * Active, individually-completable curriculum units: standalone modules
+     * and EmONC tracks. Excludes both inactive rows AND parent "module" rows
+     * that exist only to group tracks (e.g. PPH's parent module) — those
+     * never get their own ClassModule/progress record (only their tracks
+     * do, per ModuleUsageService::assignModulesToClass()), so including them
+     * would permanently block completion checks and inflate module counts.
+     */
+    public function completableModules(): \Illuminate\Support\Collection
+    {
+        return $this->programModules()
+            ->where('is_active', true)
+            ->whereDoesntHave('children', fn ($q) => $q->where('is_active', true))
+            ->get();
+    }
+
+    /**
+     * Completable modules with no tracks of their own — i.e. not a track,
+     * and not a parent grouping tracks.
+     */
+    public function standaloneModules(): \Illuminate\Support\Collection
+    {
+        return $this->completableModules()->whereNull('parent_id');
+    }
+
+    /**
+     * Completable modules that ARE a track (child of a parent module).
+     */
+    public function trackModules(): \Illuminate\Support\Collection
+    {
+        return $this->completableModules()->whereNotNull('parent_id');
+    }
+
     public function trainings(): HasMany
     {
         return $this->hasMany(Training::class);
@@ -53,6 +87,21 @@ class Program extends Model
     {
         return str_contains(strtolower($this->name), 'maternal')
             && str_contains(strtolower($this->name), 'emonc');
+    }
+
+    /**
+     * Certificate issuance policy: 'per_class' means a mentee is certified
+     * once they finish one class (today's default for every program except
+     * EmONC). 'per_program' means every module across ALL of the mentee's
+     * classes in this program must be done, and — per
+     * ClassParticipant::isReadyForHeadDrmhCertification() — additionally
+     * requires mentor approval before Head DRMH certification. Configurable
+     * per program (Curriculum → Programs) rather than hardcoded to EmONC, in
+     * case another program adopts the same policy later.
+     */
+    public function usesPerProgramCertification(): bool
+    {
+        return $this->certificate_scope === 'per_program';
     }
 
     // Query Scopes

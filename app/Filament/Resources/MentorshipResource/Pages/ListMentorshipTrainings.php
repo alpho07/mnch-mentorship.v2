@@ -30,36 +30,31 @@ class ListMentorshipTrainings extends ListRecords
                 ->label('New Mentorship')
                 ->icon('heroicon-o-plus')
                 ->color('primary')
-                ->disabled(! $newMentorshipEnabled)
-                ->tooltip($newMentorshipEnabled ? null : 'Turned off in Mentorship Settings'),
+                ->visible($newMentorshipEnabled),
             Actions\Action::make('guided_setup')
                 ->label('New Mentorship Guided Setup')
                 ->icon('heroicon-o-sparkles')
                 ->color('gray')
                 ->url(fn () => MentorshipTrainingResource::getUrl('guided-setup'))
-                ->disabled(! $guidedSetupEnabled)
-                ->tooltip($guidedSetupEnabled ? null : 'Turned off in Mentorship Settings'),
+                ->visible($guidedSetupEnabled),
             Actions\Action::make('chat_setup')
                 ->label('Chat Setup')
                 ->icon('heroicon-o-chat-bubble-left-right')
                 ->color('gray')
                 ->url(fn () => MentorshipTrainingResource::getUrl('chat-setup'))
-                ->disabled(! $chatSetupEnabled)
-                ->tooltip($chatSetupEnabled ? null : 'Turned off in Mentorship Settings'),
+                ->visible($chatSetupEnabled),
             Actions\Action::make('mnchgpt_setup')
                 ->label('MNCHGPT')
                 ->icon('heroicon-o-sparkles')
                 ->color('gray')
                 ->url(fn () => MentorshipTrainingResource::getUrl('mnchgpt-setup'))
-                ->disabled(! $mnchgptEnabled)
-                ->tooltip($mnchgptEnabled ? null : 'Turned off in Mentorship Settings'),
+                ->visible($mnchgptEnabled),
             Actions\Action::make('quick_setup')
                 ->label('Quick Setup')
                 ->icon('heroicon-o-bolt')
                 ->color('gray')
                 ->url(fn () => MentorshipTrainingResource::getUrl('quick-setup'))
-                ->disabled(! $quickSetupEnabled)
-                ->tooltip($quickSetupEnabled ? null : 'Turned off in Mentorship Settings'),
+                ->visible($quickSetupEnabled),
         ];
     }
 

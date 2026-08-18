@@ -31,9 +31,7 @@ class ViewMentorshipTraining extends ViewRecord {
                     'mentor.cadre:id,name',
                     'organizer:id,first_name,last_name,department_id',
                     'organizer.department:id,name',
-                    'programs:id,name,description',
-                    'modules:id,name,program_id,description',
-                    'modules.program:id,name',
+                    'program:id,name,description',
                     'methodologies:id,name,description',
                     'assessmentCategories:id,name,description,assessment_method',
                     'trainingMaterials:id,training_id,inventory_item_id,quantity_planned,quantity_used,total_cost,usage_notes',
@@ -60,7 +58,22 @@ class ViewMentorshipTraining extends ViewRecord {
                     ->label('Mentees')
                     ->icon('heroicon-o-users')
                     ->color('info')
-                    ->url(fn() => static::getResource()::getUrl('mentees', ['record' => $this->record])),
+                    ->url(function () {
+                        // Mentees are enrolled per class (ClassParticipant), not at the
+                        // training level — jump straight to the most relevant class's
+                        // roster: the active one if there is one, else the latest.
+                        $class = $this->record->mentorshipClasses()->where('status', 'active')->latest()->first()
+                                ?? $this->record->mentorshipClasses()->latest()->first();
+
+                        if (!$class) {
+                            return static::getResource()::getUrl('classes', ['record' => $this->record]);
+                        }
+
+                        return static::getResource()::getUrl('class-mentees', [
+                                    'training' => $this->record->id,
+                                    'class' => $class->id,
+                        ]);
+                    }),
         ];
     }
 
@@ -240,16 +253,30 @@ class ViewMentorshipTraining extends ViewRecord {
                                 Grid::make(3)
                                 ->schema([
                                     TextEntry::make('start_date')
+                                    ->label('Start Date')
                                     ->date('M j, Y')
-                                    ->icon('heroicon-o-calendar'),
+                                    ->icon('heroicon-o-calendar')
+                                    ->getStateUsing(fn($record) =>
+                                            $record->start_date ?? $this->emoncModuleSchedule($record)['start']
+                                    ),
                                     TextEntry::make('end_date')
+                                    ->label('End Date')
                                     ->date('M j, Y')
-                                    ->icon('heroicon-o-calendar'),
+                                    ->icon('heroicon-o-calendar')
+                                    ->getStateUsing(fn($record) =>
+                                            $record->end_date ?? $this->emoncModuleSchedule($record)['end']
+                                    ),
                                     TextEntry::make('duration_days')
                                     ->label('Duration')
-                                    ->getStateUsing(fn($record) =>
-                                            $record->start_date && $record->end_date ? $record->start_date->diffInDays($record->end_date) + 1 . ' days' : 'Not set'
-                                    )
+                                    ->getStateUsing(function ($record) {
+                                        if ($record->start_date && $record->end_date) {
+                                            return $record->start_date->diffInDays($record->end_date) + 1 . ' days';
+                                        }
+
+                                        $schedule = $this->emoncModuleSchedule($record);
+
+                                        return $schedule['period'] ?? 'Not set';
+                                    })
                                     ->icon('heroicon-o-clock'),
                                 ]),
                                 Grid::make(2)
@@ -301,23 +328,29 @@ class ViewMentorshipTraining extends ViewRecord {
                             ]),
                             Section::make('Content & Programs')
                             ->schema([
-                                TextEntry::make('programs.name')
-                                ->label('Programs')
-                                ->listWithLineBreaks()
+                                TextEntry::make('program.name')
+                                ->label('Program')
                                 ->badge()
                                 ->color('info')
-                                ->visible(fn($record) => $record->programs->isNotEmpty()),
-                                TextEntry::make('modules.name')
+                                ->visible(fn($record) => $record->program !== null),
+                                TextEntry::make('used_modules')
                                 ->label('Modules')
                                 ->listWithLineBreaks()
                                 ->badge()
                                 ->color('success')
-                                ->formatStateUsing(function ($state, $record) {
-                                    return $record->modules->map(function ($module) {
-                                                return "{$module->program->name} - {$module->name}";
-                                            })->toArray();
+                                ->getStateUsing(function ($record) {
+                                    return \App\Models\ProgramModule::whereIn('id',
+                                            ClassModule::whereHas('mentorshipClass', fn($q) =>
+                                                    $q->where('training_id', $record->id)
+                                            )->pluck('program_module_id')->unique()
+                                        )
+                                        ->orderBy('order_sequence')
+                                        ->pluck('name')
+                                        ->toArray();
                                 })
-                                ->visible(fn($record) => $record->modules->isNotEmpty()),
+                                ->visible(fn($record) => ClassModule::whereHas('mentorshipClass', fn($q) =>
+                                        $q->where('training_id', $record->id)
+                                )->exists()),
                                 TextEntry::make('methodologies.name')
                                 ->label('Methodologies')
                                 ->listWithLineBreaks()
@@ -363,31 +396,43 @@ class ViewMentorshipTraining extends ViewRecord {
                                 ->visible(fn() => $this->record->assessmentCategories->isNotEmpty()),
                                 Section::make('Mentee Statistics')
                                 ->schema([
-                                    Grid::make(4)
+                                    Grid::make(3)
                                     ->schema([
                                         TextEntry::make('participants_count')
                                         ->label('Total Mentees')
-                                        ->getStateUsing(fn($record) => $record->participants()->count())
+                                        ->getStateUsing(fn($record) => ClassParticipant::whereHas('mentorshipClass', fn($q) =>
+                                                        $q->where('training_id', $record->id)
+                                                )->distinct('user_id')->count('user_id')
+                                        )
                                         ->badge()
                                         ->color('success'),
                                         TextEntry::make('completion_rate')
                                         ->label('Completion Rate')
                                         ->suffix('%')
+                                        ->getStateUsing(function ($record) {
+                                            $total = ClassParticipant::whereHas('mentorshipClass', fn($q) =>
+                                                            $q->where('training_id', $record->id)
+                                                    )->count();
+                                            if ($total === 0) {
+                                                return 0;
+                                            }
+                                            $completed = ClassParticipant::whereHas('mentorshipClass', fn($q) =>
+                                                            $q->where('training_id', $record->id)
+                                                    )->where('status', 'completed')->count();
+                                            return round(($completed / $total) * 100, 1);
+                                        })
                                         ->badge()
                                         ->color(fn($state) => $state >= 80 ? 'success' : ($state >= 60 ? 'warning' : 'danger')),
                                         TextEntry::make('departments_represented')
                                         ->label('Departments Represented')
                                         ->getStateUsing(fn($record) =>
-                                                $record->participants()->with('user.department')->get()
+                                                ClassParticipant::whereHas('mentorshipClass', fn($q) =>
+                                                        $q->where('training_id', $record->id)
+                                                )->with('user.department')->get()
                                                 ->pluck('user.department.name')->filter()->unique()->count()
                                         )
                                         ->badge()
                                         ->color('info'),
-                                        TextEntry::make('assessment_categories_count')
-                                        ->label('Assessment Categories')
-                                        ->getStateUsing(fn($record) => $record->assessmentCategories()->count())
-                                        ->badge()
-                                        ->color('warning'),
                                     ]),
                                 ]),
                             ])
@@ -441,6 +486,32 @@ class ViewMentorshipTraining extends ViewRecord {
                                 ->badge()
                                 ->color('primary')
                                 ->visible(fn() => $this->record->trainingMaterials->isNotEmpty()),
+                                // EmONC has no inventory-style materials — instead, mentee
+                                // manuals and reference resources are attached at the
+                                // curriculum level (per ProgramModule). Aggregate them
+                                // across every module actually used in this training.
+                                RepeatableEntry::make('emonc_resources')
+                                ->label('Mentee Manuals & Resources')
+                                ->getStateUsing(fn($record) => $this->emoncResources($record))
+                                ->schema([
+                                    Grid::make(3)
+                                    ->schema([
+                                        TextEntry::make('title')
+                                        ->weight(FontWeight::Medium)
+                                        ->columnSpan(2),
+                                        TextEntry::make('type')
+                                        ->badge()
+                                        ->color('info'),
+                                    ]),
+                                    TextEntry::make('url')
+                                    ->label('Link')
+                                    ->url(fn($state) => $state)
+                                    ->openUrlInNewTab()
+                                    ->color('primary')
+                                    ->visible(fn($state) => !empty($state)),
+                                ])
+                                ->contained(false)
+                                ->visible(fn($record) => $record->program?->isEmonc() && $this->emoncResources($record)->isNotEmpty()),
                             ])
                             ->collapsible(),
                             Section::make('Additional Information')
@@ -449,7 +520,7 @@ class ViewMentorshipTraining extends ViewRecord {
                                 ->prose()
                                 ->columnSpanFull()
                                 ->visible(fn($state) => !empty($state)),
-                                Grid::make(3)
+                                Grid::make(2)
                                 ->schema([
                                     TextEntry::make('created_at')
                                     ->label('Created')
@@ -457,31 +528,68 @@ class ViewMentorshipTraining extends ViewRecord {
                                     TextEntry::make('updated_at')
                                     ->label('Last Updated')
                                     ->dateTime(),
-                                    TextEntry::make('facility_assessment_status')
-                                    ->label('Facility Assessment')
-                                    ->getStateUsing(function ($record) {
-                                        $assessment = \App\Models\FacilityAssessment::where('facility_id', $record->facility_id)
-                                                ->where('status', 'approved')
-                                                ->where('next_assessment_due', '>', now())
-                                                ->latest()
-                                                ->first();
-
-                                        return $assessment ? 'Valid until ' . $assessment->next_assessment_due->format('M j, Y') : 'No valid assessment';
-                                    })
-                                    ->badge()
-                                    ->color(function ($record) {
-                                        $assessment = \App\Models\FacilityAssessment::where('facility_id', $record->facility_id)
-                                                ->where('status', 'approved')
-                                                ->where('next_assessment_due', '>', now())
-                                                ->latest()
-                                                ->first();
-
-                                        return $assessment ? 'success' : 'danger';
-                                    }),
                                 ]),
                             ])
                             ->collapsible(),
         ]);
+    }
+
+    /**
+     * EmONC trainings have no top-level start_date/end_date (each module is
+     * scheduled independently — see MentorshipTrainingResource::isEmonc()).
+     * Derives an effective schedule instead: earliest module start_date to
+     * latest module end_date across every class in this training, with the
+     * span expressed in whichever unit reads best (days/weeks/months/years).
+     */
+    private function emoncModuleSchedule(Training $record): array {
+        $dates = ClassModule::whereHas('mentorshipClass', fn($q) => $q->where('training_id', $record->id))
+                ->where(fn($q) => $q->whereNotNull('start_date')->orWhereNotNull('end_date'))
+                ->get(['start_date', 'end_date']);
+
+        $start = $dates->pluck('start_date')->filter()->sort()->first();
+        $end = $dates->pluck('end_date')->filter()->sort()->last();
+
+        if (!$start || !$end) {
+            return ['start' => null, 'end' => null, 'period' => null];
+        }
+
+        // Carbon 3 returns floats from diffIn*() by default — cast down to
+        // whole units, matching the pre-3.0 behavior this logic expects.
+        $years = (int) $start->diffInYears($end);
+        $months = (int) $start->diffInMonths($end);
+        $weeks = (int) $start->diffInWeeks($end);
+        $days = (int) $start->diffInDays($end) + 1;
+
+        $period = match (true) {
+            $years >= 1 => $years . ' year' . ($years != 1 ? 's' : ''),
+            $months >= 1 => $months . ' month' . ($months != 1 ? 's' : ''),
+            $weeks >= 1 => $weeks . ' week' . ($weeks != 1 ? 's' : ''),
+            default => $days . ' day' . ($days != 1 ? 's' : ''),
+        };
+
+        return ['start' => $start, 'end' => $end, 'period' => $period];
+    }
+
+    /**
+     * All resources (manuals, guides, references) attached to any
+     * ProgramModule actually used in this training — deduplicated, since
+     * the same module can appear in more than one class.
+     */
+    private function emoncResources(Training $record): \Illuminate\Support\Collection {
+        $programModuleIds = ClassModule::whereHas('mentorshipClass', fn($q) => $q->where('training_id', $record->id))
+                ->pluck('program_module_id')
+                ->unique();
+
+        return \App\Models\Resource::whereHas('programModules', fn($q) => $q->whereIn('program_modules.id', $programModuleIds))
+                ->with(['resourceType'])
+                ->get()
+                ->unique('id')
+                ->map(fn($resource) => [
+                    'title' => $resource->title,
+                    'type' => $resource->resourceType?->name ?? 'Resource',
+                    'url' => $resource->external_url ?: $resource->file_url,
+                ])
+                ->values();
     }
 
     private function getMaterialStatus($material): string {

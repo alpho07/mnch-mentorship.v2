@@ -89,6 +89,22 @@ class ProgramResource extends Resource
                         ->visible(fn (Get $get): bool => ! $get('is_active'))
                         ->columnSpanFull(),
                 ]),
+
+            Forms\Components\Section::make('Certification')
+                ->description('Controls when a mentee becomes eligible for a certificate.')
+                ->icon('heroicon-o-academic-cap')
+                ->schema([
+                    Forms\Components\Select::make('certificate_scope')
+                        ->label('Certificate Scope')
+                        ->options([
+                            'per_class' => 'Per class — certified as soon as one class is completed',
+                            'per_program' => 'Per program — certified only once every module across all of the mentee\'s classes in this program is done, with mentor approval then Head DRMH certification',
+                        ])
+                        ->default('per_class')
+                        ->required()
+                        ->native(false)
+                        ->columnSpanFull(),
+                ]),
         ]);
     }
 
@@ -122,6 +138,12 @@ class ProgramResource extends Resource
                     ->separator(',')
                     ->placeholder('—')
                     ->tooltip('Roles that can still see this program when deactivated'),
+
+                Tables\Columns\TextColumn::make('certificate_scope')
+                    ->label('Certificate Scope')
+                    ->badge()
+                    ->color(fn (string $state): string => $state === 'per_program' ? 'warning' : 'gray')
+                    ->formatStateUsing(fn (string $state): string => $state === 'per_program' ? 'Per Program' : 'Per Class'),
 
                 Tables\Columns\TextColumn::make('module_count')
                     ->label('Modules')

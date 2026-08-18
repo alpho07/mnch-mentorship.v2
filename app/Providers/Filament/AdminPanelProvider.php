@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\GlobalSearch\AppGlobalSearchProvider;
 use App\Filament\Pages\MyProfile;
 use App\Livewire\Auth\CustomLogin;
 use App\Livewire\Auth\CustomRegister;
@@ -47,6 +48,8 @@ class AdminPanelProvider extends PanelProvider
             ->darkMode(true)
             ->defaultThemeMode(ThemeMode::Light)
             ->maxContentWidth(MaxWidth::Full)
+            ->sidebarCollapsibleOnDesktop()
+            ->globalSearch(AppGlobalSearchProvider::class)
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): HtmlString => new HtmlString(

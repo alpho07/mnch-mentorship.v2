@@ -38,7 +38,7 @@ export function AssessmentsListScreen({ assessments, sections, onView, loading, 
                 margin: "0 6px",
                 position: "relative", overflow: "hidden",
             }}>
-                <div style={{ position: "absolute", width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,106,245,0.20) 0%, transparent 70%)", top: -40, right: -40 }} />
+                <div style={{ position: "absolute", width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle, rgba(52,211,153,0.1) 0%, transparent 70%)", top: -40, right: -40 }} />
 
                 <div style={{
                     color: "white", fontSize: 22, fontWeight: 800, letterSpacing: -0.3,

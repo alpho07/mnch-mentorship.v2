@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
         // Has no effect on Capacitor builds — those use the baked-in BASE_URL.
         proxy: {
             '/api': {
-                target: 'https://mnchkenyamentorship.org',
+                target: 'https://mnchkenyamentorship.org', 
                 changeOrigin: true,
                 secure: true,
             },

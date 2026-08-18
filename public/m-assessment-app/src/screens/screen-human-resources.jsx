@@ -274,7 +274,7 @@ export function HumanResourcesScreen({ assessment, onBack, onComplete }) {
                 position: "relative", overflow: "hidden",
                 borderRadius: "24px 24px 28px 28px",
             }}>
-                <div style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,106,245,0.20) 0%, transparent 70%)", top: -30, right: -30 }} />
+                <div style={{ position: "absolute", width: 120, height: 120, borderRadius: "50%", background: "radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)", top: -30, right: -30 }} />
                 <BackButton onBack={onBack} light />
 
                 {/* Status badge */}
@@ -282,9 +282,9 @@ export function HumanResourcesScreen({ assessment, onBack, onComplete }) {
                     <div style={{
                         position: "absolute", top: 18, right: 16,
                         padding: "3px 10px", borderRadius: 10, fontSize: 10, fontWeight: 700,
-                        background: isOffline ? "rgba(251,191,36,0.2)" : "rgba(79,106,245,0.2)",
-                        color: isOffline ? "#FDE68A" : "#A5B4FC",
-                        border: `1px solid ${isOffline ? "rgba(251,191,36,0.3)" : "rgba(79,106,245,0.3)"}`,
+                        background: isOffline ? "rgba(251,191,36,0.2)" : "rgba(14,165,233,0.2)",
+                        color: isOffline ? "#FDE68A" : "#7DD3FC",
+                        border: `1px solid ${isOffline ? "rgba(251,191,36,0.3)" : "rgba(14,165,233,0.3)"}`,
                     }}>
                         {isOffline ? "✈ Offline" : `⏳ ${syncStatus.pendingCount} pending`}
                     </div>

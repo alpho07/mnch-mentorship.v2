@@ -39,10 +39,14 @@ class ManageMentorshipMentees extends Page implements HasTable {
     protected static string $view = 'filament.pages.manage-mentees';
     public Training $record;
 
-    public function mount(int|string $record): void {
-        $this->record = Training::where('type', 'facility_mentorship')
-                ->with(['facility', 'participants.user'])
-                ->findOrFail($record);
+    public function mount(): void {
+        // $this->record is automatically bound by Filament from the route —
+        // do not accept a $record parameter here: that conflicts with
+        // Filament's own route-model binding and corrupts the value before
+        // it reaches this method (see sibling pages ManageMentorshipClasses/
+        // ManageMentorshipCoMentors for the same pattern).
+        abort_unless($this->record->type === 'facility_mentorship', 404);
+        $this->record->loadMissing(['facility', 'participants.user']);
     }
 
     public function getTitle(): string {
@@ -50,7 +54,9 @@ class ManageMentorshipMentees extends Page implements HasTable {
     }
 
     public function getSubheading(): ?string {
-        return "Facility: {$this->record->facility->name} • {$this->record->participants()->count()} mentees enrolled";
+        $facilityName = $this->record->facility?->name ?? 'Unknown facility';
+
+        return "Facility: {$facilityName} • {$this->record->participants()->count()} mentees enrolled";
     }
 
     protected function getHeaderActions(): array {
@@ -124,7 +130,7 @@ class ManageMentorshipMentees extends Page implements HasTable {
                                 <div>
                                     <h4 class="text-sm font-medium text-blue-800">Managing Mentees:</h4>
                                     <ul class="mt-1 text-sm text-blue-700 list-disc list-inside space-y-1">
-                                        <li>Users from <strong>' . $this->record->facility->name . '</strong></li>
+                                        <li>Users from <strong>' . ($this->record->facility?->name ?? 'the facility') . '</strong></li>
                                         <li>Already enrolled mentees are pre-selected (checked)</li>
                                         <li>Uncheck to remove, check to add new mentees</li>
                                         <li>Search for users using the search box above</li>
@@ -197,7 +203,7 @@ class ManageMentorshipMentees extends Page implements HasTable {
                     ->color('success')
                     ->form([
                         Section::make('Create New User at Facility')
-                        ->description("Add a new user to {$this->record->facility->name} and enroll them in this mentorship")
+                        ->description('Add a new user to '.($this->record->facility?->name ?? 'the facility').' and enroll them in this mentorship')
                         ->schema([
                             TextInput::make('phone')
                             ->label('Phone Number')
@@ -307,7 +313,7 @@ class ManageMentorshipMentees extends Page implements HasTable {
                     ->color('warning')
                     ->form([
                         Section::make('Import Mentees from CSV')
-                        ->description("Upload a CSV file with mentee details from {$this->record->facility->name}")
+                        ->description('Upload a CSV file with mentee details from '.($this->record->facility?->name ?? 'the facility'))
                         ->schema([
                             FileUpload::make('csv_file')
                             ->label('CSV File')
@@ -324,7 +330,7 @@ class ManageMentorshipMentees extends Page implements HasTable {
                                             <li>• Required: first_name, last_name, phone</li>
                                             <li>• Optional: email, department_name, cadre_name</li>
                                             <li>• Phone format: +254700000000</li>
-                                            <li>• All users will be assigned to <strong>' . $this->record->facility->name . '</strong></li>
+                                            <li>• All users will be assigned to <strong>' . ($this->record->facility?->name ?? 'the facility') . '</strong></li>
                                             <li>• Existing users will be updated</li>
                                             <li>• New users will be created automatically</li>
                                         </ul>

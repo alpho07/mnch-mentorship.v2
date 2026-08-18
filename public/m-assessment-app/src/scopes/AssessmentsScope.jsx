@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api.service.js';
-import { calcGrade } from '../constants.js';
+import { calcGrade, Z } from '../constants.js';
 import { AssessmentAnalyticsHomeScreen } from '../screens/screen-analytics-home.jsx';
 import { AssessmentsListScreen } from '../screens/screen-assessments-list.jsx';
 import { AssessmentDetailScreen } from '../screens/screen-assessment-detail.jsx';
@@ -17,7 +17,7 @@ const TABS = [
 
 function BottomNav({ active, onChange }) {
     return (
-        <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#ffffff', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid #EAF6F7', boxShadow: '0 -2px 16px rgba(0,0,0,0.06)', display: 'flex', zIndex: 50, paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#ffffff', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderTop: '1px solid #EAF6F7', boxShadow: '0 -2px 16px rgba(0,0,0,0.06)', display: 'flex', zIndex: Z.navBar, paddingBottom: 'env(safe-area-inset-bottom)' }}>
             {TABS.map(tab => (
                 <button key={tab.id} onClick={() => onChange(tab.id)} style={{ flex: 1, padding: '10px 0 8px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, color: active === tab.id ? '#0097A7' : '#8BC8C8', fontSize: 10, fontWeight: active === tab.id ? 700 : 400, transition: 'color 0.15s' }}>
                     <span style={{ fontSize: 20 }}>{tab.icon}</span>
@@ -66,7 +66,7 @@ export function AssessmentsScope({ user, onLogout, onUserUpdate }) {
 
     function refreshAssessments() { api.assessments.list().then(data => { const arr = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []; setAssessments(arr.map(enrichAssessment)); }).catch(() => {}); }
 
-    if (modal?.type === 'detail') return <AssessmentDetailScreen assessment={modal.data} sections={sections} onBack={() => setModal(null)} onContinue={(a) => setModal({ type: 'form', data: a })} onViewReport={() => setModal({ type: 'report', data: modal.data })} onDelete={(a) => { api.assessments.delete(a.id).then(() => { setAssessments(prev => prev.filter(x => x.id !== a.id)); setModal(null); }).catch(() => {}); }} />;
+    if (modal?.type === 'detail') return <AssessmentDetailScreen assessment={modal.data} sections={sections} onBack={() => setModal(null)} onContinue={(a) => setModal({ type: 'form', data: a })} onViewReport={() => setModal({ type: 'report', data: modal.data })} onTeamUpdated={(updated) => { setAssessments(prev => prev.map(item => item.id === updated.id ? updated : item)); setModal({ type: 'detail', data: updated }); }} onDelete={(a) => { api.assessments.delete(a.id).then(() => { setAssessments(prev => prev.filter(x => x.id !== a.id)); setModal(null); }).catch(() => {}); }} />;
     if (modal?.type === 'form') return <AssessmentFormScreen user={user} sections={sections} editAssessment={modal.data} onBack={() => setModal({ type: 'detail', data: modal.data })} onComplete={(a) => { const enriched = enrichAssessment(a); setAssessments(prev => prev.map(x => x.id === enriched.id ? enriched : x)); setModal({ type: 'detail', data: enriched }); }} />;
     if (modal?.type === 'report') return <AssessmentReportScreen assessment={modal.data} onBack={() => setModal({ type: 'detail', data: modal.data })} />;
     if (modal?.type === 'emailJobs') return <EmailJobsScreen onBack={() => setModal(null)} />;

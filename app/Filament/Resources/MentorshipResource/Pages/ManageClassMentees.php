@@ -238,7 +238,7 @@ class ManageClassMentees extends Page implements HasTable
                     ->label('Mentor Approve')
                     ->icon('heroicon-o-check-badge')
                     ->color('success')
-                    ->visible(fn (ClassParticipant $record) => $this->isEmonc() &&
+                    ->visible(fn (ClassParticipant $record) => $this->usesPerProgramCertification() &&
                         $this->canMentorApprove() &&
                         ! $record->mentor_approved_at &&
                         $record->status === 'completed'
@@ -396,7 +396,7 @@ class ManageClassMentees extends Page implements HasTable
                     ->requiresConfirmation()
                     ->modalHeading('Mentor Approve Selected Mentees')
                     ->modalDescription('This will approve all selected mentees who are eligible for certification.')
-                    ->visible(fn () => $this->isEmonc() && $this->canMentorApprove())
+                    ->visible(fn () => $this->usesPerProgramCertification() && $this->canMentorApprove())
                     ->action(function ($records) {
                         $notificationService = app(EmoncNotificationService::class);
                         $approved = 0;
@@ -1158,11 +1158,11 @@ class ManageClassMentees extends Page implements HasTable
         $this->class->refresh();
     }
 
-    private function isEmonc(): bool
+    private function usesPerProgramCertification(): bool
     {
         $program = Program::find($this->training->program_id);
 
-        return $program?->isEmonc() ?? false;
+        return $program?->usesPerProgramCertification() ?? false;
     }
 
     /**

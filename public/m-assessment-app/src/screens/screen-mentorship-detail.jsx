@@ -245,13 +245,13 @@ function ClassesTab({ data, classes, loading, onOpenClass, onAddClass, onEditCla
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                         View
                                     </button>
-                                    {onEditClass && (
+                                    {onEditClass && c.status !== "completed" && (
                                         <button onClick={(e) => { e.stopPropagation(); onEditClass({ ...c, trainingId: data.id }); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "6px 0", borderRadius: T.radiusXs, border: `1px solid ${T.border}`, background: T.card, color: T.primary, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 00 2 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                             Edit
                                         </button>
                                     )}
-                                    {onDeleteClass && (
+                                    {onDeleteClass && c.status !== "completed" && (
                                         <button onClick={(e) => { e.stopPropagation(); onDeleteClass({ ...c, trainingId: data.id }); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "6px 0", borderRadius: T.radiusXs, border: "1px solid #FECACA", background: "#FEF2F2", color: "#DC2626", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                                             Delete
@@ -333,6 +333,7 @@ export function MentorshipDetailScreen({ training, user, onBack, onOpenClass, on
     const data    = detail ?? training;
     const classes = data?.classes ?? [];
     const trainingStatus = data.status ?? "draft";
+    const hasCompletedClass = classes.some(c => c.status === "completed");
 
     const TABS = isMentee
         ? [{ key: "classes", label: "Classes" }, { key: "info", label: "Info" }]
@@ -355,7 +356,7 @@ export function MentorshipDetailScreen({ training, user, onBack, onOpenClass, on
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         <span style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Back</span>
                     </button>
-                    {data.status !== "submitted" && data.status !== "completed" && (
+                    {data.status !== "submitted" && data.status !== "completed" && !hasCompletedClass && (
                         <button onClick={() => setShowEdit(true)} style={{ border: "none", background: "rgba(255,255,255,0.12)", cursor: "pointer", padding: "6px 10px", borderRadius: 10, display: "flex", alignItems: "center", gap: 4 }}>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             <span style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Edit</span>

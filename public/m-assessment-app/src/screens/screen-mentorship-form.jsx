@@ -1,15 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { T } from "../constants.js";
 import api from "../services/api.service.js";
 
-const inputStyle = {
+export const inputStyle = {
     display: "block", width: "100%", padding: "11px 13px",
     borderRadius: T.radiusSm, border: `1px solid ${T.border}`,
     fontSize: 14, background: "#fff", color: T.text,
     fontFamily: "inherit", outline: "none", boxSizing: "border-box",
 };
 
-const selectStyle = {
+export const selectStyle = {
     ...inputStyle,
     appearance: "none", WebkitAppearance: "none",
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
@@ -17,19 +18,25 @@ const selectStyle = {
     paddingRight: 36,
 };
 
-function Field({ label, required, hint, children }) {
+export function Field({ label, required, hint, error, children, fieldRef }) {
     return (
-        <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: T.textSub, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
+        <div ref={fieldRef} style={{ marginBottom: 16 }}>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: error ? "#DC2626" : T.textSub, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 {label}{required && <span style={{ color: "#EF4444", marginLeft: 2 }}>*</span>}
             </label>
             {children}
-            {hint && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{hint}</div>}
+            {error
+                ? <div style={{ fontSize: 11, color: "#DC2626", marginTop: 4, fontWeight: 600 }}>{error}</div>
+                : hint && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{hint}</div>}
         </div>
     );
 }
 
-function SearchableDropdown({
+// Estimated max height of the popup panel (search box + list), used to decide
+// whether it should open below or flip above the trigger.
+const DROPDOWN_PANEL_HEIGHT = 280;
+
+export function SearchableDropdown({
     options,
     value,
     onChange,
@@ -41,6 +48,9 @@ function SearchableDropdown({
 }) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
+    const [panelPos, setPanelPos] = useState(null); // { left, right, top|bottom, openUp }
+    const triggerRef = useRef(null);
+    const wrapperRef = useRef(null);
     const selected = options.find(item => String(item.id) === String(value));
     const selectedLabel = selected ? getLabel(selected) : "";
     const filtered = options.filter(item =>
@@ -52,16 +62,57 @@ function SearchableDropdown({
         setQuery("");
     };
 
+    // Position the portal-rendered panel against the trigger's real screen
+    // coordinates (position: fixed — immune to any ancestor's overflow
+    // clipping, unlike the old position: absolute approach, which got cut
+    // off inside scrollable step content). Flips upward when there isn't
+    // enough room below, so bottom-of-screen fields (e.g. Facility) don't
+    // render their list off-screen.
+    useLayoutEffect(() => {
+        if (!open || !triggerRef.current) return;
+
+        const reposition = () => {
+            const rect = triggerRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const openUp = spaceBelow < DROPDOWN_PANEL_HEIGHT && rect.top > spaceBelow;
+            setPanelPos({
+                left: rect.left,
+                width: rect.width,
+                openUp,
+                top: openUp ? undefined : rect.bottom + 4,
+                bottom: openUp ? window.innerHeight - rect.top + 4 : undefined,
+            });
+        };
+
+        reposition();
+        // Close when the background page scrolls (the panel's fixed
+        // position would otherwise drift from its trigger). Scrolling
+        // within the panel's own options list must NOT close it — capture
+        // phase sees that scroll too, so it's explicitly excluded.
+        const handleScroll = (e) => {
+            if (e.target?.closest?.("[data-dropdown-panel]")) return;
+            close();
+        };
+        window.addEventListener("scroll", handleScroll, true);
+        window.addEventListener("resize", reposition);
+        return () => {
+            window.removeEventListener("scroll", handleScroll, true);
+            window.removeEventListener("resize", reposition);
+        };
+    }, [open]);
+
     return (
         <div
+            ref={wrapperRef}
             style={{ position: "relative" }}
             onBlur={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget)) {
+                if (!wrapperRef.current?.contains(e.relatedTarget) && !e.relatedTarget?.closest('[data-dropdown-panel]')) {
                     setTimeout(close, 120);
                 }
             }}
         >
             <button
+                ref={triggerRef}
                 type="button"
                 disabled={disabled}
                 onClick={() => !disabled && setOpen(prev => !prev)}
@@ -79,22 +130,27 @@ function SearchableDropdown({
                 </span>
             </button>
 
-            {open && (
+            {open && panelPos && createPortal(
                 <div
+                    data-dropdown-panel
+                    tabIndex={-1}
                     style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        top: "calc(100% + 4px)",
-                        zIndex: 30,
+                        position: "fixed",
+                        left: panelPos.left,
+                        width: panelPos.width,
+                        top: panelPos.top,
+                        bottom: panelPos.bottom,
+                        zIndex: 9999,
                         background: "#fff",
                         border: `1px solid ${T.border}`,
                         borderRadius: T.radiusSm,
                         boxShadow: T.shadowMd,
                         overflow: "hidden",
+                        display: "flex",
+                        flexDirection: panelPos.openUp ? "column-reverse" : "column",
                     }}
                 >
-                    <div style={{ padding: 8, borderBottom: `1px solid ${T.borderLight}` }}>
+                    <div style={{ padding: 8, borderBottom: panelPos.openUp ? "none" : `1px solid ${T.borderLight}`, borderTop: panelPos.openUp ? `1px solid ${T.borderLight}` : "none" }}>
                         <input
                             autoFocus
                             value={query}
@@ -139,7 +195,8 @@ function SearchableDropdown({
                             );
                         })}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
@@ -164,7 +221,7 @@ function getProgramTheme(name, i) {
     return fb[i % fb.length];
 }
 
-function ProgramPickerCards({ programs, value, onChange }) {
+function ProgramPickerCards({ programs, value, onChange, disabled, disabledMessage }) {
     if (!programs || programs.length === 0) {
         return (
             <div style={{ padding: "20px 0", textAlign: "center", color: T.textMuted, fontSize: 13 }}>
@@ -173,7 +230,14 @@ function ProgramPickerCards({ programs, value, onChange }) {
         );
     }
     return (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div>
+            {disabled && disabledMessage && (
+                <div style={{ background: "#FFFBEB", border: "1px solid #FCD34D", borderRadius: T.radiusSm,
+                    padding: "10px 14px", marginBottom: 10, fontSize: 12, color: "#92400E", fontWeight: 600 }}>
+                    🔒 {disabledMessage}
+                </div>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, opacity: disabled ? 0.55 : 1 }}>
             {programs.map((p, i) => {
                 const theme = getProgramTheme(p.name, i);
                 const selected = String(p.id) === String(value);
@@ -181,6 +245,7 @@ function ProgramPickerCards({ programs, value, onChange }) {
                     <button
                         key={p.id}
                         type="button"
+                        disabled={disabled}
                         onClick={() => onChange(String(p.id))}
                         style={{
                             position: "relative",
@@ -188,7 +253,7 @@ function ProgramPickerCards({ programs, value, onChange }) {
                             border: selected ? "2.5px solid rgba(255,255,255,0.9)" : "2px solid transparent",
                             borderRadius: 14,
                             padding: "12px 10px 10px",
-                            cursor: "pointer",
+                            cursor: disabled ? "not-allowed" : "pointer",
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
@@ -253,21 +318,10 @@ function ProgramPickerCards({ programs, value, onChange }) {
                         <div style={{ fontSize: 11, fontWeight: 900, color: "#fff", lineHeight: 1.25, letterSpacing: "0.01em", textShadow: "0 1px 4px rgba(0,0,0,0.25)" }}>
                             {p.name}
                         </div>
-                        {/* module count */}
-                        {p.module_count != null && (
-                            <div style={{
-                                marginTop: "auto", paddingTop: 6,
-                                fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em",
-                                color: "rgba(255,255,255,0.85)",
-                                background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.28)",
-                                borderRadius: 99, padding: "3px 8px", display: "inline-block",
-                            }}>
-                                {p.module_count} module{p.module_count !== 1 ? "s" : ""}
-                            </div>
-                        )}
                     </button>
                 );
             })}
+            </div>
         </div>
     );
 }
@@ -278,6 +332,11 @@ export function MentorshipFormScreen({ user, onBack, onCreated, existingMentorsh
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [editLoading, setEditLoading] = useState(isEditMode);
+    // Edit-mode lock state, derived from the mentorship's own classes:
+    // any completed class locks the whole mentorship; any active/in-progress
+    // class (with none completed yet) locks just the Program field.
+    const [mentorshipLocked, setMentorshipLocked] = useState(false);
+    const [programLocked, setProgramLocked]       = useState(false);
 
     // ── Step 1: Setup ──────────────────────────────────────────────────────
     const [programs, setPrograms]         = useState([]);
@@ -298,7 +357,8 @@ export function MentorshipFormScreen({ user, onBack, onCreated, existingMentorsh
 
     const [startDate, setStartDate]           = useState("");
     const [endDate, setEndDate]               = useState("");
-    const [maxParticipants, setMaxParticipants] = useState(20);
+    const [maxParticipants, setMaxParticipants]           = useState(20);
+    const [maxParticipantsInput, setMaxParticipantsInput] = useState("20");
     const [className, setClassName]           = useState("Class 1");
     const [classStartDate, setClassStartDate] = useState("");
     const [classEndDate, setClassEndDate]     = useState("");
@@ -418,6 +478,12 @@ export function MentorshipFormScreen({ user, onBack, onCreated, existingMentorsh
                 if (t.end_date)    setEndDate(t.end_date);
                 if (t.max_participants) setMaxParticipants(t.max_participants);
                 if (t.is_pilot !== undefined) setIsPilot(!!t.is_pilot);
+
+                const classes = Array.isArray(t.classes) ? t.classes : [];
+                const hasCompleted = classes.some(c => c.status === "completed");
+                const hasActive    = classes.some(c => c.status === "active" || c.status === "in_progress");
+                setMentorshipLocked(hasCompleted);
+                setProgramLocked(hasCompleted || hasActive);
             })
             .catch(() => {})
             .finally(() => setEditLoading(false));
@@ -582,7 +648,8 @@ export function MentorshipFormScreen({ user, onBack, onCreated, existingMentorsh
 
     const effectiveClassStartDate = classStartDate || startDate;
     const effectiveClassEndDate = classEndDate || endDate;
-    const step1Valid = programId && countyId && facilityId && startDate && endDate;
+    const step1Valid = programId && countyId && facilityId && startDate && endDate
+        && maxParticipants >= 2 && maxParticipants <= 8;
     const step2Valid = className.trim() && effectiveClassStartDate && effectiveClassEndDate;
 
     const handleUpdate = async () => {
@@ -828,6 +895,8 @@ export function MentorshipFormScreen({ user, onBack, onCreated, existingMentorsh
                                     programs={programs}
                                     value={programId}
                                     onChange={(id) => { setProgramId(id); setSelectedModuleIds([]); }}
+                                    disabled={isEditMode && programLocked}
+                                    disabledMessage="A class is already in progress — the program can no longer be changed."
                                 />
                             </Field>
 
@@ -852,14 +921,36 @@ export function MentorshipFormScreen({ user, onBack, onCreated, existingMentorsh
                                 </Field>
                             </div>
 
-                            <Field label="Number of Mentees" hint="Recommended minimum: 2. No maximum limit enforced.">
+                            <Field
+                                label="Number of Mentees"
+                                hint={
+                                    maxParticipantsInput !== "" && (maxParticipants < 2 || maxParticipants > 8)
+                                        ? null
+                                        : "Must be between 2 and 8 mentees."
+                                }
+                            >
                                 <input
                                     type="number"
-                                    value={maxParticipants}
-                                    min={1}
-                                    onChange={e => setMaxParticipants(parseInt(e.target.value) || 20)}
+                                    value={maxParticipantsInput}
+                                    onChange={e => {
+                                        const raw = e.target.value;
+                                        setMaxParticipantsInput(raw);
+                                        const n = parseInt(raw, 10);
+                                        if (!Number.isNaN(n)) setMaxParticipants(n);
+                                    }}
+                                    onBlur={() => {
+                                        const n = parseInt(maxParticipantsInput, 10);
+                                        if (Number.isNaN(n)) {
+                                            setMaxParticipantsInput(String(maxParticipants));
+                                        }
+                                    }}
                                     style={inputStyle}
                                 />
+                                {maxParticipantsInput !== "" && (maxParticipants < 2 || maxParticipants > 8) && (
+                                    <div style={{ fontSize: 11, color: "#DC2626", marginTop: 4 }}>
+                                        Enter a number between 2 and 8.
+                                    </div>
+                                )}
                             </Field>
                         </div>
                     </div>
@@ -1182,16 +1273,22 @@ export function MentorshipFormScreen({ user, onBack, onCreated, existingMentorsh
 
             {/* ── Footer Nav ── */}
             {isEditMode ? (
-                <div style={{ padding: "12px 16px", background: T.card, borderTop: `1px solid ${T.borderLight}` }}>
+                <div style={{ padding: "12px 16px", paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))", background: T.card, borderTop: `1px solid ${T.borderLight}` }}>
+                    {mentorshipLocked && (
+                        <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: T.radiusSm,
+                            padding: "10px 14px", marginBottom: 10, fontSize: 12, color: "#991B1B", fontWeight: 600 }}>
+                            🔒 This mentorship has a completed class and can no longer be edited.
+                        </div>
+                    )}
                     <button
                         onClick={handleUpdate}
-                        disabled={saving || !step1Valid}
+                        disabled={saving || !step1Valid || mentorshipLocked}
                         style={{
                             width: "100%", padding: 13, borderRadius: T.radiusSm, border: "none",
                             background: "linear-gradient(135deg, #0097A7, #26C6DA)",
                             color: "#fff", fontSize: 14, fontWeight: 700,
-                            cursor: (saving || !step1Valid) ? "not-allowed" : "pointer",
-                            opacity: (saving || !step1Valid) ? 0.6 : 1,
+                            cursor: (saving || !step1Valid || mentorshipLocked) ? "not-allowed" : "pointer",
+                            opacity: (saving || !step1Valid || mentorshipLocked) ? 0.6 : 1,
                             boxShadow: "0 4px 12px rgba(79,106,245,0.28)",
                         }}
                     >
@@ -1199,7 +1296,7 @@ export function MentorshipFormScreen({ user, onBack, onCreated, existingMentorsh
                     </button>
                 </div>
             ) : step < 5 && (
-                <div style={{ padding: "12px 16px", background: T.card, borderTop: `1px solid ${T.borderLight}`, display: "flex", gap: 10 }}>
+                <div style={{ padding: "12px 16px", paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))", background: T.card, borderTop: `1px solid ${T.borderLight}`, display: "flex", gap: 10 }}>
                     {step > 1 && (
                         <button
                             onClick={() => setStep(s => s - 1)}

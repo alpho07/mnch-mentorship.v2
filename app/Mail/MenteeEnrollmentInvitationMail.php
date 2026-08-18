@@ -7,12 +7,13 @@ use App\Models\MentorshipClass;
 use App\Models\Program;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class MenteeEnrollmentInvitationMail extends Mailable
+class MenteeEnrollmentInvitationMail extends Mailable implements ShouldQueue
 {
     use Queueable,
         SerializesModels;

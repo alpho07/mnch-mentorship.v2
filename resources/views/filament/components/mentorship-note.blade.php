@@ -25,7 +25,7 @@
                 <div class="font-semibold">EmONC Mentorship Manual</div>
                 <div class="text-gray-600 dark:text-gray-400">Review the EmONC knowledge pack and participant manual.</div>
             </a>
-            <a href="{{ route('resources.search', ['q' => 'mentorship manual']) }}" target="_blank" rel="noopener noreferrer" class="rounded-lg border border-gray-200 p-3 text-sm hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:hover:bg-gray-800">
+            <a href="{{ route('resources.search', ['q' => 'manual']) }}" target="_blank" rel="noopener noreferrer" class="rounded-lg border border-gray-200 p-3 text-sm hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:hover:bg-gray-800">
                 <div class="font-semibold">All Mentorship Manuals</div>
                 <div class="text-gray-600 dark:text-gray-400">Search the resource library for manuals.</div>
             </a>

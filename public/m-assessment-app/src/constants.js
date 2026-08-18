@@ -1,59 +1,56 @@
-// ─── Design Tokens — Apple iOS Minimal + Indigo Sapphire ──────────────────────
+// ─── Design Tokens — Teal Wellness (Enterprise Healthcare) ───────────────────
 export const T = {
     // Backgrounds
-    bg:           "#F2F2F7",
-    card:         "#FFFFFF",
-    cardHover:    "#F9F9FB",
-    surface:      "#FFFFFF",   // alias used by ResourceCard
+    bg: "#F0F9FA",
+    card: "#FFFFFF",
+    cardHover: "#F7FDFD",
 
-    // Primary — Indigo Sapphire
-    primary:      "#4F6AF5",
-    primaryLight: "#6C63FF",
-    primaryDark:  "#3A54D4",
-    primaryGhost: "rgba(79,106,245,0.08)",
-    primaryGlow:  "rgba(79,106,245,0.20)",
+    // Primary palette — clinical teal
+    primary: "#0097A7",
+    primaryLight: "#26C6DA",
+    primaryDark: "#00565A",
+    primaryGhost: "rgba(0,151,167,0.08)",
+    primaryGlow: "rgba(0,151,167,0.18)",
 
-    // Accent (alias — used by a few screens)
-    accent:       "#6C63FF",
-    accentLight:  "#A5B4FF",
-    accentGhost:  "rgba(108,99,255,0.08)",
+    // Accent — sky blue
+    accent: "#0EA5E9",
+    accentLight: "#7DD3FC",
+    accentGhost: "rgba(14,165,233,0.08)",
 
-    // Success
-    success:      "#10B981",
-    successLight: "#34D399",
+    // Success — health green
+    success: "#10B981",
+    successLight: "#6EE7B7",
     successGhost: "rgba(16,185,129,0.08)",
 
-    // Text hierarchy (iOS system colours)
-    text:         "#1C1C1E",
-    textMid:      "#3C3C43",
-    textSub:      "#636366",
-    textMuted:    "#8E8E93",
+    // Text hierarchy
+    text: "#1A3A3A",
+    textMid: "#2A4A4A",
+    textSub: "#4A8080",
+    textMuted: "#8BC8C8",
 
     // Borders
-    border:       "rgba(0,0,0,0.08)",
-    borderLight:  "#F2F2F7",
-    separator:    "rgba(60,60,67,0.12)",
+    border: "#B2EBF2",
+    borderLight: "#E0F2F1",
 
     // Radii
-    radius:       18,
-    radiusSm:     14,
-    radiusXs:     10,
-    radiusPill:   50,
+    radius: 18,
+    radiusSm: 12,
+    radiusXs: 8,
 
     // Shadows
-    shadow:       "0 1px 3px rgba(0,0,0,0.04)",
-    shadowMd:     "0 4px 20px rgba(79,106,245,0.12)",
-    shadowLg:     "0 8px 32px rgba(79,106,245,0.18)",
-    shadowCard:   "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(79,106,245,0.06)",
+    shadow: "0 2px 16px rgba(0,151,167,0.06)",
+    shadowMd: "0 8px 32px rgba(0,151,167,0.10)",
+    shadowLg: "0 12px 48px rgba(0,151,167,0.14)",
+    shadowCard: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,151,167,0.06)",
 
     // Gradients
-    gradientPrimary: "linear-gradient(135deg, #4F6AF5 0%, #6C63FF 100%)",
-    gradientHero:    "linear-gradient(150deg, #1A1A2E 0%, #1E2A5E 55%, #2D3B8E 100%)",
-    gradientDark:    "linear-gradient(150deg, #1A1A2E 0%, #1E2A5E 55%, #2D3B8E 100%)",
-    gradientSky:     "linear-gradient(135deg, #4F6AF5 0%, #6C63FF 100%)",
-    gradientSuccess: "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
+    gradientPrimary: "linear-gradient(135deg, #0097A7 0%, #26C6DA 100%)",
+    gradientHero:    "linear-gradient(160deg, #00565A 0%, #0097A7 55%, #26C6DA 100%)",
+    gradientSky:     "linear-gradient(135deg, #0EA5E9 0%, #7DD3FC 100%)",
+    gradientSuccess: "linear-gradient(135deg, #059669 0%, #6EE7B7 100%)",
+    gradientDark:    "linear-gradient(160deg, #00565A 0%, #0097A7 55%, #26C6DA 100%)",
+    gradientGlass:   "linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.8))",
     gradientWarm:    "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
-    gradientGlass:   "linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))",
 };
 
 // ─── Grade System ─────────────────────────────────────────────────────────────

@@ -37,7 +37,9 @@
 
                     <!-- Logo -->
                     <div class="flex items-center flex-shrink-0 gap-3 mr-6">
-                        <img src="{{ asset('moh_logo.png') }}" alt="Ministry of Health — Republic of Kenya" class="moh-logo-img hidden sm:block" style="height:36px;width:auto;">
+                        <a href="{{ route('home') }}" class="hidden sm:block" aria-label="Go to homepage">
+                            <img src="{{ asset('moh_logo.png') }}" alt="Ministry of Health — Republic of Kenya" class="moh-logo-img" style="height:36px;width:auto;">
+                        </a>
                         <span class="hidden sm:block w-px h-9 bg-gray-200"></span>
                         <a href="{{ route('home') }}" class="flex items-center gap-2.5">
                             <div class="w-9 h-9 rounded-xl flex items-center justify-center"

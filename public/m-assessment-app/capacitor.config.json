@@ -1,5 +1,22 @@
 {
-  "appId": "com.mnch.assessments.app",
-  "appName": "MNCH Assessments",
-  "webDir": "dist"
+  "appId": "com.mnch.mentorship.app",
+  "appName": "MNCH Mentorship",
+  "webDir": "dist",
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "DARK",
+      "backgroundColor": "#FFFFFF"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    },
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "backgroundColor": "#1E1B4B",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
+  }
 }

@@ -1,4 +1,10 @@
 <x-filament-panels::page>
+    @script
+    <script>
+        $wire.on('scroll-top', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    </script>
+    @endscript
+
     @if ($completed)
         <div class="fi-section rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
             <p class="text-lg font-semibold text-gray-950 dark:text-white">

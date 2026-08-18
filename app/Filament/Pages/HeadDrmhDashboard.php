@@ -16,7 +16,7 @@ class HeadDrmhDashboard extends Page
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static ?string $navigationLabel = 'Head DRMH';
+    protected static ?string $navigationLabel = 'Certificate Center';
 
     protected static ?string $title = 'Certificate Issuance Hub';
 

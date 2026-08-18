@@ -114,10 +114,6 @@ select.ra-select{
                 <div class="ra-label">Date & Time of Assessment *</div>
                 <input type="datetime-local" class="ra-input" wire:model="assessed_at">
             </div>
-            <div class="ra-field">
-                <div class="ra-label">Notes / Observations</div>
-                <input type="text" class="ra-input" wire:model="notes" placeholder="Optional — e.g. 2nd attempt, post-debrief">
-            </div>
         </div>
 
         <div style="margin-top:8px;">
@@ -206,15 +202,11 @@ select.ra-select{
             @endforeach
         </div>
 
-        {{-- Debrief questions (mentor reference) --}}
-        @if($rubric->debrief_questions)
-        <div style="margin-top:24px;padding:14px;background:#fafafa;border:1px solid #e5e7eb;border-radius:10px;">
-            <div class="ra-label" style="margin-bottom:8px;">Debrief Questions (Mentor Reference)</div>
-            @foreach($rubric->debrief_questions as $i => $q)
-            <div style="font-size:13px;color:#374151;padding:4px 0;">{{ $i + 1 }}. {{ $q }}</div>
-            @endforeach
+        {{-- Mentor comment --}}
+        <div class="ra-field" style="margin-top:24px;margin-bottom:0;">
+            <div class="ra-label">Comment</div>
+            <textarea class="ra-input" rows="3" wire:model="notes" placeholder="Optional — observations on the mentee's performance"></textarea>
         </div>
-        @endif
 
     </div>
 </div>

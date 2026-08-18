@@ -595,8 +595,11 @@ export function AssessmentReportScreen({ assessment, onBack }) {
                         <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 11, marginBottom: 2 }}>
                             {[assessment.assessment_type, assessment.assessment_date].filter(Boolean).join(" · ")}
                         </div>
-                        {assessment.assessor_name && (
-                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Assessor: {assessment.assessor_name}</div>
+                        {(report?.assessment?.lead_assessor?.name || assessment.lead_assessor?.name || assessment.assessor_name) && (
+                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Lead Assessor: {report?.assessment?.lead_assessor?.name ?? assessment.lead_assessor?.name ?? assessment.assessor_name}</div>
+                        )}
+                        {((report?.assessment?.team_members ?? assessment.team_members ?? []).length > 0) && (
+                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginTop: 2 }}>Team: {(report?.assessment?.team_members ?? assessment.team_members).map(member => member.name).join(', ')}</div>
                         )}
                     </div>
                 </div>

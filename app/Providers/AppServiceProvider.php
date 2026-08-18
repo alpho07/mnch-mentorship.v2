@@ -41,8 +41,8 @@ class AppServiceProvider extends ServiceProvider
 
         $this->configureRateLimiters();
 
-        // URL::forceScheme('https');
-        // URL::forceRootUrl(config('app.url'));
+         URL::forceScheme('https');
+         URL::forceRootUrl(config('app.url'));
 
         \App\Models\MonthlyReport::observe(\App\Observers\MonthlyReportObserver::class);
 

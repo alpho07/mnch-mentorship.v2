@@ -107,7 +107,7 @@ export function ReportsScreen({ user, assessments, sectionAverages, loading, onV
                 borderRadius: "24px 24px 28px 28px",
                 position: "relative", overflow: "hidden",
             }}>
-                <div style={{ position: "absolute", width: 150, height: 150, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,106,245,0.20) 0%, transparent 70%)", top: -30, right: -30 }} />
+                <div style={{ position: "absolute", width: 150, height: 150, borderRadius: "50%", background: "radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)", top: -30, right: -30 }} />
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ color: "white", fontSize: 22, fontWeight: 800, letterSpacing: -0.3, animation: "fadeInUp 0.4s ease both" }}>Reports</div>
                     {onViewEmailJobs && (

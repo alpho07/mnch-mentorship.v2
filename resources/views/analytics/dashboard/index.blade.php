@@ -696,11 +696,10 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                         <!-- Legend -->
                         <div class="map-legend" id="mapLegend" data-intro="Color coding for coverage levels." data-step="8">
                             <h6>Coverage Legend</h6>
-                            <div class="legend-item"><div class="legend-color" style="background:#15803d;"></div>Extremely High (300+)</div>
-                            <div class="legend-item"><div class="legend-color" style="background:#22c55e;"></div>High (100–299)</div>
+                            <div class="legend-item"><div class="legend-color" style="background:#15803d;"></div>Extremely High (100+)</div>
                             <div class="legend-item"><div class="legend-color" style="background:#fef08a;"></div>Moderate (10–99)</div>
-                            <div class="legend-item"><div class="legend-color" style="background:#ffcccc;"></div>Minimal (1–9)</div>
-                            <div class="legend-item"><div class="legend-color" style="background:#9ca3af;"></div>No Training</div>
+                            <div class="legend-item"><div class="legend-color" style="background:#fbbf24;"></div>Low (1–9)</div>
+                            <div class="legend-item"><div class="legend-color" style="background:#9ca3af;"></div>No Mentorship</div>
                         </div>
                         <div class="loading-overlay">
                             <div class="text-center">
@@ -758,10 +757,9 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
                         <!-- Legend -->
                         <div class="map-legend" id="mapLegend">
                             <h6>Coverage Levels</h6>
-                            <div class="legend-item"><div class="legend-color" style="background:#15803d;"></div>Extremely High (300+)</div>
-                            <div class="legend-item"><div class="legend-color" style="background:#22c55e;"></div>High (100–299)</div>
+                            <div class="legend-item"><div class="legend-color" style="background:#15803d;"></div>Extremely High (100+)</div>
                             <div class="legend-item"><div class="legend-color" style="background:#fef08a;"></div>Moderate (10–99)</div>
-                            <div class="legend-item"><div class="legend-color" style="background:#ffcccc;"></div>Minimal (1–9)</div>
+                            <div class="legend-item"><div class="legend-color" style="background:#fbbf24;"></div>Low (1–9)</div>
                             <div class="legend-item"><div class="legend-color" style="background:#9ca3af;"></div>No Mentorship</div>
                         </div>
                         <div class="loading-overlay">
@@ -866,11 +864,10 @@ body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-seri
         },
 
         coverageLevels: {
-            EXTREMELY_HIGH: { min: 300, color: '#15803d', label: 'Extremely High' },
-            HIGH:           { min: 100, color: '#22c55e', label: 'High' },
+            EXTREMELY_HIGH: { min: 100, color: '#15803d', label: 'Extremely High' },
             MODERATE:       { min: 10,  color: '#fef08a', label: 'Moderate' },
-            MINIMAL:        { min: 1,   color: '#ffcccc', label: 'Minimal' },
-            NONE:           { min: 0,   color: '#9ca3af', label: 'No Training' }
+            LOW:            { min: 1,   color: '#fbbf24', label: 'Low' },
+            NONE:           { min: 0,   color: '#9ca3af', label: 'No Mentorship' }
         },
 
         getCoverageLevel(n) {

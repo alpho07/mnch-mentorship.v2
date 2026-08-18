@@ -5,12 +5,13 @@ namespace App\Mail;
 use App\Models\MentorshipCoMentor;
 use App\Models\Training;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class CoMentorInvitation extends Mailable
+class CoMentorInvitation extends Mailable implements ShouldQueue
 {
     use Queueable,
         SerializesModels;

@@ -86,7 +86,7 @@ $responses  = $assessment->itemResponses->keyBy('rubric_item_id');
                 </div>
                 @if($assessment->notes)
                 <div class="rv-field" style="grid-column:span 2;">
-                    <div class="rv-label">Notes</div>
+                    <div class="rv-label">Comment</div>
                     <div class="rv-value">{{ $assessment->notes }}</div>
                 </div>
                 @endif
@@ -117,20 +117,6 @@ $responses  = $assessment->itemResponses->keyBy('rubric_item_id');
         </div>
     </div>
 
-    {{-- Debrief --}}
-    @if($rubric->debrief_questions)
-    <div class="rv-card">
-        <div class="rv-head">Debrief Questions</div>
-        <div class="rv-body" style="display:flex;flex-direction:column;gap:8px;">
-            @foreach($rubric->debrief_questions as $i => $q)
-            <div style="font-size:13px;color:#374151;display:flex;gap:8px;">
-                <span style="font-weight:700;color:#6b7280;">{{ $i + 1 }}.</span>
-                <span>{{ $q }}</span>
-            </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
 
 </div>
 </x-filament-panels::page>

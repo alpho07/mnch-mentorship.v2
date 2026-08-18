@@ -35,7 +35,6 @@ class ProgramCertificationService
 
         foreach ($byProgram as $group) {
             $program = $group->first()->mentorshipClass->training->program;
-            $programModuleIds = $program->programModules()->pluck('id');
             $participantIds = $group->pluck('id');
 
             $progressByModule = MenteeModuleProgress::whereIn('class_participant_id', $participantIds)
@@ -43,27 +42,36 @@ class ProgramCertificationService
                 ->get()
                 ->groupBy(fn (MenteeModuleProgress $p) => $p->classModule?->program_module_id);
 
-            $doneCount = 0;
-            foreach ($programModuleIds as $pmId) {
+            $isSatisfied = function (int $pmId) use ($progressByModule): bool {
                 $hasRubric = ModuleRubric::where('program_module_id', $pmId)->where('is_active', true)->exists();
-                $satisfied = $progressByModule->get($pmId, collect())->contains(
+
+                return $progressByModule->get($pmId, collect())->contains(
                     fn (MenteeModuleProgress $p) => in_array($p->status, ['completed', 'exempted'])
                         && (! $hasRubric || $p->isVideoPassed())
                 );
-                if ($satisfied) {
-                    $doneCount++;
-                }
-            }
+            };
 
-            $total = $programModuleIds->count();
+            // EmONC tracked separately: standalone modules vs tracks, since
+            // "12 of 12 modules" and "8 of 11 tracks" is what's actually
+            // meaningful — a combined "20 of 23 modules" muddies the two.
+            $standaloneIds = $program->standaloneModules()->pluck('id');
+            $trackIds = $program->trackModules()->pluck('id');
+
+            $modulesDone = $standaloneIds->filter($isSatisfied)->count();
+            $tracksDone = $trackIds->filter($isSatisfied)->count();
+            $doneCount = $modulesDone + $tracksDone;
+            $total = $standaloneIds->count() + $trackIds->count();
+
             $certifiedParticipant = $group->first(fn (ClassParticipant $p) => $p->head_drmh_approved_at !== null);
 
             $result[] = [
                 'program_id' => $program->id,
                 'program_name' => $program->name,
                 'is_emonc' => $program->isEmonc(),
-                'modules_done' => $doneCount,
-                'modules_total' => $total,
+                'modules_done' => $modulesDone,
+                'modules_total' => $standaloneIds->count(),
+                'tracks_done' => $tracksDone,
+                'tracks_total' => $trackIds->count(),
                 'percent' => $total > 0 ? round(($doneCount / $total) * 100) : 0,
                 'is_certified' => $certifiedParticipant !== null,
                 'certified_at' => $certifiedParticipant?->head_drmh_approved_at,
@@ -107,23 +115,28 @@ class ProgramCertificationService
         foreach ($byProgram as $group) {
             $program = $group->first()->program;
             $trainingIds = $group->pluck('id');
-            $programModuleIds = $program->programModules()->pluck('id');
+            $standaloneIds = $program->standaloneModules()->pluck('id');
+            $trackIds = $program->trackModules()->pluck('id');
 
             $completedModuleIds = ClassModule::whereHas('mentorshipClass', fn ($q) => $q->whereIn('training_id', $trainingIds))
                 ->where('status', 'completed')
                 ->pluck('program_module_id')
                 ->unique();
 
-            $doneCount = $programModuleIds->intersect($completedModuleIds)->count();
-            $total = $programModuleIds->count();
+            $modulesDone = $standaloneIds->intersect($completedModuleIds)->count();
+            $tracksDone = $trackIds->intersect($completedModuleIds)->count();
+            $doneCount = $modulesDone + $tracksDone;
+            $total = $standaloneIds->count() + $trackIds->count();
             $isCertified = $total > 0 && $doneCount === $total;
 
             $result[] = [
                 'program_id' => $program->id,
                 'program_name' => $program->name,
                 'is_emonc' => $program->isEmonc(),
-                'modules_done' => $doneCount,
-                'modules_total' => $total,
+                'modules_done' => $modulesDone,
+                'modules_total' => $standaloneIds->count(),
+                'tracks_done' => $tracksDone,
+                'tracks_total' => $trackIds->count(),
                 'percent' => $total > 0 ? round(($doneCount / $total) * 100) : 0,
                 'is_certified' => $isCertified,
                 'cert_url' => $isCertified ? route('reports.mentor.program-certificate', ['program' => $program->id]) : null,

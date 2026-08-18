@@ -276,7 +276,7 @@ class ClassParticipant extends Model
             return false;
         }
 
-        $programModuleIds = $program->programModules()->pluck('id');
+        $programModuleIds = $program->completableModules()->pluck('id');
 
         if ($programModuleIds->isEmpty()) {
             return false;
@@ -343,14 +343,15 @@ class ClassParticipant extends Model
     /**
      * The shared readiness gate for Head DRMH certification, used by both
      * the class roster page's Certify button and the Head DRMH Dashboard.
-     * Each program (EmONC, Newborn Care, Infant & Child Care) certifies
-     * independently — a mentee must have completed every module belonging
-     * to their program (including EmONC's tracks), aggregated across ALL of
-     * their enrollments in that program regardless of class, facility, or
-     * mentor — see hasCompletedAllProgramModules(). EmONC mentees
-     * additionally still require mentor approval first; non-EmONC mentees
-     * (which never go through mentor_approve — see ManageClassMentees.php)
-     * are ready the moment every program module is done.
+     * Only relevant to programs configured with certificate_scope =
+     * 'per_program' (see Program::usesPerProgramCertification()) — a mentee
+     * must have completed every module belonging to their program, aggregated
+     * across ALL of their enrollments in that program regardless of class,
+     * facility, or mentor — see hasCompletedAllProgramModules(). Programs
+     * using per-program certification additionally require mentor approval
+     * first; mentees in 'per_class' programs (which never go through
+     * mentor_approve — see ManageClassMentees.php) are ready the moment
+     * every program module is done.
      */
     public function isReadyForHeadDrmhCertification(): bool
     {
@@ -364,7 +365,7 @@ class ClassParticipant extends Model
 
         $program = $training ? Program::find($training->program_id) : null;
 
-        if ($program?->isEmonc()) {
+        if ($program?->usesPerProgramCertification()) {
             return $this->isMentorApproved();
         }
 

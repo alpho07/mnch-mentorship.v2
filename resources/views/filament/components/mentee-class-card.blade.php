@@ -202,7 +202,13 @@ $isOpen = $defaultOpen ?? true;
                             <a href="{{ route('module.attend', ['token' => $mod['attendance_token']]) }}"
                                class="md-attend-btn" target="_blank">✓ Attend</a>
                         @elseif($mod['confirmed'] && $progStatus !== 'completed')
-                            <span class="md-module-status" style="background:#dcfce7;color:#15803d;">Confirmed</span>
+                            <a href="{{ route('mentee.class.module', [$enrollment['class_id'], $mod['id']]) }}"
+                               class="md-attend-btn">Start</a>
+                        @elseif(in_array($progStatus, ['in_progress', 'completed', 'exempted']))
+                            <a href="{{ route('mentee.class.module', [$enrollment['class_id'], $mod['id']]) }}"
+                               class="md-attend-btn">
+                                {{ $progStatus === 'in_progress' ? 'Continue' : 'View' }}
+                            </a>
                         @else
                             <span class="md-module-status" style="background:{{ $modConfig['badge_bg'] }};color:{{ $modConfig['badge_color'] }}">
                                 {{ $modConfig['label'] }}

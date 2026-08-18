@@ -1,4 +1,12 @@
 <x-filament-panels::page>
+    @script
+    <script>
+        $wire.on('chat-scroll-bottom', () => {
+            $nextTick(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
+        });
+    </script>
+    @endscript
+
     <div class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 p-6 space-y-4">
         @include('filament.pages.partials.chat-transcript', ['messages' => $messages])
 

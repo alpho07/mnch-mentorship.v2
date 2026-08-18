@@ -505,7 +505,9 @@
                 </div>
                 @endif
 
-                {{-- ── Equipment & Materials Needed (collapsible) ───────────────── --}}
+                {{-- ── Equipment & Materials Needed (collapsible) — always visible,
+                     not gated behind the pre-test, so mentees know what to gather
+                     before they even start. ─────────────────────────────────── --}}
                 @if($moduleRubric && !empty($moduleRubric->equipment_supplies))
                 <div class="section-card" x-data="{ open: false }">
                     <div class="card-stripe" style="background:#64748b"></div>
@@ -583,6 +585,62 @@
 
                 @if($canAccessContent)
 
+                    {{-- ── Instructional videos ─────────────────────────────── --}}
+                    @if($videos->isNotEmpty())
+                    <div class="section-card">
+                        <div class="card-stripe" style="background:#8b5cf6"></div>
+                        <div class="p-5 sm:p-6">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div style="width:34px;height:34px;border-radius:10px;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                    <svg style="width:16px;height:16px;color:#7c3aed" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <h2 class="text-base font-bold text-slate-900 dark:text-white">Reference Videos</h2>
+                            </div>
+                            <div class="space-y-5">
+                                @foreach($videos as $video)
+                                    <div>
+                                        <h3 class="font-semibold text-slate-900 dark:text-white text-sm mb-2">{{ $video->title }}</h3>
+                                        @php
+                                            $embedUrl  = $video->youtubeEmbedUrl();
+                                            $directUrl = $video->video_path
+                                                ? \Illuminate\Support\Facades\Storage::disk('public')->url($video->video_path)
+                                                : null;
+                                            $isDirectMp4 = $directUrl && preg_match('/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i', $directUrl);
+                                        @endphp
+                                        @if($embedUrl)
+                                            <div class="w-full rounded-xl overflow-hidden bg-black" style="height:480px">
+                                                <iframe src="{{ $embedUrl }}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                            </div>
+                                        @elseif($isDirectMp4)
+                                            <div class="w-full rounded-xl overflow-hidden bg-black" style="height:480px">
+                                                <video controls class="w-full h-full">
+                                                    <source src="{{ $directUrl }}">
+                                                </video>
+                                            </div>
+                                        @elseif($video->video_url)
+                                            {{-- External URL that isn't YouTube — open in new tab --}}
+                                            <a href="{{ $video->video_url }}" target="_blank" rel="noopener"
+                                               class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:border-brand-300 dark:hover:border-brand-600 transition-colors group">
+                                                <div style="width:40px;height:40px;border-radius:12px;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                                    <svg style="width:18px;height:18px;color:#7c3aed" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ $video->title ?: 'Watch Video' }}</p>
+                                                    <p class="text-xs text-slate-400 truncate">{{ $video->video_url }}</p>
+                                                </div>
+                                                <svg class="w-4 h-4 text-slate-400 group-hover:text-brand-500 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                            </a>
+                                        @endif
+                                        @if($video->content)
+                                            <div class="prose prose-sm dark:prose-invert max-w-none mt-3">{!! Str::markdown($video->content) !!}</div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                     {{-- ── Case Scenario (+ progression) — unlocked after the pre-test ─── --}}
                     @if($caseScenarios->isNotEmpty() || $caseScenarioProgressions->isNotEmpty())
                     <div class="section-card">
@@ -645,65 +703,9 @@
                     </div>
                     @endif
 
-                    {{-- ── Instructional videos ─────────────────────────────── --}}
-                    @if($videos->isNotEmpty())
-                    <div class="section-card">
-                        <div class="card-stripe" style="background:#8b5cf6"></div>
-                        <div class="p-5 sm:p-6">
-                            <div class="flex items-center gap-3 mb-4">
-                                <div style="width:34px;height:34px;border-radius:10px;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                    <svg style="width:16px;height:16px;color:#7c3aed" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                </div>
-                                <h2 class="text-base font-bold text-slate-900 dark:text-white">Reference Videos</h2>
-                            </div>
-                            <div class="space-y-5">
-                                @foreach($videos as $video)
-                                    <div>
-                                        <h3 class="font-semibold text-slate-900 dark:text-white text-sm mb-2">{{ $video->title }}</h3>
-                                        @php
-                                            $embedUrl  = $video->youtubeEmbedUrl();
-                                            $directUrl = $video->video_path
-                                                ? \Illuminate\Support\Facades\Storage::disk('public')->url($video->video_path)
-                                                : null;
-                                            $isDirectMp4 = $directUrl && preg_match('/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i', $directUrl);
-                                        @endphp
-                                        @if($embedUrl)
-                                            <div class="w-full rounded-xl overflow-hidden bg-black" style="height:480px">
-                                                <iframe src="{{ $embedUrl }}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                                            </div>
-                                        @elseif($isDirectMp4)
-                                            <div class="w-full rounded-xl overflow-hidden bg-black" style="height:480px">
-                                                <video controls class="w-full h-full">
-                                                    <source src="{{ $directUrl }}">
-                                                </video>
-                                            </div>
-                                        @elseif($video->video_url)
-                                            {{-- External URL that isn't YouTube — open in new tab --}}
-                                            <a href="{{ $video->video_url }}" target="_blank" rel="noopener"
-                                               class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:border-brand-300 dark:hover:border-brand-600 transition-colors group">
-                                                <div style="width:40px;height:40px;border-radius:12px;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                                    <svg style="width:18px;height:18px;color:#7c3aed" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                </div>
-                                                <div class="flex-1 min-w-0">
-                                                    <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ $video->title ?: 'Watch Video' }}</p>
-                                                    <p class="text-xs text-slate-400 truncate">{{ $video->video_url }}</p>
-                                                </div>
-                                                <svg class="w-4 h-4 text-slate-400 group-hover:text-brand-500 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                                            </a>
-                                        @endif
-                                        @if($video->content)
-                                            <div class="prose prose-sm dark:prose-invert max-w-none mt-3">{!! Str::markdown($video->content) !!}</div>
-                                        @endif
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-
                     {{-- ── Submit Hands-on Video ────────────────────────────── --}}
                     @if($isEmonc)
-                    <div id="submit-video" class="section-card" x-data="{ inputType: 'file', uploading: false, uploadPct: 0, uploadFailed: false }">
+                    <div id="submit-video" class="section-card" x-data="{ inputType: 'link', uploading: false, uploadPct: 0, uploadFailed: false }">
                         <div class="card-stripe" style="background:#f59e0b"></div>
                         <div class="p-5 sm:p-6">
                             <div class="flex items-center justify-between gap-3 mb-4">
@@ -778,25 +780,25 @@
                                 x-on:submit.prevent="uploadFailed = false; uploadVideoForm($event.target, () => { uploading = true; uploadPct = 0; }, (pct) => { uploadPct = pct; }, () => { window.location.reload(); }, () => { uploading = false; uploadFailed = true; })"
                             >
                                 @csrf
-                                <div class="flex items-center gap-4">
-                                    <label class="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
-                                        <input type="radio" name="video_input_type" value="file" x-model="inputType" class="text-brand-600 focus:ring-brand-500"> Upload file
-                                    </label>
-                                    <label class="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
-                                        <input type="radio" name="video_input_type" value="link" x-model="inputType" class="text-brand-600 focus:ring-brand-500"> Paste video link
-                                    </label>
+                                {{-- How-to guide: recording is done on the mentee's phone, so we
+                                     ask for a shareable link rather than a direct file upload. --}}
+                                <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4" x-data="{ guideOpen: false }">
+                                    <button type="button" @click="guideOpen = !guideOpen" class="w-full flex items-center justify-between gap-2 text-left">
+                                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">How to get a video link (Google Drive)</span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform shrink-0" :class="guideOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    </button>
+                                    <ol x-show="guideOpen" x-cloak class="mt-3 space-y-1.5 text-xs text-slate-600 dark:text-slate-400 list-decimal list-inside">
+                                        <li>Record the skill on your phone or computer.</li>
+                                        <li>Open the <a href="https://drive.google.com" target="_blank" rel="noopener" class="text-brand-600 dark:text-brand-400 underline">Google Drive app</a> and upload the video file.</li>
+                                        <li>Tap the video, then choose <strong>Share</strong> (or the three-dot menu → <strong>Share</strong>).</li>
+                                        <li>Under "General access", set it to <strong>"Anyone with the link"</strong>.</li>
+                                        <li>Tap <strong>Copy link</strong>, then paste it into the box below.</li>
+                                    </ol>
                                 </div>
-                                <div x-show="inputType === 'file'">
-                                    <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-5 text-center hover:border-brand-300 transition-colors">
-                                        <svg class="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                                        <input type="file" name="hands_on_video" accept="video/*" :required="inputType === 'file'" class="block w-full text-sm text-slate-600 dark:text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer">
-                                        <p class="text-xs text-slate-400 mt-1">MP4, MOV, AVI — max 50 MB</p>
-                                    </div>
-                                </div>
-                                <div x-show="inputType === 'link'" x-cloak>
-                                    <input type="url" name="hands_on_video_link" placeholder="https://youtube.com/..." :required="inputType === 'link'"
+                                <div>
+                                    <input type="url" name="hands_on_video_link" placeholder="https://drive.google.com/..." required
                                            class="block w-full rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:border-brand-500 focus:ring-brand-500 px-4 py-2.5">
-                                    <p class="text-xs text-slate-400 mt-1.5">YouTube, Vimeo, or direct video URL</p>
+                                    <p class="text-xs text-slate-400 mt-1.5">Google Drive, YouTube, Vimeo, or any direct video link</p>
                                 </div>
                                 <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
@@ -821,6 +823,30 @@
                                 </button>
                             </div>
                             @endif
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- ── Debrief Questions (collapsible) — shown after the hands-on
+                         video submission, for self-reflection on the practical. ── --}}
+                    @if($moduleRubric && !empty($moduleRubric->debrief_questions))
+                    <div class="section-card" x-data="{ open: false }">
+                        <div class="card-stripe" style="background:#64748b"></div>
+                        <button type="button" @click="open = !open" class="w-full flex items-center justify-between gap-3 p-5 sm:p-6 text-left">
+                            <div class="flex items-center gap-3">
+                                <div style="width:34px;height:34px;border-radius:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                    <svg style="width:16px;height:16px;color:#475569" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                </div>
+                                <h2 class="text-base font-bold text-slate-900 dark:text-white">Debrief</h2>
+                            </div>
+                            <svg class="w-4 h-4 text-slate-400 transition-transform shrink-0" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div x-show="open" x-cloak class="px-5 sm:px-6 pb-5 sm:pb-6 -mt-2">
+                            <ol class="space-y-2 list-decimal list-inside">
+                                @foreach($moduleRubric->debrief_questions as $question)
+                                    <li class="text-sm text-slate-600 dark:text-slate-400">{{ $question }}</li>
+                                @endforeach
+                            </ol>
                         </div>
                     </div>
                     @endif
