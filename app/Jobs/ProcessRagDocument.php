@@ -83,9 +83,7 @@ class ProcessRagDocument implements ShouldBeUnique, ShouldQueue
             }
 
             $absolutePath = Storage::disk($document->disk)->path($document->path);
-            $response = $this->shouldUseInAppIngestion($document)
-                ? $engine->ingest($document, $absolutePath)
-                : $client->ingest($absolutePath, $document->title);
+            $response = $this->ingestDocument($document, $absolutePath, $client, $engine);
 
             DB::transaction(function () use ($document, $response): void {
                 $document->forceFill([
@@ -142,11 +140,30 @@ class ProcessRagDocument implements ShouldBeUnique, ShouldQueue
 
     private function shouldUseInAppIngestion(RagDocument $document): bool
     {
-        if (config('rag.engine') === 'external') {
+        if (in_array(config('rag.engine'), ['external', 'hybrid'], true)) {
             return true;
         }
 
         return ! in_array(strtolower((string) $document->extension), ['pdf', 'pptx'], true);
+    }
+
+    private function ingestDocument(RagDocument $document, string $absolutePath, RagClient $client, InAppRagEngine $engine): array
+    {
+        if ($this->shouldUseInAppIngestion($document)) {
+            return $engine->ingest($document, $absolutePath);
+        }
+
+        try {
+            return $client->ingest($absolutePath, $document->title);
+        } catch (\Throwable $e) {
+            Log::warning('External RAG ingestion failed; falling back to in-app ingestion', [
+                'document_id' => $document->id,
+                'extension' => $document->extension,
+                'error' => $client->sanitizeError($e->getMessage()),
+            ]);
+
+            return $engine->ingest($document, $absolutePath);
+        }
     }
 
     private function metadataSummary(array $response): array

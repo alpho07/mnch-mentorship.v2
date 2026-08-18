@@ -200,7 +200,7 @@ class ManageClassMentees extends Page implements HasTable
 
                         try {
                             Mail::to($record->user->email)
-                                ->send(new MenteeEnrollmentInvitationMail(
+                                ->queue(new MenteeEnrollmentInvitationMail(
                                     $record->user,
                                     $this->class,
                                     $record,
@@ -343,7 +343,7 @@ class ManageClassMentees extends Page implements HasTable
 
                             try {
                                 Mail::to($record->user->email)
-                                    ->send(new MenteeEnrollmentInvitationMail(
+                                    ->queue(new MenteeEnrollmentInvitationMail(
                                         $record->user,
                                         $this->class,
                                         $record,
@@ -952,7 +952,7 @@ class ManageClassMentees extends Page implements HasTable
                             $isResend = (bool) $record->invitation_sent_at;
                             try {
                                 Mail::to($record->user->email)
-                                    ->send(new MenteeEnrollmentInvitationMail(
+                                    ->queue(new MenteeEnrollmentInvitationMail(
                                         $record->user,
                                         $this->class,
                                         $record,

@@ -214,7 +214,7 @@ class ChatMentorshipSetupTest extends TestCase
         $component->call('answer', 'recipients', 'all');
 
         $this->assertTrue($component->instance()->completed);
-        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
+        \Illuminate\Support\Facades\Mail::assertQueued(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
         $this->assertNotNull($component->instance()->training->fresh()->guided_setup_completed_at);
     }
 

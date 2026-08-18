@@ -243,7 +243,7 @@ class QuickMentorshipSetupTest extends TestCase
         $this->assertTrue($component->instance()->completed);
         $this->assertSame(1, $component->instance()->invitedCount);
         $this->assertSame(1, $result['sent']);
-        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
+        \Illuminate\Support\Facades\Mail::assertQueued(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
         $this->assertNotNull($training->fresh()->guided_setup_completed_at);
     }
 
@@ -383,6 +383,6 @@ class QuickMentorshipSetupTest extends TestCase
             'mentorship_class_id' => $class->id,
             'user_id' => $mentee->id,
         ]);
-        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
+        \Illuminate\Support\Facades\Mail::assertQueued(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
     }
 }

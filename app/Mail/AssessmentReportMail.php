@@ -10,8 +10,8 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AssessmentReportMail extends Mailable {
-
+class AssessmentReportMail extends Mailable
+{
     use Queueable, SerializesModels;
 
     public function __construct(
@@ -20,9 +20,10 @@ class AssessmentReportMail extends Mailable {
         private readonly string $filename,
     ) {}
 
-    public function envelope(): Envelope {
+    public function envelope(): Envelope
+    {
         $facility = $this->assessment->facility->name ?? 'Facility';
-        $date     = $this->assessment->assessment_date instanceof \Carbon\Carbon
+        $date = $this->assessment->assessment_date instanceof \Carbon\Carbon
             ? $this->assessment->assessment_date->format('d M Y')
             : (string) $this->assessment->assessment_date;
 
@@ -31,11 +32,13 @@ class AssessmentReportMail extends Mailable {
         );
     }
 
-    public function content(): Content {
+    public function content(): Content
+    {
         return new Content(view: 'emails.assessment-report');
     }
 
-    public function attachments(): array {
+    public function attachments(): array
+    {
         return [
             Attachment::fromData(fn () => $this->pdfContent, $this->filename)
                 ->withMime('application/pdf'),

@@ -247,7 +247,7 @@ class MentorshipWizardService
         foreach ($participants as $record) {
             $isResend = (bool) $record->invitation_sent_at;
 
-            Mail::to($record->user->email)->send(new MenteeEnrollmentInvitationMail(
+            Mail::to($record->user->email)->queue(new MenteeEnrollmentInvitationMail(
                 $record->user,
                 $class,
                 $record,

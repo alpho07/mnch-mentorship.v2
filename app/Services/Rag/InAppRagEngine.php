@@ -25,7 +25,8 @@ class InAppRagEngine
         }
 
         $embeddingModel = $this->provider->embeddingModel();
-        $embeddingReady = $this->provider->embeddingReady();
+        $embeddingReady = (bool) config('rag.ingest_embeddings', false)
+            && $this->provider->embeddingReady();
 
         DB::transaction(function () use ($document, $chunks, $embeddingModel, $embeddingReady): void {
             $document->chunks()->delete();

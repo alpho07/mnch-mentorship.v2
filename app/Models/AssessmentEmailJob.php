@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AssessmentEmailJob extends Model {
-
+class AssessmentEmailJob extends Model
+{
     protected $fillable = [
         'assessment_id',
         'user_id',
@@ -17,15 +17,17 @@ class AssessmentEmailJob extends Model {
     ];
 
     protected $casts = [
-        'emails'  => 'array',
+        'emails' => 'array',
         'sent_at' => 'datetime',
     ];
 
-    public function assessment(): BelongsTo {
-        return $this->belongsTo(Assessment::class);
+    public function assessment(): BelongsTo
+    {
+        return $this->belongsTo(Assessment::class)->withTrashed();
     }
 
-    public function user(): BelongsTo {
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
 }

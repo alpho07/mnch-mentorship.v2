@@ -11,25 +11,38 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
+use RuntimeException;
 use Throwable;
 
-class SendAssessmentReportEmail implements ShouldQueue {
+class SendAssessmentReportEmail implements ShouldQueue
+{
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    public int $tries = 3;
 
-    public int $tries   = 3;
     public int $backoff = 60;
 
     public function __construct(
         public readonly AssessmentEmailJob $emailJob,
-    ) {}
+    ) {
+        $this->onQueue('default');
+    }
 
-    public function handle(AssessmentPdfReportService $pdfService): void {
+    public function handle(AssessmentPdfReportService $pdfService): void
+    {
         $this->emailJob->update(['status' => 'processing']);
 
-        $assessment  = $this->emailJob->assessment;
-        $pdf         = $pdfService->generateExecutiveReport($assessment);
-        $pdfContent  = $pdf->output();
+        $assessment = $this->emailJob->assessment;
+
+        if (! $assessment) {
+            throw new RuntimeException("Assessment [{$this->emailJob->assessment_id}] could not be found for email job [{$this->emailJob->id}].");
+        }
+
+        $pdf = $pdfService->generateExecutiveReport($assessment);
+        $pdfContent = $pdf->output();
 
         $facilityName = $assessment->facility->name ?? 'report';
         $date = $assessment->assessment_date instanceof \Carbon\Carbon
@@ -49,16 +62,17 @@ class SendAssessmentReportEmail implements ShouldQueue {
         }
 
         $this->emailJob->update([
-            'status'   => 'sent',
-            'sent_at'  => now(),
-            'error'    => null,
+            'status' => 'sent',
+            'sent_at' => now(),
+            'error' => null,
         ]);
     }
 
-    public function failed(Throwable $e): void {
+    public function failed(Throwable $e): void
+    {
         $this->emailJob->update([
             'status' => 'failed',
-            'error'  => $e->getMessage(),
+            'error' => $e->getMessage(),
         ]);
     }
 }

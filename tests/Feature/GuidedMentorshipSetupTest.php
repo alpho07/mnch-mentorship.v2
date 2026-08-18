@@ -474,7 +474,7 @@ class GuidedMentorshipSetupTest extends TestCase
         $result = $component->instance()->sendInvitations(['recipients' => 'all']);
 
         $this->assertSame(1, $result['sent']);
-        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
+        \Illuminate\Support\Facades\Mail::assertQueued(\App\Mail\MenteeEnrollmentInvitationMail::class, 1);
         $this->assertTrue($component->instance()->completed);
         $participant->refresh();
         $this->assertNotNull($participant->invitation_sent_at);

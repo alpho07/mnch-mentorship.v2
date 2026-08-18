@@ -75,6 +75,8 @@ return [
         'batch_size' => (int) env('RAG_EMBEDDING_BATCH_SIZE', 32),
     ],
 
+    'ingest_embeddings' => (bool) env('RAG_INGEST_EMBEDDINGS', false),
+
     'health_cache_seconds' => (int) env('RAG_HEALTH_CACHE_SECONDS', 30),
 
     'delete_endpoint' => env('RAG_DELETE_ENDPOINT'),

@@ -30,7 +30,7 @@ class ClassLifecycleController extends Controller
     {
         $this->authorizeClassAccess($class);
 
-        if (!$class->canStart()) {
+        if (! $class->canStart()) {
             return response()->json([
                 'message' => "Class cannot be started. Status: {$class->status}. Ensure it has modules and enrolled mentees.",
             ], 422);
@@ -49,7 +49,7 @@ class ClassLifecycleController extends Controller
     {
         $this->authorizeClassAccess($class);
 
-        if (!$class->canEnd()) {
+        if (! $class->canEnd()) {
             return response()->json([
                 'message' => "Class cannot be ended. Status: {$class->status}.",
             ], 422);
@@ -81,10 +81,10 @@ class ClassLifecycleController extends Controller
         return response()->json([
             'data' => [
                 'participant_id' => $participant->id,
-                'user_id'        => $participant->user_id,
-                'name'           => $participant->user?->full_name ?? $participant->user?->name,
-                'email'          => $participant->user?->email,
-                'phone'          => $participant->user?->phone,
+                'user_id' => $participant->user_id,
+                'name' => $participant->user?->full_name ?? $participant->user?->name,
+                'email' => $participant->user?->email,
+                'phone' => $participant->user?->phone,
             ],
         ], 201);
     }
@@ -97,21 +97,21 @@ class ClassLifecycleController extends Controller
         $this->authorizeClassAccess($class);
 
         $data = $request->validate([
-            'email'         => 'required|email|max:255',
-            'first_name'    => 'nullable|string|max:100',
-            'middle_name'   => 'nullable|string|max:100',
-            'last_name'     => 'nullable|string|max:100',
-            'phone'         => 'nullable|string|max:20',
-            'cadre_id'      => 'nullable|integer',
+            'email' => 'required|email|max:255',
+            'first_name' => 'nullable|string|max:100',
+            'middle_name' => 'nullable|string|max:100',
+            'last_name' => 'nullable|string|max:100',
+            'phone' => 'nullable|string|max:20',
+            'cadre_id' => 'nullable|integer',
             'department_id' => 'nullable|integer|exists:departments,id',
-            'facility_id'   => 'nullable|integer|exists:facilities,id',
+            'facility_id' => 'nullable|integer|exists:facilities,id',
         ]);
 
-        if (!empty($data['cadre_id'])) {
+        if (! empty($data['cadre_id'])) {
             $cadreId = (int) $data['cadre_id'];
             $existsInCadres = DB::table('cadres')->where('id', $cadreId)->exists();
             $existsInAssessmentCadres = DB::table('assessment_cadres')->where('id', $cadreId)->exists();
-            if (!$existsInCadres && !$existsInAssessmentCadres) {
+            if (! $existsInCadres && ! $existsInAssessmentCadres) {
                 throw ValidationException::withMessages([
                     'cadre_id' => ['The selected cadre is invalid.'],
                 ]);
@@ -132,11 +132,11 @@ class ClassLifecycleController extends Controller
             return response()->json([
                 'data' => [
                     'participant_id' => $participant->id,
-                    'user_id'        => $participant->user_id,
-                    'name'           => $participant->user?->full_name ?? $participant->user?->name,
-                    'email'          => $participant->user?->email,
-                    'phone'          => $participant->user?->phone,
-                    'created'        => false,
+                    'user_id' => $participant->user_id,
+                    'name' => $participant->user?->full_name ?? $participant->user?->name,
+                    'email' => $participant->user?->email,
+                    'phone' => $participant->user?->phone,
+                    'created' => false,
                 ],
             ], 201);
         }
@@ -157,18 +157,18 @@ class ClassLifecycleController extends Controller
             ])));
 
             $user = User::create([
-                'first_name'    => $firstName,
-                'middle_name'   => $data['middle_name'] ?? null,
-                'last_name'     => $lastName,
-                'name'          => $displayName,
-                'email'         => $normalizedEmail,
-                'phone'         => $data['phone'] ?? null,
-                'cadre_id'      => $data['cadre_id'] ?? null,
+                'first_name' => $firstName,
+                'middle_name' => $data['middle_name'] ?? null,
+                'last_name' => $lastName,
+                'name' => $displayName,
+                'email' => $normalizedEmail,
+                'phone' => $data['phone'] ?? null,
+                'cadre_id' => $data['cadre_id'] ?? null,
                 'department_id' => $data['department_id'] ?? null,
-                'facility_id'   => $data['facility_id'] ?? null,
-                'password'      => Hash::make('123456'),
-                'status'        => 'active',
-                'role'          => 'mentee',
+                'facility_id' => $data['facility_id'] ?? null,
+                'password' => Hash::make('123456'),
+                'status' => 'active',
+                'role' => 'mentee',
             ]);
 
             if (method_exists($user, 'assignRole')) {
@@ -189,7 +189,7 @@ class ClassLifecycleController extends Controller
             $this->ensureEnrollmentToken($class);
             try {
                 Mail::to($participant->user->email)
-                    ->send(new MenteeEnrollmentInvitationMail($participant->user, $class, $participant));
+                    ->queue(new MenteeEnrollmentInvitationMail($participant->user, $class, $participant));
                 $participant->update(['invitation_sent_at' => now()]);
                 $invitationSent = true;
             } catch (\Throwable) {
@@ -199,14 +199,14 @@ class ClassLifecycleController extends Controller
 
         return response()->json([
             'data' => [
-                'participant_id'   => $participant->id,
-                'user_id'          => $participant->user_id,
-                'name'             => $participant->user?->full_name ?? $participant->user?->name,
-                'email'            => $participant->user?->email,
-                'phone'            => $participant->user?->phone,
+                'participant_id' => $participant->id,
+                'user_id' => $participant->user_id,
+                'name' => $participant->user?->full_name ?? $participant->user?->name,
+                'email' => $participant->user?->email,
+                'phone' => $participant->user?->phone,
                 'default_password' => '123456',
-                'created'          => true,
-                'invitation_sent'  => $invitationSent,
+                'created' => true,
+                'invitation_sent' => $invitationSent,
             ],
         ], 201);
     }
@@ -218,17 +218,17 @@ class ClassLifecycleController extends Controller
     {
         $this->authorizeClassAccess($class);
 
-        if (!$class->enrollment_token) {
+        if (! $class->enrollment_token) {
             $class->update(['enrollment_token' => Str::random(32), 'enrollment_link_active' => true]);
             $class->refresh();
         }
 
-        $url = url('/enroll/' . $class->enrollment_token);
+        $url = url('/enroll/'.$class->enrollment_token);
 
         return response()->json([
             'data' => [
-                'token'  => $class->enrollment_token,
-                'url'    => $url,
+                'token' => $class->enrollment_token,
+                'url' => $url,
                 'active' => (bool) $class->enrollment_link_active,
             ],
         ]);
@@ -247,8 +247,8 @@ class ClassLifecycleController extends Controller
 
         return response()->json([
             'data' => [
-                'token'  => $token,
-                'url'    => url('/enroll/' . $token),
+                'token' => $token,
+                'url' => url('/enroll/'.$token),
                 'active' => true,
             ],
         ]);
@@ -278,7 +278,7 @@ class ClassLifecycleController extends Controller
         $this->authorizeClassAccess($class);
         abort_if($participant->mentorship_class_id !== $class->id, 404);
 
-        $data = $request->validate(['email' => 'required|email|max:255|unique:users,email,' . $participant->user_id]);
+        $data = $request->validate(['email' => 'required|email|max:255|unique:users,email,'.$participant->user_id]);
 
         $participant->user()->update(['email' => $data['email']]);
 
@@ -302,7 +302,7 @@ class ClassLifecycleController extends Controller
             $isResend = (bool) $participant->invitation_sent_at;
             try {
                 Mail::to($participant->user->email)
-                    ->send(new MenteeEnrollmentInvitationMail($participant->user, $class, $participant, $isResend));
+                    ->queue(new MenteeEnrollmentInvitationMail($participant->user, $class, $participant, $isResend));
                 $emailSent = true;
             } catch (\Throwable) {
                 // Fall through — still stamp the timestamp so the caller knows we attempted.
@@ -314,20 +314,20 @@ class ClassLifecycleController extends Controller
         return response()->json([
             'data' => [
                 'invitation_sent_at' => $participant->invitation_sent_at->toIso8601String(),
-                'email_sent'         => $emailSent,
+                'email_sent' => $emailSent,
             ],
         ]);
     }
 
     private function ensureEnrollmentToken(MentorshipClass $class): void
     {
-        if (!$class->enrollment_token) {
+        if (! $class->enrollment_token) {
             $class->update([
-                'enrollment_token'       => Str::random(32),
+                'enrollment_token' => Str::random(32),
                 'enrollment_link_active' => true,
             ]);
             $class->refresh();
-        } elseif (!$class->enrollment_link_active) {
+        } elseif (! $class->enrollment_link_active) {
             $class->update(['enrollment_link_active' => true]);
             $class->refresh();
         }
