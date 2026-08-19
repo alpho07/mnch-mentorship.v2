@@ -141,7 +141,7 @@ class TrainingPerformanceChart extends ChartWidget
 
     protected function getOptions(): array
     {
-        return [
+        return \App\Support\ChartTheme::merge([
             'scales' => [
                 'y' => [
                     'type' => 'linear',
@@ -173,7 +173,7 @@ class TrainingPerformanceChart extends ChartWidget
             ],
             'responsive' => true,
             'maintainAspectRatio' => false,
-        ];
+        ]);
     }
 }
 
@@ -328,7 +328,7 @@ class TrainingAnalyticsWidget extends ChartWidget
 
     protected function getOptions(): array
     {
-        return [
+        return \App\Support\ChartTheme::merge([
             'plugins' => [
                 'legend' => [
                     'display' => true,
@@ -337,7 +337,7 @@ class TrainingAnalyticsWidget extends ChartWidget
             ],
             'responsive' => true,
             'maintainAspectRatio' => false,
-        ];
+        ]);
     }
 }
 

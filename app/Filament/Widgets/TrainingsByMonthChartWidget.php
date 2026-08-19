@@ -51,7 +51,7 @@ class TrainingsByMonthChartWidget extends ChartWidget
 
     protected function getOptions(): array
     {
-        return [
+        return \App\Support\ChartTheme::merge([
             'plugins' => [
                 'legend' => [
                     'display' => false,
@@ -65,7 +65,7 @@ class TrainingsByMonthChartWidget extends ChartWidget
                     ],
                 ],
             ],
-        ];
+        ]);
     }
 
     private function getFilteredTrainings(): Builder
