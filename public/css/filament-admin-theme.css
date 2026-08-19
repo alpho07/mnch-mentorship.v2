@@ -943,3 +943,35 @@ textarea.fi-input:focus,
 .fi-fo-toggle:hover {
     filter: brightness(0.97);
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SECTIONS / CARDS / STAT WIDGETS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.fi-section,
+.fi-wi-stats-overview-stat {
+    border-radius: var(--mnch-radius-lg) !important;
+    box-shadow: var(--mnch-shadow-sm) !important;
+    transition: var(--mnch-transition) !important;
+}
+
+.fi-section:hover,
+.fi-wi-stats-overview-stat:hover {
+    box-shadow: var(--mnch-shadow-md) !important;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TABLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.fi-ta-header-cell {
+    font-weight: 700 !important;
+    letter-spacing: 0.02em;
+}
+
+.fi-pagination-item {
+    border-radius: var(--mnch-radius-sm) !important;
+    transition: var(--mnch-transition) !important;
+}
+
+.fi-pagination-item:hover {
+    transform: translateY(-1px);
+}
