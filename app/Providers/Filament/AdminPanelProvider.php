@@ -75,6 +75,10 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::USER_MENU_PROFILE_BEFORE,
                 fn () => view('filament.components.user-menu-header'),
             )
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_AFTER,
+                fn () => view('filament.components.install-app-menu-item'),
+            )
             ->navigationGroups([
                 'Dashboards',
                 'Rubric Assessments',
