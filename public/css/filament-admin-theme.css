@@ -866,3 +866,48 @@ textarea.fi-input:focus,
     color: #fff;
 }
 .guide-btn-create:hover { background: #15803d; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DESIGN TOKENS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+:root {
+    --mnch-radius-sm: 0.5rem;
+    --mnch-radius-md: 0.75rem;
+    --mnch-radius-lg: 1rem;
+    --mnch-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.08);
+    --mnch-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.12);
+    --mnch-transition: all 0.2s ease;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BUTTONS — all variants
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.fi-btn {
+    border-radius: var(--mnch-radius-sm) !important;
+    transition: var(--mnch-transition) !important;
+}
+
+.fi-btn:not(.fi-btn-color-gray):hover {
+    transform: translateY(-1px);
+    box-shadow: var(--mnch-shadow-sm);
+}
+
+.fi-btn:active {
+    transform: translateY(0);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   INPUTS / SELECTS / TEXTAREAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.fi-input,
+.fi-select-input,
+.fi-textarea {
+    border-radius: var(--mnch-radius-sm) !important;
+    transition: var(--mnch-transition) !important;
+}
+
+.fi-input:focus,
+.fi-select-input:focus,
+.fi-textarea:focus {
+    box-shadow: var(--mnch-shadow-sm) !important;
+}
