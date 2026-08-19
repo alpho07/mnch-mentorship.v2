@@ -51,7 +51,7 @@ class TrainingsByCountyChartWidget extends ChartWidget
 
     protected function getOptions(): array
     {
-        return [
+        return \App\Support\ChartTheme::merge([
             'indexAxis' => 'y',
             'plugins' => [
                 'legend' => [
@@ -66,7 +66,7 @@ class TrainingsByCountyChartWidget extends ChartWidget
                     ],
                 ],
             ],
-        ];
+        ]);
     }
 
     private function getFilteredTrainings(): Builder

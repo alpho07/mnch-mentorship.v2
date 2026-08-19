@@ -975,3 +975,16 @@ textarea.fi-input:focus,
 .fi-pagination-item:hover {
     transform: translateY(-1px);
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CHART WIDGET CARDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.fi-wi-chart {
+    border-radius: var(--mnch-radius-lg) !important;
+    box-shadow: var(--mnch-shadow-sm) !important;
+    transition: var(--mnch-transition) !important;
+}
+
+.fi-wi-chart:hover {
+    box-shadow: var(--mnch-shadow-md) !important;
+}
