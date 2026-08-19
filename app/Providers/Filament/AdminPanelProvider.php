@@ -51,6 +51,24 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::HEAD_END,
                 fn (): HtmlString => new HtmlString(
                     '<link rel="stylesheet" href="'.asset('css/filament-admin-theme.css').'?v='.filemtime(public_path('css/filament-admin-theme.css')).'">'
+                    .'<link rel="manifest" href="'.asset('manifest.webmanifest').'">'
+                    .'<meta name="theme-color" content="#1C3A8A">'
+                    .'<link rel="apple-touch-icon" href="'.asset('icons/admin-icon-192.png').'">'
+                    .'<meta name="apple-mobile-web-app-capable" content="yes">'
+                    .'<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'
+                    .'<meta name="apple-mobile-web-app-title" content="MNCH Admin">'
+                ),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): HtmlString => new HtmlString(
+                    '<script>'
+                    ."if ('serviceWorker' in navigator) {"
+                    ."  window.addEventListener('load', function () {"
+                    ."    navigator.serviceWorker.register('".asset('sw.js')."', { scope: '/admin/' }).catch(function () {});"
+                    .'  });'
+                    .'}'
+                    .'</script>'
                 ),
             )
             ->renderHook(
