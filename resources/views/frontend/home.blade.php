@@ -6,6 +6,22 @@
 @section('content')
 <div x-data="homePage">
 
+    @if(($trainingInsights['mentorship_coverage']['counts'] ?? collect())->isNotEmpty())
+    @php
+        $floatingStatTotal = $trainingInsights['mentorship_coverage']['counts']->sum();
+        $floatingStatCounties = $trainingInsights['mentorship_coverage']['counts']->count();
+    @endphp
+    <button type="button" id="mapJumpButton"
+            class="map-jump-pulse fixed right-0 top-24 z-40 flex items-center gap-2 rounded-l-full pl-5 pr-4 py-3 text-white transition-all hover:pr-5"
+            style="background: linear-gradient(135deg, #0097A7 0%, #17579A 100%);">
+        <i class="fas fa-map-location-dot text-sm"></i>
+        <span class="text-left leading-tight">
+            <span class="block text-sm font-black">{{ number_format($floatingStatTotal) }} {{ Str::plural('Mentorship', $floatingStatTotal) }}</span>
+            <span class="block text-[10px] font-semibold uppercase tracking-wide text-white/80">{{ number_format($floatingStatCounties) }} {{ Str::plural('County', $floatingStatCounties) }} · View map</span>
+        </span>
+    </button>
+    @endif
+
     {{-- ═══════════════════════════════════════════
          THREE PILLARS OF CARE — MoH clinical hero
     ═══════════════════════════════════════════ --}}
@@ -58,7 +74,7 @@
          TRAINING + MENTORSHIP INSIGHTS
     ═══════════════════════════════════════════ --}}
     @if($trainingInsights['has_data'] ?? false)
-    <section class="relative overflow-hidden py-14" data-aos="fade-up" data-aos-delay="100" style="background: linear-gradient(135deg, #16224A 0%, #1B2E5E 48%, #2C478D 100%);">
+    <section id="program-intelligence-section" class="relative overflow-hidden py-14" data-aos="fade-up" data-aos-delay="100" style="background: linear-gradient(135deg, #16224A 0%, #1B2E5E 48%, #2C478D 100%);">
         <div class="absolute inset-0 opacity-[0.07]">
             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
                 <pattern id="insight-grid" width="42" height="42" patternUnits="userSpaceOnUse">
@@ -119,18 +135,75 @@
                 @endforeach
             </div>
 
+            @if(($trainingInsights['mentorship_coverage']['counts'] ?? collect())->isNotEmpty())
+            <div class="flex flex-wrap items-center gap-2 mb-4" data-aos="fade-up" data-aos-delay="100">
+                <button type="button" data-mentorship-filter="all" class="mentorship-filter-pill active-filter-pill">All</button>
+                <button type="button" data-mentorship-filter="newborn" class="mentorship-filter-pill">Newborn Care</button>
+                <button type="button" data-mentorship-filter="infant_child" class="mentorship-filter-pill">Infant &amp; Child Care</button>
+                <button type="button" data-mentorship-filter="emonc" class="mentorship-filter-pill">EmONC</button>
+            </div>
+            @endif
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                @foreach(($trainingInsights['signals'] ?? []) as $index => $signal)
-                <div class="rounded-2xl border border-white/15 p-5 text-white"
-                     data-aos="fade-up" data-aos-delay="{{ 200 + $index * 100 }}"
-                     style="background: rgba(255,255,255,0.09); backdrop-filter: blur(10px);">
-                    <div class="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-sky-100">
-                        <span class="h-2 w-2 rounded-full bg-sky-300"></span>
-                        {{ $signal['title'] }}
+                @if(($trainingInsights['mentorship_coverage']['counts'] ?? collect())->isNotEmpty())
+                <div class="lg:col-span-2" data-aos="fade-up" data-aos-delay="150">
+                    <div class="program-intelligence-map-frame rounded-2xl p-1.5 relative">
+                        <div id="programIntelligenceMap" class="rounded-xl overflow-hidden" style="height:520px;"></div>
+                        <div id="mapStatBadge" class="absolute top-4 left-4 z-20 rounded-full px-3 py-1.5 text-xs font-bold text-white"
+                             style="background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.15);"></div>
                     </div>
-                    <p class="text-sm leading-relaxed text-white/88">{{ $signal['text'] }}</p>
+                    <div class="flex flex-wrap items-center justify-center gap-4 mt-3 text-xs font-semibold text-sky-100/90">
+                        @foreach($trainingInsights['mentorship_coverage']['tier_labels'] as $tierKey => $tierLabel)
+                            <span class="inline-flex items-center gap-1.5">
+                                <span class="h-2.5 w-2.5 rounded-full" style="background:{{ $trainingInsights['mentorship_coverage']['tier_colors'][$tierKey] }};"></span>
+                                {{ $tierLabel }}
+                            </span>
+                        @endforeach
+                    </div>
                 </div>
-                @endforeach
+                @endif
+
+                <div class="rounded-2xl border border-white/15 p-5 text-white overflow-y-auto scrollbar-none"
+                     data-aos="fade-up" data-aos-delay="200"
+                     style="background: rgba(255,255,255,0.09); backdrop-filter: blur(10px); height:520px;">
+                    <div class="mb-3 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-sky-100">
+                            <span class="h-2 w-2 rounded-full bg-sky-300"></span>
+                            Live Mentorships by County
+                        </div>
+                        <button type="button" id="countyFilterClear" class="hidden flex-shrink-0 inline-flex items-center gap-1 rounded-full bg-sky-400/20 px-2 py-0.5 text-xs font-semibold text-sky-100 hover:bg-sky-400/30 hover:text-white transition-colors"></button>
+                    </div>
+                    <div id="mentorshipByCountyTable">
+                        @php
+                            $tierColorMap = $trainingInsights['mentorship_coverage']['tier_colors'] ?? [];
+                            $tierByCountyMap = $trainingInsights['mentorship_coverage']['tiers'] ?? collect();
+                        @endphp
+                        @forelse(($trainingInsights['mentorship_by_facility'] ?? collect()) as $countyName => $facilities)
+                            @php
+                                $tierKey = $tierByCountyMap[$countyName] ?? 'none';
+                                $tierColor = $tierColorMap[$tierKey] ?? '#9ca3af';
+                            @endphp
+                            <div class="mb-3 last:mb-0 rounded-lg px-3 py-2.5" style="background: {{ $tierColor }}26; border-left: 3px solid {{ $tierColor }};">
+                                <div class="flex items-center justify-between gap-2 text-sm font-bold text-white">
+                                    <span class="truncate">{{ $countyName }}</span>
+                                    <span class="flex-shrink-0 inline-flex items-center justify-center rounded-full bg-sky-400/20 text-sky-100 text-xs font-bold px-2 py-0.5">
+                                        {{ $facilities->sum() }}
+                                    </span>
+                                </div>
+                                <ul class="mt-1.5 space-y-1">
+                                    @foreach($facilities as $facilityName => $count)
+                                    <li class="flex items-center justify-between gap-2 text-xs text-white/80">
+                                        <span class="truncate">{{ $facilityName }}</span>
+                                        <span class="flex-shrink-0 font-semibold text-white/95">{{ $count }}</span>
+                                    </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @empty
+                            <p class="text-sm text-white/70">No live mentorships are currently running at any facility.</p>
+                        @endforelse
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -469,6 +542,49 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
 <style>
+    /* public/css/map.css has a generic dark-mode rule for .leaflet-container
+       (`filter: invert(1) hue-rotate(180deg)`) meant for the site's other,
+       tile-based maps. It's unscoped, so it also hits this map and inverts
+       both the white background (→ black) and every tier color. This
+       choropleth's colors are semantic (must match the legend exactly), so
+       opt it out — the ID selector's specificity wins over the plain class
+       rule without needing !important.
+    */
+    #programIntelligenceMap.leaflet-container {
+        background: transparent;
+        filter: none;
+    }
+
+    .program-intelligence-map-frame {
+        background: linear-gradient(160deg, rgba(255,255,255,0.16), rgba(255,255,255,0.02));
+        box-shadow:
+            0 24px 48px -16px rgba(3, 12, 30, 0.55),
+            0 2px 6px rgba(3, 12, 30, 0.35),
+            0 1px 0 rgba(255,255,255,0.18) inset,
+            0 0 0 1px rgba(255,255,255,0.08) inset;
+    }
+
+    .mentorship-filter-pill {
+        padding: 0.4rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: rgba(224, 242, 254, 0.9);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        transition: all 0.15s ease;
+        cursor: pointer;
+    }
+    .mentorship-filter-pill:hover {
+        background: rgba(255, 255, 255, 0.16);
+        color: #fff;
+    }
+    .mentorship-filter-pill.active-filter-pill {
+        background: #fff;
+        color: #17579A;
+        border-color: #fff;
+    }
+
     .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
@@ -528,11 +644,25 @@
         0%, 100% { transform: translateX(0); }
         50% { transform: translateX(4px); }
     }
+
+    /* Floating map-jump badge — pulse to draw the eye since it's a fixed,
+       out-of-flow element easy to miss on first load. */
+    .map-jump-pulse {
+        animation: mapJumpPulse 2.6s ease-in-out infinite;
+    }
+    .map-jump-pulse:hover {
+        animation-play-state: paused;
+    }
+    @keyframes mapJumpPulse {
+        0%, 100% { box-shadow: 0 8px 24px rgba(0, 151, 167, 0.35); transform: scale(1); }
+        50% { box-shadow: 0 8px 36px rgba(0, 151, 167, 0.7), 0 0 0 8px rgba(0, 151, 167, 0.12); transform: scale(1.035); }
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('homePage', () => ({ init() {} }));
@@ -550,7 +680,303 @@
         }
 
         initHomeCounters();
+        initProgramIntelligenceMap();
+
+        const mapJumpButton = document.getElementById('mapJumpButton');
+        const programIntelligenceSection = document.getElementById('program-intelligence-section');
+        if (mapJumpButton && programIntelligenceSection) {
+            mapJumpButton.addEventListener('click', () => {
+                // scrollIntoView({block:'start'}) puts the section flush with
+                // the viewport top — but the nav is `sticky top-0 z-50`, so it
+                // would land the section header underneath the nav. Instead,
+                // compute the target from the section's position in the
+                // current viewport (getBoundingClientRect().top is relative
+                // to the viewport right now) plus how far we've already
+                // scrolled (scrollY), then subtract the nav's real height so
+                // the section lands just below it.
+                const nav = document.querySelector('nav.sticky');
+                const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+                const targetY = programIntelligenceSection.getBoundingClientRect().top + window.scrollY - navHeight - 12;
+                window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
+            });
+        }
     });
+
+    // ── Isolated Kenya coverage map (Program Intelligence) ──────────────────
+    // Deliberately has NO tile layer — only Kenya's own county polygons are
+    // drawn, so no neighbouring countries or world basemap ever appear.
+    function initProgramIntelligenceMap() {
+        const container = document.getElementById('programIntelligenceMap');
+        if (!container || typeof L === 'undefined') return;
+
+        const tierColors = @json($trainingInsights['mentorship_coverage']['tier_colors'] ?? []);
+        const coverageByFilter = @json($trainingInsights['mentorship_coverage_by_filter'] ?? []);
+        const facilityByFilter = @json($trainingInsights['mentorship_by_facility_by_filter'] ?? []);
+        const tableContainer = document.getElementById('mentorshipByCountyTable');
+        // Program pills (newborn / infant_child / emonc) are multi-select and
+        // combined client-side, so any mix — e.g. Newborn + EmONC alone — is
+        // reachable without the backend precomputing every combination.
+        // "All" is its own mode: it means no program filter at all (matches
+        // whatever buildMentorshipCoverageByCounty(null) returns), not just
+        // "all three pills selected" — so it stays correct if a new program
+        // is added later without a matching pill.
+        const selectedFilters = new Set();
+        let mode = 'all';
+        let geoLayer = null;
+        let selectedCounty = null;
+        let currentCoverage = { counts: {}, tiers: {} };
+        let currentFacilities = {};
+        const countyFilterClearBtn = document.getElementById('countyFilterClear');
+        const mapStatBadge = document.getElementById('mapStatBadge');
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+            }[char]));
+        }
+
+        function tierForCount(count) {
+            if (count >= 7) return 'extremely_high';
+            if (count >= 3) return 'moderate';
+            if (count >= 1) return 'low';
+            return 'none';
+        }
+
+        function mergeCoverage(keys) {
+            const counts = {};
+            keys.forEach((key) => {
+                const source = (coverageByFilter[key] || {}).counts || {};
+                Object.entries(source).forEach(([countyName, count]) => {
+                    counts[countyName] = (counts[countyName] || 0) + count;
+                });
+            });
+            const tiers = {};
+            Object.entries(counts).forEach(([countyName, count]) => {
+                tiers[countyName] = tierForCount(count);
+            });
+            return { counts, tiers };
+        }
+
+        function mergeFacilities(keys) {
+            const merged = {};
+            keys.forEach((key) => {
+                const facilities = facilityByFilter[key] || {};
+                Object.entries(facilities).forEach(([countyName, facilityMap]) => {
+                    merged[countyName] = merged[countyName] || {};
+                    Object.entries(facilityMap).forEach(([facilityName, count]) => {
+                        merged[countyName][facilityName] = (merged[countyName][facilityName] || 0) + count;
+                    });
+                });
+            });
+            return merged;
+        }
+
+        function activeDataset() {
+            if (mode === 'all' || selectedFilters.size === 0) {
+                return {
+                    coverage: coverageByFilter['all'] || { counts: {}, tiers: {} },
+                    facilities: facilityByFilter['all'] || {},
+                };
+            }
+            const keys = Array.from(selectedFilters);
+            return {
+                coverage: mergeCoverage(keys),
+                facilities: mergeFacilities(keys),
+            };
+        }
+
+        function applyMapFilter(coverage) {
+            if (!geoLayer) return;
+            const tierByCounty = coverage.tiers || {};
+            const countsByCounty = coverage.counts || {};
+
+            geoLayer.eachLayer((featureLayer) => {
+                const name = featureLayer.feature.properties.COUNTY;
+                const tier = tierByCounty[name] || 'none';
+                const count = countsByCounty[name] || 0;
+                const isSelected = selectedCounty === name;
+                featureLayer.setStyle({
+                    fillColor: tierColors[tier] || '#9ca3af',
+                    weight: isSelected ? 3 : 1,
+                    color: isSelected ? '#38bdf8' : '#94a3b8',
+                });
+                if (isSelected) {
+                    featureLayer.bringToFront();
+                }
+                featureLayer.setTooltipContent(
+                    `<strong>${escapeHtml(name)}</strong><br>${count} mentorship${count === 1 ? '' : 's'}`
+                );
+            });
+        }
+
+        function renderTable(facilities, tierByCounty) {
+            if (!tableContainer) return;
+            let counties = Object.keys(facilities);
+            if (selectedCounty) {
+                counties = counties.filter((name) => name === selectedCounty);
+            }
+
+            if (counties.length === 0) {
+                tableContainer.innerHTML = selectedCounty
+                    ? `<p class="text-sm text-white/70">No live mentorships in ${escapeHtml(selectedCounty)} for this filter.</p>`
+                    : '<p class="text-sm text-white/70">No live mentorships match this filter.</p>';
+                return;
+            }
+
+            tableContainer.innerHTML = counties.map((countyName) => {
+                const facilityMap = facilities[countyName];
+                const total = Object.values(facilityMap).reduce((sum, count) => sum + count, 0);
+                const tier = (tierByCounty || {})[countyName] || 'none';
+                const tierColor = tierColors[tier] || '#9ca3af';
+                const rows = Object.entries(facilityMap).map(([facilityName, count]) => `
+                    <li class="flex items-center justify-between gap-2 text-xs text-white/80">
+                        <span class="truncate">${escapeHtml(facilityName)}</span>
+                        <span class="flex-shrink-0 font-semibold text-white/95">${count}</span>
+                    </li>
+                `).join('');
+
+                return `
+                    <div class="mb-3 last:mb-0 rounded-lg px-3 py-2.5" style="background: ${tierColor}26; border-left: 3px solid ${tierColor};">
+                        <div class="flex items-center justify-between gap-2 text-sm font-bold text-white">
+                            <span class="truncate">${escapeHtml(countyName)}</span>
+                            <span class="flex-shrink-0 inline-flex items-center justify-center rounded-full bg-sky-400/20 text-sky-100 text-xs font-bold px-2 py-0.5">${total}</span>
+                        </div>
+                        <ul class="mt-1.5 space-y-1">${rows}</ul>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateCountyFilterIndicator() {
+            if (!countyFilterClearBtn) return;
+            if (selectedCounty) {
+                countyFilterClearBtn.textContent = `${selectedCounty} ✕`;
+                countyFilterClearBtn.classList.remove('hidden');
+            } else {
+                countyFilterClearBtn.classList.add('hidden');
+            }
+        }
+
+        function updateMapStatBadge(coverage) {
+            if (!mapStatBadge) return;
+            const counts = coverage.counts || {};
+
+            if (selectedCounty) {
+                const count = counts[selectedCounty] || 0;
+                mapStatBadge.textContent = `${count} mentorship${count === 1 ? '' : 's'} · ${selectedCounty}`;
+                return;
+            }
+
+            const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+            const countiesReached = Object.keys(counts).length;
+            mapStatBadge.textContent = `${total} mentorship${total === 1 ? '' : 's'} · ${countiesReached} ${countiesReached === 1 ? 'county' : 'counties'}`;
+        }
+
+        function renderViews() {
+            applyMapFilter(currentCoverage);
+            renderTable(currentFacilities, currentCoverage.tiers);
+            updateMapStatBadge(currentCoverage);
+        }
+
+        function refresh() {
+            const { coverage, facilities } = activeDataset();
+            currentCoverage = coverage;
+            currentFacilities = facilities;
+            renderViews();
+        }
+
+        function selectCounty(name) {
+            selectedCounty = (selectedCounty === name) ? null : name;
+            updateCountyFilterIndicator();
+            renderViews();
+        }
+
+        if (countyFilterClearBtn) {
+            countyFilterClearBtn.addEventListener('click', () => {
+                selectedCounty = null;
+                updateCountyFilterIndicator();
+                renderViews();
+            });
+        }
+
+        function updatePillStates() {
+            document.querySelectorAll('[data-mentorship-filter]').forEach((btn) => {
+                const key = btn.dataset.mentorshipFilter;
+                const isActive = mode === 'all' ? key === 'all' : selectedFilters.has(key);
+                btn.classList.toggle('active-filter-pill', isActive);
+            });
+        }
+
+        document.querySelectorAll('[data-mentorship-filter]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const key = btn.dataset.mentorshipFilter;
+
+                if (key === 'all') {
+                    selectedFilters.clear();
+                    mode = 'all';
+                } else {
+                    mode = 'custom';
+                    if (selectedFilters.has(key)) {
+                        selectedFilters.delete(key);
+                    } else {
+                        selectedFilters.add(key);
+                    }
+                    if (selectedFilters.size === 0) {
+                        mode = 'all';
+                    }
+                }
+
+                updatePillStates();
+                refresh();
+            });
+        });
+
+        // This map never pans/zooms, so the CSS3 3D-transform positioning
+        // Leaflet uses by default buys nothing — and on some GPU/headless
+        // rendering paths it composites the pane as solid black instead of
+        // transparent. Forcing the plain top/left code path avoids that
+        // entirely, with no behavioral difference for a static map.
+        L.Browser.any3d = false;
+
+        const map = L.map(container, {
+            zoomControl: false,
+            attributionControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            boxZoom: false,
+            keyboard: false,
+            touchZoom: false,
+        });
+
+        // Leaflet's own stylesheet sets a default background on the pane it
+        // creates inside the container — clear it explicitly so gaps
+        // between/around county shapes stay transparent, showing the page
+        // background through instead of Leaflet's default fill.
+        map.getContainer().style.background = 'transparent';
+
+        fetch('/kenyan-counties.geojson')
+            .then(res => res.json())
+            .then(geojson => {
+                geoLayer = L.geoJSON(geojson, {
+                    style: { fillOpacity: 0.85, color: '#94a3b8', weight: 1 },
+                    onEachFeature: (feature, featureLayer) => {
+                        featureLayer.bindTooltip('', { sticky: true });
+                        featureLayer.on('click', () => selectCounty(feature.properties.COUNTY));
+                    },
+                }).addTo(map);
+
+                map.fitBounds(geoLayer.getBounds(), { padding: [8, 8] });
+                map.setMaxBounds(geoLayer.getBounds().pad(0.05));
+                map.setMinZoom(map.getZoom());
+
+                updatePillStates();
+                refresh();
+            })
+            .catch(() => {
+                container.innerHTML = '<div class="flex items-center justify-center h-full text-sm text-gray-400">Map data unavailable.</div>';
+            });
+    }
 
     function initHomeCounters() {
         const counters = document.querySelectorAll('.counter-animate');

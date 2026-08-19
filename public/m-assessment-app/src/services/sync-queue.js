@@ -9,6 +9,8 @@
  */
 
 import offlineStore from "./offline-store.js";
+import { Network } from "@capacitor/network";
+import { App as CapacitorApp } from "@capacitor/app";
 // ── Status management ────────────────────────────────────────────────────────
 // status: "idle" | "syncing" | "error" | "offline"
 let _status = navigator.onLine ? "idle" : "offline";
@@ -701,17 +703,25 @@ function startPeriodicCheck() {
 
 // ── Initialize ───────────────────────────────────────────────────────────────
 function init() {
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+    // Native connectivity events — real OS-level changes on native, falls
+    // back to navigator.onLine/online/offline transparently in a browser.
+    Network.addListener("networkStatusChange", (status) => {
+        if (status.connected) handleOnline();
+        else handleOffline();
+    });
 
-    // Also listen for Capacitor app resume (if available)
-    document.addEventListener("resume", () => {
-        if (navigator.onLine) flush();
+    // App resume via the Capacitor App plugin, replacing the legacy
+    // Cordova-style document "resume" event for a more reliable trigger.
+    CapacitorApp.addListener("resume", async () => {
+        const status = await Network.getStatus();
+        if (status.connected) flush();
     });
 
     // Initial count
     refreshCount();
-    if (navigator.onLine && _pendingCount > 0) flush();
+    Network.getStatus().then(status => {
+        if (status.connected && _pendingCount > 0) flush();
+    });
 
     // Start periodic check
     startPeriodicCheck();

@@ -552,24 +552,6 @@
             color: #94a3b8;
         }
 
-        /* ── Velocity badge ───────────────────────────────────────────────────── */
-        .md-velocity-fast   {
-            background: #dcfce7;
-            color: #15803d;
-        }
-        .md-velocity-steady {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-        .md-velocity-slow   {
-            background: #fef9c3;
-            color: #854d0e;
-        }
-        .md-velocity-inactive {
-            background: #f1f5f9;
-            color: #64748b;
-        }
-
         /* ── Donut mini chart ─────────────────────────────────────────────────── */
         .md-donut-wrap {
             display: flex;
@@ -802,11 +784,6 @@
                         <span class="md-tag">📍 {{ $profile['county'] }}</span>
                     @endif
                     <span class="md-tag">🗓 Since {{ $profile['joined'] }}</span>
-                    {{-- Velocity --}}
-                    @php $vel = $globalStats['learning_velocity'] ?? 'Inactive'; $vClass = 'md-velocity-' . strtolower($vel); @endphp
-                    <span class="md-tag {{ $vClass }}" style="border: none;">
-                        ⚡ {{ $vel }} learner
-                    </span>
             @if(($globalStats['streak_days'] ?? 0) > 0)
                         <span class="md-tag" style="background:rgba(251,191,36,0.25);border-color:rgba(251,191,36,0.4);">
                             🔥 {{ $globalStats['streak_days'] }}-day streak

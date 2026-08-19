@@ -330,6 +330,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     'end_date' => $get('end_date'),
                                     'max_participants' => $get('max_participants'),
                                 ]);
+                                $this->dispatch('scroll-top');
                             } catch (\Throwable $e) {
                                 $this->stepFailed($e);
                             }
@@ -384,6 +385,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     'end_date' => $get('class_end_date'),
                                     'description' => $get('class_description'),
                                 ]);
+                                $this->dispatch('scroll-top');
                             } catch (\Throwable $e) {
                                 $this->stepFailed($e);
                             }
@@ -477,6 +479,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     'auto_create_sessions' => $get('auto_create_sessions') ?? true,
                                     'module_dates' => $this->moduleDates,
                                 ]);
+                                $this->dispatch('scroll-top');
                             } catch (\Throwable $e) {
                                 $this->stepFailed($e);
                             }
@@ -595,6 +598,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
                                     'selected_users' => $get('selected_users') ?? [],
                                     'new_mentee' => $get('new_mentee.email') ? $get('new_mentee') : null,
                                 ]);
+                                $this->dispatch('scroll-top');
                             } catch (\Throwable $e) {
                                 $this->stepFailed($e);
                             }
@@ -685,6 +689,7 @@ class GuidedMentorshipSetup extends Page implements HasForms
             $this->sendInvitations([
                 'recipients' => $data['recipients'] ?? 'all',
             ]);
+            $this->dispatch('scroll-top');
         } catch (\Throwable $e) {
             // Note: unlike afterValidation() on a Wizard\Step (caught internally
             // by Wizard.php), this submit() method is invoked directly by

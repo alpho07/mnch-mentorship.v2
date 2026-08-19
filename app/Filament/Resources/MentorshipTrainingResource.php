@@ -8,6 +8,7 @@ use App\Models\ClassParticipant;
 use App\Models\County;
 use App\Models\Facility;
 use App\Models\Program;
+use App\Models\Setting;
 use App\Models\Training;
 use App\Models\User;
 use Filament\Forms;
@@ -205,7 +206,7 @@ class MentorshipTrainingResource extends Resource
                                             <span class="text-gray-400">|</span>
                                             <a class="text-primary-600 hover:underline" href="'.url('/resources/emonc-mentorship-manual').'" target="_blank" rel="noopener noreferrer">EmONC Mentorship Manual</a>
                                             <span class="text-gray-400">|</span>
-                                            <a class="text-primary-600 hover:underline" href="'.route('resources.search', ['q' => 'mentorship manual']).'" target="_blank" rel="noopener noreferrer">Search mentorship manuals</a>
+                                            <a class="text-primary-600 hover:underline" href="'.route('resources.search', ['q' => 'manual']).'" target="_blank" rel="noopener noreferrer">Search mentorship manuals</a>
                                             <span class="text-gray-400">|</span>
                                             <a class="text-primary-600 hover:underline" href="'.route('resources.search', ['q' => 'MNCH guidelines']).'" target="_blank" rel="noopener noreferrer">MNCH guidelines</a>
                                         </div>
@@ -448,7 +449,22 @@ class MentorshipTrainingResource extends Resource
                         ->label('Mentees')
                         ->icon('heroicon-o-users')
                         ->color('success')
-                        ->url(fn (Training $r) => static::getUrl('mentees', ['record' => $r->id]))
+                        ->url(function (Training $r) {
+                            // Mentees are enrolled per class (ClassParticipant), not at the
+                            // training level — jump straight to the most relevant class's
+                            // roster: the active one if there is one, else the latest.
+                            $class = $r->mentorshipClasses()->where('status', 'active')->latest()->first()
+                                    ?? $r->mentorshipClasses()->latest()->first();
+
+                            if (! $class) {
+                                return static::getUrl('classes', ['record' => $r->id]);
+                            }
+
+                            return static::getUrl('class-mentees', [
+                                'training' => $r->id,
+                                'class' => $class->id,
+                            ]);
+                        })
                         ->visible(fn (Training $r) => $r->deleted_at === null),
                     Tables\Actions\EditAction::make()
                         ->visible(fn (Training $r) => $r->deleted_at === null),
@@ -573,7 +589,9 @@ class MentorshipTrainingResource extends Resource
             ->emptyStateDescription('Create your first mentorship program to get started.')
             ->emptyStateIcon('heroicon-o-academic-cap')
             ->emptyStateActions([
-                Tables\Actions\CreateAction::make()->label('Create Mentorship'),
+                Tables\Actions\CreateAction::make()
+                    ->label('Create Mentorship')
+                    ->visible(fn () => Setting::getBool(Setting::NEW_MENTORSHIP_BUTTON_ENABLED)),
             ]);
     }
 

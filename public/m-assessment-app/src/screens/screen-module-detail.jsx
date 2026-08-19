@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { T } from "../constants.js";
 import api from "../services/api.service.js";
 
+const TEAL = "#0097A7";
 
 const SESSION_STATUS = {
     scheduled:   { bg: "#F3F4F6", color: "#6B7280" },
@@ -177,7 +178,7 @@ function AddSessionSheet({ moduleId, onAdd, onClose }) {
                                 onClick={() => handleAdd(t)}
                                 disabled={addingId === t.id}
                                 style={{
-                                    border: "none", background: T.primary, color: "#fff",
+                                    border: "none", background: TEAL, color: "#fff",
                                     borderRadius: 8, padding: "7px 14px", fontSize: 12,
                                     fontWeight: 700, cursor: addingId === t.id ? "not-allowed" : "pointer",
                                     opacity: addingId === t.id ? 0.7 : 1, flexShrink: 0,
@@ -383,8 +384,8 @@ export function ModuleDetailScreen({ module: mod, user, onBack, onOpenAttendance
                                 flex: 1, padding: "11px 0", border: "none", background: "none",
                                 fontWeight: activeTab === tab.key ? 700 : 500,
                                 fontSize: 13,
-                                color: activeTab === tab.key ? T.primary : T.textSub,
-                                borderBottom: activeTab === tab.key ? `2px solid ${T.primary}` : "2px solid transparent",
+                                color: activeTab === tab.key ? TEAL : T.textSub,
+                                borderBottom: activeTab === tab.key ? `2px solid ${TEAL}` : "2px solid transparent",
                                 cursor: "pointer",
                             }}
                         >
@@ -404,8 +405,8 @@ export function ModuleDetailScreen({ module: mod, user, onBack, onOpenAttendance
                             <button
                                 onClick={() => setAddSheet(true)}
                                 style={{
-                                    width: "100%", border: `1.5px dashed ${T.primary}`, background: "transparent",
-                                    color: T.primary, borderRadius: T.radiusSm, padding: "10px 0",
+                                    width: "100%", border: `1.5px dashed ${TEAL}`, background: "transparent",
+                                    color: TEAL, borderRadius: T.radiusSm, padding: "10px 0",
                                     fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 12,
                                     display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                                 }}

@@ -148,12 +148,17 @@ class MentorshipClass extends Model {
                 'start_date' => $this->start_date ?? now()->toDateString(),
             ]);
 
-            // Start every module that is still not_started
+            // Start every module that is still not_started. notify: false —
+            // the classStarted() email below already covers "modules are now
+            // accessible"; per-module emails here would spam mentees with
+            // one message per module on top of it.
             $modules = $this->classModules()->where('status', 'not_started')->get();
             foreach ($modules as $module) {
-                $module->start();
+                $module->start(notify: false);
             }
         });
+
+        app(\App\Services\ClassLifecycleNotificationService::class)->classStarted($this);
     }
 
     /**
@@ -174,7 +179,10 @@ class MentorshipClass extends Model {
         }
 
         DB::transaction(function () {
-            // 1. Complete every module still in_progress
+            // 1. Complete every module still in_progress. (ClassModule::complete()
+            // has no broadcast notification of its own to suppress here — it only
+            // sends a per-attended-participant notice via EmoncNotificationService,
+            // which stays as-is regardless of this cascade.)
             $modules = $this->classModules()->where('status', 'in_progress')->get();
             foreach ($modules as $module) {
                 $module->complete();
@@ -195,6 +203,8 @@ class MentorshipClass extends Model {
                         'completed_at' => now(),
             ]);
         });
+
+        app(\App\Services\ClassLifecycleNotificationService::class)->classCompleted($this);
     }
 
     /**

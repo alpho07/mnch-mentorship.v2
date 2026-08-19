@@ -5,8 +5,10 @@
     box-sizing: border-box;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');
+
 :root {
-    font-family: -apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
     line-height: 1.5;
     font-weight: 400;
     font-synthesis: none;
@@ -14,19 +16,23 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 
+    /* Safe area insets — populated by the OS on notched/gesture-nav devices.
+     Falls back to 0 on devices without system bars. */
     --sat: env(safe-area-inset-top, 0px);
     --sar: env(safe-area-inset-right, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
     --sal: env(safe-area-inset-left, 0px);
 
+    /* Bottom nav total height = visible tab bar + system nav bar */
     --nav-bar-height: 64px;
     --bottom-inset: calc(var(--nav-bar-height) + var(--sab));
 
-    --primary: #4F6AF5;
-    --primary-light: #6C63FF;
-    --accent: #6C63FF;
+    /* Color tokens as CSS vars for rare CSS-only usage */
+    --primary: #6C5CE7;
+    --primary-light: #A29BFE;
+    --accent: #0EA5E9;
     --success: #10B981;
-    --bg: #F2F2F7;
+    --bg: #F4F6FB;
 }
 
 html,
@@ -37,7 +43,8 @@ body {
     height: 100%;
     /* Prevent iOS/Android bounce scroll on the root */
     overflow: hidden;
-    background: #F2F2F7;
+    /* Dark backdrop shows through the top rounded corners on Capacitor */
+    background: #004D40;
 }
 
 #root {
@@ -45,6 +52,10 @@ body {
     height: 100%;
     /* Use 100dvh so the shell fills the real viewport on mobile browsers */
     height: 100dvh;
+    /* Curve the top corners to match the phone screen shape */
+    border-radius: 16px 16px 0 0;
+    overflow: hidden;
+    background: #F4F6FB;
 }
 
 button {
@@ -74,7 +85,7 @@ textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(79, 106, 245, 0.15);
+    background: rgba(108, 92, 231, 0.15);
     border-radius: 99px;
 }
 
@@ -104,8 +115,9 @@ textarea {
 @keyframes slideInUp {
     from {
         opacity: 0;
-        transform: translateY(100%);
+        transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

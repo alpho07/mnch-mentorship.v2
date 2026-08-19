@@ -40,9 +40,22 @@ class ManageModuleMentees extends Page implements HasTable
 
     public function mount(Training $training, MentorshipClass $class, ClassModule $module): void
     {
-        $this->training = $training;
+        $this->training = $training->load('program');
         $this->class = $class;
         $this->module = $module->load('programModule');
+    }
+
+    /**
+     * EmONC decouples "present" from "started": presence just confirms
+     * attendance, module progress only moves to in_progress once the mentee
+     * (or the mentor, via the separate Start action) actually begins the
+     * content. Other programs collapse both into one Mark Present step.
+     */
+    private function isEmonc(): bool
+    {
+        $name = strtolower($this->training->program?->name ?? '');
+
+        return str_contains($name, 'maternal') && str_contains($name, 'emonc');
     }
 
     public function getTitle(): string
@@ -157,10 +170,14 @@ class ManageModuleMentees extends Page implements HasTable
                             'source' => 'manual',
                         ]);
 
-                        MenteeModuleProgress::where('class_participant_id', $participant->id)
-                            ->where('class_module_id', $this->module->id)
-                            ->where('status', 'not_started')
-                            ->update(['status' => 'in_progress', 'started_at' => now()]);
+                        // Non-EmONC: presence IS starting — one step. EmONC keeps
+                        // progress at not_started until a separate Start action.
+                        if (! $this->isEmonc()) {
+                            MenteeModuleProgress::where('class_participant_id', $participant->id)
+                                ->where('class_module_id', $this->module->id)
+                                ->where('status', 'not_started')
+                                ->update(['status' => 'in_progress', 'started_at' => now()]);
+                        }
 
                         if ($participant->user) {
                             Notification::make()
@@ -382,10 +399,15 @@ class ManageModuleMentees extends Page implements HasTable
                                 'source' => 'manual',
                             ]);
 
-                            MenteeModuleProgress::where('class_participant_id', $record->id)
-                                ->where('class_module_id', $this->module->id)
-                                ->where('status', 'not_started')
-                                ->update(['status' => 'in_progress', 'started_at' => now()]);
+                            // Non-EmONC: presence IS starting — one step. EmONC keeps
+                            // progress at not_started until the separate Start action
+                            // (or the mentee themselves) begins the content.
+                            if (! $this->isEmonc()) {
+                                MenteeModuleProgress::where('class_participant_id', $record->id)
+                                    ->where('class_module_id', $this->module->id)
+                                    ->where('status', 'not_started')
+                                    ->update(['status' => 'in_progress', 'started_at' => now()]);
+                            }
 
                             if ($record->user) {
                                 Notification::make()
@@ -396,6 +418,35 @@ class ManageModuleMentees extends Page implements HasTable
                             }
 
                             Notification::make()->success()->title("Marked {$record->user?->full_name} as present")->send();
+                        }),
+                    // ── Start (EmONC only — moves a present-but-not-started
+                    // mentee's progress into in_progress) ────────────────────
+                    Tables\Actions\Action::make('start_progress')
+                        ->label('Start')
+                        ->icon('heroicon-o-play-circle')
+                        ->color('primary')
+                        ->visible(fn (ClassParticipant $record) => $this->isEmonc() &&
+                            $this->module->status === 'in_progress' &&
+                            $this->isPresent($record) &&
+                            (MenteeModuleProgress::where('class_participant_id', $record->id)
+                                ->where('class_module_id', $this->module->id)
+                                ->value('status') ?? 'not_started') === 'not_started'
+                        )
+                        ->action(function (ClassParticipant $record) {
+                            MenteeModuleProgress::where('class_participant_id', $record->id)
+                                ->where('class_module_id', $this->module->id)
+                                ->where('status', 'not_started')
+                                ->update(['status' => 'in_progress', 'started_at' => now()]);
+
+                            if ($record->user) {
+                                Notification::make()
+                                    ->title('Module Started')
+                                    ->body("Your mentor has started {$this->module->programModule?->name} for you.")
+                                    ->success()
+                                    ->sendToDatabase($record->user);
+                            }
+
+                            Notification::make()->success()->title("Started module for {$record->user?->full_name}")->send();
                         }),
                     // ── Remove Attendance ────────────────────────────────────
                     Tables\Actions\Action::make('remove_attendance')

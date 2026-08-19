@@ -7,7 +7,14 @@
 <div
     x-data="{
         selected: $wire.entangle('{{ $statePath }}').live,
-        dates: $wire.entangle('moduleDates').live,
+        {{-- Not .live: this only needs to ride along with whatever request
+             happens next (the field's own live sync, or Next/Save). A second
+             independently-live entangled property on the same component
+             races against `selected`'s own live sync — checking a track and
+             then saving its date modal fires two separate, unordered
+             network requests that can clobber each other's snapshot,
+             silently dropping the just-entered dates. --}}
+        dates: $wire.entangle('moduleDates'),
         dateModal: { open: false, id: null, start: '', end: '' },
         isSelected(id) {
             return this.selected && (this.selected.includes(String(id)) || this.selected.includes(Number(id)));

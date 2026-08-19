@@ -151,6 +151,7 @@ trait HasMentorshipChatSlots
             'timestamp' => now()->toIso8601String(),
         ];
         $this->syncTranscript();
+        $this->dispatch('chat-scroll-bottom');
     }
 
     public function updatedMenteeSearch(): void
@@ -260,6 +261,7 @@ trait HasMentorshipChatSlots
             'timestamp' => now()->toIso8601String(),
         ];
         $this->syncTranscript();
+        $this->dispatch('chat-scroll-bottom');
     }
 
     public function mount(): void
@@ -516,6 +518,7 @@ trait HasMentorshipChatSlots
         }
 
         $this->syncTranscript();
+        $this->dispatch('chat-scroll-bottom');
     }
 
     public function editSlot(string $slotId): void

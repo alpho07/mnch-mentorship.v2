@@ -146,6 +146,7 @@ class ResourceController extends Controller
 
         $upcomingBase = Training::query()
             ->whereIn('type', ['global_training', 'facility_mentorship'])
+            ->live()
             ->whereNotIn('status', ['cancelled', 'completed'])
             ->whereDate('start_date', '>=', $today);
 
@@ -168,6 +169,7 @@ class ResourceController extends Controller
 
         $activeMentorships = Training::query()
             ->where('type', 'facility_mentorship')
+            ->live()
             ->whereNotIn('status', ['cancelled', 'completed'])
             ->where(function ($query) {
                 $query->whereIn('status', ['active', 'ongoing'])
@@ -177,16 +179,17 @@ class ResourceController extends Controller
 
         $activeClasses = MentorshipClass::query()
             ->where('status', 'active')
-            ->whereHas('training', fn($query) => $query->where('type', 'facility_mentorship'))
+            ->whereHas('training', fn($query) => $query->where('type', 'facility_mentorship')->live())
             ->count();
 
         $mentorshipMentees = ClassParticipant::query()
-            ->whereHas('mentorshipClass.training', fn($query) => $query->where('type', 'facility_mentorship'))
+            ->whereHas('mentorshipClass.training', fn($query) => $query->where('type', 'facility_mentorship')->live())
             ->distinct('class_participants.user_id')
             ->count('class_participants.user_id');
 
         $mentoredFacilities = Training::query()
             ->where('type', 'facility_mentorship')
+            ->live()
             ->whereNotNull('facility_id')
             ->distinct('facility_id')
             ->count('facility_id');
@@ -233,7 +236,21 @@ class ResourceController extends Controller
         $pipelineTotal = $upcomingTrainingsCount + $upcomingMentorshipsCount;
         $mentorshipShare = $pipelineTotal > 0 ? round(($upcomingMentorshipsCount / $pipelineTotal) * 100) : 0;
 
+        $programFilterGroups = $this->mentorshipProgramFilterGroups();
+        $coverageByFilter = collect($programFilterGroups)
+            ->mapWithKeys(fn ($programIds, $key) => [$key => $this->buildMentorshipCoverageByCounty($programIds)]);
+        $facilityByFilter = collect($programFilterGroups)
+            ->mapWithKeys(fn ($programIds, $key) => [$key => $this->buildMentorshipCoverageByFacility($programIds)]);
+
+        $totalCounties = \App\Models\County::count();
+        $countiesWithMentorship = $coverageByFilter['all']['counts']->count();
+        $coveragePercent = $totalCounties > 0 ? round(($countiesWithMentorship / $totalCounties) * 100) : 0;
+
         return [
+            'mentorship_coverage' => $coverageByFilter['all'],
+            'mentorship_by_facility' => $facilityByFilter['all'],
+            'mentorship_coverage_by_filter' => $coverageByFilter,
+            'mentorship_by_facility_by_filter' => $facilityByFilter,
             'has_data' => $pipelineTotal > 0 || $activeMentorships > 0 || $mentorshipMentees > 0 || $trainingParticipants > 0,
             'cards' => [
                 [
@@ -245,25 +262,25 @@ class ResourceController extends Controller
                     'bg' => '#E0F7FA',
                 ],
                 [
-                    'label' => 'Mentorship Reach',
-                    'value' => number_format($mentorshipMentees),
-                    'detail' => number_format($activeMentorships) . ' active mentorships, ' . number_format($activeClasses) . ' active classes, ' . number_format($mentoredFacilities) . ' facilities reached.',
-                    'icon' => 'fas fa-user-md',
+                    'label' => 'Counties Covered',
+                    'value' => number_format($countiesWithMentorship),
+                    'detail' => number_format($activeMentorships) . ' active mentorships, ' . number_format($activeClasses) . ' active classes running now.',
+                    'icon' => 'fas fa-map-marker-alt',
                     'accent' => '#059669',
                     'bg' => '#D1FAE5',
                 ],
                 [
-                    'label' => 'Training Coverage',
-                    'value' => number_format($trainingParticipants),
-                    'detail' => $completionRate . '% completion across global training participant records.',
-                    'icon' => 'fas fa-users',
+                    'label' => 'Facilities Reached',
+                    'value' => number_format($mentoredFacilities),
+                    'detail' => number_format($mentorshipMentees) . ' mentees reached across all facility mentorships.',
+                    'icon' => 'fas fa-hospital',
                     'accent' => '#2563EB',
                     'bg' => '#DBEAFE',
                 ],
                 [
-                    'label' => 'Mentorship Mix',
-                    'value' => $mentorshipShare . '%',
-                    'detail' => number_format($upcomingMentorshipsCount) . ' of ' . number_format($pipelineTotal) . ' upcoming programs are facility-based mentorships.',
+                    'label' => '% Coverage',
+                    'value' => $coveragePercent . '%',
+                    'detail' => number_format($countiesWithMentorship) . ' of ' . number_format($totalCounties) . ' counties have active mentorship coverage.',
                     'icon' => 'fas fa-chart-pie',
                     'accent' => '#F59E0B',
                     'bg' => '#FEF3C7',
@@ -289,6 +306,125 @@ class ResourceController extends Controller
                         : 'No upcoming training or mentorship has a future start date.',
                 ],
             ],
+        ];
+    }
+
+    /**
+     * Per-county facility-mentorship training counts for the homepage's
+     * isolated Kenya coverage map, tiered to match the analytics dashboard's
+     * coverage legend. Excludes pilot runs (Training::live()) — pilots are
+     * test/trial mentorships, not real coverage, and are excluded from all
+     * public counts/analytics elsewhere in the app. Thresholds are
+     * calibrated to this specific live-only metric (max ~15 per county in
+     * practice) rather than the dashboard's general "all trainings"
+     * thresholds, which are tuned for a much larger combined count and
+     * would never light up for mentorship-only data.
+     */
+    private function buildMentorshipCoverageByCounty(?array $programIds = null): array
+    {
+        $counts = Training::query()
+            ->where('type', 'facility_mentorship')
+            ->live()
+            ->whereNotNull('county_id')
+            ->when($programIds, fn ($query) => $query->whereIn('program_id', $programIds))
+            ->with('county:id,name')
+            ->select('county_id', DB::raw('COUNT(*) as trainings_count'))
+            ->groupBy('county_id')
+            ->get()
+            ->filter(fn ($row) => $row->county !== null)
+            ->mapWithKeys(fn ($row) => [$row->county->name => (int) $row->trainings_count]);
+
+        $tierFor = function (int $count): string {
+            return match (true) {
+                $count >= 7 => 'extremely_high',
+                $count >= 3 => 'moderate',
+                $count >= 1 => 'low',
+                default => 'none',
+            };
+        };
+
+        return [
+            'counts' => $counts,
+            'tiers' => $counts->map($tierFor),
+            'tier_colors' => [
+                'extremely_high' => '#15803d',
+                'moderate' => '#fef08a',
+                'low' => '#fbbf24',
+                'none' => '#9ca3af',
+            ],
+            'tier_labels' => [
+                'extremely_high' => 'Extremely High',
+                'moderate' => 'Moderate',
+                'low' => 'Low',
+                'none' => 'No Mentorship',
+            ],
+        ];
+    }
+
+    /**
+     * County -> facility -> mentorship count, for the homepage's "Program
+     * Intelligence" side panel. Uses the exact same base query as
+     * buildMentorshipCoverageByCounty() (non-pilot facility mentorships via
+     * Training::live(), no status filter) so the panel's per-county totals
+     * always match the map's tooltip/tier counts — "live" here means
+     * non-pilot, matching this app's Training::scopeLive() convention, not
+     * "currently in progress". Counties are ordered by total mentorships,
+     * facilities within each county by their own count, both descending.
+     */
+    private function buildMentorshipCoverageByFacility(?array $programIds = null): \Illuminate\Support\Collection
+    {
+        $trainings = Training::query()
+            ->where('type', 'facility_mentorship')
+            ->live()
+            ->whereNotNull('county_id')
+            ->whereNotNull('facility_id')
+            ->when($programIds, fn ($query) => $query->whereIn('program_id', $programIds))
+            ->with(['county:id,name', 'facility:id,name'])
+            ->get();
+
+        return $trainings
+            ->filter(fn ($training) => $training->county && $training->facility)
+            ->groupBy(fn ($training) => $training->county->name)
+            ->map(fn ($countyTrainings) => $countyTrainings
+                ->groupBy(fn ($training) => $training->facility->name)
+                ->map(fn ($facilityTrainings) => $facilityTrainings->count())
+                ->sortDesc())
+            ->sortByDesc(fn ($facilities) => $facilities->sum());
+    }
+
+    /**
+     * Program-group -> program IDs, one entry per individually selectable
+     * filter pill on the homepage coverage panel (Newborn Care, Infant &
+     * Child Care, EmONC), plus "all" (null = no program filter). The panel
+     * lets these be toggled independently and combined client-side (e.g.
+     * Newborn + EmONC together), so this only needs to supply the base,
+     * non-overlapping per-program datasets — it does not need a combined
+     * "child health" bucket. Resolved by name (no dedicated "code"/"group"
+     * column exists on programs) rather than hardcoded IDs, so a renamed or
+     * newly added program is still bucketed correctly.
+     */
+    private function mentorshipProgramFilterGroups(): array
+    {
+        $emoncIds = \App\Models\Program::query()
+            ->where('name', 'like', '%EmONC%')
+            ->pluck('id')
+            ->all();
+
+        $newbornIds = \App\Models\Program::query()
+            ->where('name', 'like', '%Newborn%')
+            ->pluck('id')
+            ->all();
+
+        $infantChildIds = \App\Models\Program::query()
+            ->where('name', 'like', '%Infant%')
+            ->pluck('id')
+            ->all();
+
+        return [
+            'all' => null,
+            'newborn' => $newbornIds,
+            'infant_child' => $infantChildIds,
+            'emonc' => $emoncIds,
         ];
     }
 

@@ -318,7 +318,7 @@ export function MenteeManagerScreen({ cls, onBack, confirm = (o) => Promise.reso
         <div style={{ display: "flex", flexDirection: "column", height: "100%", background: T.bg }}>
             {/* Header */}
             <div style={{ background: T.gradientHero, padding: "44px 20px 16px", position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", width: 140, height: 140, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,106,245,0.20) 0%, transparent 70%)", top: -40, right: -30 }} />
+                <div style={{ position: "absolute", width: 140, height: 140, borderRadius: "50%", background: "radial-gradient(circle, rgba(38,198,218,0.15) 0%, transparent 70%)", top: -40, right: -30 }} />
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <button onClick={onBack} style={{ background: "rgba(255,255,255,0.12)", border: "none", cursor: "pointer", padding: "6px 10px", borderRadius: 10, display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>

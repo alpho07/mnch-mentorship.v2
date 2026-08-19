@@ -27,7 +27,7 @@
                     color="danger"
                     outlined
                     wire:click="discard"
-                    onclick="return confirm('Discard this pending mentorship draft? This cannot be undone.')"
+                    wire:confirm="Discard this pending mentorship draft? This cannot be undone."
                 >
                     Discard
                 </x-filament::button>

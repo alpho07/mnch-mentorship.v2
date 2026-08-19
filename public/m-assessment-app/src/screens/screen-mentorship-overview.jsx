@@ -172,6 +172,7 @@ export function MentorshipOverviewScreen({ mentorshipId, onBack, onViewDetail, o
     }
 
     const m = mentorship;
+    const hasCompletedClass = classes.some(c => c.status === "completed");
     const totalMentees  = classes.reduce((s, c) => s + (c.participant_count ?? 0), 0);
     const avgPct        = classes.length > 0
         ? Math.round(classes.reduce((s, c) => s + (c.progress_percentage ?? 0), 0) / classes.length)
@@ -255,13 +256,15 @@ export function MentorshipOverviewScreen({ mentorshipId, onBack, onViewDetail, o
                         boxShadow: `0 4px 16px ${T.primaryGlow}` }}>
                     View Detail & Reports →
                 </button>
-                <button
-                    onClick={() => onEdit(m ?? { id: mentorshipId })}
-                    style={{ padding: "12px 18px", background: T.primaryGhost,
-                        color: T.primary, border: `1px solid ${T.primary}33`,
-                        borderRadius: T.radiusSm, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-                    Edit
-                </button>
+                {!hasCompletedClass && (
+                    <button
+                        onClick={() => onEdit(m ?? { id: mentorshipId })}
+                        style={{ padding: "12px 18px", background: T.primaryGhost,
+                            color: T.primary, border: `1px solid ${T.primary}33`,
+                            borderRadius: T.radiusSm, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                        Edit
+                    </button>
+                )}
             </div>
 
             {/* Classes section */}

@@ -134,6 +134,10 @@ class QuickMentorshipSetup extends Page implements HasForms
                     || array_key_exists('module_ids', $draft);
                 $this->menteesSaved = $this->class->participants()->exists()
                     || array_key_exists('selected_users', $draft);
+
+                if (empty($this->moduleDates)) {
+                    $this->moduleDates = $this->moduleDatesFromClass();
+                }
             }
         }
 
@@ -463,6 +467,7 @@ class QuickMentorshipSetup extends Page implements HasForms
 
         try {
             $this->sendInvitations(['recipients' => $state['recipients'] ?? 'all']);
+            $this->dispatch('scroll-top');
         } catch (\Throwable $e) {
             Notification::make()
                 ->danger()
@@ -496,6 +501,7 @@ class QuickMentorshipSetup extends Page implements HasForms
         ]);
 
         $this->menteesSaved = true;
+        $this->dispatch('scroll-top');
     }
 
     public function enrollMentees(array $data): int
@@ -517,14 +523,39 @@ class QuickMentorshipSetup extends Page implements HasForms
         ]);
 
         $this->modulesSaved = true;
+        $this->dispatch('scroll-top');
     }
 
     public function assignModules(array $data): int
     {
         $created = app(MentorshipWizardService::class)->assignModules($data, $this->training, $this->class);
-        $this->moduleDates = [];
+        $this->moduleDates = $this->moduleDatesFromClass();
 
         return $created;
+    }
+
+    /**
+     * Rebuild the {id: {start, end}} shape the EmONC module picker's date
+     * badges read from, off the persisted ClassModule dates rather than the
+     * (now-cleared) wizard draft — otherwise the badges go blank the instant
+     * "Continue" is pressed, even though the dates were saved successfully.
+     */
+    private function moduleDatesFromClass(): array
+    {
+        if (! $this->class) {
+            return [];
+        }
+
+        return $this->class->classModules()
+            ->get()
+            ->filter(fn ($classModule) => $classModule->start_date || $classModule->end_date)
+            ->mapWithKeys(fn ($classModule) => [
+                $classModule->program_module_id => [
+                    'start' => $classModule->start_date?->toDateString(),
+                    'end' => $classModule->end_date?->toDateString(),
+                ],
+            ])
+            ->toArray();
     }
 
     public function validateModuleDates(array $moduleIds): ?string
@@ -562,6 +593,7 @@ class QuickMentorshipSetup extends Page implements HasForms
         ]);
 
         $this->firstClassSaved = true;
+        $this->dispatch('scroll-top');
     }
 
     public function createFirstClass(array $data): MentorshipClass
@@ -588,6 +620,7 @@ class QuickMentorshipSetup extends Page implements HasForms
 
         $this->training->update(['guided_setup_method' => 'quick']);
         $this->basicsSaved = true;
+        $this->dispatch('scroll-top');
     }
 
     public function createTraining(array $data): Training

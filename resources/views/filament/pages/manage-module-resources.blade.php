@@ -106,21 +106,52 @@
                         @endforelse
                     @endif
 
+                    @if ($key === 'learning_objectives')
+                        @forelse ($items as $objective)
+                            <div class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                <x-heroicon-o-check-circle class="w-4 h-4 shrink-0 mt-0.5 text-primary-500" />
+                                <span>{{ $objective }}</span>
+                            </div>
+                        @empty
+                            <p class="text-gray-500">No learning objectives configured.</p>
+                        @endforelse
+                    @endif
+
                     @if ($key === 'video')
                         @forelse ($items as $video)
                             <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                 <h4 class="font-semibold text-gray-900 dark:text-white mb-3">{{ $video->title }}</h4>
-                                @if ($video->youtubeEmbedUrl())
+                                @php
+                                    $embedUrl = $video->youtubeEmbedUrl();
+                                    $isDirectVideo = $video->video_url && preg_match('/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i', $video->video_url);
+                                @endphp
+                                @if ($embedUrl)
                                     <div class="rounded-lg overflow-hidden" style="width:100%;max-height:400px;aspect-ratio:16/9;margin:0 auto;background:#000;">
-                                        <iframe src="{{ $video->youtubeEmbedUrl() }}"
+                                        <iframe src="{{ $embedUrl }}"
                                                 style="width:100%;height:100%;"
                                                 frameborder="0"
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                 allowfullscreen></iframe>
                                     </div>
-                                @elseif ($video->video_url)
+                                @elseif ($isDirectVideo)
                                     <div class="rounded-lg overflow-hidden" style="width:100%;max-height:400px;aspect-ratio:16/9;margin:0 auto;background:#000;">
                                         <video src="{{ $video->video_url }}" controls style="width:100%;height:100%;object-fit:contain;"></video>
+                                    </div>
+                                @elseif ($video->video_url)
+                                    {{-- Not YouTube, not a direct video file (e.g. a Google Drive share
+                                         link) — <video src> can't play this, so link out instead. --}}
+                                    <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
+                                        <div class="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0">
+                                            <x-heroicon-o-link class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ $video->video_url }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">External video link</p>
+                                        </div>
+                                        <a href="{{ $video->video_url }}" target="_blank" rel="noopener noreferrer"
+                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold transition-colors shrink-0">
+                                            Open
+                                        </a>
                                     </div>
                                 @endif
                                 @if ($video->content)
@@ -130,7 +161,7 @@
                                 @endif
                             </div>
                         @empty
-                            <p class="text-gray-500">No hands-on videos available.</p>
+                            <p class="text-gray-500">No learning videos available.</p>
                         @endforelse
                     @endif
 
@@ -145,6 +176,30 @@
                         @empty
                             <p class="text-gray-500">No case scenarios available.</p>
                         @endforelse
+                    @endif
+
+                    @if ($key === 'equipment')
+                        @if (count($items) > 0)
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($items as $item)
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300">{{ $item }}</span>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-gray-500">No equipment or materials listed for this module.</p>
+                        @endif
+                    @endif
+
+                    @if ($key === 'debrief')
+                        @if (count($items) > 0)
+                            <ol class="space-y-2 list-decimal list-inside">
+                                @foreach ($items as $question)
+                                    <li class="text-sm text-gray-700 dark:text-gray-300">{{ $question }}</li>
+                                @endforeach
+                            </ol>
+                        @else
+                            <p class="text-gray-500">No debrief questions configured for this module.</p>
+                        @endif
                     @endif
 
                     @if ($key === 'resources')

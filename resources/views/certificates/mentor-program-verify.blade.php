@@ -44,6 +44,12 @@
                         <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Modules Facilitated</p>
                         <p class="mt-1 text-lg font-semibold">{{ $progress['modules_done'] }} of {{ $progress['modules_total'] }}</p>
                     </div>
+                    @if(($progress['tracks_total'] ?? 0) > 0)
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Tracks Facilitated</p>
+                        <p class="mt-1 text-lg font-semibold">{{ $progress['tracks_done'] }} of {{ $progress['tracks_total'] }}</p>
+                    </div>
+                    @endif
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Progress</p>
                         <p class="mt-1 text-lg font-semibold">{{ $progress['percent'] }}%</p>

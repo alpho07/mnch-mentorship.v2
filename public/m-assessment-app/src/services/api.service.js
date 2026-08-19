@@ -12,26 +12,38 @@
 
 import offlineStore from "./offline-store.js";
 import syncQueue from "./sync-queue.js";
+import { Preferences } from "@capacitor/preferences";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://mnchkenyamentorship.org/api/v1';
+const TOKEN_KEY = 'mnch_token';
+
+// Every existing caller (request() below, App.jsx's session-restore check)
+// expects a synchronous get() — @capacitor/preferences is async-only, so this
+// keeps a hydrated in-memory copy as the fast synchronous source of truth and
+// persists to Preferences (native storage, more durable than localStorage
+// inside a WebView) in the background. localStorage is kept as a mirror too,
+// both as a same-tick fallback before Preferences hydration finishes and for
+// zero behavior change if this ever runs outside Capacitor (plain browser).
+let _memToken = (() => {
+    try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+})();
+
+Preferences.get({ key: TOKEN_KEY }).then(({ value }) => {
+    if (value) _memToken = value;
+    else if (_memToken) Preferences.set({ key: TOKEN_KEY, value: _memToken }); // migrate pre-existing localStorage token
+}).catch(() => {});
 
 const TokenStore = {
-    get: () => {
-        try {
-            return localStorage.getItem('mnch_token');
-        } catch {
-            return null;
-        }
-    },
+    get: () => _memToken,
     set: (t) => {
-        try {
-            localStorage.setItem('mnch_token', t);
-        } catch { /* localStorage unavailable */ }
+        _memToken = t;
+        try { localStorage.setItem(TOKEN_KEY, t); } catch { /* localStorage unavailable */ }
+        Preferences.set({ key: TOKEN_KEY, value: t }).catch(() => {});
     },
     clear: () => {
-        try {
-            localStorage.removeItem('mnch_token');
-        } catch { /* localStorage unavailable */ }
+        _memToken = null;
+        try { localStorage.removeItem(TOKEN_KEY); } catch { /* localStorage unavailable */ }
+        Preferences.remove({ key: TOKEN_KEY }).catch(() => {});
     },
 };
 
@@ -266,6 +278,9 @@ export const _rawApi = {
         forgotPassword: (email) => post('/auth/forgot-password', {email}),
         resetPassword: (token, email, password, password_confirmation) =>
             post('/auth/reset-password', {token, email, password, password_confirmation}),
+        register: (payload) => post('/auth/register', payload),
+        verifyAccount: (userId, expires, signature, password, password_confirmation) =>
+            post(`/auth/verify-account/${userId}`, {expires, signature, password, password_confirmation}),
     },
     profile: {
         get: () => get('/profile'),
@@ -295,6 +310,9 @@ export const _rawApi = {
             put('/assessments/' + assessmentId + '/sections/' + sectionCode + '/progress', {done}),
         create: (facility_id, assessment_type, assessment_date) =>
             post('/assessments', {facility_id, assessment_type, assessment_date}),
+        team: (assessmentId) => get('/assessments/' + assessmentId + '/team'),
+        eligibleTeamMembers: (assessmentId) => get('/assessments/' + assessmentId + '/team/eligible'),
+        addTeamMembers: (assessmentId, memberIds) => post('/assessments/' + assessmentId + '/team', {member_ids: memberIds}),
     },
     humanResources: {
         get: (assessmentId) => get('/assessments/' + assessmentId + '/human-resources'),
@@ -380,6 +398,17 @@ export const _rawApi = {
         userByEmail: (email) => get('/users/by-email?email=' + encodeURIComponent(email)),
         userSearch: (q, perPage = 20) => get('/users/search?q=' + encodeURIComponent(q) + '&per_page=' + encodeURIComponent(perPage)),
     },
+    // Public, unauthenticated — Register screen only. Uses MainCadre (matches
+    // RegisterRequest's validation), not the assessment_cadres-backed /cadres
+    // lookup above, which is a different table entirely.
+    registerLookups: {
+        counties: () => get('/register-lookups/counties'),
+        cadres: () => get('/register-lookups/cadres'),
+        departments: () => get('/register-lookups/departments'),
+        facilitiesByCounty: (countyId) => get('/register-lookups/counties/' + countyId + '/facilities'),
+        checkEmail: (email) => get('/register-lookups/check-email?email=' + encodeURIComponent(email)),
+        checkPhone: (phone) => get('/register-lookups/check-phone?phone=' + encodeURIComponent(phone)),
+    },
     mentorshipCreate: {
         create: (payload) => post('/mentorships', payload),
         update: (id, payload) => put('/mentorships/' + id, payload),
@@ -423,6 +452,9 @@ const api = {
     clearToken: () => TokenStore.clear(),
     getToken: () => TokenStore.get(),
 
+    // Public, unauthenticated, no offline cache — Register screen only.
+    registerLookups: _rawApi.registerLookups,
+
     // ── Auth (no offline cache — login requires network, session restore uses cached user) ──
     auth: {
         login: async (email, password, deviceName) => {
@@ -460,6 +492,13 @@ const api = {
         refresh: _rawApi.auth.refresh,
         forgotPassword: _rawApi.auth.forgotPassword,
         resetPassword: _rawApi.auth.resetPassword,
+        register: _rawApi.auth.register,
+        verifyAccount: async (userId, expires, signature, password, password_confirmation) => {
+            const data = await _rawApi.auth.verifyAccount(userId, expires, signature, password, password_confirmation);
+            if (data?.token) TokenStore.set(data.token);
+            if (data?.user) await offlineStore.saveUser(data.user);
+            return data;
+        },
     },
 
     // ── Profile ──────────────────────────────────────────────────────────────
@@ -708,6 +747,9 @@ const api = {
                 throw e;
             }
         },
+        team: _rawApi.assessments.team,
+        eligibleTeamMembers: _rawApi.assessments.eligibleTeamMembers,
+        addTeamMembers: _rawApi.assessments.addTeamMembers,
     },
 
     // ── Human Resources (cached reads, queued writes) ────────────────────────
@@ -1969,5 +2011,4 @@ document.addEventListener('resume', () => {
 });
 
 export default api;
-
 

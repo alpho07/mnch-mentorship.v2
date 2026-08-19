@@ -1,4 +1,4 @@
-﻿import { T } from "../constants.js";
+import { T } from "../constants.js";
 
 // ── Inline keyframes (injected once) ────────────────────────────────────────
 const ANIM_STYLES = `
@@ -6,7 +6,6 @@ const ANIM_STYLES = `
 @keyframes navSlide{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes barGrow{from{width:0%}to{width:var(--bar-w)}}
 @keyframes dotPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
-@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
 `;
 
 // ── Phone shell ────────────────────────────────────────────────────────────────
@@ -16,8 +15,8 @@ export function PhoneShell({ children }) {
             width: "100%", maxWidth: 390, height: "100dvh",
             margin: "0 auto", background: T.bg,
             position: "relative", overflow: "hidden",
-            boxShadow: "0 0 80px rgba(26,26,46,0.18)",
-            fontFamily: "-apple-system, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif",
+            boxShadow: "0 0 80px rgba(6,78,59,0.12)",
+            fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif",
             borderRadius: 0,
         }}>
             <style>{ANIM_STYLES}</style>
@@ -79,15 +78,20 @@ const NavIcons = {
 // ── Bottom navigation ──────────────────────────────────────────────────────────
 export function BottomNav({ active, onChange, tabs, showFab = false }) {
     const resolvedTabs = tabs ?? [
-        { key: "dashboard",   label: "Home",        iconKey: "dashboard"   },
-        { key: "assessments", label: "Assessments",  iconKey: "assessments" },
-        { key: "reports",     label: "Reports",      iconKey: "reports"     },
-        { key: "profile",     label: "Profile",      iconKey: "profile"     },
+        { key: "dashboard", label: "Home", iconKey: "dashboard" },
+        { key: "assessments", label: "Assessments", iconKey: "assessments" },
+        { key: "reports", label: "Reports", iconKey: "reports" },
+        { key: "profile", label: "Profile", iconKey: "profile" },
     ];
 
+    // Insert FAB tab in the center position if showFab
     const mid = Math.floor(resolvedTabs.length / 2);
     const displayTabs = showFab
-        ? [...resolvedTabs.slice(0, mid), { key: "new", label: "New", iconKey: null }, ...resolvedTabs.slice(mid)]
+        ? [
+            ...resolvedTabs.slice(0, mid),
+            { key: "new", label: "New", iconKey: null },
+            ...resolvedTabs.slice(mid),
+          ]
         : resolvedTabs;
 
     return (
@@ -96,81 +100,99 @@ export function BottomNav({ active, onChange, tabs, showFab = false }) {
             background: "rgba(255,255,255,0.92)",
             backdropFilter: "blur(20px) saturate(180%)",
             WebkitBackdropFilter: "blur(20px) saturate(180%)",
-            borderTop: "0.5px solid rgba(0,0,0,0.10)",
-            boxShadow: "0 -4px 24px rgba(79,106,245,0.06)",
+            borderTop: `1px solid ${T.border}`,
+            boxShadow: "0 -4px 24px rgba(6,78,59,0.06)",
         }}>
-            <div style={{ height: 64, display: "flex", alignItems: "stretch" }}>
+            <div style={{
+                height: 64,
+                display: "flex",
+                alignItems: "stretch",
+            }}>
                 {displayTabs.map(t => {
                     const isActive = active === t.key;
-                    const iconFn   = NavIcons[t.iconKey];
-
-                    if (t.key === "new") return (
-                        <button
-                            key="new"
-                            onClick={() => onChange("new")}
-                            aria-label="New assessment"
-                            style={{
-                                flex: 1, border: "none", background: "none",
-                                cursor: "pointer", padding: 0,
-                                display: "flex", flexDirection: "column",
-                                alignItems: "center", justifyContent: "flex-end",
-                                paddingBottom: 8, position: "relative",
-                            }}
-                        >
-                            <div style={{
-                                position: "absolute", bottom: 10,
-                                width: 52, height: 52, borderRadius: "50%",
-                                background: T.gradientPrimary,
-                                boxShadow: "0 -2px 16px rgba(79,106,245,0.35), 0 4px 16px rgba(79,106,245,0.30)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1)",
-                            }}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-                                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                                </svg>
-                            </div>
-                            <span style={{ fontSize: 10, fontWeight: 600, color: T.primary, paddingTop: 32 }}>New</span>
-                        </button>
-                    );
-
-                    return (
+                    const iconFn = NavIcons[t.iconKey];
+                    return t.key === "new" ? (
+                            /* ── Raised circular FAB in the center of the nav ── */
+                            <button
+                                key={t.key}
+                                onClick={() => onChange(t.key)}
+                                aria-label="New assessment"
+                                style={{
+                                    flex: 1, border: "none",
+                                    background: "none",
+                                    cursor: "pointer", padding: 0,
+                                    display: "flex", flexDirection: "column",
+                                    alignItems: "center", justifyContent: "flex-end",
+                                    paddingBottom: 8,
+                                    position: "relative",
+                                }}
+                            >
+                                <div style={{
+                                    position: "absolute",
+                                    bottom: 10,
+                                    width: 56, height: 56,
+                                    borderRadius: "50%",
+                                    background: T.gradientPrimary,
+                                    boxShadow: "0 -2px 16px rgba(6,78,59,0.35), 0 4px 16px rgba(6,78,59,0.3)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1)",
+                                    transform: "scale(1)",
+                                }}>
+                                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="12" y1="5" x2="12" y2="19" />
+                                        <line x1="5" y1="12" x2="19" y2="12" />
+                                    </svg>
+                                </div>
+                                <span style={{
+                                    fontSize: 10, fontWeight: 600,
+                                    color: T.primary,
+                                    marginTop: 2,
+                                    paddingTop: 32,
+                                }}>
+                                    New
+                                </span>
+                            </button>
+                        ) : (
                         <button
                             key={t.key}
                             onClick={() => onChange(t.key)}
                             style={{
-                                flex: 1, border: "none", background: "none",
-                                cursor: "pointer", padding: "8px 4px 6px",
+                                flex: 1, border: "none",
+                                background: "none",
+                                cursor: "pointer", padding: "6px 4px 8px",
                                 display: "flex", flexDirection: "column",
                                 alignItems: "center", justifyContent: "center", gap: 3,
-                                transition: "all 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+                                position: "relative",
+                                transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
                             }}
                         >
-                            {/* Filled pill behind active icon */}
+                            {/* Active indicator line */}
+                            {isActive && (
+                                <div style={{
+                                    position: "absolute", top: 0, left: "25%", right: "25%",
+                                    height: 3, borderRadius: "0 0 99px 99px",
+                                    background: T.gradientPrimary,
+                                    animation: "navPop 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+                                }} />
+                            )}
+
                             <div style={{
-                                width: 44, height: 28, borderRadius: 14,
-                                background: isActive ? T.gradientPrimary : "transparent",
+                                width: 36, height: 36,
                                 display: "flex", alignItems: "center", justifyContent: "center",
-                                transition: "all 0.25s cubic-bezier(0.34,1.56,0.64,1)",
-                                boxShadow: isActive ? "0 4px 12px rgba(79,106,245,0.28)" : "none",
+                                borderRadius: 12,
+                                background: isActive ? T.primaryGhost : "transparent",
+                                transition: "all 0.2s",
+                                transform: isActive ? "scale(1)" : "scale(0.95)",
                             }}>
-                                {isActive ? (
-                                    /* White icon inside filled pill */
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                        stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        {t.iconKey === "dashboard"   && <><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" fill="rgba(255,255,255,0.25)"/><polyline points="9 22 9 12 15 12 15 22"/></>}
-                                        {t.iconKey === "assessments" && <><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="rgba(255,255,255,0.25)"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></>}
-                                        {t.iconKey === "reports"     && <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>}
-                                        {t.iconKey === "mentorship"  && <><circle cx="12" cy="8" r="4" fill="rgba(255,255,255,0.25)"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><path d="M17 11l2 2 4-4"/></>}
-                                        {t.iconKey === "myClasses"   && <><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" fill="rgba(255,255,255,0.25)"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></>}
-                                        {t.iconKey === "trainings"   && <><rect x="3" y="4" width="18" height="16" rx="2" fill="rgba(255,255,255,0.25)"/><path d="M8 9h8M8 13h5"/></>}
-                                        {t.iconKey === "profile"     && <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4" fill="rgba(255,255,255,0.25)"/></>}
-                                    </svg>
-                                ) : iconFn && iconFn(false)}
+                                {iconFn(isActive)}
                             </div>
+
                             <span style={{
-                                fontSize: 9, fontWeight: isActive ? 700 : 500,
+                                fontSize: 10, fontWeight: isActive ? 700 : 500,
                                 color: isActive ? T.primary : T.textMuted,
-                                transition: "color 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+                                letterSpacing: isActive ? 0.3 : 0,
+                                transition: "all 0.2s",
+                                animation: isActive ? "navSlide 0.2s ease" : "none",
                             }}>
                                 {t.label}
                             </span>
@@ -181,13 +203,14 @@ export function BottomNav({ active, onChange, tabs, showFab = false }) {
         </div>
     );
 }
+
 // ── Back button ────────────────────────────────────────────────────────────────
 export function BackButton({ onBack, light = false }) {
     return (
         <button
             onClick={onBack}
             style={{
-                background: light ? "rgba(255,255,255,0.12)" : T.primaryGhost,
+                background: light ? "rgba(255,255,255,0.12)" : "rgba(108,92,231,0.06)",
                 border: "none", borderRadius: 12, padding: "8px 16px",
                 cursor: "pointer", fontSize: 13, fontWeight: 600,
                 color: light ? "white" : T.primary,
@@ -204,6 +227,7 @@ export function BackButton({ onBack, light = false }) {
         </button>
     );
 }
+
 // ── Avatar ─────────────────────────────────────────────────────────────────────
 export function Avatar({ initials, size = 40, color }) {
     return (
@@ -333,7 +357,7 @@ export function Skeleton({ width = "100%", height = 16, radius = 8, style = {} }
     return (
         <div style={{
             width, height, borderRadius: radius,
-            background: "linear-gradient(90deg, #EBEBF0 25%, #E0E0E8 50%, #EBEBF0 75%)",
+            background: "linear-gradient(90deg, #F0F1F8 25%, #E8E9F3 50%, #F0F1F8 75%)",
             backgroundSize: "200% 100%",
             animation: "shimmer 1.5s infinite",
             ...style,

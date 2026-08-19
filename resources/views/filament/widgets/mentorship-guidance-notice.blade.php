@@ -95,22 +95,14 @@
             </div>
 
             <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-                <a href="{{ url('/resources/infant-child-mentorship-manual') }}" target="_blank" rel="noopener noreferrer"
-                   class="rounded-lg border border-gray-200 bg-white p-4 text-sm transition hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-primary-600 dark:hover:bg-gray-800">
-                    <div class="font-semibold text-gray-950 dark:text-white">Infant and Child Mentorship Manual</div>
-                    <div class="mt-1 text-gray-600 dark:text-gray-400">Use this to plan content and session flow.</div>
-                </a>
-                <a href="https://mnchkenyamentorship.org/resources/newborn-mentorship-mentors-manual" target="_blank" rel="noopener noreferrer"
-                   class="rounded-lg border border-gray-200 bg-white p-4 text-sm transition hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-primary-600 dark:hover:bg-gray-800">
-                    <div class="font-semibold text-gray-950 dark:text-white">Newborn Mentorship Mentor's Manual</div>
-                    <div class="mt-1 text-gray-600 dark:text-gray-400">Use this when the mentorship focus includes newborn care.</div>
-                </a>
-                <a href="{{ url('/resources/emonc-mentorship-manual') }}" target="_blank" rel="noopener noreferrer"
-                   class="rounded-lg border border-gray-200 bg-white p-4 text-sm transition hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-primary-600 dark:hover:bg-gray-800">
-                    <div class="font-semibold text-gray-950 dark:text-white">EmONC Mentorship Manual</div>
-                    <div class="mt-1 text-gray-600 dark:text-gray-400">Use this when the mentorship focus includes emergency obstetric care.</div>
-                </a>
-                <a href="{{ route('resources.search', ['q' => 'mentorship manual']) }}" target="_blank" rel="noopener noreferrer"
+                @foreach($manualLinks as $link)
+                    <a href="{{ $link['url'] }}" target="_blank" rel="noopener noreferrer"
+                       class="rounded-lg border border-gray-200 bg-white p-4 text-sm transition hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-primary-600 dark:hover:bg-gray-800">
+                        <div class="font-semibold text-gray-950 dark:text-white">{{ $link['label'] }}</div>
+                        <div class="mt-1 text-gray-600 dark:text-gray-400">{{ $link['description'] }}</div>
+                    </a>
+                @endforeach
+                <a href="{{ route('resources.search', ['q' => 'manual']) }}" target="_blank" rel="noopener noreferrer"
                    class="rounded-lg border border-gray-200 bg-white p-4 text-sm transition hover:border-primary-300 hover:bg-primary-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-primary-600 dark:hover:bg-gray-800">
                     <div class="font-semibold text-gray-950 dark:text-white">Search Mentorship Manuals</div>
                     <div class="mt-1 text-gray-600 dark:text-gray-400">Find manuals, guides, and learning materials.</div>

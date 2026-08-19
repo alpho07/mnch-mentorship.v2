@@ -117,7 +117,7 @@ function SectionCard({ section, completedSections, responses, onOpen, index, spe
             width: "100%", background: T.card, borderRadius: 16, padding: 0, marginBottom: 10,
             border: `2px solid ${isCompleted ? "#6EE7B7" : pct > 0 ? "#FCD34D" : T.borderLight}`,
             cursor: "pointer", textAlign: "left",
-            boxShadow: isCompleted ? "0 4px 16px rgba(79,106,245,0.12)" : T.shadow,
+            boxShadow: isCompleted ? "0 4px 16px rgba(16,185,129,0.12)" : T.shadow,
             overflow: "hidden", transition: "all 0.2s",
             animation: `cardIn 0.3s ease ${index * 0.05}s both`,
         }}>
@@ -237,8 +237,8 @@ function ProgressHeader({ sections, completedSections, responses, onBack, specia
 
     return (
         <div style={{ background: T.gradientDark, padding: "20px 20px 22px", position: "relative", overflow: "hidden", borderRadius: "24px 24px 28px 28px" }}>
-            <div style={{ position: "absolute", width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,106,245,0.20) 0%, transparent 70%)", top: -50, right: -40 }} />
-            <div style={{ position: "absolute", width: 80, height: 80, borderRadius: "50%", background: "radial-gradient(circle, rgba(108,99,255,0.14) 0%, transparent 70%)", bottom: -20, left: 10 }} />
+            <div style={{ position: "absolute", width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)", top: -50, right: -40 }} />
+            <div style={{ position: "absolute", width: 80, height: 80, borderRadius: "50%", background: "radial-gradient(circle, rgba(52,211,153,0.07) 0%, transparent 70%)", bottom: -20, left: 10 }} />
             <BackButton onBack={onBack} light />
             <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 12 }}>
                 <CircleRing pct={overallPct} size={58} stroke={5} color="white" bg="rgba(255,255,255,0.2)">

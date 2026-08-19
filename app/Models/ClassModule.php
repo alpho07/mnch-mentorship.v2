@@ -129,7 +129,7 @@ class ClassModule extends Model
      *                             (status is NOT forced to in_progress — mentees must confirm
      *                              attendance themselves via the link)
      */
-    public function start(): void
+    public function start(bool $notify = true): void
     {
         if (! $this->canStart()) {
             throw new \LogicException(
@@ -147,6 +147,10 @@ class ClassModule extends Model
         // Ensure every enrolled mentee has a progress placeholder row.
         // Status = 'not_started' until THEY confirm attendance via the link.
         $this->ensureMenteeProgressRecords();
+
+        if ($notify) {
+            app(\App\Services\ClassLifecycleNotificationService::class)->moduleStarted($this);
+        }
     }
 
     /**

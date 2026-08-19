@@ -342,10 +342,7 @@ class ClassReportController extends Controller
 
     private function ensureCanViewCertificate(MentorshipClass $class, ClassParticipant $participant): void
     {
-        $programName = strtolower($class->training->program?->name ?? '');
-        $isEmonc = str_contains($programName, 'maternal') && str_contains($programName, 'emonc');
-
-        if ($isEmonc) {
+        if ($class->training->program?->usesPerProgramCertification()) {
             abort_unless($participant->isCertified(), 403, 'This mentee has not completed the mentor and Head DRMH approval process.');
 
             return;
