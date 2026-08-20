@@ -9,12 +9,17 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class AssessmentPdfReportService {
 
     /**
-     * Generate PDF report
+     * Generate PDF report — renders the exact same view as the web
+     * summary page (reports.assessment-html-report, via the PDF-specific
+     * wrapper that supplies the .badge/.info-row/etc. CSS the Filament
+     * page normally provides), so the PDF matches what's on screen
+     * instead of a separately-maintained layout.
      */
     public function generateExecutiveReport(Assessment $assessment) {
         $data = $this->prepareReportData($assessment);
+        $data['comparison'] = app(\App\Services\AssessmentComparisonService::class)->prepareComparisonData($assessment);
 
-        $pdf = Pdf::loadView('pdf.assessment-executive-report', $data);
+        $pdf = Pdf::loadView('pdf.assessment-html-report-wrapper', $data);
 
         $pdf->setPaper('a4', 'portrait');
 
