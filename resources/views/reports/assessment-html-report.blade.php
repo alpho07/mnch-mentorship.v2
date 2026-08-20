@@ -51,10 +51,10 @@ $percentage=0;
         <div class="section-score-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
             @foreach($sectionScores as $score)
                 <div class="section-score" style="background: #f9fafb; padding: 16px; border-left: 4px solid {{ $score['percentage'] >= 70 ? '#10b981' : ($score['percentage'] >= 50 ? '#f59e0b' : '#ef4444') }}; border-radius: 4px;">
-                    <h3 style="margin: 0 0 8px 0; color: #374151;">{{ $score['section_name'] }}</h3>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 24px; font-weight: bold; color: #1f2937;">{{ number_format($score['percentage'], 1) }}%</span>
-                        <span style="color: #6b7280;">{{ $score['score'] }} / {{ $score['max_score'] }}</span>
+                    <h3 class="section-score-title" style="margin: 0 0 8px 0; color: #374151;">{{ $score['section_name'] }}</h3>
+                    <div class="section-score-row" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="section-score-percentage" style="font-size: 24px; font-weight: bold; color: #1f2937;">{{ number_format($score['percentage'], 1) }}%</span>
+                        <span class="section-score-fraction" style="color: #6b7280;">{{ $score['score'] }} / {{ $score['max_score'] }}</span>
                     </div>
                 </div>
                 @php 

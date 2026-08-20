@@ -74,6 +74,44 @@
             margin-right: 0 !important;
         }
 
+        /*
+         * The card's title + percentage/fraction row was sized for a
+         * ~300px-minimum grid column; squeezed into a ~31%-wide floated
+         * third of the page (see .section-score above) at the original
+         * font sizes, the 24px percentage and the fraction text collide.
+         * Shrunk for PDF and switched off flex (dompdf's justify-content
+         * support is unreliable) in favor of a simple two-line stack.
+         */
+        .section-score-title {
+            font-size: 9pt !important;
+            line-height: 1.3;
+        }
+
+        .section-score-row {
+            display: block !important;
+        }
+
+        .section-score-percentage {
+            display: block;
+            font-size: 15pt !important;
+        }
+
+        .section-score-fraction {
+            display: block;
+            font-size: 7.5pt !important;
+            margin-top: 2px;
+        }
+
+        /*
+         * DomPDF frequently fails to paint CSS linear-gradient backgrounds
+         * (renders as transparent/white instead), which left this block's
+         * white text invisible against the resulting white background.
+         * Solid color for PDF only — the live HTML page keeps the gradient.
+         */
+        .overall-score {
+            background: #5b4fc4 !important;
+        }
+
         h1 {
             font-size: 24px;
             font-weight: bold;
