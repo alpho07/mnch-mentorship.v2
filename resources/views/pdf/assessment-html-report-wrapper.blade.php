@@ -45,6 +45,35 @@
             overflow-wrap: break-word;
         }
 
+        /*
+         * DomPDF has no CSS Grid support, so the report partial's
+         * `display: grid` on .section-score-grid falls back to plain
+         * block/inline flow — every card stacked in one column instead of
+         * a grid. Floats are what DomPDF actually supports, so this
+         * reproduces a 3-column grid with them, PDF-only (the live HTML
+         * page never loads this stylesheet, so it keeps its real grid).
+         */
+        .section-score-grid {
+            display: block !important;
+        }
+
+        .section-score-grid::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        .section-score {
+            float: left !important;
+            width: 31.33% !important;
+            margin: 0 3% 12px 0 !important;
+            box-sizing: border-box;
+        }
+
+        .section-score:nth-child(3n) {
+            margin-right: 0 !important;
+        }
+
         h1 {
             font-size: 24px;
             font-weight: bold;

@@ -48,7 +48,7 @@ $percentage=0;
     {{-- Section Scores --}}
     <div class="section" style="margin-bottom: 32px;">
         <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Section Performance</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+        <div class="section-score-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
             @foreach($sectionScores as $score)
                 <div class="section-score" style="background: #f9fafb; padding: 16px; border-left: 4px solid {{ $score['percentage'] >= 70 ? '#10b981' : ($score['percentage'] >= 50 ? '#f59e0b' : '#ef4444') }}; border-radius: 4px;">
                     <h3 style="margin: 0 0 8px 0; color: #374151;">{{ $score['section_name'] }}</h3>
