@@ -148,138 +148,57 @@ $percentage=0;
         </div>
     @endif
 
+    @php
+        $hrRows = $comparison['humanResources'] ?? collect($humanResourcesDetails['responses'] ?? [])
+            ->map(fn ($d) => ['label' => $d['cadre'], 'values' => [$assessment->id => $d]])->all();
+        $hrColumns = [
+            'total_in_facility' => 'Available',
+            'etat_plus' => 'ETAT+',
+            'comprehensive_newborn_care' => 'Comp. NB',
+            'imnci' => 'IMNCI',
+            'type_1_diabetes' => 'Diabetes',
+            'essential_newborn_care' => 'Ess. NB',
+        ];
+    @endphp
+
     {{-- Human Resources --}}
- @if(!empty($humanResourcesDetails['responses']))
-
-        @php
-$totalAvailable = 0;
-$totalEtat = 0;
-$totalCompNB = 0;
-$totalImnci = 0;
-$totalDiabetes = 0;
-$totalEssNB = 0;
-@endphp
-
+    @if(!empty($hrRows))
         <div class="section" style="margin-bottom: 32px; page-break-inside: avoid;">
-            <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">
-            Human Resources
-            </h2>
+            <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Human Resources</h2>
 
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                 <thead>
                     <tr>
-                        <th style="background:#f3f4f6;padding:12px;text-align:left;border:1px solid #d1d5db;">Cadre</th>
-                        <th style="background:#f3f4f6;padding:12px;text-align:left;border:1px solid #d1d5db;">No. Available</th>
-                        <th style="background:#f3f4f6;padding:12px;text-align:center;border:1px solid #d1d5db;">ETAT+</th>
-                        <th style="background:#f3f4f6;padding:12px;text-align:center;border:1px solid #d1d5db;">Comp. NB</th>
-                        <th style="background:#f3f4f6;padding:12px;text-align:center;border:1px solid #d1d5db;">IMNCI</th>
-                        <th style="background:#f3f4f6;padding:12px;text-align:center;border:1px solid #d1d5db;">Diabetes</th>
-                        <th style="background:#f3f4f6;padding:12px;text-align:center;border:1px solid #d1d5db;">Ess. NB</th>
+                        <th rowspan="2" style="background:#f3f4f6;padding:12px;text-align:left;border:1px solid #d1d5db;vertical-align:bottom;">Cadre</th>
+                        @foreach($comparisonRounds as $round)
+                            <th colspan="{{ count($hrColumns) }}" style="background:#e5e7eb;padding:8px;text-align:center;border:1px solid #d1d5db;">{{ $round['label'] }}</th>
+                        @endforeach
+                    </tr>
+                    <tr>
+                        @foreach($comparisonRounds as $round)
+                            @foreach($hrColumns as $label)
+                                <th style="background:#f3f4f6;padding:8px;text-align:center;border:1px solid #d1d5db;font-size:12px;">{{ $label }}</th>
+                            @endforeach
+                        @endforeach
                     </tr>
                 </thead>
-
                 <tbody>
-
-                    @foreach($humanResourcesDetails['responses'] as $hr)
-
-                        @php
-                // hrCell() returns the string 'N/A' for a cadre's inapplicable
-                // training columns — keep that for display, but sum only the
-                // numeric ones (is_numeric('N/A') is false), or "int + string"
-                // throws the moment any cadre has an N/A column.
-                $totalDisplay = $hr['total_in_facility'] ?? 0;
-                $etatDisplay = $hr['etat_plus'] ?? 0;
-                $compNBDisplay = $hr['comprehensive_newborn_care'] ?? 0;
-                $imnciDisplay = $hr['imnci'] ?? 0;
-                $diabetesDisplay = $hr['type_1_diabetes'] ?? 0;
-                $essNBDisplay = $hr['essential_newborn_care'] ?? 0;
-
-                // No. Available is the cadre's own independently-entered
-                // headcount, never the sum of the training columns — the
-                // same worker can be trained in more than one area, so
-                // adding those together double-counts them.
-                $available = is_numeric($totalDisplay) ? $totalDisplay : 0;
-                $etat = is_numeric($etatDisplay) ? $etatDisplay : 0;
-                $compNB = is_numeric($compNBDisplay) ? $compNBDisplay : 0;
-                $imnci = is_numeric($imnciDisplay) ? $imnciDisplay : 0;
-                $diabetes = is_numeric($diabetesDisplay) ? $diabetesDisplay : 0;
-                $essNB = is_numeric($essNBDisplay) ? $essNBDisplay : 0;
-
-                $totalAvailable += $available;
-                $totalEtat += $etat;
-                $totalCompNB += $compNB;
-                $totalImnci += $imnci;
-                $totalDiabetes += $diabetes;
-                $totalEssNB += $essNB;
-            @endphp
-
+                    @foreach($hrRows as $row)
                         <tr>
-                            <td style="padding:10px 12px;border:1px solid #e5e7eb;font-weight:600;">
-                                {{ $hr['cadre'] ?? '-' }}
-                            </td>
-
-                            <td style="padding:10px 12px;border:1px solid #e5e7eb;font-weight:600;">
-                                {{ $totalDisplay }}
-                            </td>
-
-                            <td style="padding:10px 12px;border:1px solid #e5e7eb;text-align:center;">
-                                {{ $etatDisplay }}
-                            </td>
-
-                            <td style="padding:10px 12px;border:1px solid #e5e7eb;text-align:center;">
-                                {{ $compNBDisplay }}
-                            </td>
-
-                            <td style="padding:10px 12px;border:1px solid #e5e7eb;text-align:center;">
-                                {{ $imnciDisplay }}
-                            </td>
-
-                            <td style="padding:10px 12px;border:1px solid #e5e7eb;text-align:center;">
-                                {{ $diabetesDisplay }}
-                            </td>
-
-                            <td style="padding:10px 12px;border:1px solid #e5e7eb;text-align:center;">
-                                {{ $essNBDisplay }}
-                            </td>
+                            <td style="padding:10px 12px;border:1px solid #e5e7eb;font-weight:600;">{{ $row['label'] ?? '-' }}</td>
+                            @foreach($comparisonRounds as $round)
+                                @foreach($hrColumns as $field => $label)
+                                    @php $value = $row['values'][$round['id']][$field] ?? null; @endphp
+                                    <td style="padding:10px 12px;border:1px solid #e5e7eb;text-align:center;">
+                                        {{ $value === null ? '—' : $value }}
+                                    </td>
+                                @endforeach
+                            @endforeach
                         </tr>
-
                     @endforeach
-
-                    {{-- TOTAL ROW --}}
-                    <tr style="background:#111827;color:#ffffff;font-weight:700;">
-                        <td style="padding:14px;border:2px solid #111827;">
-                        TOTAL
-                        </td>
-
-                        <td style="padding:14px;border:2px solid #111827;text-align:center;">
-                            {{ $totalAvailable }}
-                        </td>
-
-                        <td style="padding:14px;border:2px solid #111827;text-align:center;">
-                            {{ $totalEtat }}
-                        </td>
-
-                        <td style="padding:14px;border:2px solid #111827;text-align:center;">
-                            {{ $totalCompNB }}
-                        </td>
-
-                        <td style="padding:14px;border:2px solid #111827;text-align:center;">
-                            {{ $totalImnci }}
-                        </td>
-
-                        <td style="padding:14px;border:2px solid #111827;text-align:center;">
-                            {{ $totalDiabetes }}
-                        </td>
-
-                        <td style="padding:14px;border:2px solid #111827;text-align:center;">
-                            {{ $totalEssNB }}
-                        </td>
-                    </tr>
-
                 </tbody>
             </table>
         </div>
-
     @endif
 
     {{-- Health Products Summary --}}
