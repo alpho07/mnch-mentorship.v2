@@ -54,6 +54,10 @@ class AssessmentComparisonService
             'qualityNewbornStats' => $this->mergeByKey($perAssessmentData, $rounds, 'qualityOfCareDetails.newborn_stats_array', 'question', ['response']),
             'qualityPaedStats' => $this->mergeByKey($perAssessmentData, $rounds, 'qualityOfCareDetails.paed_stats_array', 'question', ['response']),
             'healthProducts' => $this->mergeHealthProducts($perAssessmentData, $rounds),
+            'indicatorsNewborn' => $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.newborn_array', 'question', ['response']),
+            'indicatorsPaediatric' => $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.paediatric_array', 'question', ['response']),
+            'indicatorsNewbornProportions' => $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.newborn_proportions_array', 'question', ['response']),
+            'indicatorsPaediatricProportions' => $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.paediatric_proportions_array', 'question', ['response']),
         ];
     }
 

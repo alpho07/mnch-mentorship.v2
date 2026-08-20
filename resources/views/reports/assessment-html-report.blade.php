@@ -302,61 +302,40 @@ $percentage=0;
         </div>
     @endif
 
+    @php
+        $indicatorsNewbornRows = $comparison['indicatorsNewborn'] ?? collect($indicatorsDetails['newborn_array'] ?? [])
+            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+        $indicatorsPaediatricRows = $comparison['indicatorsPaediatric'] ?? collect($indicatorsDetails['paediatric_array'] ?? [])
+            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+        $indicatorsNewbornProportionsRows = $comparison['indicatorsNewbornProportions'] ?? collect($indicatorsDetails['newborn_proportions_array'] ?? [])
+            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+        $indicatorsPaediatricProportionsRows = $comparison['indicatorsPaediatricProportions'] ?? collect($indicatorsDetails['paediatric_proportions_array'] ?? [])
+            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+    @endphp
+
     {{-- Newborn & Paediatric Indicators --}}
-    @if(!empty($indicatorsDetails['newborn_array']) || !empty($indicatorsDetails['paediatric_array']))
+    @if(!empty($indicatorsNewbornRows) || !empty($indicatorsPaediatricRows) || !empty($indicatorsNewbornProportionsRows) || !empty($indicatorsPaediatricProportionsRows))
         <div class="section" style="margin-bottom: 32px;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Newborn & Paediatric Indicators</h2>
 
-            @if(!empty($indicatorsDetails['newborn_array']))
+            @if(!empty($indicatorsNewbornRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Newborn Indicators</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px;">
-                    @foreach($indicatorsDetails['newborn_array'] as $stat)
-                        <div style="background: #f9fafb; padding: 12px; border-radius: 4px;">
-                            <p style="color: #6b7280; font-size: 12px; margin: 0;">{{ $stat['question'] }}</p>
-                            <p style="color: #1f2937; font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">{{ $stat['response'] }}</p>
-                        </div>
-                    @endforeach
-                </div>
+                @include('reports.partials.comparison-rows', ['rows' => $indicatorsNewbornRows, 'rounds' => $comparisonRounds, 'field' => 'response'])
             @endif
 
-            @if(!empty($indicatorsDetails['paediatric_array']))
+            @if(!empty($indicatorsPaediatricRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Paediatric Indicators</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px;">
-                    @foreach($indicatorsDetails['paediatric_array'] as $stat)
-                        <div style="background: #f9fafb; padding: 12px; border-radius: 4px;">
-                            <p style="color: #6b7280; font-size: 12px; margin: 0;">{{ $stat['question'] }}</p>
-                            <p style="color: #1f2937; font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">{{ $stat['response'] }}</p>
-                        </div>
-                    @endforeach
-                </div>
+                @include('reports.partials.comparison-rows', ['rows' => $indicatorsPaediatricRows, 'rounds' => $comparisonRounds, 'field' => 'response'])
             @endif
 
-            @if(!empty($indicatorsDetails['newborn_proportions_array']))
+            @if(!empty($indicatorsNewbornProportionsRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Newborn Proportions</h3>
-                <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
-                    <tbody>
-                        @foreach($indicatorsDetails['newborn_proportions_array'] as $item)
-                            <tr>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $item['question'] }}</td>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center; width: 160px; font-weight: 600;">{{ $item['response'] }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                @include('reports.partials.comparison-rows', ['rows' => $indicatorsNewbornProportionsRows, 'rounds' => $comparisonRounds, 'field' => 'response'])
             @endif
 
-            @if(!empty($indicatorsDetails['paediatric_proportions_array']))
+            @if(!empty($indicatorsPaediatricProportionsRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Paediatric Proportions</h3>
-                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                    <tbody>
-                        @foreach($indicatorsDetails['paediatric_proportions_array'] as $item)
-                            <tr>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $item['question'] }}</td>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center; width: 160px; font-weight: 600;">{{ $item['response'] }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                @include('reports.partials.comparison-rows', ['rows' => $indicatorsPaediatricProportionsRows, 'rounds' => $comparisonRounds, 'field' => 'response'])
             @endif
         </div>
     @endif
