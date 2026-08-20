@@ -40,6 +40,7 @@ class AssessmentPdfReportService {
         $data = $this->prepareReportData($assessment);
         $data['comparison'] = app(\App\Services\AssessmentComparisonService::class)->prepareComparisonData($assessment);
         $data['enabledSections'] = $enabledSections;
+        $data['isPdf'] = true;
 
         $pdf = Pdf::loadView('pdf.assessment-html-report-wrapper', $data);
 
@@ -55,13 +56,16 @@ class AssessmentPdfReportService {
     }
 
     /**
-     * Generate HTML report for web display — always shows every section
-     * (enabledSections is only a PDF-download concept).
+     * Generate HTML report for web display.
+     *
+     * @param  array<int, string>|null  $enabledSections  Keys from
+     *     TOGGLEABLE_SECTIONS to include; null includes all of them.
      */
-    public function generateHtmlReport(Assessment $assessment): string {
+    public function generateHtmlReport(Assessment $assessment, ?array $enabledSections = null): string {
         $data = $this->prepareReportData($assessment);
         $data['comparison'] = app(\App\Services\AssessmentComparisonService::class)->prepareComparisonData($assessment);
-        $data['enabledSections'] = null;
+        $data['enabledSections'] = $enabledSections;
+        $data['isPdf'] = false;
 
         return view('reports.assessment-html-report', $data)->render();
     }

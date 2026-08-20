@@ -46,71 +46,22 @@
         }
 
         /*
-         * DomPDF has no CSS Grid support, so the report partial's
-         * `display: grid` on .section-score-grid falls back to plain
-         * block/inline flow — every card stacked in one column instead of
-         * a grid. Floats are what DomPDF actually supports, so this
-         * reproduces a 3-column grid with them, PDF-only (the live HTML
-         * page never loads this stylesheet, so it keeps its real grid).
+         * DomPDF has no CSS Grid support, and its float/flex/::after
+         * support is unreliable enough (confirmed: a floated grid with a
+         * ::after clearfix silently dropped a 4th card under the box
+         * below it) that Section Performance and the Overall-Score-by-
+         * Round row use real <table> markup for PDF instead — see the
+         * `$isPdf` branches in reports/assessment-html-report.blade.php.
+         * The .section-score-grid/.section-score/etc. classes below are
+         * only reached by the live HTML page's own grid, which this
+         * stylesheet never loads for, so no PDF-specific override of them
+         * is needed here.
+         *
+         * .overall-score's background/text-color are set inline in the
+         * report partial itself (per $isPdf), not here as a class rule —
+         * simpler to reason about and immune to any future edit elsewhere
+         * in this stylesheet accidentally breaking it again.
          */
-        .section-score-grid {
-            display: block !important;
-        }
-
-        .section-score-grid::after {
-            content: "";
-            display: table;
-            clear: both;
-        }
-
-        .section-score {
-            float: left !important;
-            width: 31.33% !important;
-            margin: 0 3% 12px 0 !important;
-            box-sizing: border-box;
-        }
-
-        .section-score:nth-child(3n) {
-            margin-right: 0 !important;
-        }
-
-        /*
-         * The card's title + percentage/fraction row was sized for a
-         * ~300px-minimum grid column; squeezed into a ~31%-wide floated
-         * third of the page (see .section-score above) at the original
-         * font sizes, the 24px percentage and the fraction text collide.
-         * Shrunk for PDF and switched off flex (dompdf's justify-content
-         * support is unreliable) in favor of a simple two-line stack.
-         */
-        .section-score-title {
-            font-size: 9pt !important;
-            line-height: 1.3;
-        }
-
-        .section-score-row {
-            display: block !important;
-        }
-
-        .section-score-percentage {
-            display: block;
-            font-size: 15pt !important;
-        }
-
-        .section-score-fraction {
-            display: block;
-            font-size: 7.5pt !important;
-            margin-top: 2px;
-        }
-
-        /*
-         * DomPDF frequently fails to paint CSS linear-gradient backgrounds
-         * (renders as transparent/white instead), which left this block's
-         * white text invisible against the resulting white background.
-         * Solid color for PDF only — the live HTML page keeps the gradient.
-         */
-        .overall-score {
-            background: #5b4fc4 !important;
-        }
 
         h1 {
             font-size: 24px;
@@ -178,14 +129,6 @@
         .badge-red {
             background-color: #fee2e2;
             color: #991b1b;
-        }
-
-        .section-score {
-            margin: 8px 0;
-            padding: 12px;
-            background-color: #f9fafb;
-            border-left: 4px solid #3b82f6;
-            border-radius: 4px;
         }
 
         .info-row {

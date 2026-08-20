@@ -55,22 +55,45 @@ $percentage=0;
     {{-- Section Scores --}}
     <div class="section" style="margin-bottom: 32px;">
         <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Section Performance</h2>
-        <div class="section-score-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-            @foreach($sectionScores as $score)
-                <div class="section-score" style="background: #f9fafb; padding: 16px; border-left: 4px solid {{ $score['percentage'] >= 70 ? '#10b981' : ($score['percentage'] >= 50 ? '#f59e0b' : '#ef4444') }}; border-radius: 4px;">
-                    <h3 class="section-score-title" style="margin: 0 0 8px 0; color: #374151;">{{ $score['section_name'] }}</h3>
-                    <div class="section-score-row" style="display: flex; justify-content: space-between; align-items: center;">
-                        <span class="section-score-percentage" style="font-size: 24px; font-weight: bold; color: #1f2937;">{{ number_format($score['percentage'], 1) }}%</span>
-                        <span class="section-score-fraction" style="color: #6b7280;">{{ $score['score'] }} / {{ $score['max_score'] }}</span>
-                    </div>
-                </div>
-                @php 
-               
-               $percentage += $score['percentage']; 
-            @endphp
+        @php $percentage = collect($sectionScores)->sum('percentage'); @endphp
+        @if($isPdf ?? false)
+            {{--
+                A real <table> instead of the web view's CSS grid: DomPDF
+                has no Grid support, and floats need a clearfix DomPDF
+                doesn't reliably honor either (confirmed — it silently
+                dropped a 4th card under the Overall Score box below).
+                Tables are the one layout primitive DomPDF renders
+                consistently, so 3-per-row via table rows here.
+            --}}
+            @foreach(collect($sectionScores)->chunk(3) as $rowOfScores)
+                <table style="width: 100%; border-collapse: separate; border-spacing: 8px 0; margin-bottom: 8px;">
+                    <tr>
+                        @foreach($rowOfScores as $score)
+                            <td style="width: {{ (int) (100 / $rowOfScores->count()) }}%; background: #f9fafb; padding: 16px; border-left: 4px solid {{ $score['percentage'] >= 70 ? '#10b981' : ($score['percentage'] >= 50 ? '#f59e0b' : '#ef4444') }}; vertical-align: top;">
+                                <div style="font-size: 9pt; font-weight: 600; color: #374151; margin-bottom: 6px;">{{ $score['section_name'] }}</div>
+                                <div style="font-size: 15pt; font-weight: bold; color: #1f2937;">{{ number_format($score['percentage'], 1) }}%</div>
+                                <div style="font-size: 7.5pt; color: #6b7280; margin-top: 2px;">{{ $score['score'] }} / {{ $score['max_score'] }}</div>
+                            </td>
+                        @endforeach
+                        @for($i = $rowOfScores->count(); $i < 3; $i++)
+                            <td style="width: 33%;"></td>
+                        @endfor
+                    </tr>
+                </table>
             @endforeach
-
-        </div>
+        @else
+            <div class="section-score-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+                @foreach($sectionScores as $score)
+                    <div class="section-score" style="background: #f9fafb; padding: 16px; border-left: 4px solid {{ $score['percentage'] >= 70 ? '#10b981' : ($score['percentage'] >= 50 ? '#f59e0b' : '#ef4444') }}; border-radius: 4px;">
+                        <h3 class="section-score-title" style="margin: 0 0 8px 0; color: #374151;">{{ $score['section_name'] }}</h3>
+                        <div class="section-score-row" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="section-score-percentage" style="font-size: 24px; font-weight: bold; color: #1f2937;">{{ number_format($score['percentage'], 1) }}%</span>
+                            <span class="section-score-fraction" style="color: #6b7280;">{{ $score['score'] }} / {{ $score['max_score'] }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     @php
@@ -86,27 +109,62 @@ $percentage=0;
         $comparisonRounds = $comparison['rounds'] ?? [['id' => $assessment->id, 'label' => $assessment->round_display]];
     @endphp
 
-    {{-- Overall Score Summary --}}
-    <div class="overall-score" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 8px; margin-bottom: 24px;">
+    {{--
+        Overall Score Summary. background is set inline per-branch — a
+        stylesheet !important rule for it turned out to be silently
+        broken by a malformed CSS comment earlier in the same
+        stylesheet (now fixed), which is a fragile enough failure mode
+        that inline stays regardless: it can't be taken out by an
+        unrelated edit elsewhere in the file. Text color is likewise set
+        explicitly on every element below rather than relied on via
+        inheritance from this div — inheritance through the inline-block
+        round cards was unreliable in DomPDF even after the background
+        itself started painting again.
+    --}}
+    <div class="overall-score" style="background: {{ ($isPdf ?? false) ? '#5b4fc4' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}; color: white; padding: 24px; border-radius: 8px; margin-bottom: 24px; page-break-inside: avoid;">
         @if($comparison)
-            <h3 style="margin: 0 0 16px 0; font-size: 16px; opacity: 0.9;">Overall Score by Round</h3>
-            <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+            <h3 style="margin: 0 0 16px 0; font-size: 16px; opacity: 0.9; color: white;">Overall Score by Round</h3>
+            @if($isPdf ?? false)
+                {{--
+                    flex-wrap doesn't lay these out horizontally in DomPDF
+                    (each round ended up stacked full-width down the
+                    page) — display: inline-block does. Width kept well
+                    under a strict 100/3 split (24% not ~31%) since three
+                    inline-block items at ~33% combined each still wrapped
+                    the third onto its own row instead of sharing the line.
+                --}}
                 @foreach($comparisonRounds as $round)
                     @php $roundScore = $comparison['overallScore'][$round['id']] ?? null; @endphp
-                    <div>
-                        <p style="margin: 0; font-size: 13px; opacity: 0.85;">{{ $round['label'] }}</p>
-                        <p style="font-size: 28px; font-weight: bold; margin: 4px 0;">{{ number_format($roundScore['percentage'] ?? 0, 1) }}%</p>
-                        <span class="badge badge-{{ $roundScore['grade_color'] ?? 'gray' }}" style="font-size: 14px; padding: 4px 12px;">
+                    <div style="display: inline-block; width: 24%; vertical-align: top; margin-right: 2%;">
+                        <p style="margin: 0; font-size: 8.5pt; opacity: 0.85; color: white;">{{ $round['label'] }}</p>
+                        <p style="font-size: 15pt; font-weight: bold; margin: 3px 0; color: white;">{{ number_format($roundScore['percentage'] ?? 0, 1) }}%</p>
+                        <span class="badge badge-{{ $roundScore['grade'] ?? 'gray' }}" style="font-size: 8pt; padding: 3px 9px;">
                             {{ strtoupper($roundScore['grade'] ?? 'N/A') }}
                         </span>
                     </div>
                 @endforeach
-            </div>
+            @else
+                <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                    @foreach($comparisonRounds as $round)
+                        @php $roundScore = $comparison['overallScore'][$round['id']] ?? null; @endphp
+                        <div>
+                            <p style="margin: 0; font-size: 13px; opacity: 0.85;">{{ $round['label'] }}</p>
+                            <p style="font-size: 28px; font-weight: bold; margin: 4px 0;">{{ number_format($roundScore['percentage'] ?? 0, 1) }}%</p>
+                            <span class="badge badge-{{ $roundScore['grade'] ?? 'gray' }}" style="font-size: 14px; padding: 4px 12px;">
+                                {{ strtoupper($roundScore['grade'] ?? 'N/A') }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         @else
+            {{-- Used by both HTML and PDF (no comparison data to branch
+                 on here) — color kept explicit rather than inherited,
+                 same reasoning as the round cards above. --}}
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <h3 style="margin: 0; font-size: 16px; opacity: 0.9;">Overall Score</h3>
-                    <p style="font-size: 36px; font-weight: bold; margin: 8px 0;"> {{number_format($percentage/4,1) }}%</p>
+                    <h3 style="margin: 0; font-size: 16px; opacity: 0.9; color: white;">Overall Score</h3>
+                    <p style="font-size: 36px; font-weight: bold; margin: 8px 0; color: white;"> {{number_format($percentage/4,1) }}%</p>
                 </div>
                 <div style="text-align: right;">
                     <span class="badge badge-{{ $color }}" style="font-size: 24px; padding: 8px 20px;">

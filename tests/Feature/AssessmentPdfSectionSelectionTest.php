@@ -17,13 +17,22 @@ class AssessmentPdfSectionSelectionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_html_report_always_shows_every_section_regardless_of_preference(): void
+    public function test_html_report_shows_every_section_by_default(): void
     {
         [$assessment] = $this->makeAssessmentWithInfrastructureQuestion();
 
         $html = app(AssessmentPdfReportService::class)->generateHtmlReport($assessment);
 
-        $this->assertStringContainsString('Infrastructure', $html);
+        $this->assertStringContainsString('Has power backup?', $html);
+    }
+
+    public function test_html_report_respects_an_explicit_section_list_same_as_the_pdf(): void
+    {
+        [$assessment] = $this->makeAssessmentWithInfrastructureQuestion();
+
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($assessment, []);
+
+        $this->assertStringNotContainsString('Has power backup?', $html);
     }
 
     public function test_pdf_omits_a_section_not_in_the_enabled_list(): void
@@ -76,6 +85,32 @@ class AssessmentPdfSectionSelectionTest extends TestCase
             array_keys(AssessmentPdfReportService::TOGGLEABLE_SECTIONS),
             $user->enabledReportSections()
         );
+    }
+
+    public function test_view_summary_page_omits_a_section_the_user_has_deselected(): void
+    {
+        [$assessment] = $this->makeAssessmentWithInfrastructureQuestion();
+        $user = User::factory()->create(['name' => 'Summary Viewer']);
+        $user->update(['report_section_preferences' => ['skills_lab']]);
+        $this->actingAs($user);
+
+        $page = new \App\Filament\Resources\AssessmentResource\Pages\ViewAssessmentSummary();
+        $page->record = $assessment;
+
+        $this->assertStringNotContainsString('Has power backup?', $page->getReportHtml());
+    }
+
+    public function test_view_summary_page_shows_a_section_the_user_has_selected(): void
+    {
+        [$assessment] = $this->makeAssessmentWithInfrastructureQuestion();
+        $user = User::factory()->create(['name' => 'Summary Viewer 2']);
+        $user->update(['report_section_preferences' => ['infrastructure']]);
+        $this->actingAs($user);
+
+        $page = new \App\Filament\Resources\AssessmentResource\Pages\ViewAssessmentSummary();
+        $page->record = $assessment;
+
+        $this->assertStringContainsString('Has power backup?', $page->getReportHtml());
     }
 
     /**

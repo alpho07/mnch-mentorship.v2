@@ -18,6 +18,23 @@ class ViewAssessmentSummary extends ViewRecord {
 
     protected function getHeaderActions(): array {
         return [
+                    Actions\Action::make('select_sections')
+                    ->label('Select Sections')
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->color('gray')
+                    ->form([
+                        CheckboxList::make('sections')
+                            ->label('Sections to include')
+                            ->helperText('Facility Information, Section Performance, and Overall Score are always included. Applies here and to future PDF downloads — remembered for next time.')
+                            ->options(AssessmentPdfReportService::TOGGLEABLE_SECTIONS)
+                            ->default(fn () => auth()->user()->enabledReportSections())
+                            ->columns(2),
+                    ])
+                    ->action(function (array $data) {
+                        auth()->user()->update(['report_section_preferences' => $data['sections'] ?? []]);
+
+                        $this->redirect(static::getUrl(['record' => $this->record]));
+                    }),
                     Actions\Action::make('export_csv')
                     ->label('Export CSV (Raw Data)')
                     ->icon('heroicon-o-document-arrow-down')
@@ -42,21 +59,10 @@ class ViewAssessmentSummary extends ViewRecord {
                     ->label('Download PDF Report')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('warning')
-                    ->form([
-                        CheckboxList::make('sections')
-                            ->label('Sections to include')
-                            ->helperText('Facility Information, Section Performance, and Overall Score are always included. Your selection is remembered for next time.')
-                            ->options(AssessmentPdfReportService::TOGGLEABLE_SECTIONS)
-                            ->default(fn () => auth()->user()->enabledReportSections())
-                            ->columns(2),
-                    ])
-                    ->action(function (array $data) {
-                        $enabledSections = $data['sections'] ?? [];
-
-                        auth()->user()->update(['report_section_preferences' => $enabledSections]);
-
+                    ->tooltip('Uses your saved section selection — see "Select Sections" to change it')
+                    ->action(function () {
                         $service = app(AssessmentPdfReportService::class);
-                        $pdf = $service->generateExecutiveReport($this->record, $enabledSections);
+                        $pdf = $service->generateExecutiveReport($this->record, auth()->user()->enabledReportSections());
 
                         $filename = sprintf(
                                 'MNCH-Assessment-%s-%s.pdf',
@@ -95,10 +101,11 @@ class ViewAssessmentSummary extends ViewRecord {
     }
 
     /**
-     * Get the report HTML for web display
+     * Get the report HTML for web display — filtered by the user's saved
+     * section selection, same as the PDF download.
      */
     public function getReportHtml(): string {
         $service = app(AssessmentPdfReportService::class);
-        return $service->generateHtmlReport($this->record);
+        return $service->generateHtmlReport($this->record, auth()->user()->enabledReportSections());
     }
 }
