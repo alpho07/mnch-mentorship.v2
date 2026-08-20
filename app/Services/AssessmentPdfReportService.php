@@ -32,6 +32,7 @@ class AssessmentPdfReportService {
      */
     public function generateHtmlReport(Assessment $assessment): string {
         $data = $this->prepareReportData($assessment);
+        $data['comparison'] = app(\App\Services\AssessmentComparisonService::class)->prepareComparisonData($assessment);
 
         return view('reports.assessment-html-report', $data)->render();
     }
