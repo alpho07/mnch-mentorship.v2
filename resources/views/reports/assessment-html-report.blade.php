@@ -306,41 +306,30 @@ $totalEssNB = 0;
         </div>
     @endif
 
+    @php
+        $qualityYesNoRows = $comparison['qualityYesNo'] ?? collect($qualityOfCareDetails['yes_no_array'] ?? [])
+            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+        $qualityStatsRows = $comparison
+            ? array_merge($comparison['qualityNewbornStats'] ?? [], $comparison['qualityPaedStats'] ?? [])
+            : collect(array_merge($qualityOfCareDetails['newborn_stats_array'] ?? [], $qualityOfCareDetails['paed_stats_array'] ?? []))
+                ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+    @endphp
+
     {{-- Quality of Care --}}
-    @if(!empty($qualityOfCareDetails))
+    @if(!empty($qualityYesNoRows) || !empty($qualityStatsRows))
         <div class="section" style="margin-bottom: 32px;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Quality of Care</h2>
 
             {{-- Audit Questions --}}
-        @if(!empty($qualityOfCareDetails['yes_no_array']))
+            @if(!empty($qualityYesNoRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Audit & Process Compliance</h3>
-                <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
-                    <tbody>
-                        @foreach($qualityOfCareDetails['yes_no_array'] as $item)
-                            <tr>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $item['question'] }}</td>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center; width: 120px;">
-                                    <span class="badge badge-{{ $item['response'] === 'Yes' ? 'green' : 'red' }}">
-                                        {{ $item['response'] }}
-                                    </span>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                @include('reports.partials.comparison-rows', ['rows' => $qualityYesNoRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true])
             @endif
 
             {{-- Statistical Data --}}
-        @if(!empty($qualityOfCareDetails['newborn_stats_array']) || !empty($qualityOfCareDetails['paed_stats_array']))
+            @if(!empty($qualityStatsRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Care Statistics</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
-                    @foreach(array_merge($qualityOfCareDetails['newborn_stats_array'] ?? [], $qualityOfCareDetails['paed_stats_array'] ?? []) as $stat)
-                        <div style="background: #f9fafb; padding: 12px; border-radius: 4px;">
-                            <p style="color: #6b7280; font-size: 12px; margin: 0;">{{ $stat['question'] }}</p>
-                            <p style="color: #1f2937; font-size: 20px; font-weight: bold; margin: 4px 0 0 0;">{{ $stat['response'] }}</p>
-                        </div>
-                    @endforeach
-                </div>
+                @include('reports.partials.comparison-rows', ['rows' => $qualityStatsRows, 'rounds' => $comparisonRounds, 'field' => 'response'])
             @endif
         </div>
     @endif
