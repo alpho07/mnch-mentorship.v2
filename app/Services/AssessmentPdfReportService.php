@@ -39,7 +39,7 @@ class AssessmentPdfReportService {
     /**
      * Prepare all report data
      */
-    protected function prepareReportData(Assessment $assessment) {
+    public function prepareReportData(Assessment $assessment): array {
         // Load all relationships
         $assessment->load([
             'facility.subcounty.county',
@@ -555,18 +555,21 @@ class AssessmentPdfReportService {
     ];
 
     /**
-     * Same idea for paediatric — but only these 2 of the spreadsheet's 11
-     * paediatric proportions have a denominator that was ever captured as
-     * its own indicator question. The other 9 need a denominator like
-     * "admitted with severe pneumonia", "diagnosed with diarrhoea",
-     * "attending outpatient department", or "active Type 1 DM diagnosis" —
-     * none of which IndicatorsSeeder's raw paediatric questions capture
-     * even approximately, so computing them would mean dividing by the
-     * wrong (much broader) population. Left out rather than guessed.
+     * All 11 of the spreadsheet's "REPORTING PROPORTIONAL PAEDIATRIC
+     * INDICATORS" — each pair maps to an IND_PAED_* raw count question.
      */
     private const PAEDIATRIC_PROPORTIONS = [
+        ['Proportion of children under 5 years with severe pneumonia initiated on oxygen', 'IND_PAED_SEVERE_PNEUMONIA_OXYGEN', 'IND_PAED_SEVERE_PNEUMONIA_ADMISSIONS'],
+        ['Proportion of children under 5 years with severe pneumonia initiated on oxygen therapy who had correct oxygen prescription (appropriate delivery device, flow rate and target SpO2)', 'IND_PAED_OXYGEN_CORRECT_PRESCRIPTION', 'IND_PAED_SEVERE_PNEUMONIA_OXYGEN'],
+        ['Proportion of children under 5 years with pneumonia initiated on Amoxicillin DT', 'IND_PAED_PNEUMONIA_AMOXICILLIN', 'IND_PAED_PNEUMONIA_ADMISSIONS'],
+        ['Proportion of children under 5 years with severe pneumonia who died', 'IND_PAED_SEVERE_PNEUMONIA_DEATHS', 'IND_PAED_SEVERE_PNEUMONIA_ADMISSIONS'],
+        ['Proportion of children under 5 years with diarrhoea treated with ORS/Zinc co-pack', 'IND_PAED_DIARRHOEA_ORS', 'IND_PAED_DIARRHOEA_ADMISSIONS'],
+        ['Proportion of children under 5 years with hypovolemic shock due to diarrhoea treated with correct volume of isotonic fluid', 'IND_PAED_HYPOVOLEMIC_SHOCK', 'IND_PAED_DIARRHOEA_ADMISSIONS'],
         ['Proportion of children under 5 years admitted with an RBS measurement', 'IND_PAED_RBS', 'IND_PAED_ADMISSIONS'],
-        ['Proportion of children under 5 years screened for malnutrition (inpatient)', 'IND_PAED_MALNUTRITION_INPATIENT', 'IND_PAED_ADMISSIONS'],
+        ['Proportion of children under 5 years screened for malnutrition (MUAC/WHZ/nutritional oedema) in the outpatient department', 'IND_PAED_MALNUTRITION_OUTPATIENT', 'IND_PAED_OUTPATIENT_ATTENDANCE'],
+        ['Proportion of children under 5 years screened for malnutrition (MUAC/WHZ/nutritional oedema) in the inpatient department', 'IND_PAED_MALNUTRITION_INPATIENT', 'IND_PAED_ADMISSIONS'],
+        ['Proportion of patients aged 0-18 years with type 1 DM on basal bolus regimen', 'IND_PAED_T1DM_BASAL_BOLUS', 'IND_PAED_T1DM_ACTIVE'],
+        ['Proportion of children aged 0-18 years admitted with DKA who died', 'IND_PAED_DKA_DEATHS', 'IND_PAED_T1DM_ACTIVE'],
     ];
 
     /**
