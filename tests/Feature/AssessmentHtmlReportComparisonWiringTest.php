@@ -38,11 +38,11 @@ class AssessmentHtmlReportComparisonWiringTest extends TestCase
     {
         $type = AssessmentType::create(['name' => 'T', 'code' => 'WIRE2', 'version' => '1.0', 'is_active' => true]);
         $facility = Facility::factory()->create();
-        $baseline = Assessment::create([
+        Assessment::create([
             'facility_id' => $facility->id, 'assessment_type_id' => $type->id,
             'round' => 'baseline', 'assessment_date' => now()->subMonth(), 'assessor_name' => 'Test Assessor',
         ]);
-        Assessment::create([
+        $midline = Assessment::create([
             'facility_id' => $facility->id, 'assessment_type_id' => $type->id,
             'round' => 'midline', 'assessment_date' => now(), 'assessor_name' => 'Test Assessor',
         ]);
@@ -52,7 +52,7 @@ class AssessmentHtmlReportComparisonWiringTest extends TestCase
             $shared = $view->getData();
         });
 
-        app(AssessmentPdfReportService::class)->generateHtmlReport($baseline);
+        app(AssessmentPdfReportService::class)->generateHtmlReport($midline);
 
         $this->assertArrayHasKey('comparison', $shared);
         $this->assertIsArray($shared['comparison']);

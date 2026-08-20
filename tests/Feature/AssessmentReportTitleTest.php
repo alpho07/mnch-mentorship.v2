@@ -34,16 +34,16 @@ class AssessmentReportTitleTest extends TestCase
         $type = AssessmentType::create(['name' => 'T', 'code' => 'TITLE2', 'version' => '1.0', 'is_active' => true]);
         $facility = Facility::factory()->create();
 
-        $baseline = Assessment::create([
+        Assessment::create([
             'facility_id' => $facility->id, 'assessment_type_id' => $type->id,
             'round' => 'baseline', 'assessment_date' => now()->subMonth(), 'assessor_name' => 'Test Assessor',
         ]);
-        Assessment::create([
+        $midline = Assessment::create([
             'facility_id' => $facility->id, 'assessment_type_id' => $type->id,
             'round' => 'midline', 'assessment_date' => now(), 'assessor_name' => 'Test Assessor',
         ]);
 
-        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($baseline);
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($midline);
 
         $this->assertStringContainsString('MNCH ASSESSMENT<', $html);
         $this->assertStringNotContainsString('MNCH BASELINE ASSESSMENT', $html);

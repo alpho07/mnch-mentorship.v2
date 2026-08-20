@@ -42,7 +42,7 @@ class AssessmentHtmlReportComparisonRenderTest extends TestCase
         AssessmentQuestionResponse::create(['assessment_id' => $baseline->id, 'assessment_question_id' => $question->id, 'response_value' => 'No']);
         AssessmentQuestionResponse::create(['assessment_id' => $midline->id, 'assessment_question_id' => $question->id, 'response_value' => 'Yes']);
 
-        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($baseline);
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($midline);
 
         $this->assertStringContainsString('Has power backup?', $html);
         $this->assertStringContainsString('Baseline', $html);

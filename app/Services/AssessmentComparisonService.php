@@ -21,9 +21,32 @@ class AssessmentComparisonService
             ->values();
     }
 
+    /**
+     * The rounds a report should actually compare against: everything up
+     * to and including the assessment being viewed, in round order — never
+     * rounds that come after it. Viewing the baseline report must show
+     * just the baseline, not a comparison against a midline/endline that
+     * didn't exist yet when it was done (or was done after, workflow-wise,
+     * even if it exists in the database by the time someone opens this
+     * report). Viewing the midline compares baseline+midline; viewing the
+     * endline compares all three; and so on.
+     */
+    private function comparableAssessmentsUpToCurrent(Assessment $assessment): Collection
+    {
+        $allSiblings = $this->getComparableAssessments($assessment);
+
+        $currentIndex = $allSiblings->search(fn (Assessment $a) => $a->id === $assessment->id);
+
+        if ($currentIndex === false) {
+            return collect([$assessment]);
+        }
+
+        return $allSiblings->slice(0, $currentIndex + 1)->values();
+    }
+
     public function prepareComparisonData(Assessment $assessment): ?array
     {
-        $siblings = $this->getComparableAssessments($assessment);
+        $siblings = $this->comparableAssessmentsUpToCurrent($assessment);
 
         if ($siblings->count() < 2) {
             return null;

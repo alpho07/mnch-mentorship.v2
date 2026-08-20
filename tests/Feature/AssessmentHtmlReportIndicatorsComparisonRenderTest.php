@@ -43,7 +43,7 @@ class AssessmentHtmlReportIndicatorsComparisonRenderTest extends TestCase
         AssessmentQuestionResponse::create(['assessment_id' => $baseline->id, 'assessment_question_id' => $question->id, 'response_value' => '10']);
         AssessmentQuestionResponse::create(['assessment_id' => $midline->id, 'assessment_question_id' => $question->id, 'response_value' => '25']);
 
-        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($baseline);
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($midline);
 
         $this->assertStringContainsString('Number of newborn admissions', $html);
         $this->assertStringContainsString('Baseline', $html);
@@ -55,16 +55,16 @@ class AssessmentHtmlReportIndicatorsComparisonRenderTest extends TestCase
         $type = AssessmentType::create(['name' => 'T', 'code' => 'INDREND2', 'version' => '1.0', 'is_active' => true]);
         $facility = Facility::factory()->create();
 
-        $baseline = Assessment::create([
+        Assessment::create([
             'facility_id' => $facility->id, 'assessment_type_id' => $type->id,
             'round' => 'baseline', 'assessment_date' => now()->subMonth(), 'assessor_name' => 'Test Assessor',
         ]);
-        Assessment::create([
+        $midline = Assessment::create([
             'facility_id' => $facility->id, 'assessment_type_id' => $type->id,
             'round' => 'midline', 'assessment_date' => now(), 'assessor_name' => 'Test Assessor',
         ]);
 
-        $result = app(AssessmentComparisonService::class)->prepareComparisonData($baseline);
+        $result = app(AssessmentComparisonService::class)->prepareComparisonData($midline);
 
         $this->assertArrayHasKey('indicatorsNewborn', $result);
         $this->assertArrayHasKey('indicatorsPaediatric', $result);

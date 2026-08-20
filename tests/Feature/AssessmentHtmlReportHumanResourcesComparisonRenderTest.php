@@ -33,7 +33,7 @@ class AssessmentHtmlReportHumanResourcesComparisonRenderTest extends TestCase
         HumanResourceResponse::create(['assessment_id' => $baseline->id, 'cadre_id' => $cadre->id, 'total_in_facility' => 5]);
         HumanResourceResponse::create(['assessment_id' => $midline->id, 'cadre_id' => $cadre->id, 'total_in_facility' => 8]);
 
-        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($baseline);
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($midline);
 
         $this->assertStringContainsString('Nurse', $html);
         $this->assertStringContainsString('Baseline', $html);

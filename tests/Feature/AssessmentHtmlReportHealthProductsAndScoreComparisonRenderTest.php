@@ -43,7 +43,7 @@ class AssessmentHtmlReportHealthProductsAndScoreComparisonRenderTest extends Tes
             'available' => true, 'not_applicable' => false,
         ]);
 
-        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($baseline);
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($midline);
 
         $this->assertStringContainsString('Amoxicillin', $html);
         $this->assertStringContainsString('Baseline', $html);

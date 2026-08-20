@@ -49,16 +49,16 @@ class AssessmentReportHeaderAndDatesTest extends TestCase
         $type = AssessmentType::create(['name' => 'T', 'code' => 'HDR3', 'version' => '1.0', 'is_active' => true]);
         $facility = Facility::factory()->create();
 
-        $baseline = Assessment::create([
+        Assessment::create([
             'facility_id' => $facility->id, 'assessment_type_id' => $type->id,
             'round' => 'baseline', 'assessment_date' => \Carbon\Carbon::parse('2026-01-10'), 'assessor_name' => 'Test Assessor',
         ]);
-        Assessment::create([
+        $midline = Assessment::create([
             'facility_id' => $facility->id, 'assessment_type_id' => $type->id,
             'round' => 'midline', 'assessment_date' => \Carbon\Carbon::parse('2026-06-20'), 'assessor_name' => 'Test Assessor',
         ]);
 
-        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($baseline);
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($midline);
 
         $this->assertStringContainsString('Baseline Assessment:', $html);
         $this->assertStringContainsString('January 10, 2026', $html);

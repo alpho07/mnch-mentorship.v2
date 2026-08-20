@@ -42,7 +42,7 @@ class AssessmentHtmlReportQualityComparisonRenderTest extends TestCase
         AssessmentQuestionResponse::create(['assessment_id' => $baseline->id, 'assessment_question_id' => $question->id, 'response_value' => 'No']);
         AssessmentQuestionResponse::create(['assessment_id' => $endline->id, 'assessment_question_id' => $question->id, 'response_value' => 'Yes']);
 
-        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($baseline);
+        $html = app(AssessmentPdfReportService::class)->generateHtmlReport($endline);
 
         $this->assertStringContainsString('Mortality audits conducted?', $html);
         $this->assertStringContainsString('Baseline', $html);
