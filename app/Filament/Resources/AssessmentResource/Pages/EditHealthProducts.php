@@ -152,6 +152,15 @@ class EditHealthProducts extends EditRecord
                     'baseUrl' => AssessmentResource::getUrl('edit-health-products', ['record' => $this->record->id]),
                 ])
                 ->columnSpanFull(),
+            ...$this->buildCategorySections($this->activeDepartment, $categories, $responsesByCode),
+            // Filament's default bottom Save/Cancel bar is suppressed
+            // (see getFormActions() below) in favor of this — sits where
+            // that bar used to, after every category, so it reads as "the
+            // save button" rather than a mid-page action. Still drives the
+            // section-completion path: on the last department,
+            // saveDepartmentTab()'s getRedirectUrl() falls through to the
+            // next top-level section (or the dashboard) exactly as it did
+            // before this moved.
             Forms\Components\Actions::make([
                 Forms\Components\Actions\Action::make('save_active_department')
                     ->label("Save {$this->activeDepartment->name}")
@@ -159,8 +168,17 @@ class EditHealthProducts extends EditRecord
                     ->color('success')
                     ->action(fn () => $this->saveDepartmentTab($this->activeDepartment->id)),
             ])->columnSpanFull(),
-            ...$this->buildCategorySections($this->activeDepartment, $categories, $responsesByCode),
         ]);
+    }
+
+    /**
+     * Removes Filament's default bottom Save/Cancel bar — the per-
+     * department "Save {Department}" action above (inside the form
+     * schema itself) is this page's only save control now.
+     */
+    protected function getFormActions(): array
+    {
+        return [];
     }
 
     /**
