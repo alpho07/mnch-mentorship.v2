@@ -79,17 +79,42 @@ class ViewAssessmentSummary extends ViewRecord {
                     ->label('Mark as Complete')
                     ->icon('heroicon-o-check-circle')
                     ->color('primary')
-                    ->visible(fn() => $this->record->status !== 'completed')
+                    ->visible(fn() => $this->record->status !== 'completed'
+                        && ! empty($this->record->section_progress)
+                        && ! in_array(false, $this->record->section_progress, true))
                     ->requiresConfirmation()
+                    ->modalHeading('Mark Assessment as Complete')
+                    ->modalDescription('This will lock the assessment. It cannot be edited further, even by the team lead — only an admin can reopen it.')
+                    ->modalSubmitActionLabel('Mark as Complete')
                     ->action(function () {
                         $this->record->update([
                             'status' => 'completed',
                             'completed_at' => now(),
                             'completed_by' => auth()->id(),
                         ]);
+                        $this->record->lock(auth()->id());
 
                         \Filament\Notifications\Notification::make()
-                                ->title('Assessment marked as complete')
+                                ->title('Assessment marked as complete and locked')
+                                ->success()
+                                ->send();
+                    }),
+                    Actions\Action::make('reopen')
+                    ->label('Reopen')
+                    ->icon('heroicon-o-lock-open')
+                    ->color('danger')
+                    ->visible(fn() => $this->record->status === 'completed'
+                        && auth()->user()?->hasRole(['admin', 'super_admin']))
+                    ->requiresConfirmation()
+                    ->modalHeading('Reopen Assessment')
+                    ->modalDescription('This unlocks the assessment so it can be edited again.')
+                    ->modalSubmitActionLabel('Reopen')
+                    ->action(function () {
+                        $this->record->update(['status' => 'in_progress']);
+                        $this->record->unlock();
+
+                        \Filament\Notifications\Notification::make()
+                                ->title('Assessment reopened')
                                 ->success()
                                 ->send();
                     }),

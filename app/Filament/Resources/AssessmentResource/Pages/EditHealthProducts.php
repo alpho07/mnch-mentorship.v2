@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AssessmentResource\Pages;
 
 use App\Filament\Resources\AssessmentResource;
+use App\Filament\Resources\AssessmentResource\Traits\GuardsLockedAssessment;
 use App\Filament\Resources\AssessmentResource\Traits\HasSectionNavigation;
 use App\Models\AssessmentCommodityResponse;
 use App\Models\AssessmentDepartment;
@@ -19,6 +20,7 @@ use Illuminate\Support\Collection;
 class EditHealthProducts extends EditRecord
 {
     use HasSectionNavigation;
+    use GuardsLockedAssessment;
 
     protected static string $resource = AssessmentResource::class;
 
@@ -68,6 +70,10 @@ class EditHealthProducts extends EditRecord
         // the fill step.
         $this->record = $this->resolveRecord($record);
         $this->authorizeAccess();
+
+        if ($this->abortIfLocked($this->record)) {
+            return;
+        }
 
         // Filtered in PHP via resolvedKind() for consistency with
         // EditHumanResources — commodity_matrix isn't actually ambiguous
@@ -188,6 +194,16 @@ class EditHealthProducts extends EditRecord
      */
     public function saveDepartmentTab(int $departmentId): void
     {
+        if ($this->record->is_locked && ! auth()->user()?->hasRole(['admin', 'super_admin'])) {
+            Notification::make()
+                ->title('Assessment is locked')
+                ->body('This assessment has been marked complete and locked. Only an admin can reopen it.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
         $payload = $this->data['commodities'][$departmentId] ?? [];
         $quantityPayload = $this->data['commodities_quantity'][$departmentId] ?? [];
 

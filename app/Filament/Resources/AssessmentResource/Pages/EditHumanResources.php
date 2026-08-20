@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AssessmentResource\Pages;
 
 use App\Filament\Resources\AssessmentResource;
+use App\Filament\Resources\AssessmentResource\Traits\GuardsLockedAssessment;
 use App\Filament\Resources\AssessmentResource\Traits\HasSectionNavigation;
 use App\Models\AssessmentSection;
 use App\Models\HumanResourceResponse;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class EditHumanResources extends EditRecord
 {
     use HasSectionNavigation;
+    use GuardsLockedAssessment;
 
     protected static string $resource = AssessmentResource::class;
 
@@ -88,6 +90,10 @@ class EditHumanResources extends EditRecord
     public function mount(int|string $record): void
     {
         parent::mount($record);
+
+        if ($this->abortIfLocked($this->record)) {
+            return;
+        }
 
         // Filtered in PHP via resolvedKind() rather than a raw section_type
         // query — that DB column value ('structured_data') is shared with
@@ -218,6 +224,8 @@ class EditHumanResources extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $this->haltIfLocked($this->record);
+
         $cadres = MainCadre::where('is_active', true)
             ->where('assessment_type_id', $this->record->assessment_type_id)
             ->get();

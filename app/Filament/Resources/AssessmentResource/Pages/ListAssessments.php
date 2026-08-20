@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\AssessmentExportService;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables;
@@ -273,6 +274,53 @@ class ListAssessments extends ListRecords
                         ->icon('heroicon-o-eye')
                         ->color('info')
                         ->url(fn ($record) => AssessmentResource::getUrl('summary', ['record' => $record])),
+                    // Mark as Complete Action — only once every section is
+                    // done; locks the assessment against further edits by
+                    // anyone but an admin (see GuardsLockedAssessment).
+                    Tables\Actions\Action::make('mark_complete')
+                        ->label('Mark as Complete')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->visible(fn ($record) => $record->status !== 'completed'
+                            && ! empty($record->section_progress)
+                            && ! in_array(false, $record->section_progress, true))
+                        ->requiresConfirmation()
+                        ->modalHeading('Mark Assessment as Complete')
+                        ->modalDescription('This will lock the assessment. It cannot be edited further, even by the team lead — only an admin can reopen it.')
+                        ->modalSubmitActionLabel('Mark as Complete')
+                        ->action(function ($record): void {
+                            $record->update([
+                                'status' => 'completed',
+                                'completed_at' => now(),
+                                'completed_by' => auth()->id(),
+                            ]);
+                            $record->lock(auth()->id());
+
+                            Notification::make()
+                                ->title('Assessment marked as complete and locked')
+                                ->success()
+                                ->send();
+                        }),
+                    // Reopen Action — admin only, undoes mark_complete's lock.
+                    Tables\Actions\Action::make('reopen')
+                        ->label('Reopen')
+                        ->icon('heroicon-o-lock-open')
+                        ->color('danger')
+                        ->visible(fn ($record) => $record->status === 'completed'
+                            && auth()->user()?->hasRole(['admin', 'super_admin']))
+                        ->requiresConfirmation()
+                        ->modalHeading('Reopen Assessment')
+                        ->modalDescription('This unlocks the assessment so it can be edited again.')
+                        ->modalSubmitActionLabel('Reopen')
+                        ->action(function ($record): void {
+                            $record->update(['status' => 'in_progress']);
+                            $record->unlock();
+
+                            Notification::make()
+                                ->title('Assessment reopened')
+                                ->success()
+                                ->send();
+                        }),
                     // Manage Team Action
                     Tables\Actions\Action::make('manage_team')
                         ->label('Manage Team')
@@ -467,7 +515,7 @@ class ListAssessments extends ListRecords
                     ->size('sm')
                     ->color('gray')
                     ->button(),
-            ])
+            ], position: Tables\Enums\ActionsPosition::BeforeColumns)
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\BulkAction::make('export_selected')

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AssessmentResource\Pages;
 
 use App\Filament\Resources\AssessmentResource;
+use App\Filament\Resources\AssessmentResource\Traits\GuardsLockedAssessment;
 use App\Filament\Resources\AssessmentResource\Traits\HasSectionNavigation;
 use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentSection;
@@ -28,6 +29,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class EditSection extends EditRecord
 {
     use HasSectionNavigation;
+    use GuardsLockedAssessment;
 
     protected static string $resource = AssessmentResource::class;
 
@@ -60,6 +62,10 @@ class EditSection extends EditRecord
         }
 
         $this->section = $section;
+
+        if ($this->abortIfLocked($this->record)) {
+            return;
+        }
 
         // EmONC's Human Resources block has no fixed cadre list — its rows
         // come from the admin-managed Cadre list (category: 'emonc'),
@@ -236,6 +242,8 @@ class EditSection extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $this->haltIfLocked($this->record);
+
         DynamicFormBuilder::saveResponses($this->record->id, $this->section->id, $data);
         DynamicScoringService::recalculateSectionScore($this->record->id, $this->section->id);
 
