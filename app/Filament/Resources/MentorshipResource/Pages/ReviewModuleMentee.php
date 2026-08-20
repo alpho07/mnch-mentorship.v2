@@ -79,7 +79,7 @@ class ReviewModuleMentee extends Page
             'moduleRubric' => $this->moduleRubric,
             'latestRubricAssessment' => $this->latestRubricAssessment,
             'mentorCourseIntro' => $contents->where('type', 'mentor_course_intro')->first(),
-            'mentorMaterials' => $contents->where('type', 'mentor_materials')->first(),
+            'mentorMaterials' => $contents->where('type', 'mentor_materials')->sortBy('order_sequence')->values(),
             'conductAssessmentUrl' => $this->moduleRubric
                 ? RubricAssessmentResource::getUrl('create').'?rubric_id='.$this->moduleRubric->id.'&mentee_id='.$this->participant->user_id.'&class_module_id='.$this->module->id
                 : RubricAssessmentResource::getUrl('create'),

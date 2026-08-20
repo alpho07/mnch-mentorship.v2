@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             EmoncAphIntroContentSeeder::class, // APH intro/outcome/objectives/workplan (skipped by the batch seeders)
             ModuleRubricSeeder::class,         // Practical rubrics for Modules 4, 5 and all PPH tracks
             EmoncBatchAContentSeeder::class,   // Modules 2,3,4,6 — content + quiz
+            EmoncLcgModule2SectionContentSeeder::class, // Module 2 — replaces case scenario with 7 section-based mentee/mentor rows from the LCG webinar PPTX
             EmoncBatchBContentSeeder::class,   // Modules 7,8,9 — content + quiz
             EmoncBatchCContentSeeder::class,   // Modules 10,11,12,13 — content + quiz
             EmoncPphModuleContentSeeder::class, // Module 5 (PPH) parent — content + quiz
