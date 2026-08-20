@@ -71,20 +71,43 @@ $percentage=0;
     $color =$np >= 80 ? 'green' : ( $np >= 50 ? 'yellow' : 'red');
 @endphp
 
+    @php
+        // Defined here (not only in the later @php block below) because
+        // this Overall Score block renders *before* that block in the
+        // file — Blade has no block scoping, but top-to-bottom order
+        // still matters for when a variable first exists.
+        $comparisonRounds = $comparison['rounds'] ?? [['id' => $assessment->id, 'label' => $assessment->round_display]];
+    @endphp
+
     {{-- Overall Score Summary --}}
     <div class="overall-score" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px; border-radius: 8px; margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h3 style="margin: 0; font-size: 16px; opacity: 0.9;">Overall Score</h3>
-                <p style="font-size: 36px; font-weight: bold; margin: 8px 0;"> {{number_format($percentage/4,1) }}%</p>
+        @if($comparison)
+            <h3 style="margin: 0 0 16px 0; font-size: 16px; opacity: 0.9;">Overall Score by Round</h3>
+            <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                @foreach($comparisonRounds as $round)
+                    @php $roundScore = $comparison['overallScore'][$round['id']] ?? null; @endphp
+                    <div>
+                        <p style="margin: 0; font-size: 13px; opacity: 0.85;">{{ $round['label'] }}</p>
+                        <p style="font-size: 28px; font-weight: bold; margin: 4px 0;">{{ number_format($roundScore['percentage'] ?? 0, 1) }}%</p>
+                        <span class="badge badge-{{ $roundScore['grade_color'] ?? 'gray' }}" style="font-size: 14px; padding: 4px 12px;">
+                            {{ strtoupper($roundScore['grade'] ?? 'N/A') }}
+                        </span>
+                    </div>
+                @endforeach
             </div>
-            <div style="text-align: right;">
-                <span class="badge badge-{{ $color }}" style="font-size: 24px; padding: 8px 20px;">
-                    {{ strtoupper($color) }}
-                </span>
-<!--                <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">{{ $overallScore['score'] }} / {{ $overallScore['max_score'] }} points</p>-->
+        @else
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0; font-size: 16px; opacity: 0.9;">Overall Score</h3>
+                    <p style="font-size: 36px; font-weight: bold; margin: 8px 0;"> {{number_format($percentage/4,1) }}%</p>
+                </div>
+                <div style="text-align: right;">
+                    <span class="badge badge-{{ $color }}" style="font-size: 24px; padding: 8px 20px;">
+                        {{ strtoupper($color) }}
+                    </span>
+                </div>
             </div>
-        </div>
+        @endif
     </div>
 
     @php
@@ -201,25 +224,51 @@ $percentage=0;
         </div>
     @endif
 
+    @php
+        $healthProductsData = $comparison['healthProducts'] ?? $healthProductsDetails;
+    @endphp
+
     {{-- Health Products Summary --}}
-    @if(!empty($healthProductsDetails))
+    @if(!empty($healthProductsData))
         <div class="section" style="margin-bottom: 32px;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Health Products & Commodities</h2>
-        @foreach($healthProductsDetails as $departmentName => $dept)
+            @foreach($healthProductsData as $departmentName => $dept)
                 <h3 style="color: #374151; margin-top: 24px; margin-bottom: 12px;">{{ $departmentName }}</h3>
-            @foreach($dept['categories'] as $category)
-                    <div style="margin-bottom: 16px;">
-                        <h4 style="color: #4b5563; font-size: 14px; margin-bottom: 8px;">{{ $category['name'] }} ({{ $category['available'] }}/{{ $category['total'] }} available)</h4>
-                        <div style="background: #f9fafb; padding: 12px; border-radius: 4px;">
+                @foreach($dept['categories'] as $category)
+                    <h4 style="color: #4b5563; font-size: 14px; margin-bottom: 8px;">{{ $category['name'] }}</h4>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px;">
+                        <thead>
+                            <tr>
+                                <th style="background: #f3f4f6; padding: 8px 12px; text-align: left; border: 1px solid #d1d5db;">Item</th>
+                                @foreach($comparisonRounds as $round)
+                                    <th style="background: #f3f4f6; padding: 8px 12px; text-align: center; border: 1px solid #d1d5db;">{{ $round['label'] }}</th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody>
                             @foreach($category['items'] as $item)
-                                <div style="display: inline-block; margin: 4px 8px 4px 0;">
-                                    <span class="badge badge-{{ $item['available'] ? 'green' : 'red' }}" style="font-size: 12px;">
-                                        {{ $item['name'] }}
-                                    </span>
-                                </div>
+                                <tr>
+                                    <td style="padding: 8px 12px; border: 1px solid #e5e7eb;">{{ $item['name'] }}</td>
+                                    @foreach($comparisonRounds as $round)
+                                        @php
+                                            $available = $comparison
+                                                ? ($item['values'][$round['id']] ?? null)
+                                                : $item['available'];
+                                        @endphp
+                                        <td style="padding: 8px 12px; border: 1px solid #e5e7eb; text-align: center;">
+                                            @if($available === null)
+                                                <span style="color:#9ca3af;">&mdash;</span>
+                                            @else
+                                                <span class="badge badge-{{ $available ? 'green' : 'red' }}" style="font-size: 12px;">
+                                                    {{ $available ? 'Yes' : 'No' }}
+                                                </span>
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                </tr>
                             @endforeach
-                        </div>
-                    </div>
+                        </tbody>
+                    </table>
                 @endforeach
             @endforeach
         </div>
