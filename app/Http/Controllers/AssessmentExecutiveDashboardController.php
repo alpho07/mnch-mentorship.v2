@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Assessment;
+use App\Services\AssessmentComparisonService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 
@@ -14,9 +15,14 @@ class AssessmentExecutiveDashboardController extends Controller
      */
     private const JUNK_COUNT_SENTINEL = 1111;
 
+    public function __construct(private AssessmentComparisonService $comparisonService)
+    {
+    }
+
     public function show(Assessment $assessment)
     {
         $data = $this->buildDashboardData($assessment);
+        $data['comparison'] = $this->comparisonService->prepareComparisonData($assessment);
 
         return view('analytics.assessment-executive.dashboard', $data);
     }

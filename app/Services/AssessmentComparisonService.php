@@ -65,6 +65,7 @@ class AssessmentComparisonService
         return [
             'rounds' => $rounds,
             'overallScore' => $this->mergeSimpleValues($perAssessmentData, $rounds, 'overallScore'),
+            'sectionScores' => $this->mergeByKey($perAssessmentData, $rounds, 'sectionScores', 'section_name', ['percentage', 'score', 'max_score']),
             'humanResources' => $this->mergeByKey($perAssessmentData, $rounds, 'humanResourcesDetails.responses', 'cadre', [
                 'total_in_facility', 'etat_plus', 'comprehensive_newborn_care', 'imnci', 'type_1_diabetes', 'essential_newborn_care',
             ]),
@@ -78,11 +79,101 @@ class AssessmentComparisonService
             'qualityNewbornStats' => $this->mergeByKey($perAssessmentData, $rounds, 'qualityOfCareDetails.newborn_stats_array', 'question', ['response']),
             'qualityPaedStats' => $this->mergeByKey($perAssessmentData, $rounds, 'qualityOfCareDetails.paed_stats_array', 'question', ['response']),
             'healthProducts' => $this->mergeHealthProducts($perAssessmentData, $rounds),
-            'indicatorsNewborn' => $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.newborn_array', 'question', ['response']),
-            'indicatorsPaediatric' => $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.paediatric_array', 'question', ['response']),
-            'indicatorsNewbornProportions' => $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.newborn_proportions_array', 'question', ['response']),
-            'indicatorsPaediatricProportions' => $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.paediatric_proportions_array', 'question', ['response']),
+            'indicatorsNewborn' => $this->attachIndicatorDeltas(
+                $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.newborn_array', 'question', ['response']),
+                $rounds, false
+            ),
+            'indicatorsPaediatric' => $this->attachIndicatorDeltas(
+                $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.paediatric_array', 'question', ['response']),
+                $rounds, false
+            ),
+            'indicatorsNewbornProportions' => $this->attachIndicatorDeltas(
+                $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.newborn_proportions_array', 'question', ['response']),
+                $rounds, true
+            ),
+            'indicatorsPaediatricProportions' => $this->attachIndicatorDeltas(
+                $this->mergeByKey($perAssessmentData, $rounds, 'indicatorsDetails.paediatric_proportions_array', 'question', ['response']),
+                $rounds, true
+            ),
         ];
+    }
+
+    /**
+     * Adds a 'delta' entry to each row, comparing the two most recent
+     * rounds shown (the last two entries in $rounds) regardless of how
+     * many rounds are displayed in total — "current vs previous" always
+     * means the latest pair, not the full span back to baseline.
+     *
+     * Raw counts (indicatorsNewborn/Paediatric) carry a plain numeric
+     * 'response' — delta is (current - previous) plus a percent-change
+     * relative to the previous value. Proportions
+     * (indicatorsNewborn/PaediatricProportions) instead store 'response'
+     * as a pre-formatted "45.0% (12/27)" string — delta there is a
+     * percentage-point difference (current% - previous%), not a "percent
+     * change of a percentage," which would misleadingly compound two
+     * different units. Rows where either side is missing or non-numeric
+     * (unanswered, "N/A") get delta => null rather than a fabricated value.
+     *
+     * @param  array<int, array{id: int}>  $rounds
+     */
+    private function attachIndicatorDeltas(array $rows, array $rounds, bool $isProportion): array
+    {
+        if (count($rounds) < 2) {
+            return $rows;
+        }
+
+        $currentId = $rounds[count($rounds) - 1]['id'];
+        $previousId = $rounds[count($rounds) - 2]['id'];
+
+        return array_map(function (array $row) use ($currentId, $previousId, $isProportion) {
+            $current = $this->extractNumericIndicatorValue($row['values'][$currentId]['response'] ?? null, $isProportion);
+            $previous = $this->extractNumericIndicatorValue($row['values'][$previousId]['response'] ?? null, $isProportion);
+
+            if ($current === null || $previous === null) {
+                $row['delta'] = null;
+
+                return $row;
+            }
+
+            $diff = round($current - $previous, 1);
+
+            $row['delta'] = [
+                'is_proportion' => $isProportion,
+                'diff' => $diff,
+                'direction' => $diff > 0 ? 'up' : ($diff < 0 ? 'down' : 'flat'),
+                // Proportions: $diff IS the percentage-point change already.
+                // Raw counts: a separate percent-change relative to $previous.
+                'percent_change' => (! $isProportion && $previous != 0.0)
+                    ? round(($diff / $previous) * 100, 1)
+                    : null,
+            ];
+
+            return $row;
+        }, $rows);
+    }
+
+    /**
+     * Pulls a comparable float out of a row's 'response' value. Proportion
+     * rows store a formatted "45.0% (12/27)" (or "N/A") string — only the
+     * leading percentage is extracted. Raw-count rows store a plain numeric
+     * string already. Returns null for anything non-numeric (unanswered,
+     * "N/A", free text) rather than guessing.
+     */
+    private function extractNumericIndicatorValue(mixed $value, bool $isProportion): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if ($isProportion) {
+            if (! preg_match('/^(-?\d+(?:\.\d+)?)%/', (string) $value, $matches)) {
+                return null;
+            }
+
+            return (float) $matches[1];
+        }
+
+        return is_numeric($value) ? (float) $value : null;
     }
 
     /**

@@ -100,6 +100,35 @@ body {
 .btn-outline { background: #fff; color: #0097A7; border: 1.5px solid #0097A7; }
 .btn-ghost   { background: #f1f5f9; color: #475569; }
 
+/* ── View tabs ───────────────────────────────────────────────────────── */
+.view-tabs { display: flex; gap: .5rem; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; }
+.view-tab {
+    display: flex; align-items: center; gap: .45rem;
+    padding: .65rem 1.1rem;
+    font-size: .85rem; font-weight: 600; color: #64748b;
+    background: none; border: none; border-bottom: 2px solid transparent;
+    cursor: pointer;
+}
+.view-tab:hover { color: #0097A7; }
+.view-tab.active { color: #0097A7; border-bottom-color: #0097A7; }
+.view-tab-count {
+    background: #e2e8f0; color: #475569;
+    font-size: .68rem; font-weight: 700;
+    padding: .05rem .45rem; border-radius: 99px;
+}
+.view-tab.active .view-tab-count { background: #ccfbf1; color: #0f766e; }
+
+/* ── Compare-rounds delta chips ─────────────────────────────────────── */
+.delta-chip {
+    display: inline-flex; align-items: center; gap: .25rem;
+    font-size: .72rem; font-weight: 700;
+    padding: .1rem .5rem; border-radius: 99px;
+    white-space: nowrap;
+}
+.delta-up   { background: #d1fae5; color: #065f46; }
+.delta-down { background: #fee2e2; color: #991b1b; }
+.delta-flat { background: #f1f5f9; color: #64748b; }
+
 /* ── Section wrapper ─────────────────────────────────────────────────── */
 .section-wrap {
     background: #fff;
@@ -279,6 +308,21 @@ body {
     </a>
     <span style="margin-left:auto;font-size:.78rem;color:#64748b;">Generated {{ now()->format('d M Y, H:i') }}</span>
 </div>
+
+@if(!$isPdf && $comparison)
+{{-- ── View tabs ────────────────────────────────────────────────────── --}}
+<div class="view-tabs no-print">
+    <button type="button" class="view-tab active" data-tab="overview" onclick="mnchSwitchTab('overview')">
+        <i class="fas fa-chart-pie"></i> Overview
+    </button>
+    <button type="button" class="view-tab" data-tab="compare" onclick="mnchSwitchTab('compare')">
+        <i class="fas fa-code-compare"></i> Compare Rounds
+        <span class="view-tab-count">{{ count($comparison['rounds']) }}</span>
+    </button>
+</div>
+@endif
+
+<div id="mnch-tab-overview">
 
 {{-- ── Cover ────────────────────────────────────────────────────────── --}}
 <div class="cover">
@@ -848,12 +892,32 @@ body {
     </div>
 </div>
 
+</div>{{-- end #mnch-tab-overview --}}
+
+@if(!$isPdf && $comparison)
+<div id="mnch-tab-compare" style="display:none;">
+    @include('analytics.assessment-executive._compare-rounds', ['comparison' => $comparison])
+</div>
+@endif
+
 {{-- ── Footer ───────────────────────────────────────────────────────── --}}
 <div style="text-align:center;padding:1.5rem 0;font-size:.72rem;color:#94a3b8;">
     MNCH Mentorship Programme &bull; Kenya &bull; Confidential &bull; Generated {{ now()->format('d M Y') }}
 </div>
 
 </div>{{-- end .container --}}
+
+@if(!$isPdf && $comparison)
+<script>
+function mnchSwitchTab(tab) {
+    document.getElementById('mnch-tab-overview').style.display = tab === 'overview' ? '' : 'none';
+    document.getElementById('mnch-tab-compare').style.display = tab === 'compare' ? '' : 'none';
+    document.querySelectorAll('.view-tab').forEach(function (btn) {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+}
+</script>
+@endif
 
 {{-- ── Chart.js scripts ─────────────────────────────────────────────── --}}
 @if(!$isPdf)
