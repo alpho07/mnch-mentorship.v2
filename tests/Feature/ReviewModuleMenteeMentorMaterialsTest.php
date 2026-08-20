@@ -58,7 +58,7 @@ class ReviewModuleMenteeMentorMaterialsTest extends TestCase
         ]);
 
         Auth::login($mentor);
-        $page = new ReviewModuleMentee();
+        $page = new ReviewModuleMentee;
         $page->mount($training, $class, $classModule, $participant);
 
         $getViewData = new \ReflectionMethod($page, 'getViewData');
