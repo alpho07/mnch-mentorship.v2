@@ -110,7 +110,9 @@ class ListAssessments extends ListRecords
                         : $state)
                     ->searchable(['name', 'mfl_code'])
                     ->sortable(),
-                Tables\Columns\TextColumn::make('assessment_type')
+                Tables\Columns\TextColumn::make('round')
+                    ->label('Round')
+                    ->formatStateUsing(fn ($record) => $record->round_display)
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'baseline' => 'info',
@@ -239,12 +241,13 @@ class ListAssessments extends ListRecords
                         Assessment::query()->whereNotNull('assessor_id')->distinct()->pluck('assessor_id')
                     )->get()->mapWithKeys(fn (User $u) => [$u->id => $u->full_name]))
                     ->searchable(),
-                Tables\Filters\SelectFilter::make('assessment_type')
+                Tables\Filters\SelectFilter::make('round')
                     ->label('Assessment Round')
                     ->options([
                         'baseline' => 'Baseline',
                         'midline' => 'Midline',
                         'endline' => 'Endline',
+                        'other' => 'Other',
                     ]),
                 Tables\Filters\SelectFilter::make('overall_grade')
                     ->label('Grade')

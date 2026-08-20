@@ -59,7 +59,7 @@ class AssessmentPdfReportService {
 
         // Assessment Details
         $assessmentDetails = [
-            'type' => ucfirst($assessment->assessment_type),
+            'type' => $assessment->round_display,
             'date' => $assessment->assessment_date->format('F j, Y'),
             'status' => ucfirst($assessment->status),
             'assessor_name' => $assessment->assessor_name,
