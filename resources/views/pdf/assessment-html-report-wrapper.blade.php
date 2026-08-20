@@ -18,9 +18,31 @@
 
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 9pt;
-            line-height: 1.6;
+            font-size: 8pt;
+            line-height: 1.5;
             color: #333;
+        }
+
+        /*
+         * The report partial sets its own font-size (13px/14px/etc.) inline
+         * on most tables — inline styles normally beat a stylesheet, but
+         * !important flips that, so this is what actually shrinks them for
+         * print. table-layout: fixed + break-word keeps every table inside
+         * the page width instead of overflowing it (the live HTML page has
+         * no such width constraint, so the partial itself doesn't set this).
+         */
+        table, table th, table td {
+            font-size: 8pt !important;
+        }
+
+        table {
+            table-layout: fixed !important;
+        }
+
+        table th, table td {
+            padding: 5px 6px !important;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         h1 {
