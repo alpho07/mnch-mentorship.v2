@@ -143,7 +143,10 @@ class AssessmentComparisonService
                             $departments[$departmentName]['categories'][$catName]['itemOrder'][] = $itemName;
                         }
 
-                        $departments[$departmentName]['categories'][$catName]['items'][$itemName]['values'][$round['id']] = $item['available'];
+                        $departments[$departmentName]['categories'][$catName]['items'][$itemName]['values'][$round['id']] = [
+                            'available' => $item['available'],
+                            'quantity' => $item['quantity'] ?? null,
+                        ];
                     }
                 }
             }

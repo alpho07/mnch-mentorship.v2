@@ -338,6 +338,19 @@ class HealthProductsSeeder extends Seeder
             $this->createCommodity($labCategory, $name, null, 0, ++$order, null, [$labDeptId]);
         }
 
+        // These two ask to indicate a number when the answer is Yes — the
+        // matching commodity name is the natural, stable signal (it's the
+        // exact source-spreadsheet label), simpler than threading a new
+        // modifier type through the CATEGORIES DSL for just two rows. The
+        // similarly-worded CPAP row is deliberately excluded: it asks for
+        // both a unit count AND accessory availability in one label, a
+        // genuinely different (compound) shape this single quantity field
+        // doesn't fit.
+        Commodity::whereIn('name', [
+            'Functional Infusion Pumps. If yes indicate number',
+            'Functional Syringe pumps. If yes indicate number',
+        ])->update(['requires_quantity' => true]);
+
         $prunedCount = $this->pruneStaleCommodities($type);
 
         $commodityCount = Commodity::whereIn('commodity_category_id', CommodityCategory::where('assessment_type_id', $type->id)->pluck('id'))->count();

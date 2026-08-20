@@ -383,6 +383,7 @@ class AssessmentPdfReportService {
                             'not_applicable' => $item->not_applicable,
                             'group' => $item->commodity->group_label,
                             'indent_level' => (int) ($item->commodity->indent_level ?? 0),
+                            'quantity' => $item->quantity,
                         ];
                     })->values()->toArray(),
                 ];

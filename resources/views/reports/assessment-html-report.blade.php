@@ -387,9 +387,9 @@ $percentage=0;
                                         <td style="padding: 8px 12px; border: 1px solid #e5e7eb; {{ $item['indent'] ? 'padding-left: 24px;' : '' }}">{{ $item['numbered_label'] }}</td>
                                         @foreach($comparisonRounds as $round)
                                             @php
-                                                $available = $comparison
-                                                    ? ($item['values'][$round['id']] ?? null)
-                                                    : $item['available'];
+                                                $roundValue = $comparison ? ($item['values'][$round['id']] ?? null) : $item;
+                                                $available = $roundValue['available'] ?? null;
+                                                $quantity = $roundValue['quantity'] ?? null;
                                             @endphp
                                             <td style="padding: 8px 12px; border: 1px solid #e5e7eb; text-align: center;">
                                                 @if($available === null)
@@ -398,6 +398,9 @@ $percentage=0;
                                                     <span class="badge badge-{{ $available ? 'green' : 'red' }}" style="font-size: 12px;">
                                                         {{ $available ? 'Yes' : 'No' }}
                                                     </span>
+                                                    @if($available && $quantity !== null)
+                                                        <span style="color:#4b5563; font-size: 12px;">({{ $quantity }})</span>
+                                                    @endif
                                                 @endif
                                             </td>
                                         @endforeach

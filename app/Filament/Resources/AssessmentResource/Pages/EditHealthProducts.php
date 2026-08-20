@@ -14,6 +14,7 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Collection;
 
 class EditHealthProducts extends EditRecord
 {
@@ -29,9 +30,44 @@ class EditHealthProducts extends EditRecord
      */
     public AssessmentSection $section;
 
+    /**
+     * Only this department's commodities are ever queried, built into form
+     * fields, or sent over the wire — a large facility's full commodity
+     * matrix is up to ~800 fields, and Filament's Tabs render every tab's
+     * content into the same Livewire component regardless of which is
+     * active, so keeping all departments in one form made every load and
+     * every save move the whole payload. One department per request/save
+     * (switched via ?dept=<slug>, a normal page load) keeps both
+     * proportional to a single department's size instead of the facility's
+     * total.
+     */
+    public AssessmentDepartment $activeDepartment;
+
+    /**
+     * Public (not protected) so Livewire actually dehydrates/rehydrates it
+     * across requests — mount() only runs on the initial full page load,
+     * not on subsequent AJAX action calls like the per-department "Save"
+     * button, and Livewire only restores public properties on those.
+     *
+     * @var Collection<int, AssessmentDepartment>
+     */
+    public Collection $visibleDepartments;
+
+    private ?array $responsesByCodeCache = null;
+
     public function mount(int|string $record): void
     {
-        parent::mount($record);
+        // Not delegated to parent::mount(): it resolves the record, then
+        // immediately calls fillForm(), which builds the form schema (i.e.
+        // calls form() below) before control ever returns here. form()
+        // reads $this->activeDepartment directly (not just inside deferred
+        // closures — e.g. the "Save {department}" action label), so it must
+        // already be set by the time fillForm() runs. Resolving the record
+        // and department first, then filling the form ourselves, is
+        // equivalent to parent::mount() with that setup spliced in before
+        // the fill step.
+        $this->record = $this->resolveRecord($record);
+        $this->authorizeAccess();
 
         // Filtered in PHP via resolvedKind() for consistency with
         // EditHumanResources — commodity_matrix isn't actually ambiguous
@@ -48,19 +84,46 @@ class EditHealthProducts extends EditRecord
 
         $this->section = $section;
 
+        $responsesByCode = $this->responsesByQuestionCode();
+
+        $this->visibleDepartments = AssessmentDepartment::where('is_active', true)
+            ->where('assessment_type_id', $this->record->assessment_type_id)
+            ->orderBy('order')
+            ->get()
+            ->filter(fn (AssessmentDepartment $dept) => $this->isBlockVisible($dept->display_conditions, $responsesByCode))
+            ->values();
+
+        if ($this->visibleDepartments->isEmpty()) {
+            throw (new ModelNotFoundException)->setModel(AssessmentDepartment::class);
+        }
+
+        $requestedSlug = request()->query('dept');
+
+        $this->activeDepartment = $this->visibleDepartments
+            ->first(fn (AssessmentDepartment $d) => $d->slug === $requestedSlug)
+            ?? $this->visibleDepartments->first();
+
         $this->form->fill($this->loadSavedResponses());
+
+        $this->previousUrl = url()->previous();
     }
 
     protected function loadSavedResponses(): array
     {
-        $responses = AssessmentCommodityResponse::where('assessment_id', $this->record->id)->get();
+        $responses = AssessmentCommodityResponse::where('assessment_id', $this->record->id)
+            ->where('assessment_department_id', $this->activeDepartment->id)
+            ->get();
 
-        $data = ['commodities' => []];
+        $data = ['commodities' => [$this->activeDepartment->id => []], 'commodities_quantity' => [$this->activeDepartment->id => []]];
 
         foreach ($responses as $response) {
-            $data['commodities'][$response->assessment_department_id][$response->commodity_id] = $response->not_applicable
+            $data['commodities'][$this->activeDepartment->id][$response->commodity_id] = $response->not_applicable
                 ? 'na'
                 : ($response->available ? 1 : 0);
+
+            if ($response->quantity !== null) {
+                $data['commodities_quantity'][$this->activeDepartment->id][$response->commodity_id] = $response->quantity;
+            }
         }
 
         return $data;
@@ -69,12 +132,6 @@ class EditHealthProducts extends EditRecord
     public function form(Form $form): Form
     {
         $responsesByCode = $this->responsesByQuestionCode();
-
-        $departments = AssessmentDepartment::where('is_active', true)
-            ->where('assessment_type_id', $this->record->assessment_type_id)
-            ->orderBy('order')
-            ->get()
-            ->filter(fn (AssessmentDepartment $dept) => $this->isBlockVisible($dept->display_conditions, $responsesByCode));
 
         $categories = CommodityCategory::where('assessment_type_id', $this->record->assessment_type_id)
             ->orderBy('order')
@@ -88,41 +145,43 @@ class EditHealthProducts extends EditRecord
                     'currentKey' => $this->section->code,
                 ])
                 ->columnSpanFull(),
-            Forms\Components\Tabs::make('Departments')
-                ->tabs(
-                    $departments->map(function ($dept) use ($categories, $responsesByCode) {
-                        return Forms\Components\Tabs\Tab::make($dept->name)
-                            ->schema([
-                                Forms\Components\Actions::make([
-                                    Forms\Components\Actions\Action::make("save_dept_{$dept->id}")
-                                        ->label("Save {$dept->name}")
-                                        ->icon('heroicon-o-check-circle')
-                                        ->color('success')
-                                        ->action(fn () => $this->saveDepartmentTab($dept->id)),
-                                ])->columnSpanFull(),
-                                ...$this->buildCategorySections($dept, $categories, $responsesByCode),
-                            ]);
-                    })->toArray()
-                )
-                ->columnSpanFull()
-                ->contained(false),
+            Forms\Components\View::make('filament.pages.assessment.department-tabs')
+                ->viewData(fn () => [
+                    'departments' => $this->visibleDepartments,
+                    'activeDepartmentId' => $this->activeDepartment->id,
+                    'baseUrl' => AssessmentResource::getUrl('edit-health-products', ['record' => $this->record->id]),
+                ])
+                ->columnSpanFull(),
+            Forms\Components\Actions::make([
+                Forms\Components\Actions\Action::make('save_active_department')
+                    ->label("Save {$this->activeDepartment->name}")
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->action(fn () => $this->saveDepartmentTab($this->activeDepartment->id)),
+            ])->columnSpanFull(),
+            ...$this->buildCategorySections($this->activeDepartment, $categories, $responsesByCode),
         ]);
     }
 
     /**
-     * Save just one department's commodities without touching the rest of
-     * the form or navigating away — lets an assessor save progress
-     * department-by-department instead of always submitting all
-     * departments (up to ~800 commodities for a large facility) at once.
+     * Saves just the active department's commodities, then advances to the
+     * next department tab (or, after the last department, the next
+     * top-level assessment section / dashboard — same as getRedirectUrl()).
      */
     public function saveDepartmentTab(int $departmentId): void
     {
         $payload = $this->data['commodities'][$departmentId] ?? [];
+        $quantityPayload = $this->data['commodities_quantity'][$departmentId] ?? [];
 
-        $this->persistCommodityResponses([$departmentId => $payload]);
+        $this->persistCommodityResponses([$departmentId => $payload], [$departmentId => $quantityPayload]);
 
         app(\App\Services\CommodityScoringService::class)
             ->recalculateDepartmentScore($this->record->id, $departmentId);
+
+        $progress = $this->record->section_progress ?? [];
+        $progress[$this->section->code] = true;
+        $this->record->section_progress = $progress;
+        $this->record->save();
 
         $departmentName = AssessmentDepartment::find($departmentId)?->name ?? 'Department';
 
@@ -131,11 +190,50 @@ class EditHealthProducts extends EditRecord
             ->success()
             ->duration(2500)
             ->send();
+
+        $redirectUrl = $this->getRedirectUrl();
+
+        $this->redirect($redirectUrl, navigate: \Filament\Support\Facades\FilamentView::hasSpaMode($redirectUrl));
+    }
+
+    /**
+     * The department immediately after the active one in tab order, or null
+     * if the active department is the last one.
+     */
+    private function nextDepartment(): ?AssessmentDepartment
+    {
+        $currentIndex = $this->visibleDepartments->search(
+            fn (AssessmentDepartment $d) => $d->id === $this->activeDepartment->id
+        );
+
+        if ($currentIndex === false) {
+            return null;
+        }
+
+        return $this->visibleDepartments->get($currentIndex + 1);
+    }
+
+    /**
+     * Overrides HasSectionNavigation's version: saving a department should
+     * move to the next department tab within Health Products first, and
+     * only fall through to the next top-level assessment section (or the
+     * dashboard) once every department here has been saved.
+     */
+    protected function getRedirectUrl(): string
+    {
+        $nextDepartment = $this->nextDepartment();
+
+        if ($nextDepartment) {
+            return AssessmentResource::getUrl('edit-health-products', ['record' => $this->record->id])
+                .'?dept='.$nextDepartment->slug;
+        }
+
+        return $this->getNextSectionRoute();
     }
 
     private function responsesByQuestionCode(): array
     {
-        return \App\Models\AssessmentQuestionResponse::query()
+        return $this->responsesByCodeCache ??= \App\Models\AssessmentQuestionResponse::query()
             ->where('assessment_id', $this->record->id)
             ->join('assessment_questions', 'assessment_questions.id', '=', 'assessment_question_responses.assessment_question_id')
             ->pluck('assessment_question_responses.response_value', 'assessment_questions.question_code')
@@ -205,31 +303,50 @@ class EditHealthProducts extends EditRecord
                 }
                 $rowStyle = $commodity->indent_level > 0 ? ['style' => 'margin-left: 1.5rem;'] : [];
 
-                $rows[] = Forms\Components\Grid::make(2)
-                    ->schema([
-                        Forms\Components\Placeholder::make("label_{$dept->id}_{$commodity->id}")
-                            ->label('')
-                            ->content($label)
-                            ->extraAttributes($rowStyle)
-                            ->columnSpan(1),
-                        Forms\Components\ToggleButtons::make("commodities.{$dept->id}.{$commodity->id}")
-                            ->label('')
-                            ->options([
-                                1 => 'Available',
-                                0 => 'Not Available',
-                            ])
-                            ->colors([
-                                1 => 'success',
-                                0 => 'danger',
-                            ])
-                            ->icons([
-                                1 => 'heroicon-o-check-circle',
-                                0 => 'heroicon-o-x-circle',
-                            ])
-                            ->inline()
-                            ->columnSpan(1),
+                $answerField = Forms\Components\ToggleButtons::make("commodities.{$dept->id}.{$commodity->id}")
+                    ->label('')
+                    ->options([
+                        1 => 'Available',
+                        0 => 'Not Available',
                     ])
-                    ->columns(2);
+                    ->colors([
+                        1 => 'success',
+                        0 => 'danger',
+                    ])
+                    ->icons([
+                        1 => 'heroicon-o-check-circle',
+                        0 => 'heroicon-o-x-circle',
+                    ])
+                    ->inline()
+                    ->live()
+                    ->columnSpan(1);
+
+                $rowFields = [
+                    Forms\Components\Placeholder::make("label_{$dept->id}_{$commodity->id}")
+                        ->label('')
+                        ->content($label)
+                        ->extraAttributes($rowStyle)
+                        ->columnSpan(1),
+                    $answerField,
+                ];
+
+                // The commodity's own label promises a follow-up number
+                // when the answer is Yes (e.g. "Functional Infusion
+                // Pumps. If yes indicate number") — nothing captured that
+                // number before requires_quantity existed, despite the
+                // label asking for it.
+                if ($commodity->requires_quantity) {
+                    $rowFields[] = Forms\Components\TextInput::make("commodities_quantity.{$dept->id}.{$commodity->id}")
+                        ->label('Number')
+                        ->numeric()
+                        ->minValue(0)
+                        ->visible(fn (Forms\Get $get) => (int) $get("commodities.{$dept->id}.{$commodity->id}") === 1)
+                        ->columnSpan(1);
+                }
+
+                $rows[] = Forms\Components\Grid::make(count($rowFields))
+                    ->schema($rowFields)
+                    ->columns(count($rowFields));
             }
 
             return Forms\Components\Section::make($category->name)
@@ -242,8 +359,9 @@ class EditHealthProducts extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $payload = $data['commodities'] ?? [];
+        $quantityPayload = $data['commodities_quantity'] ?? [];
 
-        $this->persistCommodityResponses($payload);
+        $this->persistCommodityResponses($payload, $quantityPayload);
 
         foreach (array_keys($payload) as $departmentId) {
             app(\App\Services\CommodityScoringService::class)
@@ -255,7 +373,7 @@ class EditHealthProducts extends EditRecord
         $this->record->section_progress = $progress;
         $this->record->save();
 
-        unset($data['commodities']);
+        unset($data['commodities'], $data['commodities_quantity']);
 
         return $data;
     }
@@ -272,8 +390,9 @@ class EditHealthProducts extends EditRecord
      * what the model's `saving` event would have computed.
      *
      * @param  array<int, array<int, mixed>>  $payload  [departmentId => [commodityId => 1|0|'na']]
+     * @param  array<int, array<int, mixed>>  $quantityPayload  [departmentId => [commodityId => number|null]] — only set for commodities with requires_quantity=true.
      */
-    private function persistCommodityResponses(array $payload): void
+    private function persistCommodityResponses(array $payload, array $quantityPayload = []): void
     {
         $now = now();
         $rows = [];
@@ -282,6 +401,7 @@ class EditHealthProducts extends EditRecord
             foreach ($commodityEntries as $commodityId => $value) {
                 $isNotApplicable = $value === 'na';
                 $available = $isNotApplicable ? false : (bool) $value;
+                $quantity = $available ? ($quantityPayload[$departmentId][$commodityId] ?? null) : null;
 
                 $rows[] = [
                     'assessment_id' => $this->record->id,
@@ -289,6 +409,7 @@ class EditHealthProducts extends EditRecord
                     'commodity_id' => $commodityId,
                     'available' => $available,
                     'not_applicable' => $isNotApplicable,
+                    'quantity' => $quantity !== null && $quantity !== '' ? (int) $quantity : null,
                     'score' => ($isNotApplicable || ! $available) ? 0 : 1,
                     'created_at' => $now,
                     'updated_at' => $now,
@@ -303,7 +424,7 @@ class EditHealthProducts extends EditRecord
         AssessmentCommodityResponse::upsert(
             $rows,
             ['assessment_id', 'commodity_id', 'assessment_department_id'],
-            ['available', 'not_applicable', 'score', 'updated_at']
+            ['available', 'not_applicable', 'quantity', 'score', 'updated_at']
         );
     }
 
@@ -343,3 +464,4 @@ class EditHealthProducts extends EditRecord
         return "Health Products - {$this->record->facility->name}";
     }
 }
+

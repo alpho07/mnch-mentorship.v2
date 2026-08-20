@@ -15,11 +15,13 @@ class AssessmentCommodityResponse extends Model {
         'not_applicable',
         'notes',
         'score',
+        'quantity',
     ];
     protected $casts = [
         'available' => 'boolean',
         'not_applicable' => 'boolean',
         'score' => 'decimal:2',
+        'quantity' => 'integer',
     ];
 
     protected static function boot() {
