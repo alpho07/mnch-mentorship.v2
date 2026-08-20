@@ -76,10 +76,13 @@ class ResourceFileController extends Controller {
 
     public static function signedTempUrl(ResourceFile $file): string
     {
-        return URL::temporarySignedRoute(
+        $relativeUrl = URL::temporarySignedRoute(
             'resource-files.temp-view',
             now()->addMinutes(5),
-            ['file' => $file->id]
+            ['file' => $file->id],
+            absolute: false
         );
+
+        return url($relativeUrl);
     }
 }

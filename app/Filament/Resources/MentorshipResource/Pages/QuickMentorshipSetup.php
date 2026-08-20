@@ -252,6 +252,7 @@ class QuickMentorshipSetup extends Page implements HasForms
                         Forms\Components\TextInput::make('class_name')
                             ->label('Class/Cohort Name')
                             ->required(fn () => $this->basicsSaved)
+                            ->default('Cohort 1')
                             ->placeholder('e.g., January 2027 Cohort')
                             ->maxLength(255),
                         Forms\Components\Grid::make(2)->schema([
@@ -467,7 +468,7 @@ class QuickMentorshipSetup extends Page implements HasForms
 
         try {
             $this->sendInvitations(['recipients' => $state['recipients'] ?? 'all']);
-            $this->dispatch('scroll-top');
+            $this->dispatch('scroll-to-next-step');
         } catch (\Throwable $e) {
             Notification::make()
                 ->danger()
@@ -501,7 +502,7 @@ class QuickMentorshipSetup extends Page implements HasForms
         ]);
 
         $this->menteesSaved = true;
-        $this->dispatch('scroll-top');
+        $this->dispatch('scroll-to-next-step');
     }
 
     public function enrollMentees(array $data): int
@@ -523,7 +524,7 @@ class QuickMentorshipSetup extends Page implements HasForms
         ]);
 
         $this->modulesSaved = true;
-        $this->dispatch('scroll-top');
+        $this->dispatch('scroll-to-next-step');
     }
 
     public function assignModules(array $data): int
@@ -593,7 +594,7 @@ class QuickMentorshipSetup extends Page implements HasForms
         ]);
 
         $this->firstClassSaved = true;
-        $this->dispatch('scroll-top');
+        $this->dispatch('scroll-to-next-step');
     }
 
     public function createFirstClass(array $data): MentorshipClass
@@ -620,7 +621,7 @@ class QuickMentorshipSetup extends Page implements HasForms
 
         $this->training->update(['guided_setup_method' => 'quick']);
         $this->basicsSaved = true;
-        $this->dispatch('scroll-top');
+        $this->dispatch('scroll-to-next-step');
     }
 
     public function createTraining(array $data): Training
@@ -636,3 +637,4 @@ class QuickMentorshipSetup extends Page implements HasForms
         return app(MentorshipWizardService::class)->isEmoncProgram($programId);
     }
 }
+

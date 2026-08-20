@@ -56,7 +56,7 @@ class AdminPanelProvider extends PanelProvider
                     '<link rel="stylesheet" href="'.asset('css/filament-admin-theme.css').'?v='.filemtime(public_path('css/filament-admin-theme.css')).'">'
                     .'<link rel="manifest" href="'.asset('manifest.webmanifest').'">'
                     .'<meta name="theme-color" content="#1C3A8A">'
-                    .'<link rel="apple-touch-icon" href="'.asset('icons/admin-icon-192.png').'">'
+                    .'<link rel="apple-touch-icon" href="'.asset('app-icons/admin-icon-192.png').'">'
                     .'<meta name="apple-mobile-web-app-capable" content="yes">'
                     .'<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'
                     .'<meta name="apple-mobile-web-app-title" content="MNCH Admin">'

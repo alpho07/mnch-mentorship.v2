@@ -6,9 +6,9 @@ const CACHE_NAME = 'mnch-admin-static-v1';
 const STATIC_ASSETS = [
     '/css/filament-admin-theme.css',
     '/manifest.webmanifest',
-    '/icons/admin-icon-192.png',
-    '/icons/admin-icon-512.png',
-    '/icons/admin-icon-maskable-512.png',
+    '/app-icons/admin-icon-192.png',
+    '/app-icons/admin-icon-512.png',
+    '/app-icons/admin-icon-maskable-512.png',
 ];
 
 self.addEventListener('install', (event) => {
