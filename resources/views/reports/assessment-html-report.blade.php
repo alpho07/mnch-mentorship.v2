@@ -87,146 +87,63 @@ $percentage=0;
         </div>
     </div>
 
+    @php
+        $comparisonRounds = $comparison['rounds'] ?? [['id' => $assessment->id, 'label' => $assessment->round_display]];
+
+        $infraRows = $comparison['infrastructure'] ?? collect($infrastructureDetails['responses'] ?? [])
+            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+        $infraBedsRows = $comparison['infrastructureBeds'] ?? collect($infrastructureDetails['beds_table'] ?? [])
+            ->map(fn ($d) => ['label' => $d['unit'], 'values' => [$assessment->id => $d]])->all();
+    @endphp
+
     {{-- Infrastructure Details --}}
-    @if(!empty($infrastructureDetails['responses']) || !empty($infrastructureDetails['beds_table']))
+    @if(!empty($infraRows) || !empty($infraBedsRows))
         <div class="section" style="margin-bottom: 32px; page-break-inside: avoid;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Infrastructure</h2>
 
-            @if(!empty($infrastructureDetails['responses']))
-                <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
-                    <thead>
-                        <tr>
-                            <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db;">Question</th>
-                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">Response</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($infrastructureDetails['responses'] as $detail)
-                            <tr>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $detail['question'] }}</td>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                    @if($detail['is_number'] ?? false)
-                                        {{ $detail['response'] }}
-                                    @else
-                                        <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
-                                            {{ $detail['response'] }}
-                                        </span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+            @if(!empty($infraRows))
+                @include('reports.partials.comparison-rows', ['rows' => $infraRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true])
             @endif
 
-            @if(!empty($infrastructureDetails['beds_table']))
+            @if(!empty($infraBedsRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Bed Capacity</h3>
-                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                    <thead>
-                        <tr>
-                            <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db;">Unit</th>
-                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">No. Functional</th>
-                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 130px;">No. Non-Functional</th>
-                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 100px;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($infrastructureDetails['beds_table'] as $bed)
-                            <tr>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $bed['unit'] }}</td>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">{{ $bed['functional'] }}</td>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">{{ $bed['non_functional'] }}</td>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center; font-weight: 600;">{{ $bed['total'] }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                @include('reports.partials.comparison-rows', ['rows' => $infraBedsRows, 'rounds' => $comparisonRounds, 'fields' => ['functional' => 'Functional', 'non_functional' => 'Non-Functional', 'total' => 'Total'], 'labelHeader' => 'Unit'])
             @endif
         </div>
     @endif
+
+    @php
+        $skillsLabRows = $comparison['skillsLab'] ?? collect($skillsLabDetails['responses'] ?? [])
+            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+    @endphp
 
     {{-- Skills Lab Details --}}
-    @if(!empty($skillsLabDetails['responses']))
+    @if(!empty($skillsLabRows))
         <div class="section" style="margin-bottom: 32px; page-break-inside: avoid;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Skills Lab</h2>
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                <thead>
-                    <tr>
-                        <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db;">Equipment/Item</th>
-                        <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($skillsLabDetails['responses'] as $detail)
-                        <tr>
-                            <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $detail['question'] }}</td>
-                            <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
-                                    {{ $detail['response'] }}
-                                </span>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            @include('reports.partials.comparison-rows', ['rows' => $skillsLabRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true, 'labelHeader' => 'Equipment/Item'])
         </div>
     @endif
 
+    @php
+        $infoSysRows = $comparison['informationSystems'] ?? collect($informationSystemsDetails['responses'] ?? [])
+            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+        $infoSysToolsRows = $comparison['informationSystemsDataTools'] ?? collect($informationSystemsDetails['data_tools_table'] ?? [])
+            ->map(fn ($d) => ['label' => $d['form'], 'values' => [$assessment->id => $d]])->all();
+    @endphp
+
     {{-- Information Systems Details --}}
-    @if(!empty($informationSystemsDetails['responses']) || !empty($informationSystemsDetails['data_tools_table']))
+    @if(!empty($infoSysRows) || !empty($infoSysToolsRows))
         <div class="section" style="margin-bottom: 32px; page-break-inside: avoid;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Information Systems</h2>
-            @if(!empty($informationSystemsDetails['responses']))
-                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                    <thead>
-                        <tr>
-                            <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db;">Question</th>
-                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">Response</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($informationSystemsDetails['responses'] as $detail)
-                            <tr>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $detail['question'] }}</td>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                    <span class="badge badge-{{ $detail['response'] === 'Yes' ? 'green' : 'red' }}">
-                                        {{ $detail['response'] }}
-                                    </span>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+
+            @if(!empty($infoSysRows))
+                @include('reports.partials.comparison-rows', ['rows' => $infoSysRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true])
             @endif
 
-            @if(!empty($informationSystemsDetails['data_tools_table']))
+            @if(!empty($infoSysToolsRows))
                 <h3 style="color: #374151; margin-top: 20px; margin-bottom: 12px;">Data Collection Tools & Registers — Availability &amp; Completeness</h3>
-                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                    <thead>
-                        <tr>
-                            <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db;">Form / Register</th>
-                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">Available</th>
-                            <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; width: 120px;">Complete</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($informationSystemsDetails['data_tools_table'] as $row)
-                            <tr>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $row['form'] }}</td>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                    <span class="badge badge-{{ $row['available'] === 'Yes' ? 'green' : 'red' }}">
-                                        {{ $row['available'] }}
-                                    </span>
-                                </td>
-                                <td style="padding: 10px 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                    <span class="badge badge-{{ $row['completeness'] === 'Yes' ? 'green' : 'red' }}">
-                                        {{ $row['completeness'] }}
-                                    </span>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                @include('reports.partials.comparison-rows', ['rows' => $infoSysToolsRows, 'rounds' => $comparisonRounds, 'fields' => ['available' => 'Available', 'completeness' => 'Complete'], 'badge' => true, 'labelHeader' => 'Form / Register'])
             @endif
         </div>
     @endif
