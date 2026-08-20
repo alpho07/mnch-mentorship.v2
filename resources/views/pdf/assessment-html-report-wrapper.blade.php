@@ -24,6 +24,35 @@
         }
 
         /*
+         * Compact spacing so Facility Information, Section Performance,
+         * and Overall Score fit on page 1 together instead of Overall
+         * Score alone spilling to page 2 — the partial's own inline
+         * margins/padding (32px section gaps, 16px facility-info padding,
+         * 6px info-rows) were sized for the web page, which has no such
+         * one-page constraint.
+         */
+        .report-header {
+            margin-bottom: 14px !important;
+        }
+
+        .section {
+            margin-bottom: 14px !important;
+        }
+
+        .section h2 {
+            margin-bottom: 8px !important;
+            padding-bottom: 4px !important;
+        }
+
+        .info-row {
+            padding: 3px 0 !important;
+        }
+
+        .facility-info-box {
+            padding: 8px 12px !important;
+        }
+
+        /*
          * The report partial sets its own font-size (13px/14px/etc.) inline
          * on most tables — inline styles normally beat a stylesheet, but
          * !important flips that, so this is what actually shrinks them for

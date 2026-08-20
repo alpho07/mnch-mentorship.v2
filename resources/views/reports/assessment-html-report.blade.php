@@ -6,12 +6,20 @@
     // before this existed. An array restricts to just those keys, from
     // AssessmentPdfReportService::TOGGLEABLE_SECTIONS.
     $sectionEnabled = fn (string $key) => ! isset($enabledSections) || $enabledSections === null || in_array($key, $enabledSections, true);
+
+    // Was hardcoded to "BASELINE" regardless of the actual round — wrong
+    // for a midline/endline/other assessment. Comparing multiple rounds
+    // at once has no single round to name, so that case gets a neutral
+    // title instead of picking one round arbitrarily.
+    $reportTitle = $comparison
+        ? 'MNCH ASSESSMENT'
+        : 'MNCH '.strtoupper($assessment->round_display).' ASSESSMENT';
 @endphp
 
 <div class="report-container">
     {{-- Header --}}
     <div class="report-header" style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #1f2937; margin-bottom: 8px;">MNCH BASELINE ASSESSMENT</h1>
+        <h1 style="color: #1f2937; margin-bottom: 8px;">{{ $reportTitle }}</h1>
         <h2 style="color: #4b5563; font-size: 18px; font-weight: normal;">{{ $facilityInfo['name'] }}</h2>
         <p style="color: #6b7280; margin-top: 8px;">Assessment Date: {{ $assessment->assessment_date->format('F d, Y') }}</p>
     </div>
@@ -21,7 +29,7 @@
     {{-- Facility Information --}}
     <div class="section" style="margin-bottom: 32px;">
         <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Facility Information</h2>
-        <div style="background: #f9fafb; padding: 16px; border-radius: 6px;">
+        <div class="facility-info-box" style="background: #f9fafb; padding: 16px; border-radius: 6px;">
             <div class="info-row" style="display: flex; padding: 6px 0;">
                 <span class="info-label" style="font-weight: 600; width: 200px; color: #6b7280;">Facility Name:</span>
                 <span class="info-value" style="color: #1f2937;">{{ $facilityInfo['name'] }}</span>
@@ -66,13 +74,13 @@ $percentage=0;
                 consistently, so 3-per-row via table rows here.
             --}}
             @foreach(collect($sectionScores)->chunk(3) as $rowOfScores)
-                <table style="width: 100%; border-collapse: separate; border-spacing: 8px 0; margin-bottom: 8px;">
+                <table style="width: 100%; border-collapse: separate; border-spacing: 8px 0; margin-bottom: 6px;">
                     <tr>
                         @foreach($rowOfScores as $score)
-                            <td style="width: {{ (int) (100 / $rowOfScores->count()) }}%; background: #f9fafb; padding: 16px; border-left: 4px solid {{ $score['percentage'] >= 70 ? '#10b981' : ($score['percentage'] >= 50 ? '#f59e0b' : '#ef4444') }}; vertical-align: top;">
-                                <div style="font-size: 9pt; font-weight: 600; color: #374151; margin-bottom: 6px;">{{ $score['section_name'] }}</div>
-                                <div style="font-size: 15pt; font-weight: bold; color: #1f2937;">{{ number_format($score['percentage'], 1) }}%</div>
-                                <div style="font-size: 7.5pt; color: #6b7280; margin-top: 2px;">{{ $score['score'] }} / {{ $score['max_score'] }}</div>
+                            <td style="width: {{ (int) (100 / $rowOfScores->count()) }}%; background: #f9fafb; padding: 9px 10px; border-left: 4px solid {{ $score['percentage'] >= 70 ? '#10b981' : ($score['percentage'] >= 50 ? '#f59e0b' : '#ef4444') }}; vertical-align: top;">
+                                <div style="font-size: 8pt; font-weight: 600; color: #374151; margin-bottom: 3px;">{{ $score['section_name'] }}</div>
+                                <div style="font-size: 12pt; font-weight: bold; color: #1f2937;">{{ number_format($score['percentage'], 1) }}%</div>
+                                <div style="font-size: 7pt; color: #6b7280; margin-top: 1px;">{{ $score['score'] }} / {{ $score['max_score'] }}</div>
                             </td>
                         @endforeach
                         @for($i = $rowOfScores->count(); $i < 3; $i++)
@@ -121,9 +129,9 @@ $percentage=0;
         round cards was unreliable in DomPDF even after the background
         itself started painting again.
     --}}
-    <div class="overall-score" style="background: {{ ($isPdf ?? false) ? '#5b4fc4' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}; color: white; padding: 24px; border-radius: 8px; margin-bottom: 24px; page-break-inside: avoid;">
+    <div class="overall-score" style="background: {{ ($isPdf ?? false) ? '#5b4fc4' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}; color: white; padding: {{ ($isPdf ?? false) ? '14px 18px' : '24px' }}; border-radius: 8px; margin-bottom: {{ ($isPdf ?? false) ? '12px' : '24px' }}; page-break-inside: avoid;">
         @if($comparison)
-            <h3 style="margin: 0 0 16px 0; font-size: 16px; opacity: 0.9; color: white;">Overall Score by Round</h3>
+            <h3 style="margin: 0 0 {{ ($isPdf ?? false) ? '8px' : '16px' }} 0; font-size: {{ ($isPdf ?? false) ? '11pt' : '16px' }}; opacity: 0.9; color: white;">Overall Score by Round</h3>
             @if($isPdf ?? false)
                 {{--
                     flex-wrap doesn't lay these out horizontally in DomPDF
@@ -136,9 +144,9 @@ $percentage=0;
                 @foreach($comparisonRounds as $round)
                     @php $roundScore = $comparison['overallScore'][$round['id']] ?? null; @endphp
                     <div style="display: inline-block; width: 24%; vertical-align: top; margin-right: 2%;">
-                        <p style="margin: 0; font-size: 8.5pt; opacity: 0.85; color: white;">{{ $round['label'] }}</p>
-                        <p style="font-size: 15pt; font-weight: bold; margin: 3px 0; color: white;">{{ number_format($roundScore['percentage'] ?? 0, 1) }}%</p>
-                        <span class="badge badge-{{ $roundScore['grade'] ?? 'gray' }}" style="font-size: 8pt; padding: 3px 9px;">
+                        <p style="margin: 0; font-size: 7.5pt; opacity: 0.85; color: white;">{{ $round['label'] }}</p>
+                        <p style="font-size: 12pt; font-weight: bold; margin: 2px 0; color: white;">{{ number_format($roundScore['percentage'] ?? 0, 1) }}%</p>
+                        <span class="badge badge-{{ $roundScore['grade'] ?? 'gray' }}" style="font-size: 7pt; padding: 2px 7px;">
                             {{ strtoupper($roundScore['grade'] ?? 'N/A') }}
                         </span>
                     </div>
@@ -163,11 +171,11 @@ $percentage=0;
                  same reasoning as the round cards above. --}}
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <h3 style="margin: 0; font-size: 16px; opacity: 0.9; color: white;">Overall Score</h3>
-                    <p style="font-size: 36px; font-weight: bold; margin: 8px 0; color: white;"> {{number_format($percentage/4,1) }}%</p>
+                    <h3 style="margin: 0; font-size: {{ ($isPdf ?? false) ? '11pt' : '16px' }}; opacity: 0.9; color: white;">Overall Score</h3>
+                    <p style="font-size: {{ ($isPdf ?? false) ? '20pt' : '36px' }}; font-weight: bold; margin: 8px 0; color: white;"> {{number_format($percentage/4,1) }}%</p>
                 </div>
                 <div style="text-align: right;">
-                    <span class="badge badge-{{ $color }}" style="font-size: 24px; padding: 8px 20px;">
+                    <span class="badge badge-{{ $color }}" style="font-size: {{ ($isPdf ?? false) ? '13pt' : '24px' }}; padding: {{ ($isPdf ?? false) ? '5px 12px' : '8px 20px' }};">
                         {{ strtoupper($color) }}
                     </span>
                 </div>
