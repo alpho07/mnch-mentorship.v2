@@ -1,5 +1,12 @@
 {{-- resources/views/reports/assessment-html-report.blade.php --}}
 
+@php
+    // enabledSections is a PDF-download-only concept — null (including
+    // when the caller never sets it) means "show everything", same as
+    // before this existed. An array restricts to just those keys, from
+    // AssessmentPdfReportService::TOGGLEABLE_SECTIONS.
+    $sectionEnabled = fn (string $key) => ! isset($enabledSections) || $enabledSections === null || in_array($key, $enabledSections, true);
+@endphp
 
 <div class="report-container">
     {{-- Header --}}
@@ -120,7 +127,7 @@ $percentage=0;
     @endphp
 
     {{-- Infrastructure Details --}}
-    @if(!empty($infraRows) || !empty($infraBedsRows))
+    @if($sectionEnabled('infrastructure') && (!empty($infraRows) || !empty($infraBedsRows)))
         <div class="section" style="margin-bottom: 32px; page-break-inside: avoid;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Infrastructure</h2>
 
@@ -141,7 +148,7 @@ $percentage=0;
     @endphp
 
     {{-- Skills Lab Details --}}
-    @if(!empty($skillsLabRows))
+    @if($sectionEnabled('skills_lab') && !empty($skillsLabRows))
         <div class="section" style="margin-bottom: 32px; page-break-inside: avoid;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Skills Lab</h2>
             @include('reports.partials.comparison-rows', ['rows' => $skillsLabRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true, 'labelHeader' => 'Equipment/Item'])
@@ -156,7 +163,7 @@ $percentage=0;
     @endphp
 
     {{-- Information Systems Details --}}
-    @if(!empty($infoSysRows) || !empty($infoSysToolsRows))
+    @if($sectionEnabled('information_systems') && (!empty($infoSysRows) || !empty($infoSysToolsRows)))
         <div class="section" style="margin-bottom: 32px; page-break-inside: avoid;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Information Systems</h2>
 
@@ -185,7 +192,7 @@ $percentage=0;
     @endphp
 
     {{-- Human Resources --}}
-    @if(!empty($hrRows))
+    @if($sectionEnabled('human_resources') && !empty($hrRows))
         <div class="section" style="margin-bottom: 32px; page-break-inside: avoid;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Human Resources</h2>
 
@@ -229,7 +236,7 @@ $percentage=0;
     @endphp
 
     {{-- Health Products Summary --}}
-    @if(!empty($healthProductsData))
+    @if($sectionEnabled('health_products') && !empty($healthProductsData))
         <div class="section" style="margin-bottom: 32px;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Health Products & Commodities</h2>
             @foreach($healthProductsData as $departmentName => $dept)
@@ -284,7 +291,7 @@ $percentage=0;
     @endphp
 
     {{-- Quality of Care --}}
-    @if(!empty($qualityYesNoRows) || !empty($qualityStatsRows))
+    @if($sectionEnabled('quality_of_care') && (!empty($qualityYesNoRows) || !empty($qualityStatsRows)))
         <div class="section" style="margin-bottom: 32px;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Quality of Care</h2>
 
@@ -314,7 +321,7 @@ $percentage=0;
     @endphp
 
     {{-- Newborn & Paediatric Indicators --}}
-    @if(!empty($indicatorsNewbornRows) || !empty($indicatorsPaediatricRows) || !empty($indicatorsNewbornProportionsRows) || !empty($indicatorsPaediatricProportionsRows))
+    @if($sectionEnabled('indicators') && (!empty($indicatorsNewbornRows) || !empty($indicatorsPaediatricRows) || !empty($indicatorsNewbornProportionsRows) || !empty($indicatorsPaediatricProportionsRows)))
         <div class="section" style="margin-bottom: 32px;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Newborn & Paediatric Indicators</h2>
 

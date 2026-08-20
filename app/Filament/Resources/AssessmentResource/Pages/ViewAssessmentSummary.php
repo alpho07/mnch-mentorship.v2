@@ -6,6 +6,7 @@ use App\Filament\Resources\AssessmentResource;
 use App\Services\AssessmentPdfReportService;
 use App\Services\AssessmentExportService;
 use Filament\Actions;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
@@ -41,9 +42,21 @@ class ViewAssessmentSummary extends ViewRecord {
                     ->label('Download PDF Report')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('warning')
-                    ->action(function () {
+                    ->form([
+                        CheckboxList::make('sections')
+                            ->label('Sections to include')
+                            ->helperText('Facility Information, Section Performance, and Overall Score are always included. Your selection is remembered for next time.')
+                            ->options(AssessmentPdfReportService::TOGGLEABLE_SECTIONS)
+                            ->default(fn () => auth()->user()->enabledReportSections())
+                            ->columns(2),
+                    ])
+                    ->action(function (array $data) {
+                        $enabledSections = $data['sections'] ?? [];
+
+                        auth()->user()->update(['report_section_preferences' => $enabledSections]);
+
                         $service = app(AssessmentPdfReportService::class);
-                        $pdf = $service->generateExecutiveReport($this->record);
+                        $pdf = $service->generateExecutiveReport($this->record, $enabledSections);
 
                         $filename = sprintf(
                                 'MNCH-Assessment-%s-%s.pdf',

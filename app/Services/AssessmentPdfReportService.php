@@ -9,15 +9,37 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class AssessmentPdfReportService {
 
     /**
+     * Section keys a user can opt out of in the PDF download, keyed to the
+     * $sectionEnabled() check each section's @if wraps in
+     * reports/assessment-html-report.blade.php. Facility Information,
+     * Section Performance, and Overall Score are always included — not
+     * offered as toggles.
+     */
+    public const TOGGLEABLE_SECTIONS = [
+        'infrastructure' => 'Infrastructure',
+        'skills_lab' => 'Skills Lab',
+        'human_resources' => 'Human Resources',
+        'health_products' => 'Health Products & Commodities',
+        'information_systems' => 'Information Systems',
+        'quality_of_care' => 'Quality of Care',
+        'indicators' => 'Newborn & Paediatric Indicators',
+    ];
+
+    /**
      * Generate PDF report — renders the exact same view as the web
      * summary page (reports.assessment-html-report, via the PDF-specific
      * wrapper that supplies the .badge/.info-row/etc. CSS the Filament
      * page normally provides), so the PDF matches what's on screen
      * instead of a separately-maintained layout.
+     *
+     * @param  array<int, string>|null  $enabledSections  Keys from
+     *     TOGGLEABLE_SECTIONS to include; null (the default) includes all
+     *     of them, same as before this parameter existed.
      */
-    public function generateExecutiveReport(Assessment $assessment) {
+    public function generateExecutiveReport(Assessment $assessment, ?array $enabledSections = null) {
         $data = $this->prepareReportData($assessment);
         $data['comparison'] = app(\App\Services\AssessmentComparisonService::class)->prepareComparisonData($assessment);
+        $data['enabledSections'] = $enabledSections;
 
         $pdf = Pdf::loadView('pdf.assessment-html-report-wrapper', $data);
 
@@ -33,11 +55,13 @@ class AssessmentPdfReportService {
     }
 
     /**
-     * Generate HTML report for web display
+     * Generate HTML report for web display — always shows every section
+     * (enabledSections is only a PDF-download concept).
      */
     public function generateHtmlReport(Assessment $assessment): string {
         $data = $this->prepareReportData($assessment);
         $data['comparison'] = app(\App\Services\AssessmentComparisonService::class)->prepareComparisonData($assessment);
+        $data['enabledSections'] = null;
 
         return view('reports.assessment-html-report', $data)->render();
     }

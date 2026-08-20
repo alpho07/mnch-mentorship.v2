@@ -46,6 +46,7 @@ class User extends Authenticatable implements FilamentUser
         'email_verified_at',
         'county_id', // Add if missing
         'program_scope',
+        'report_section_preferences',
     ];
 
     /**
@@ -82,7 +83,20 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'can_create_mentorships' => 'boolean',
             'supervisor_id' => 'integer',
+            'report_section_preferences' => 'array',
         ];
+    }
+
+    /**
+     * Which toggleable PDF report sections this user has chosen to include
+     * — the keys from AssessmentPdfReportService::TOGGLEABLE_SECTIONS. All
+     * sections are enabled by default until the user saves a selection.
+     *
+     * @return array<int, string>
+     */
+    public function enabledReportSections(): array
+    {
+        return $this->report_section_preferences ?? array_keys(\App\Services\AssessmentPdfReportService::TOGGLEABLE_SECTIONS);
     }
 
     /**
