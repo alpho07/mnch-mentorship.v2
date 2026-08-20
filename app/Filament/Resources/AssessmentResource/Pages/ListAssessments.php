@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\AssessmentExportService;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables;
@@ -110,7 +111,9 @@ class ListAssessments extends ListRecords
                         : $state)
                     ->searchable(['name', 'mfl_code'])
                     ->sortable(),
-                Tables\Columns\TextColumn::make('assessment_type')
+                Tables\Columns\TextColumn::make('round')
+                    ->label('Round')
+                    ->formatStateUsing(fn ($record) => $record->round_display)
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'baseline' => 'info',
@@ -239,12 +242,13 @@ class ListAssessments extends ListRecords
                         Assessment::query()->whereNotNull('assessor_id')->distinct()->pluck('assessor_id')
                     )->get()->mapWithKeys(fn (User $u) => [$u->id => $u->full_name]))
                     ->searchable(),
-                Tables\Filters\SelectFilter::make('assessment_type')
+                Tables\Filters\SelectFilter::make('round')
                     ->label('Assessment Round')
                     ->options([
                         'baseline' => 'Baseline',
                         'midline' => 'Midline',
                         'endline' => 'Endline',
+                        'other' => 'Other',
                     ]),
                 Tables\Filters\SelectFilter::make('overall_grade')
                     ->label('Grade')
@@ -257,6 +261,55 @@ class ListAssessments extends ListRecords
             ->filtersLayout(FiltersLayout::Dropdown)
             ->actions([
                 Tables\Actions\ActionGroup::make([
+                    // Mark as Complete Action — only once every section is
+                    // done; locks the assessment against further edits by
+                    // anyone but an admin (see GuardsLockedAssessment).
+                    // Kept first so it's the immediate choice once a record
+                    // is eligible, rather than buried under navigation actions.
+                    Tables\Actions\Action::make('mark_complete')
+                        ->label('Mark as Complete')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->visible(fn ($record) => $record->status !== 'completed'
+                            && $record->allSectionsComplete())
+                        ->requiresConfirmation()
+                        ->modalHeading('Mark Assessment as Complete')
+                        ->modalDescription('This will lock the assessment. It cannot be edited further, even by the team lead — only an admin can reopen it.')
+                        ->modalSubmitActionLabel('Mark as Complete')
+                        ->action(function ($record): void {
+                            $record->update([
+                                'status' => 'completed',
+                                'completed_at' => now(),
+                                'completed_by' => auth()->id(),
+                            ]);
+                            $record->lock(auth()->id());
+
+                            Notification::make()
+                                ->title('Assessment marked as complete and locked')
+                                ->success()
+                                ->send();
+                        }),
+                    // Reopen Action — admin only, undoes mark_complete's lock.
+                    // Also kept first, alongside mark_complete.
+                    Tables\Actions\Action::make('reopen')
+                        ->label('Reopen')
+                        ->icon('heroicon-o-lock-open')
+                        ->color('danger')
+                        ->visible(fn ($record) => $record->status === 'completed'
+                            && auth()->user()?->hasRole(['admin', 'super_admin']))
+                        ->requiresConfirmation()
+                        ->modalHeading('Reopen Assessment')
+                        ->modalDescription('This unlocks the assessment so it can be edited again.')
+                        ->modalSubmitActionLabel('Reopen')
+                        ->action(function ($record): void {
+                            $record->update(['status' => 'in_progress']);
+                            $record->unlock();
+
+                            Notification::make()
+                                ->title('Assessment reopened')
+                                ->success()
+                                ->send();
+                        }),
                     // Dashboard Action
                     Tables\Actions\Action::make('dashboard')
                         ->label('Continue Assessments')
@@ -464,7 +517,7 @@ class ListAssessments extends ListRecords
                     ->size('sm')
                     ->color('gray')
                     ->button(),
-            ])
+            ], position: Tables\Enums\ActionsPosition::BeforeColumns)
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\BulkAction::make('export_selected')

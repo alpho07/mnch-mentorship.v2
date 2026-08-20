@@ -3,9 +3,40 @@
 namespace App\Services;
 
 use App\Models\Assessment;
+use App\Models\AssessmentType;
 use Illuminate\Support\Facades\DB;
 
 class AssessmentExportService {
+
+    /**
+     * Export a template's blank question list — one row per question,
+     * ordered by section then question order. For someone who wants to
+     * see (or print) the full question set a given template asks,
+     * independent of any facility's actual responses.
+     */
+    public function exportTemplateQuestionsToCSV(AssessmentType $type): string {
+        $rows = [
+            ['Section', 'Question Code', 'Question Text', 'Type', 'Order'],
+        ];
+
+        $sections = $type->sections()->orderBy('order')->get();
+
+        foreach ($sections as $section) {
+            $questions = $section->questions()->orderBy('order')->get();
+
+            foreach ($questions as $question) {
+                $rows[] = [
+                    $section->name,
+                    $question->question_code,
+                    $question->question_text,
+                    $question->question_type,
+                    $question->order,
+                ];
+            }
+        }
+
+        return $this->arrayToCSV($rows);
+    }
 
     /**
      * Export complete assessment data to CSV
@@ -118,7 +149,7 @@ class AssessmentExportService {
         return [
             ['ASSESSMENT DETAILS'],
             ['Assessment ID', $assessment->id],
-            ['Assessment Type', ucfirst($assessment->assessment_type)],
+            ['Assessment Round', $assessment->round_display],
             ['Assessment Date', $assessment->assessment_date->format('Y-m-d')],
             ['Status', ucfirst($assessment->status)],
             ['Assessor Name', $assessment->assessor_name],
@@ -294,7 +325,7 @@ class AssessmentExportService {
             'MFL Code',
             'County',
             'Sub-County',
-            'Assessment Type',
+            'Assessment Round',
             'Assessment Date',
             'Status',
             'Assessor',
@@ -325,7 +356,7 @@ class AssessmentExportService {
                 $assessment->facility->mfl_code ?? 'N/A',
                 $assessment->facility->subcounty->county->name ?? 'N/A',
                 $assessment->facility->subcounty->name ?? 'N/A',
-                ucfirst($assessment->assessment_type),
+                $assessment->round_display,
                 $assessment->assessment_date->format('Y-m-d'),
                 ucfirst($assessment->status),
                 $assessment->assessor_name,

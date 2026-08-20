@@ -68,7 +68,7 @@ class AssessmentDashboard extends Page
                     ->schema([
                         TextEntry::make('facility.name')->label('Facility'),
                         TextEntry::make('assessmentType.category.name')->label('Category')->placeholder('—'),
-                        TextEntry::make('assessment_type')->label('Type'),
+                        TextEntry::make('round')->label('Round')->formatStateUsing(fn ($record) => $record->round_display),
                         TextEntry::make('assessment_date')->label('Date')->date(),
                         TextEntry::make('assessor.name')->label('Assessor'),
                     ])
@@ -204,9 +204,7 @@ class AssessmentDashboard extends Page
 
     public function submitAssessment()
     {
-        $progress = $this->record->section_progress;
-
-        if (in_array(false, $progress, true)) {
+        if (! $this->record->allSectionsComplete()) {
             Notification::make()
                 ->warning()
                 ->title('Cannot submit')
@@ -221,11 +219,12 @@ class AssessmentDashboard extends Page
             'completed_at' => now(),
             'completed_by' => auth()->id(),
         ]);
+        $this->record->lock(auth()->id());
 
         Notification::make()
             ->success()
             ->title('Assessment submitted')
-            ->body('Assessment successfully completed.')
+            ->body('Assessment successfully completed and locked. Only an admin can reopen it.')
             ->send();
 
         return redirect(AssessmentResource::getUrl());

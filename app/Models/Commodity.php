@@ -18,12 +18,14 @@ class Commodity extends Model {
         'order',
         'is_active',
         'display_conditions',
+        'requires_quantity',
     ];
     protected $casts = [
         'is_active' => 'boolean',
         'order' => 'integer',
         'indent_level' => 'integer',
         'display_conditions' => 'array',
+        'requires_quantity' => 'boolean',
     ];
 
     // ==========================================

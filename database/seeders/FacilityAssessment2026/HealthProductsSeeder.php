@@ -26,6 +26,13 @@ class HealthProductsSeeder extends Seeder
 
     private const LABORATORY_DEPARTMENT = 'Laboratory';
 
+    /**
+     * Display name only — the slug stays the plain Str::slug('NBU') =
+     * 'nbu' so existing ?dept=nbu links (including ones saved before this
+     * name was spelled out) keep resolving to this department.
+     */
+    private const DEPARTMENT_NAME_OVERRIDES = ['NBU' => 'Newborn Unit (NBU)'];
+
     private const NICU_GATE = ['question_code' => 'INFRA_HAS_NICU', 'operator' => 'equals', 'value' => 'Yes'];
 
     private const PICU_GATE = ['question_code' => 'INFRA_HAS_PICU', 'operator' => 'equals', 'value' => 'Yes'];
@@ -299,16 +306,17 @@ class HealthProductsSeeder extends Seeder
         );
 
         $allDepartmentNames = array_merge(self::DEPARTMENTS, [self::LABORATORY_DEPARTMENT]);
-        $departments = collect($allDepartmentNames)->map(fn ($name, $order) => AssessmentDepartment::updateOrCreate(
-            ['assessment_type_id' => $type->id, 'slug' => Str::slug($name)],
-            [
-                'name' => $name,
-                'order' => $order + 1,
-                'is_active' => true,
-                'display_conditions' => $name === 'Skills lab' ? self::SKILLS_LAB_GATE : null,
-            ]
-        ));
-        $deptIdsByName = $departments->pluck('id', 'name')->all();
+        $deptIdsByName = collect($allDepartmentNames)->mapWithKeys(fn ($name, $order) => [
+            $name => AssessmentDepartment::updateOrCreate(
+                ['assessment_type_id' => $type->id, 'slug' => Str::slug($name)],
+                [
+                    'name' => self::DEPARTMENT_NAME_OVERRIDES[$name] ?? $name,
+                    'order' => $order + 1,
+                    'is_active' => true,
+                    'display_conditions' => $name === 'Skills lab' ? self::SKILLS_LAB_GATE : null,
+                ]
+            )->id,
+        ])->all();
         $allDeptIds = collect(self::DEPARTMENTS)->map(fn ($name) => $deptIdsByName[$name])->values()->all();
 
         $this->seededCommodityIds = [];
@@ -337,6 +345,19 @@ class HealthProductsSeeder extends Seeder
         foreach (self::LABORATORY_ITEMS as $name) {
             $this->createCommodity($labCategory, $name, null, 0, ++$order, null, [$labDeptId]);
         }
+
+        // These two ask to indicate a number when the answer is Yes — the
+        // matching commodity name is the natural, stable signal (it's the
+        // exact source-spreadsheet label), simpler than threading a new
+        // modifier type through the CATEGORIES DSL for just two rows. The
+        // similarly-worded CPAP row is deliberately excluded: it asks for
+        // both a unit count AND accessory availability in one label, a
+        // genuinely different (compound) shape this single quantity field
+        // doesn't fit.
+        Commodity::whereIn('name', [
+            'Functional Infusion Pumps. If yes indicate number',
+            'Functional Syringe pumps. If yes indicate number',
+        ])->update(['requires_quantity' => true]);
 
         $prunedCount = $this->pruneStaleCommodities($type);
 

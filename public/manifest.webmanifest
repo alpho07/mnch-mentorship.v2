@@ -1,0 +1,30 @@
+{
+    "name": "MNCH Mentorship Admin",
+    "short_name": "MNCH Admin",
+    "description": "MNCH Mentorship Platform admin panel for training, mentorship, and facility assessment management.",
+    "start_url": "/admin",
+    "scope": "/admin/",
+    "display": "standalone",
+    "background_color": "#F4F6FB",
+    "theme_color": "#1C3A8A",
+    "icons": [
+        {
+            "src": "/app-icons/admin-icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/app-icons/admin-icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/app-icons/admin-icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

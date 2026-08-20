@@ -334,7 +334,7 @@ Route::get('login-v1', function () {
 // Signed temporary URL for external viewers (Google Docs / Office Online) — no auth, expires quickly
 Route::get('resource-files/{file}/temp-view', [App\Http\Controllers\Admin\ResourceFileController::class, 'tempView'])
     ->name('resource-files.temp-view')
-    ->middleware('signed');
+    ->middleware('signed:relative');
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Resource file operations

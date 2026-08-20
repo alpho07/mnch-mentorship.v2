@@ -16,6 +16,8 @@ class Assessment extends Model
         'facility_id',
         'assessment_type_id',
         'assessment_type',
+        'round',
+        'round_label',
         'assessment_date',
         'assessor_id',
         'assessor_name',
@@ -75,6 +77,10 @@ class Assessment extends Model
 
             if (empty($assessment->assessment_type)) {
                 $assessment->assessment_type = 'baseline';
+            }
+
+            if (empty($assessment->round)) {
+                $assessment->round = 'baseline';
             }
 
             if (empty($assessment->assessment_date)) {
@@ -276,6 +282,25 @@ class Assessment extends Model
         return $this->completion_percentage === 100.0;
     }
 
+    public function getRoundDisplayAttribute(): string
+    {
+        if ($this->round === 'other') {
+            return $this->round_label ?: 'Other';
+        }
+
+        return ucfirst($this->round ?: 'baseline');
+    }
+
+    public function roundSortWeight(): int
+    {
+        return match ($this->round) {
+            'baseline' => 0,
+            'midline' => 1,
+            'endline' => 2,
+            default => 3,
+        };
+    }
+
     /**
      * Complete the assessment
      */
@@ -354,6 +379,33 @@ class Assessment extends Model
     public function isLocked(): bool
     {
         return (bool) $this->is_locked;
+    }
+
+    /**
+     * True once every real, fillable section on this assessment's template
+     * is marked done. Deliberately ignores informational sections (e.g.
+     * facility_profile, bed_capacity — see AssessmentSection::INFORMATIONAL_CODES):
+     * they have no dedicated edit page and so never get a section_progress
+     * entry written for them, but the raw array frequently carries a leftover
+     * `false` for them anyway — scanning the whole array for any `false`
+     * would make "all sections complete" permanently unreachable.
+     */
+    public function allSectionsComplete(): bool
+    {
+        $progress = $this->section_progress ?? [];
+
+        $codes = $this->assessmentType
+            ?->sections()
+            ->where('is_active', true)
+            ->get()
+            ->filter(fn (AssessmentSection $s) => $s->resolvedKind() !== 'informational')
+            ->pluck('code');
+
+        if (! $codes || $codes->isEmpty()) {
+            return false;
+        }
+
+        return $codes->every(fn ($code) => ($progress[$code] ?? false) === true);
     }
 
     public function lock(int $userId): void

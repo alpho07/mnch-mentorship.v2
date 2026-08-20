@@ -79,6 +79,24 @@ class CreateAssessment extends CreateRecord
                             ->preload()
                             ->live()
                             ->required(),
+                        Forms\Components\Select::make('round')
+                            ->label('Assessment Round')
+                            ->helperText('Which round of this template is this?')
+                            ->options([
+                                'baseline' => 'Baseline',
+                                'midline' => 'Midline',
+                                'endline' => 'Endline',
+                                'other' => 'Other',
+                            ])
+                            ->default('baseline')
+                            ->live()
+                            ->required(),
+                        Forms\Components\TextInput::make('round_label')
+                            ->label('Specify Round')
+                            ->helperText('Required when round is "Other" — e.g. "Post-COVID Re-assessment".')
+                            ->maxLength(100)
+                            ->visible(fn (Forms\Get $get) => $get('round') === 'other')
+                            ->required(fn (Forms\Get $get) => $get('round') === 'other'),
                         Forms\Components\DatePicker::make('assessment_date')
                             ->label('Assessment Date')
                             ->default(now())
@@ -122,29 +140,35 @@ class CreateAssessment extends CreateRecord
     }
 
     /**
-     * Block duplicate assessments: one per facility per template. Keyed off
-     * assessment_type_id (the template) now, not the old baseline/midline/
-     * endline label — a deliberate change, since "period" now lives in the
-     * template's own title/period_start/period_end rather than a fixed
-     * 3-value enum.
+     * Block duplicate assessments: one per facility, per template, per
+     * round — baseline/midline/endline each allowed once; "other" rounds
+     * are distinguished by their free-text round_label, so any number of
+     * distinctly-labeled "other" assessments are allowed.
      */
     protected function beforeCreate(): void
     {
         $facilityId = $this->data['facility_id'] ?? null;
         $assessmentTypeId = $this->data['assessment_type_id'] ?? null;
+        $round = $this->data['round'] ?? null;
+        $roundLabel = $round === 'other' ? ($this->data['round_label'] ?? null) : null;
 
-        if ($facilityId && $assessmentTypeId) {
-            $exists = Assessment::where('facility_id', $facilityId)
+        if ($facilityId && $assessmentTypeId && $round) {
+            $query = Assessment::where('facility_id', $facilityId)
                 ->where('assessment_type_id', $assessmentTypeId)
-                ->whereNull('deleted_at')
-                ->exists();
+                ->where('round', $round)
+                ->whereNull('deleted_at');
 
-            if ($exists) {
+            if ($round === 'other') {
+                $query->where('round_label', $roundLabel);
+            }
+
+            if ($query->exists()) {
                 $typeName = AssessmentType::find($assessmentTypeId)?->name ?? 'This';
+                $roundName = $round === 'other' ? $roundLabel : ucfirst($round);
                 Notification::make()
                     ->danger()
                     ->title('Duplicate Assessment')
-                    ->body("A \"{$typeName}\" assessment already exists for this facility. Only one assessment per template per facility is allowed.")
+                    ->body("A \"{$roundName}\" \"{$typeName}\" assessment already exists for this facility.")
                     ->persistent()
                     ->send();
 

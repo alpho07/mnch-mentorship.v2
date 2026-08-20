@@ -165,6 +165,21 @@ class AssessmentTypeResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('download_questions_csv')
+                    ->label('Download Questions (CSV)')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('gray')
+                    ->action(function (AssessmentType $record) {
+                        $csv = app(\App\Services\AssessmentExportService::class)->exportTemplateQuestionsToCSV($record);
+
+                        $filename = sprintf('mnch-template-questions-%s.csv', \Illuminate\Support\Str::slug($record->name));
+
+                        return response()->streamDownload(function () use ($csv) {
+                            echo $csv;
+                        }, $filename, [
+                            'Content-Type' => 'text/csv',
+                        ]);
+                    }),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

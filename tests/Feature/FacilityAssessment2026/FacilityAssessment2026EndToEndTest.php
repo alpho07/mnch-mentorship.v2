@@ -64,21 +64,30 @@ class FacilityAssessment2026EndToEndTest extends TestCase
         $this->assertNull(AssessmentQuestionResponse::where('assessment_id', $assessment->id)->where('assessment_question_id', $manikinAnne->id)->first());
 
         // Health Products: 'surfactant' has two rows — one unconditional,
-        // attached to the NBU and Maternity departments (2 tabs), and one
-        // scoped to the Skills lab tab alone, gated on HAS_NICU. Every
-        // department tab renders in the same page (Filament Tabs doesn't
-        // lazy-load), so the unconditional row alone accounts for 2
-        // occurrences regardless of the gate; a 3rd appears once the
-        // Skills-lab-scoped row also becomes visible.
+        // attached to the NBU and Maternity departments, and one scoped to
+        // the Skills lab department alone, gated on HAS_NICU. Departments
+        // are one-per-page-load now (switched via ?dept=<slug>), not all
+        // rendered together in one page, so each department is checked via
+        // its own request instead of counting occurrences on one page.
         $hpUrl = AssessmentResource::getUrl('edit-health-products', ['record' => $assessment->id]);
-        $hpResponse = $this->get($hpUrl);
-        $hpResponse->assertOk();
-        $this->assertSame(2, substr_count($hpResponse->getContent(), 'surfactant'));
 
-        // Flip HAS_NICU to Yes — the Skills-lab-scoped row must now also render.
+        $nbuResponse = $this->get($hpUrl.'?dept=nbu');
+        $nbuResponse->assertOk();
+        $this->assertSame(1, substr_count($nbuResponse->getContent(), 'surfactant'));
+
+        $maternityResponse = $this->get($hpUrl.'?dept=maternity');
+        $maternityResponse->assertOk();
+        $this->assertSame(1, substr_count($maternityResponse->getContent(), 'surfactant'));
+
+        // Skills lab: the gated row must not render while HAS_NICU is No.
+        $skillsLabResponse = $this->get($hpUrl.'?dept=skills-lab');
+        $skillsLabResponse->assertOk();
+        $this->assertSame(0, substr_count($skillsLabResponse->getContent(), 'surfactant'));
+
+        // Flip HAS_NICU to Yes — the Skills-lab-scoped row must now render.
         AssessmentQuestionResponse::where('assessment_id', $assessment->id)->where('assessment_question_id', $hasNicu->id)->update(['response_value' => 'Yes']);
-        $hpResponseAfter = $this->get($hpUrl);
-        $hpResponseAfter->assertOk();
-        $this->assertSame(3, substr_count($hpResponseAfter->getContent(), 'surfactant'));
+        $skillsLabResponseAfter = $this->get($hpUrl.'?dept=skills-lab');
+        $skillsLabResponseAfter->assertOk();
+        $this->assertSame(1, substr_count($skillsLabResponseAfter->getContent(), 'surfactant'));
     }
 }

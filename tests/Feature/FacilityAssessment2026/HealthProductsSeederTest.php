@@ -148,12 +148,12 @@ class HealthProductsSeederTest extends TestCase
         foreach (['2.5', '3.0', '3.5', '4.0'] as $size) {
             $departments = $items[$size]->applicableDepartments()->pluck('name');
             $this->assertNotContains('Theatre', $departments);
-            $this->assertContains('NBU', $departments);
+            $this->assertContains('Newborn Unit (NBU)', $departments);
         }
         foreach (['4.5', '5.0', '5.5', '6.0'] as $size) {
             $departments = $items[$size]->applicableDepartments()->pluck('name');
             $this->assertNotContains('Theatre', $departments);
-            $this->assertNotContains('NBU', $departments);
+            $this->assertNotContains('Newborn Unit (NBU)', $departments);
         }
     }
 
@@ -186,7 +186,7 @@ class HealthProductsSeederTest extends TestCase
         $departments = $items->first()->applicableDepartments()->pluck('name');
         $this->assertNotContains('Skills lab', $departments);
         $this->assertNotContains('Theatre', $departments);
-        $this->assertContains('NBU', $departments);
+        $this->assertContains('Newborn Unit (NBU)', $departments);
     }
 
     /**
@@ -216,7 +216,7 @@ class HealthProductsSeederTest extends TestCase
             $plainRow = $rows->firstWhere('display_conditions', null);
             $this->assertNotNull($plainRow, "{$name} should have one ungated row");
             $plainDepartments = $plainRow->applicableDepartments()->pluck('name');
-            $this->assertContains('NBU', $plainDepartments);
+            $this->assertContains('Newborn Unit (NBU)', $plainDepartments);
             $this->assertContains('Maternity', $plainDepartments);
             $this->assertNotContains('Skills lab', $plainDepartments);
             foreach ($excluded as $dept) {
@@ -263,11 +263,11 @@ class HealthProductsSeederTest extends TestCase
         ] as $unrestricted => $restricted) {
             $unrestrictedDepartments = Commodity::where('name', $unrestricted)->firstOrFail()->applicableDepartments()->pluck('name');
             $this->assertNotContains('Theatre', $unrestrictedDepartments);
-            $this->assertContains('NBU', $unrestrictedDepartments);
+            $this->assertContains('Newborn Unit (NBU)', $unrestrictedDepartments);
 
             $restrictedDepartments = Commodity::where('name', $restricted)->firstOrFail()->applicableDepartments()->pluck('name');
             $this->assertNotContains('Theatre', $restrictedDepartments);
-            $this->assertNotContains('NBU', $restrictedDepartments);
+            $this->assertNotContains('Newborn Unit (NBU)', $restrictedDepartments);
         }
     }
 
@@ -279,7 +279,7 @@ class HealthProductsSeederTest extends TestCase
         $dept = AssessmentDepartment::where('assessment_type_id', $type->id)->where('name', 'Skills lab')->firstOrFail();
         $this->assertSame(['question_code' => 'SKILLS_HAS_LAB', 'operator' => 'equals', 'value' => 'Yes'], $dept->display_conditions);
 
-        $otherDept = AssessmentDepartment::where('assessment_type_id', $type->id)->where('name', 'NBU')->firstOrFail();
+        $otherDept = AssessmentDepartment::where('assessment_type_id', $type->id)->where('name', 'Newborn Unit (NBU)')->firstOrFail();
         $this->assertNull($otherDept->display_conditions);
     }
 
@@ -342,7 +342,7 @@ class HealthProductsSeederTest extends TestCase
             'facility_id' => $facility->id, 'assessment_type_id' => $category->assessment_type_id,
             'assessment_type' => 'baseline', 'assessment_date' => now(), 'assessor_name' => 'Prune Test Assessor',
         ]);
-        $dept = AssessmentDepartment::where('assessment_type_id', $category->assessment_type_id)->where('name', 'NBU')->firstOrFail();
+        $dept = AssessmentDepartment::where('assessment_type_id', $category->assessment_type_id)->where('name', 'Newborn Unit (NBU)')->firstOrFail();
         \App\Models\AssessmentCommodityResponse::create([
             'assessment_id' => $assessment->id, 'commodity_id' => $staleWithResponse->id,
             'assessment_department_id' => $dept->id, 'available' => true,

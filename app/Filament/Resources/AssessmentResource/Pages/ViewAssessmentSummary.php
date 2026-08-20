@@ -6,6 +6,7 @@ use App\Filament\Resources\AssessmentResource;
 use App\Services\AssessmentPdfReportService;
 use App\Services\AssessmentExportService;
 use Filament\Actions;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
@@ -17,6 +18,65 @@ class ViewAssessmentSummary extends ViewRecord {
 
     protected function getHeaderActions(): array {
         return [
+                    Actions\Action::make('mark_complete')
+                    ->label('Mark as Complete')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('primary')
+                    ->visible(fn() => $this->record->status !== 'completed'
+                        && $this->record->allSectionsComplete())
+                    ->requiresConfirmation()
+                    ->modalHeading('Mark Assessment as Complete')
+                    ->modalDescription('This will lock the assessment. It cannot be edited further, even by the team lead — only an admin can reopen it.')
+                    ->modalSubmitActionLabel('Mark as Complete')
+                    ->action(function () {
+                        $this->record->update([
+                            'status' => 'completed',
+                            'completed_at' => now(),
+                            'completed_by' => auth()->id(),
+                        ]);
+                        $this->record->lock(auth()->id());
+
+                        \Filament\Notifications\Notification::make()
+                                ->title('Assessment marked as complete and locked')
+                                ->success()
+                                ->send();
+                    }),
+                    Actions\Action::make('reopen')
+                    ->label('Reopen')
+                    ->icon('heroicon-o-lock-open')
+                    ->color('danger')
+                    ->visible(fn() => $this->record->status === 'completed'
+                        && auth()->user()?->hasRole(['admin', 'super_admin']))
+                    ->requiresConfirmation()
+                    ->modalHeading('Reopen Assessment')
+                    ->modalDescription('This unlocks the assessment so it can be edited again.')
+                    ->modalSubmitActionLabel('Reopen')
+                    ->action(function () {
+                        $this->record->update(['status' => 'in_progress']);
+                        $this->record->unlock();
+
+                        \Filament\Notifications\Notification::make()
+                                ->title('Assessment reopened')
+                                ->success()
+                                ->send();
+                    }),
+                    Actions\Action::make('select_sections')
+                    ->label('Select Sections')
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->color('gray')
+                    ->form([
+                        CheckboxList::make('sections')
+                            ->label('Sections to include')
+                            ->helperText('Facility Information, Section Performance, and Overall Score are always included. Applies here and to future PDF downloads — remembered for next time.')
+                            ->options(AssessmentPdfReportService::TOGGLEABLE_SECTIONS)
+                            ->default(fn () => auth()->user()->enabledReportSections())
+                            ->columns(2),
+                    ])
+                    ->action(function (array $data) {
+                        auth()->user()->update(['report_section_preferences' => $data['sections'] ?? []]);
+
+                        $this->redirect(static::getUrl(['record' => $this->record]));
+                    }),
                     Actions\Action::make('export_csv')
                     ->label('Export CSV (Raw Data)')
                     ->icon('heroicon-o-document-arrow-down')
@@ -41,9 +101,10 @@ class ViewAssessmentSummary extends ViewRecord {
                     ->label('Download PDF Report')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('warning')
+                    ->tooltip('Uses your saved section selection — see "Select Sections" to change it')
                     ->action(function () {
                         $service = app(AssessmentPdfReportService::class);
-                        $pdf = $service->generateExecutiveReport($this->record);
+                        $pdf = $service->generateExecutiveReport($this->record, auth()->user()->enabledReportSections());
 
                         $filename = sprintf(
                                 'MNCH-Assessment-%s-%s.pdf',
@@ -56,24 +117,6 @@ class ViewAssessmentSummary extends ViewRecord {
                                 }, $filename);
                     }),
             Actions\EditAction::make(),
-                    Actions\Action::make('mark_complete')
-                    ->label('Mark as Complete')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('primary')
-                    ->visible(fn() => $this->record->status !== 'completed')
-                    ->requiresConfirmation()
-                    ->action(function () {
-                        $this->record->update([
-                            'status' => 'completed',
-                            'completed_at' => now(),
-                            'completed_by' => auth()->id(),
-                        ]);
-
-                        \Filament\Notifications\Notification::make()
-                                ->title('Assessment marked as complete')
-                                ->success()
-                                ->send();
-                    }),
         ];
     }
 
@@ -82,10 +125,11 @@ class ViewAssessmentSummary extends ViewRecord {
     }
 
     /**
-     * Get the report HTML for web display
+     * Get the report HTML for web display — filtered by the user's saved
+     * section selection, same as the PDF download.
      */
     public function getReportHtml(): string {
         $service = app(AssessmentPdfReportService::class);
-        return $service->generateHtmlReport($this->record);
+        return $service->generateHtmlReport($this->record, auth()->user()->enabledReportSections());
     }
 }
