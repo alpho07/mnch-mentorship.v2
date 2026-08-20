@@ -764,8 +764,7 @@ body {
     </div>
     <div class="section-body">
         @php
-            $infoScored   = $infoResponses->where('is_scored', 1);
-            $infoUnscored = $infoResponses->where('is_scored', 0);
+            $infoScored   = $infoResponsesUngrouped->where('is_scored', 1);
         @endphp
         <div class="indicator-grid">
             @foreach($infoScored as $item)
@@ -784,6 +783,29 @@ body {
             </div>
             @endforeach
         </div>
+
+        @if($infoDataToolsTable->isNotEmpty())
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin:1.2rem 0 .5rem;">Data Collection Tools &amp; Registers</div>
+        <div style="overflow-x:auto;">
+        <table class="data-table">
+            <thead><tr><th>Form / Register</th><th>Available</th><th>Completeness</th></tr></thead>
+            <tbody>
+                @foreach($infoDataToolsTable as $row)
+                <tr>
+                    <td>{{ $row['form'] }}</td>
+                    <td>
+                        @if($row['available'] === 'Yes') <span class="pill-green score-pill" style="margin:0;">Yes</span>
+                        @elseif($row['available'] === 'No') <span class="pill-red score-pill" style="margin:0;">No</span>
+                        @else <span class="pill-gray score-pill" style="margin:0;">{{ $row['available'] }}</span>
+                        @endif
+                    </td>
+                    <td>{{ $row['completeness'] }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        </div>
+        @endif
 
         @if($sectionScores->has('information_systems'))
         @php $ss = $sectionScores->get('information_systems'); @endphp

@@ -139,11 +139,41 @@ class AssessmentExecutiveDashboardController extends Controller
                 'assessment_questions.question_code',
                 'assessment_questions.question_text',
                 'assessment_questions.is_scored',
+                'assessment_questions.group',
                 'assessment_question_responses.response_value',
                 'assessment_question_responses.score',
             )
             ->orderBy('assessment_questions.id')
             ->get();
+
+        // The MoH-form Available/Completeness pairs (see
+        // AssessmentPdfReportService::getInformationSystemsDetails, which
+        // this mirrors) share a "Category|Type|{formName}" group and both
+        // use the bare question text "Available"/"Completeness" — left in
+        // the flat list above, that's dozens of identical-looking rows
+        // with no indication of which form each belongs to. Pulled into
+        // their own form-by-form table instead; $infoResponses below is
+        // filtered down to the ungrouped questions only.
+        $infoDataToolsTable = $infoResponses
+            ->filter(fn ($r) => $r->group !== null)
+            ->groupBy(fn ($r) => last(explode('|', $r->group)))
+            ->map(function ($pair, $formName) {
+                $available = $pair->first(fn ($r) => str_ends_with($r->question_code, '_AVAILABLE'));
+                $complete = $pair->first(fn ($r) => str_ends_with($r->question_code, '_COMPLETE'));
+
+                return [
+                    'form' => $formName,
+                    'available' => $available?->response_value ?? 'N/A',
+                    'completeness' => $complete?->response_value ?? 'N/A',
+                ];
+            })
+            ->values();
+
+        // $infoResponses itself stays the full list — generateInsights()
+        // and detectStraightLining() below need every scored row,
+        // grouped or not, to count "missing" correctly. Only the grid
+        // rendering (dashboard blade) uses this trimmed-down version.
+        $infoResponsesUngrouped = $infoResponses->filter(fn ($r) => $r->group === null)->values();
 
         // ── Quality of Care ───────────────────────────────────────────────────
         $qocAll = DB::table('assessment_questions')
@@ -255,6 +285,8 @@ class AssessmentExecutiveDashboardController extends Controller
             'skillsAvailable',
             'skillsMissing',
             'infoResponses',
+            'infoResponsesUngrouped',
+            'infoDataToolsTable',
             'qocAll',
             'hrRows',
             'totalStaff',
