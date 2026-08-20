@@ -381,6 +381,33 @@ class Assessment extends Model
         return (bool) $this->is_locked;
     }
 
+    /**
+     * True once every real, fillable section on this assessment's template
+     * is marked done. Deliberately ignores informational sections (e.g.
+     * facility_profile, bed_capacity — see AssessmentSection::INFORMATIONAL_CODES):
+     * they have no dedicated edit page and so never get a section_progress
+     * entry written for them, but the raw array frequently carries a leftover
+     * `false` for them anyway — scanning the whole array for any `false`
+     * would make "all sections complete" permanently unreachable.
+     */
+    public function allSectionsComplete(): bool
+    {
+        $progress = $this->section_progress ?? [];
+
+        $codes = $this->assessmentType
+            ?->sections()
+            ->where('is_active', true)
+            ->get()
+            ->filter(fn (AssessmentSection $s) => $s->resolvedKind() !== 'informational')
+            ->pluck('code');
+
+        if (! $codes || $codes->isEmpty()) {
+            return false;
+        }
+
+        return $codes->every(fn ($code) => ($progress[$code] ?? false) === true);
+    }
+
     public function lock(int $userId): void
     {
         $this->update(['is_locked' => true, 'locked_at' => now(), 'locked_by' => $userId]);

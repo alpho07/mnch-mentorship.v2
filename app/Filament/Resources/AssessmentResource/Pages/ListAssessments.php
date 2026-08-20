@@ -261,29 +261,17 @@ class ListAssessments extends ListRecords
             ->filtersLayout(FiltersLayout::Dropdown)
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    // Dashboard Action
-                    Tables\Actions\Action::make('dashboard')
-                        ->label('Continue Assessments')
-                        ->icon('heroicon-o-clipboard-document-list')
-                        ->color('primary')
-                        ->visible(fn ($record) => $record->status !== 'completed')
-                        ->url(fn ($record) => AssessmentResource::getUrl('dashboard', ['record' => $record])),
-                    // View Summary Action
-                    Tables\Actions\Action::make('view_summary')
-                        ->label('View Summary')
-                        ->icon('heroicon-o-eye')
-                        ->color('info')
-                        ->url(fn ($record) => AssessmentResource::getUrl('summary', ['record' => $record])),
                     // Mark as Complete Action — only once every section is
                     // done; locks the assessment against further edits by
                     // anyone but an admin (see GuardsLockedAssessment).
+                    // Kept first so it's the immediate choice once a record
+                    // is eligible, rather than buried under navigation actions.
                     Tables\Actions\Action::make('mark_complete')
                         ->label('Mark as Complete')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->visible(fn ($record) => $record->status !== 'completed'
-                            && ! empty($record->section_progress)
-                            && ! in_array(false, $record->section_progress, true))
+                            && $record->allSectionsComplete())
                         ->requiresConfirmation()
                         ->modalHeading('Mark Assessment as Complete')
                         ->modalDescription('This will lock the assessment. It cannot be edited further, even by the team lead — only an admin can reopen it.')
@@ -302,6 +290,7 @@ class ListAssessments extends ListRecords
                                 ->send();
                         }),
                     // Reopen Action — admin only, undoes mark_complete's lock.
+                    // Also kept first, alongside mark_complete.
                     Tables\Actions\Action::make('reopen')
                         ->label('Reopen')
                         ->icon('heroicon-o-lock-open')
@@ -321,6 +310,19 @@ class ListAssessments extends ListRecords
                                 ->success()
                                 ->send();
                         }),
+                    // Dashboard Action
+                    Tables\Actions\Action::make('dashboard')
+                        ->label('Continue Assessments')
+                        ->icon('heroicon-o-clipboard-document-list')
+                        ->color('primary')
+                        ->visible(fn ($record) => $record->status !== 'completed')
+                        ->url(fn ($record) => AssessmentResource::getUrl('dashboard', ['record' => $record])),
+                    // View Summary Action
+                    Tables\Actions\Action::make('view_summary')
+                        ->label('View Summary')
+                        ->icon('heroicon-o-eye')
+                        ->color('info')
+                        ->url(fn ($record) => AssessmentResource::getUrl('summary', ['record' => $record])),
                     // Manage Team Action
                     Tables\Actions\Action::make('manage_team')
                         ->label('Manage Team')
