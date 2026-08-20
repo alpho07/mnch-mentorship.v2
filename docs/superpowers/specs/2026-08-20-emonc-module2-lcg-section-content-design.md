@@ -50,7 +50,7 @@ recommendation quotes are preserved verbatim where the slide quotes WHO 2018/202
 
 ## Images
 
-13 distinct figures (image27–image45, excluding duplicates reused across slides) are extracted once from
+19 distinct figures (image27–image45) are extracted once from
 the PPTX now and committed to the repo as static assets — the seeder does not depend on the PPTX at
 deploy/runtime:
 
