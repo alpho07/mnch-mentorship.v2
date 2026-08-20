@@ -235,7 +235,7 @@ else                               { $vidC='#f59e0b'; $vidBg='#fffbeb'; $vidBdr=
     </div>
 
     {{-- ═══ COURSE INFORMATION (mentor-facing) ════════════════════════════════ --}}
-    @if($mentorCourseIntro || $mentorMaterials || $moduleRubric?->debrief_questions || $moduleRubric?->equipment_supplies)
+    @if($mentorCourseIntro || $moduleRubric?->debrief_questions || $moduleRubric?->equipment_supplies)
     <div class="rv-animate" style="animation-delay:0.04s;margin-bottom:20px;background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
         <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:10px;">
             <svg fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="#4f46e5" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
@@ -246,12 +246,6 @@ else                               { $vidC='#f59e0b'; $vidBg='#fffbeb'; $vidBdr=
                 <div>
                     <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;color:#9ca3af;margin:0 0 6px;">Course Introduction</p>
                     <div class="prose prose-sm max-w-none" style="font-size:13px;color:#374151;">{!! Str::markdown($mentorCourseIntro->content) !!}</div>
-                </div>
-            @endif
-            @if($mentorMaterials)
-                <div>
-                    <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;color:#9ca3af;margin:0 0 6px;">Materials Needed for the Course</p>
-                    <div class="prose prose-sm max-w-none" style="font-size:13px;color:#374151;">{!! Str::markdown($mentorMaterials->content) !!}</div>
                 </div>
             @endif
             @if($moduleRubric?->equipment_supplies)
@@ -274,6 +268,24 @@ else                               { $vidC='#f59e0b'; $vidBg='#fffbeb'; $vidBdr=
                     </ul>
                 </div>
             @endif
+        </div>
+    </div>
+    @endif
+
+    {{-- ═══ MENTOR MATERIALS (mentor-facing, per LCG section) ═══════════════════ --}}
+    @if($mentorMaterials->isNotEmpty())
+    <div class="rv-animate" style="animation-delay:0.05s;margin-bottom:20px;background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:10px;">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="#4f46e5" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+            <h3 style="font-size:14px;font-weight:800;color:#111827;margin:0;">Mentor Materials — By Section</h3>
+        </div>
+        <div style="padding:18px 20px;">
+            @foreach($mentorMaterials as $material)
+                <div class="{{ $loop->first ? '' : 'mt-5 pt-5' }}" style="{{ $loop->first ? '' : 'border-top:1px solid #f1f5f9;' }}">
+                    <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;color:#9ca3af;margin:0 0 6px;">{{ $material->title }}</p>
+                    <div class="prose prose-sm max-w-none" style="font-size:13px;color:#374151;">{!! Str::markdown($material->content) !!}</div>
+                </div>
+            @endforeach
         </div>
     </div>
     @endif
