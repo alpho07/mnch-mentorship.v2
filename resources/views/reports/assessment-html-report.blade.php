@@ -14,14 +14,18 @@
     $reportTitle = $comparison
         ? 'MNCH ASSESSMENT'
         : 'MNCH '.strtoupper($assessment->round_display).' ASSESSMENT';
+
+    // Defined once here (not per-section further down) so Facility
+    // Information can list every round's date too, not just show the
+    // single "Assessment Date" the header used to.
+    $comparisonRounds = $comparison['rounds'] ?? [['id' => $assessment->id, 'label' => $assessment->round_display, 'date' => $assessment->assessment_date]];
 @endphp
 
 <div class="report-container">
-    {{-- Header --}}
+    {{-- Header — facility name dropped: it's already the first row of
+         Facility Information right below, no need to say it twice. --}}
     <div class="report-header" style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #1f2937; margin-bottom: 8px;">{{ $reportTitle }}</h1>
-        <h2 style="color: #4b5563; font-size: 18px; font-weight: normal;">{{ $facilityInfo['name'] }}</h2>
-        <p style="color: #6b7280; margin-top: 8px;">Assessment Date: {{ $assessment->assessment_date->format('F d, Y') }}</p>
     </div>
 
 
@@ -54,6 +58,25 @@
                 <span class="info-label" style="font-weight: 600; width: 200px; color: #6b7280;">Assessor:</span>
                 <span class="info-value" style="color: #1f2937;">{{ $assessment->assessor_name }}</span>
             </div>
+            {{--
+                One row per round when comparing (e.g. "Baseline: August
+                15, 2026", "Midline: August 20, 2026"); a single
+                "Assessment Date" row otherwise — same as the header used
+                to show, just relocated here instead of duplicated.
+            --}}
+            @if($comparison)
+                @foreach($comparisonRounds as $round)
+                    <div class="info-row" style="display: flex; padding: 6px 0;">
+                        <span class="info-label" style="font-weight: 600; width: 200px; color: #6b7280;">{{ $round['label'] }} Assessment:</span>
+                        <span class="info-value" style="color: #1f2937;">{{ $round['date']->format('F d, Y') }}</span>
+                    </div>
+                @endforeach
+            @else
+                <div class="info-row" style="display: flex; padding: 6px 0;">
+                    <span class="info-label" style="font-weight: 600; width: 200px; color: #6b7280;">Assessment Date:</span>
+                    <span class="info-value" style="color: #1f2937;">{{ $assessment->assessment_date->format('F d, Y') }}</span>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -108,14 +131,6 @@ $percentage=0;
     $np = (int) ($percentage/4);
     $color =$np >= 80 ? 'green' : ( $np >= 50 ? 'yellow' : 'red');
 @endphp
-
-    @php
-        // Defined here (not only in the later @php block below) because
-        // this Overall Score block renders *before* that block in the
-        // file — Blade has no block scoping, but top-to-bottom order
-        // still matters for when a variable first exists.
-        $comparisonRounds = $comparison['rounds'] ?? [['id' => $assessment->id, 'label' => $assessment->round_display]];
-    @endphp
 
     {{--
         Overall Score Summary. background is set inline per-branch — a
@@ -184,10 +199,8 @@ $percentage=0;
     </div>
 
     @php
-        $comparisonRounds = $comparison['rounds'] ?? [['id' => $assessment->id, 'label' => $assessment->round_display]];
-
         $infraRows = $comparison['infrastructure'] ?? collect($infrastructureDetails['responses'] ?? [])
-            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+            ->map(fn ($d) => ['label' => $d['question'], 'group' => $d['group'] ?? null, 'indent_level' => $d['indent_level'] ?? 0, 'values' => [$assessment->id => $d]])->all();
         $infraBedsRows = $comparison['infrastructureBeds'] ?? collect($infrastructureDetails['beds_table'] ?? [])
             ->map(fn ($d) => ['label' => $d['unit'], 'values' => [$assessment->id => $d]])->all();
     @endphp
@@ -198,7 +211,7 @@ $percentage=0;
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Infrastructure</h2>
 
             @if(!empty($infraRows))
-                @include('reports.partials.comparison-rows', ['rows' => $infraRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true])
+                @include('reports.partials.comparison-rows', ['rows' => $infraRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true, 'numbered' => true])
             @endif
 
             @if(!empty($infraBedsRows))
@@ -210,20 +223,20 @@ $percentage=0;
 
     @php
         $skillsLabRows = $comparison['skillsLab'] ?? collect($skillsLabDetails['responses'] ?? [])
-            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+            ->map(fn ($d) => ['label' => $d['question'], 'group' => $d['group'] ?? null, 'indent_level' => $d['indent_level'] ?? 0, 'values' => [$assessment->id => $d]])->all();
     @endphp
 
     {{-- Skills Lab Details --}}
     @if($sectionEnabled('skills_lab') && !empty($skillsLabRows))
         <div class="section" style="margin-bottom: 32px; page-break-inside: avoid;">
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Skills Lab</h2>
-            @include('reports.partials.comparison-rows', ['rows' => $skillsLabRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true, 'labelHeader' => 'Equipment/Item'])
+            @include('reports.partials.comparison-rows', ['rows' => $skillsLabRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true, 'labelHeader' => 'Equipment/Item', 'numbered' => true])
         </div>
     @endif
 
     @php
         $infoSysRows = $comparison['informationSystems'] ?? collect($informationSystemsDetails['responses'] ?? [])
-            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+            ->map(fn ($d) => ['label' => $d['question'], 'group' => $d['group'] ?? null, 'indent_level' => $d['indent_level'] ?? 0, 'values' => [$assessment->id => $d]])->all();
         $infoSysToolsRows = $comparison['informationSystemsDataTools'] ?? collect($informationSystemsDetails['data_tools_table'] ?? [])
             ->map(fn ($d) => ['label' => $d['form'], 'values' => [$assessment->id => $d]])->all();
     @endphp
@@ -234,7 +247,7 @@ $percentage=0;
             <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 16px;">Information Systems</h2>
 
             @if(!empty($infoSysRows))
-                @include('reports.partials.comparison-rows', ['rows' => $infoSysRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true])
+                @include('reports.partials.comparison-rows', ['rows' => $infoSysRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true, 'numbered' => true])
             @endif
 
             @if(!empty($infoSysToolsRows))
@@ -309,6 +322,51 @@ $percentage=0;
                 <h3 style="color: #374151; margin-top: 24px; margin-bottom: 12px;">{{ $departmentName }}</h3>
                 @foreach($dept['categories'] as $category)
                     <h4 style="color: #4b5563; font-size: 14px; margin-bottom: 8px;">{{ $category['name'] }}</h4>
+                    @php
+                        // Numbered/lettered/indented exactly like the live
+                        // data-entry form's commodity list already is (see
+                        // EditHealthProducts::buildCategorySections()) —
+                        // restarting at 1 for every category, same idea,
+                        // including that method's group-header row: a
+                        // group_label like "Suction catheters size fr" is
+                        // its own question/category — it never has a
+                        // Yes/No answer of its own, only its lettered
+                        // sub-items (Fr-6, Fr-8, ...) do. Dropping that
+                        // header row (this report's first version of this
+                        // did) makes the lettered items look like orphaned
+                        // options with no question above them.
+                        $healthProductItems = [];
+                        $itemNumber = 0;
+                        foreach (\App\Services\FormKernel\LineItemGrouper::annotate(
+                            $category['items'],
+                            fn ($item) => $item['group'] ?? null,
+                            fn ($item) => (int) ($item['indent_level'] ?? 0),
+                        ) as ['item' => $item, 'letter' => $letter, 'is_group_start' => $isGroupStart]) {
+                            if ($isGroupStart) {
+                                $itemNumber++;
+                                $healthProductItems[] = [
+                                    'is_header' => true,
+                                    'numbered_label' => "{$itemNumber}. {$item['group']}",
+                                ];
+                            } elseif ($letter === null) {
+                                $itemNumber++;
+                            }
+
+                            if ($letter !== null) {
+                                $item['numbered_label'] = "{$letter}) {$item['name']}";
+                            } elseif ($isGroupStart) {
+                                // The header row just above already carries
+                                // this item's number — a lone "group" of
+                                // one option restates just its own name.
+                                $item['numbered_label'] = $item['name'];
+                            } else {
+                                $item['numbered_label'] = "{$itemNumber}. {$item['name']}";
+                            }
+                            $item['indent'] = (int) ($item['indent_level'] ?? 0) >= 1;
+                            $item['is_header'] = false;
+                            $healthProductItems[] = $item;
+                        }
+                    @endphp
                     <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px;">
                         <thead>
                             <tr>
@@ -319,26 +377,32 @@ $percentage=0;
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($category['items'] as $item)
-                                <tr>
-                                    <td style="padding: 8px 12px; border: 1px solid #e5e7eb;">{{ $item['name'] }}</td>
-                                    @foreach($comparisonRounds as $round)
-                                        @php
-                                            $available = $comparison
-                                                ? ($item['values'][$round['id']] ?? null)
-                                                : $item['available'];
-                                        @endphp
-                                        <td style="padding: 8px 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                            @if($available === null)
-                                                <span style="color:#9ca3af;">&mdash;</span>
-                                            @else
-                                                <span class="badge badge-{{ $available ? 'green' : 'red' }}" style="font-size: 12px;">
-                                                    {{ $available ? 'Yes' : 'No' }}
-                                                </span>
-                                            @endif
-                                        </td>
-                                    @endforeach
-                                </tr>
+                            @foreach($healthProductItems as $item)
+                                @if($item['is_header'])
+                                    <tr>
+                                        <td colspan="{{ 1 + count($comparisonRounds) }}" style="padding: 8px 12px; border: 1px solid #e5e7eb; background: #f9fafb; font-weight: 600; color: #374151;">{{ $item['numbered_label'] }}</td>
+                                    </tr>
+                                @else
+                                    <tr>
+                                        <td style="padding: 8px 12px; border: 1px solid #e5e7eb; {{ $item['indent'] ? 'padding-left: 24px;' : '' }}">{{ $item['numbered_label'] }}</td>
+                                        @foreach($comparisonRounds as $round)
+                                            @php
+                                                $available = $comparison
+                                                    ? ($item['values'][$round['id']] ?? null)
+                                                    : $item['available'];
+                                            @endphp
+                                            <td style="padding: 8px 12px; border: 1px solid #e5e7eb; text-align: center;">
+                                                @if($available === null)
+                                                    <span style="color:#9ca3af;">&mdash;</span>
+                                                @else
+                                                    <span class="badge badge-{{ $available ? 'green' : 'red' }}" style="font-size: 12px;">
+                                                        {{ $available ? 'Yes' : 'No' }}
+                                                    </span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>
@@ -349,11 +413,11 @@ $percentage=0;
 
     @php
         $qualityYesNoRows = $comparison['qualityYesNo'] ?? collect($qualityOfCareDetails['yes_no_array'] ?? [])
-            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+            ->map(fn ($d) => ['label' => $d['question'], 'group' => $d['group'] ?? null, 'indent_level' => $d['indent_level'] ?? 0, 'values' => [$assessment->id => $d]])->all();
         $qualityStatsRows = $comparison
             ? array_merge($comparison['qualityNewbornStats'] ?? [], $comparison['qualityPaedStats'] ?? [])
             : collect(array_merge($qualityOfCareDetails['newborn_stats_array'] ?? [], $qualityOfCareDetails['paed_stats_array'] ?? []))
-                ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+                ->map(fn ($d) => ['label' => $d['question'], 'group' => $d['group'] ?? null, 'indent_level' => $d['indent_level'] ?? 0, 'values' => [$assessment->id => $d]])->all();
     @endphp
 
     {{-- Quality of Care --}}
@@ -364,26 +428,26 @@ $percentage=0;
             {{-- Audit Questions --}}
             @if(!empty($qualityYesNoRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Audit & Process Compliance</h3>
-                @include('reports.partials.comparison-rows', ['rows' => $qualityYesNoRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true])
+                @include('reports.partials.comparison-rows', ['rows' => $qualityYesNoRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'badge' => true, 'numbered' => true])
             @endif
 
             {{-- Statistical Data --}}
             @if(!empty($qualityStatsRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Care Statistics</h3>
-                @include('reports.partials.comparison-rows', ['rows' => $qualityStatsRows, 'rounds' => $comparisonRounds, 'field' => 'response'])
+                @include('reports.partials.comparison-rows', ['rows' => $qualityStatsRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'numbered' => true])
             @endif
         </div>
     @endif
 
     @php
         $indicatorsNewbornRows = $comparison['indicatorsNewborn'] ?? collect($indicatorsDetails['newborn_array'] ?? [])
-            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+            ->map(fn ($d) => ['label' => $d['question'], 'group' => $d['group'] ?? null, 'indent_level' => $d['indent_level'] ?? 0, 'values' => [$assessment->id => $d]])->all();
         $indicatorsPaediatricRows = $comparison['indicatorsPaediatric'] ?? collect($indicatorsDetails['paediatric_array'] ?? [])
-            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+            ->map(fn ($d) => ['label' => $d['question'], 'group' => $d['group'] ?? null, 'indent_level' => $d['indent_level'] ?? 0, 'values' => [$assessment->id => $d]])->all();
         $indicatorsNewbornProportionsRows = $comparison['indicatorsNewbornProportions'] ?? collect($indicatorsDetails['newborn_proportions_array'] ?? [])
-            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+            ->map(fn ($d) => ['label' => $d['question'], 'group' => $d['group'] ?? null, 'indent_level' => $d['indent_level'] ?? 0, 'values' => [$assessment->id => $d]])->all();
         $indicatorsPaediatricProportionsRows = $comparison['indicatorsPaediatricProportions'] ?? collect($indicatorsDetails['paediatric_proportions_array'] ?? [])
-            ->map(fn ($d) => ['label' => $d['question'], 'values' => [$assessment->id => $d]])->all();
+            ->map(fn ($d) => ['label' => $d['question'], 'group' => $d['group'] ?? null, 'indent_level' => $d['indent_level'] ?? 0, 'values' => [$assessment->id => $d]])->all();
     @endphp
 
     {{-- Newborn & Paediatric Indicators --}}
@@ -393,22 +457,22 @@ $percentage=0;
 
             @if(!empty($indicatorsNewbornRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Newborn Indicators</h3>
-                @include('reports.partials.comparison-rows', ['rows' => $indicatorsNewbornRows, 'rounds' => $comparisonRounds, 'field' => 'response'])
+                @include('reports.partials.comparison-rows', ['rows' => $indicatorsNewbornRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'numbered' => true])
             @endif
 
             @if(!empty($indicatorsPaediatricRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Paediatric Indicators</h3>
-                @include('reports.partials.comparison-rows', ['rows' => $indicatorsPaediatricRows, 'rounds' => $comparisonRounds, 'field' => 'response'])
+                @include('reports.partials.comparison-rows', ['rows' => $indicatorsPaediatricRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'numbered' => true])
             @endif
 
             @if(!empty($indicatorsNewbornProportionsRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Newborn Proportions</h3>
-                @include('reports.partials.comparison-rows', ['rows' => $indicatorsNewbornProportionsRows, 'rounds' => $comparisonRounds, 'field' => 'response'])
+                @include('reports.partials.comparison-rows', ['rows' => $indicatorsNewbornProportionsRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'numbered' => true])
             @endif
 
             @if(!empty($indicatorsPaediatricProportionsRows))
                 <h3 style="color: #374151; margin-bottom: 12px;">Paediatric Proportions</h3>
-                @include('reports.partials.comparison-rows', ['rows' => $indicatorsPaediatricProportionsRows, 'rounds' => $comparisonRounds, 'field' => 'response'])
+                @include('reports.partials.comparison-rows', ['rows' => $indicatorsPaediatricProportionsRows, 'rounds' => $comparisonRounds, 'field' => 'response', 'numbered' => true])
             @endif
         </div>
     @endif

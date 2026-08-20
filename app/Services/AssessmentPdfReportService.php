@@ -229,11 +229,13 @@ class AssessmentPdfReportService {
             // beds_table instead.
             'responses' => $otherResponses->map(function ($response) {
                 return [
-                    'question' => $response->question->question_text,
+                    'question' => $this->stripLegacyNumbering($response->question->question_text),
                     'response' => $response->response_value ?? 'N/A',
                     'is_number' => $response->question->question_type === 'number',
                     'score' => $response->score ?? 0,
                     'explanation' => $response->explanation,
+                    'group' => $response->question->group,
+                    'indent_level' => (int) ($response->question->indent_level ?? 0),
                 ];
             })->values()->toArray(),
             'beds_table' => $bedsTable,
@@ -277,10 +279,12 @@ class AssessmentPdfReportService {
                 }
 
                 return [
-                    'question' => $response->question->question_text,
+                    'question' => $this->stripLegacyNumbering($response->question->question_text),
                     'response' => $displayValue,
                     'score' => $response->score ?? 0,
                     'explanation' => $response->explanation,
+                    'group' => $response->question->group,
+                    'indent_level' => (int) ($response->question->indent_level ?? 0),
                 ];
             })->toArray(),
             // Detailed structure for PDF
@@ -368,13 +372,19 @@ class AssessmentPdfReportService {
                     'available' => $available,
                     'total' => $total,
                     'percentage' => $total > 0 ? round(($available / $total) * 100, 1) : 0,
-                    'items' => $items->map(function ($item) {
+                    // Same order the commodities were seeded in — needed
+                    // for group_label/indent_level numbering below to
+                    // cluster consecutive line items correctly, same as
+                    // buildCategorySections()'s ->orderBy('order').
+                    'items' => $items->sortBy('commodity.order')->map(function ($item) {
                         return [
                             'name' => $item->commodity->name,
                             'available' => $item->available,
                             'not_applicable' => $item->not_applicable,
+                            'group' => $item->commodity->group_label,
+                            'indent_level' => (int) ($item->commodity->indent_level ?? 0),
                         ];
-                    })->toArray(),
+                    })->values()->toArray(),
                 ];
             }
 
@@ -464,11 +474,13 @@ class AssessmentPdfReportService {
                 }
 
                 return [
-                    'question' => $response->question->question_text,
+                    'question' => $this->stripLegacyNumbering($response->question->question_text),
                     'response' => $displayValue,
                     'score' => $response->score ?? 0,
                     'explanation' => $response->explanation,
                     'is_mortality' => $isMortality,
+                    'group' => $response->question->group,
+                    'indent_level' => (int) ($response->question->indent_level ?? 0),
                 ];
             })->values()->toArray(),
             'data_tools_table' => $dataToolsTable,
@@ -521,33 +533,41 @@ class AssessmentPdfReportService {
         // For HTML - convert to arrays
         $yesNoArray = $yesNoCollection->map(function ($response) {
                     return [
-                        'question' => $response->question->question_text,
+                        'question' => $this->stripLegacyNumbering($response->question->question_text),
                         'response' => $response->response_value ?? 'N/A',
                         'score' => $response->score ?? 0,
                         'explanation' => $response->explanation,
+                        'group' => $response->question->group,
+                        'indent_level' => (int) ($response->question->indent_level ?? 0),
                     ];
                 })->values()->toArray();
 
         $selectArray = $selectCollection->map(function ($response) {
                     return [
-                        'question' => $response->question->question_text,
+                        'question' => $this->stripLegacyNumbering($response->question->question_text),
                         'response' => $response->response_value ?? 'N/A',
                         'score' => $response->score ?? 0,
                         'explanation' => $response->explanation,
+                        'group' => $response->question->group,
+                        'indent_level' => (int) ($response->question->indent_level ?? 0),
                     ];
                 })->values()->toArray();
 
         $newbornStatsArray = $newbornStatsCollection->map(function ($response) {
                     return [
-                        'question' => $response->question->question_text,
+                        'question' => $this->stripLegacyNumbering($response->question->question_text),
                         'response' => $response->response_value ?? '0',
+                        'group' => $response->question->group,
+                        'indent_level' => (int) ($response->question->indent_level ?? 0),
                     ];
                 })->values()->toArray();
 
         $paedStatsArray = $paedStatsCollection->map(function ($response) {
                     return [
-                        'question' => $response->question->question_text,
+                        'question' => $this->stripLegacyNumbering($response->question->question_text),
                         'response' => $response->response_value ?? '0',
+                        'group' => $response->question->group,
+                        'indent_level' => (int) ($response->question->indent_level ?? 0),
                     ];
                 })->values()->toArray();
 
@@ -624,8 +644,10 @@ class AssessmentPdfReportService {
 
         $toArray = fn ($collection) => $collection->map(function ($response) {
                     return [
-                        'question' => $response->question->question_text,
+                        'question' => $this->stripLegacyNumbering($response->question->question_text),
                         'response' => $response->response_value ?? '0',
+                        'group' => $response->question->group,
+                        'indent_level' => (int) ($response->question->indent_level ?? 0),
                     ];
                 })->values()->toArray();
 
@@ -637,6 +659,8 @@ class AssessmentPdfReportService {
         $admissionsRow = [[
             'question' => 'Total number of newborn admissions for the last complete month',
             'response' => $responsesByCode->get('IND_NEWBORN_ADMISSIONS')?->response_value ?? 'N/A',
+            'group' => null,
+            'indent_level' => 0,
         ]];
 
         return [
@@ -664,13 +688,13 @@ class AssessmentPdfReportService {
             // applicable this period", not "0%") — otherwise show N/A
             // rather than a misleading computed value.
             if (! is_numeric($numerator) || ! is_numeric($denominator) || (float) $denominator <= 0) {
-                $result[] = ['question' => $label, 'response' => 'N/A'];
+                $result[] = ['question' => $label, 'response' => 'N/A', 'group' => null, 'indent_level' => 0];
 
                 continue;
             }
 
             $percentage = number_format(((float) $numerator / (float) $denominator) * 100, 1);
-            $result[] = ['question' => $label, 'response' => "{$percentage}% ({$numerator}/{$denominator})"];
+            $result[] = ['question' => $label, 'response' => "{$percentage}% ({$numerator}/{$denominator})", 'group' => null, 'indent_level' => 0];
         }
 
         return $result;
@@ -701,5 +725,19 @@ class AssessmentPdfReportService {
             'red' => '#ef4444',
             default => '#6b7280',
         };
+    }
+
+    /**
+     * Some question_text values in the database still carry a leading
+     * "1. "/"11. " etc. baked in from before question numbering became a
+     * report-rendering concern (see reports/partials/comparison-rows.blade.php's
+     * `numbered` option) — left displaying that stale digit is harmless on
+     * its own, but stacks into "11. 11. Question text" once the report
+     * adds its own live-computed number on top. Stripped here so every
+     * caller gets clean text regardless of which convention that
+     * particular question's row predates.
+     */
+    private function stripLegacyNumbering(string $text): string {
+        return preg_replace('/^\d+\.\s*/', '', $text);
     }
 }

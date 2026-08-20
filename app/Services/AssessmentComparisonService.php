@@ -32,6 +32,7 @@ class AssessmentComparisonService
         $rounds = $siblings->map(fn (Assessment $a) => [
             'id' => $a->id,
             'label' => $a->round_display,
+            'date' => $a->assessment_date,
         ])->values()->toArray();
 
         $perAssessmentData = $siblings->mapWithKeys(
@@ -76,7 +77,16 @@ class AssessmentComparisonService
                 $key = $item[$keyField] ?? '-';
 
                 if (! isset($rows[$key])) {
-                    $rows[$key] = ['label' => $key, 'values' => []];
+                    // group/indent_level are per-question metadata, the
+                    // same regardless of which round answered it — taken
+                    // from whichever round first has this row, same as
+                    // the label itself.
+                    $rows[$key] = [
+                        'label' => $key,
+                        'group' => $item['group'] ?? null,
+                        'indent_level' => (int) ($item['indent_level'] ?? 0),
+                        'values' => [],
+                    ];
                     $order[] = $key;
                 }
 
@@ -124,7 +134,12 @@ class AssessmentComparisonService
                         $itemName = $item['name'];
 
                         if (! isset($departments[$departmentName]['categories'][$catName]['items'][$itemName])) {
-                            $departments[$departmentName]['categories'][$catName]['items'][$itemName] = ['name' => $itemName, 'values' => []];
+                            $departments[$departmentName]['categories'][$catName]['items'][$itemName] = [
+                                'name' => $itemName,
+                                'group' => $item['group'] ?? null,
+                                'indent_level' => (int) ($item['indent_level'] ?? 0),
+                                'values' => [],
+                            ];
                             $departments[$departmentName]['categories'][$catName]['itemOrder'][] = $itemName;
                         }
 
