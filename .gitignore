@@ -28,3 +28,4 @@ Thumbs.db
 /public/m-assessment-app.v1/nbproject/private/
 /public/m-assessment-app/nbproject/private/
 .playwright-mcp/
+.worktrees/
