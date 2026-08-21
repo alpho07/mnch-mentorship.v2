@@ -106,6 +106,60 @@ class Training extends Model
         $this->update(['chat_setup_transcript' => $transcript]);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Lifecycle Guards
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * A facility mentorship may only be marked active/completed once it has
+     * genuinely started: at least one class that has itself been started
+     * (status active/completed — draft classes don't count) with at least
+     * one mentee enrolled in it. Pilot mentorships and non-mentorship
+     * trainings are exempt — this guard is about the live mentorship
+     * programme specifically.
+     */
+    public function canActivate(): bool
+    {
+        if ($this->type !== 'facility_mentorship' || $this->is_pilot) {
+            return true;
+        }
+
+        return $this->mentorshipClasses()
+            ->whereIn('status', ['active', 'completed'])
+            ->whereHas('participants', fn (Builder $query) => $query->whereIn('status', ['enrolled', 'active', 'completed']))
+            ->exists();
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Training $training) {
+            // Only guard transitions on records that already exist — plenty
+            // of test fixtures (and potentially other tooling) shortcut
+            // setup by creating a Training pre-set to active/completed.
+            // The real-world risk this guard exists for is a draft
+            // mentorship being flipped active without ever starting, which
+            // is an update, not a create.
+            if (! $training->exists) {
+                return;
+            }
+
+            if (! $training->isDirty('status')) {
+                return;
+            }
+
+            if (! in_array($training->status, ['active', 'completed'], true)) {
+                return;
+            }
+
+            if (! $training->canActivate()) {
+                throw new \LogicException(
+                    "Mentorship [{$training->id}] cannot be set to \"{$training->status}\". ".
+                    'It needs at least one started class (not draft) with at least one enrolled mentee.'
+                );
+            }
+        });
+    }
+
     // ============================================
     // BASIC RELATIONSHIPS
     // ============================================

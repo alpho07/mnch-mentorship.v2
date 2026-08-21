@@ -80,8 +80,15 @@ class ResourceController extends Controller
                 ->limit(4)
                 ->get();
 
+            // "Ongoing" / "Closed" require status = active / completed, not
+            // just dates that happen to bracket now() — a draft mentorship
+            // that never actually started (see Training::canActivate())
+            // must not be advertised publicly as currently running or
+            // successfully finished just because leftover date fields say
+            // so. "Upcoming" is exempt — by definition it hasn't started
+            // yet, so draft is exactly the correct, legitimate state there.
             $ongoingMentorships = Training::where('type', 'facility_mentorship')
-                ->where('status', '!=', 'cancelled')
+                ->where('status', 'active')
                 ->where('start_date', '<=', $now)
                 ->where('end_date', '>=', $now)
                 ->with(['county', 'facility'])
@@ -90,7 +97,7 @@ class ResourceController extends Controller
                 ->get();
 
             $upcomingMentorships = Training::where('type', 'facility_mentorship')
-                ->where('status', '!=', 'cancelled')
+                ->whereIn('status', ['draft', 'active'])
                 ->where('start_date', '>', $now)
                 ->with(['county', 'facility'])
                 ->orderBy('start_date')
@@ -98,7 +105,7 @@ class ResourceController extends Controller
                 ->get();
 
             $closedMentorships = Training::where('type', 'facility_mentorship')
-                ->where('status', '!=', 'cancelled')
+                ->where('status', 'completed')
                 ->where('end_date', '<', $now)
                 ->where('end_date', '>=', $now->copy()->subDays(30))
                 ->with(['county', 'facility'])

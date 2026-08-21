@@ -26,6 +26,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
@@ -73,6 +74,12 @@ class AdminPanelProvider extends PanelProvider
                     .'}'
                     .'</script>'
                 ),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): HtmlString => auth()->user()?->isAboveSite()
+                    ? new HtmlString(Blade::render('@livewire(\'online-users-badge\')'))
+                    : new HtmlString(''),
             )
             ->renderHook(
                 PanelsRenderHook::USER_MENU_PROFILE_BEFORE,
@@ -147,6 +154,8 @@ class AdminPanelProvider extends PanelProvider
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
                 AuthenticateSession::class,
+                \App\Http\Middleware\TrackUserActivity::class,
+                \App\Http\Middleware\TrackPageVisit::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,

@@ -1,150 +1,80 @@
 {{-- resources/views/livewire/auth/custom-login.blade.php --}}
 <div
     class="fi-simple-page"
-    x-data="{
-        crisisOpen: false,
-        dismissCrisis() {
-            this.crisisOpen = false;
-            localStorage.setItem('mnch_why_seen_v1', '1');
-        },
-    }"
-    x-init="crisisOpen = !localStorage.getItem('mnch_why_seen_v1')"
-    @keydown.escape.window="dismissCrisis()"
+    x-data="{ crisisOpen: false }"
+    @keydown.escape.window="crisisOpen = false"
 >
     <div class="auth-shell">
 
         {{-- ═══════════════════════════════════════════════════════════════
-             LEFT — Rich Hero Panel
+             LEFT — Hero Panel
              ═══════════════════════════════════════════════════════════════ --}}
-        <div class="auth-hero">
+        <section class="auth-hero" aria-labelledby="hero-title">
             <div class="hero-bg"></div>
             <div class="hero-gradient"></div>
-            <div class="hero-orb hero-orb-1"></div>
-            <div class="hero-orb hero-orb-2"></div>
-            <div class="hero-orb hero-orb-3"></div>
 
             <div class="hero-content">
-                <div class="hero-badge"><span class="hero-dot"></span> Ministry of Health · Kenya</div>
-
-                <h2 class="hero-title"><em>MNCH</em> Mentorship<br>Platform</h2>
-                <p class="hero-desc">
-                    Kenya's digital backbone for maternal, newborn &amp; child health mentorship — connecting
-                    mentors and health workers through structured, trackable, evidence-based programmes.
-                </p>
-
-                <div class="crisis-panel">
-                    <div class="crisis-label">
-                        <svg viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-                        Why This Platform Exists
-                    </div>
-                    <div class="crisis-stats">
-                        <div class="crisis-stat">
-                            <div class="crisis-val">355</div>
-                            <div class="crisis-lbl">Maternal deaths per 100,000 live births</div>
-                        </div>
-                        <div class="crisis-stat">
-                            <div class="crisis-val">21</div>
-                            <div class="crisis-lbl">Newborn deaths per 1,000 births — unchanged in 30 years</div>
-                        </div>
-                        <div class="crisis-stat">
-                            <div class="crisis-val">41</div>
-                            <div class="crisis-lbl">Child deaths (under 5) per 1,000 live births</div>
-                        </div>
-                    </div>
-                    <div class="crisis-note">
-                        <strong>Postpartum haemorrhage</strong> is Kenya's leading cause of maternal death, and
-                        <strong>newborns account for over half</strong> of all under-5 deaths. These are the exact
-                        gaps our EmONC mentorship curriculum closes — obstetric emergency response, essential
-                        newborn care &amp; resuscitation, and sick-child management — through live, hands-on
-                        mentorship at the facility level.
-                    </div>
-                    <div class="crisis-source">Source: Kenya Demographic &amp; Health Survey (KDHS) 2022 · Ministry of Health Kenya</div>
+                <div class="hero-badge">
+                    <span class="hero-badge-logo-wrap"><img src="{{ asset('moh_logo.png') }}" alt="Ministry of Health — Republic of Kenya" class="hero-badge-logo"></span>
                 </div>
 
-                <div class="live-label"><span class="hero-dot"></span> Live Nationwide Impact — Not A Pilot</div>
-                <div class="hero-stats">
-                    <div><div class="stat-val">{{ number_format($platformStats['mentorships']) }}</div><div class="stat-lbl">Mentorships</div></div>
-                    <div><div class="stat-val">{{ number_format($platformStats['mentees']) }}</div><div class="stat-lbl">Mentees Enrolled</div></div>
-                    <div><div class="stat-val">{{ number_format($platformStats['facilities']) }}</div><div class="stat-lbl">Facilities</div></div>
-                    <div><div class="stat-val">{{ number_format($platformStats['counties']) }}</div><div class="stat-lbl">Counties</div></div>
-                </div>
-
-                <div class="hero-features">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        </div>
-                        <div class="feature-text">
-                            <strong>Structured Mentorship</strong>
-                            <span>Create programmes with classes, modules &amp; curriculum tracking from enrolment to completion</span>
-                        </div>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                        </div>
-                        <div class="feature-text">
-                            <strong>Real-Time Attendance</strong>
-                            <span>Mentees self-confirm via secure links, mentors track participation with immutable records</span>
-                        </div>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                        </div>
-                        <div class="feature-text">
-                            <strong>Progress Analytics</strong>
-                            <span>Module completion rates, attendance tracking &amp; facility-level performance dashboards</span>
-                        </div>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        </div>
-                        <div class="feature-text">
-                            <strong>Role-Based Access</strong>
-                            <span>Facility mentors, national mentors, admins &amp; mentees — each with tailored dashboards</span>
-                        </div>
+                <div class="hero-message">
+                    <p class="hero-overline">National MNCH Mentorship Platform</p>
+                    <h1 id="hero-title" class="hero-title">Strengthening care<br>through mentorship</h1>
+                    <p class="hero-desc">
+                        Equipping healthcare workers with practical skills, structured learning and real-time
+                        support to improve outcomes for mothers, newborns and children.
+                    </p>
+                    <div class="hero-programmes">
+                        <span class="programme maternal">Maternal Health</span>
+                        <span class="programme newborn">Newborn Care</span>
+                        <span class="programme child">Infant &amp; Child Care</span>
                     </div>
                 </div>
 
-                <div class="hero-workflow">
-                    <div class="workflow-label">How It Works</div>
-                    <div class="workflow-steps">
-                        <div class="wf-step"><div class="wf-num">1</div><span>Create Mentorship</span></div>
-                        <div class="wf-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-                        <div class="wf-step"><div class="wf-num">2</div><span>Add Classes &amp; Modules</span></div>
-                        <div class="wf-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-                        <div class="wf-step"><div class="wf-num">3</div><span>Enrol &amp; Track</span></div>
-                        <div class="wf-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
-                        <div class="wf-step"><div class="wf-num">4</div><span>Complete &amp; Report</span></div>
+                <div class="impact-wrap">
+                    <div class="impact-heading">
+                        <span>Live nationwide impact</span>
+                        <button type="button" class="why-link" @click="crisisOpen = true">Why this matters ↗</button>
                     </div>
-                </div>
-
-                <div class="hero-trust">
-                    <span class="trust-label">Supported by</span>
-                    <span class="trust-item">Division of RMNCAH</span>
-                    <span class="trust-sep">·</span>
-                    <span class="trust-item">County Health Departments</span>
-                    <span class="trust-sep">·</span>
-                    <span class="trust-item">Development Partners</span>
+                    <div class="impact-grid">
+                        <article class="impact-card">
+                            <span class="impact-icon">✦</span>
+                            <div><strong>{{ number_format($platformStats['mentorships']) }}</strong><span>Mentorships</span></div>
+                        </article>
+                        <article class="impact-card">
+                            <span class="impact-icon">◎</span>
+                            <div><strong>{{ number_format($platformStats['mentees']) }}</strong><span>Mentees enrolled</span></div>
+                        </article>
+                        <article class="impact-card">
+                            <span class="impact-icon">+</span>
+                            <div><strong>{{ number_format($platformStats['facilities']) }}</strong><span>Facilities reached</span></div>
+                        </article>
+                        <article class="impact-card">
+                            <span class="impact-icon">⌖</span>
+                            <div><strong>{{ number_format($platformStats['counties']) }}</strong><span>Counties covered</span></div>
+                        </article>
+                    </div>
+                    <p class="hero-supported">Supported by <b>Division of RMNCAH</b> · County Health Departments · Development Partners</p>
                 </div>
             </div>
-        </div>
+        </section>
 
         {{-- ═══════════════════════════════════════════════════════════════
              RIGHT — Login Form
              ═══════════════════════════════════════════════════════════════ --}}
-        <div class="auth-right">
+        <section class="auth-right" aria-label="Sign in">
             <div class="auth-box">
 
-                {{-- Ministry of Health Logo --}}
                 <div class="moh-logo-wrap">
                     <img src="{{ asset('moh_logo.png') }}" alt="Ministry of Health — Republic of Kenya" class="moh-logo-img">
                 </div>
 
-                <h1 class="auth-h1">Welcome back</h1>
-                <p class="auth-sub">Sign in to your MNCH Mentorship account to continue.</p>
+                <div class="auth-intro">
+                    <p class="login-kicker">MNCH Mentorship Platform</p>
+                    <h2 class="auth-h1">Welcome back</h2>
+                    <p class="auth-sub">Sign in to manage mentorships, track participation and access your learning dashboard.</p>
+                </div>
 
                 <form wire:submit.prevent="authenticate">
                     {{ $this->form }}
@@ -183,22 +113,30 @@
                     </div>
                 </form>
 
+                <div class="secure-strip">
+                    <span>✓</span>Secure access for mentors, mentees and programme administrators
+                </div>
             </div>
-        </div>
+
+            <details class="mobile-matters">
+                <summary @click.prevent="crisisOpen = true">Why this platform matters</summary>
+            </details>
+        </section>
     </div>
 
     {{-- ═══════════════════════════════════════════════════════════════
-         "Why This Platform Exists" — one-time popup on first visit
+         "Why This Platform Exists" — popup, opened via the hero /
+         mobile "why this matters" links
          ═══════════════════════════════════════════════════════════════ --}}
     <div
         x-show="crisisOpen"
         x-cloak
         class="crisis-modal-backdrop"
-        @click.self="dismissCrisis()"
+        @click.self="crisisOpen = false"
         style="display:none"
     >
         <div class="crisis-modal" role="dialog" aria-modal="true" aria-labelledby="crisis-modal-title">
-            <button type="button" class="crisis-modal-close" @click="dismissCrisis()" aria-label="Close">
+            <button type="button" class="crisis-modal-close" @click="crisisOpen = false" aria-label="Close">
                 <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
 
@@ -232,7 +170,7 @@
 
             <div class="crisis-modal-source">Source: Kenya Demographic &amp; Health Survey (KDHS) 2022 · Ministry of Health Kenya</div>
 
-            <button type="button" class="crisis-modal-cta" @click="dismissCrisis()">
+            <button type="button" class="crisis-modal-cta" @click="crisisOpen = false">
                 Continue to Sign In
             </button>
         </div>
@@ -246,68 +184,63 @@
         .fi-simple-page,.fi-simple-main,.fi-simple-layout,.fi-simple{max-width:none!important;width:100%!important;padding:0!important;margin:0!important;background:transparent!important;min-height:100vh!important}
         *,*::before,*::after{box-sizing:border-box}
 
+        :root{--navy:#061b43;--blue:#1769c2;--ink:#10213b}
+
         /* ── Entrance animations ─────────────────────────────────────────── */
         @keyframes fade-up   {from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes fade-down {from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
         @keyframes fade-in   {from{opacity:0}to{opacity:1}}
         @keyframes spin      {to{transform:rotate(360deg)}}
-        @keyframes float-orb {0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(15px,-20px) scale(1.05)}66%{transform:translate(-10px,15px) scale(0.95)}}
         @keyframes pulse-dot {0%,100%{opacity:1}50%{opacity:.35}}
-        @keyframes count-up  {from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-        /* Hero entrance */
-        .hero-badge    {animation:fade-down 0.55s cubic-bezier(.16,1,.3,1) both}
-        .hero-title    {animation:fade-up   0.65s cubic-bezier(.16,1,.3,1) 0.10s both}
-        .hero-desc     {animation:fade-up   0.65s cubic-bezier(.16,1,.3,1) 0.20s both}
-        .crisis-panel  {animation:fade-up   0.65s cubic-bezier(.16,1,.3,1) 0.26s both}
-        .live-label    {animation:fade-up   0.65s cubic-bezier(.16,1,.3,1) 0.30s both}
-        .hero-stats    {animation:fade-up   0.65s cubic-bezier(.16,1,.3,1) 0.34s both}
-        .stat-val      {animation:count-up  0.5s  cubic-bezier(.16,1,.3,1) 0.35s both}
-        .feature-card:nth-child(1){animation:fade-up 0.55s cubic-bezier(.16,1,.3,1) 0.40s both}
-        .feature-card:nth-child(2){animation:fade-up 0.55s cubic-bezier(.16,1,.3,1) 0.48s both}
-        .feature-card:nth-child(3){animation:fade-up 0.55s cubic-bezier(.16,1,.3,1) 0.56s both}
-        .feature-card:nth-child(4){animation:fade-up 0.55s cubic-bezier(.16,1,.3,1) 0.64s both}
-        .hero-workflow {animation:fade-up   0.55s cubic-bezier(.16,1,.3,1) 0.68s both}
-        .hero-trust    {animation:fade-in   0.55s ease                     0.74s both}
-        /* Form entrance */
-        .auth-box      {animation:fade-up   0.70s cubic-bezier(.16,1,.3,1) 0.12s both}
+        .hero-badge    {animation:fade-up 0.55s cubic-bezier(.16,1,.3,1) both}
+        .hero-title    {animation:fade-up 0.65s cubic-bezier(.16,1,.3,1) 0.10s both}
+        .hero-desc     {animation:fade-up 0.65s cubic-bezier(.16,1,.3,1) 0.18s both}
+        .hero-programmes{animation:fade-up 0.65s cubic-bezier(.16,1,.3,1) 0.24s both}
+        .impact-wrap   {animation:fade-up 0.65s cubic-bezier(.16,1,.3,1) 0.30s both}
+        .auth-box      {animation:fade-up 0.70s cubic-bezier(.16,1,.3,1) 0.12s both}
 
         /* ── Shell ───────────────────────────────────────────────────────── */
-        .auth-shell{display:flex;height:100vh;width:100vw;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+        .auth-shell{display:flex;min-height:100vh;width:100vw;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;color:var(--ink)}
 
         /* ── Hero (left) ─────────────────────────────────────────────────── */
-        .auth-hero{flex:0 0 58%;position:relative;overflow:hidden;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;scrollbar-width:none}
+        .auth-hero{flex:0 0 calc(58% + 100px);position:relative;overflow:hidden;overflow-y:auto;color:#fff;scrollbar-width:none}
         .auth-hero::-webkit-scrollbar{display:none}
-        .hero-bg{position:fixed;left:0;top:0;width:58%;height:100vh;background:url('https://images.unsplash.com/photo-1584515933487-779824d29309?w=1200&q=80') center/cover no-repeat}
-        .hero-gradient{position:fixed;left:0;top:0;width:58%;height:100vh;background:linear-gradient(135deg,rgba(8,28,90,.96) 0%,rgba(18,69,168,.91) 45%,rgba(37,99,235,.86) 100%)}
+        .hero-bg{position:fixed;left:0;top:0;width:calc(58% + 100px);height:100vh;background:url('{{ asset('images/mnch-mentorship-login-hero.webp') }}') center 40%/cover no-repeat}
+        .hero-gradient{position:fixed;left:0;top:0;width:calc(58% + 100px);height:100vh;background:linear-gradient(90deg,rgba(4,22,59,.96) 0%,rgba(5,35,77,.88) 34%,rgba(7,48,102,.55) 65%,rgba(7,48,102,.24) 100%),linear-gradient(0deg,rgba(3,17,47,.9),rgba(3,17,47,.15) 48%)}
 
-        .hero-orb{position:fixed;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(147,197,253,.13) 0%,transparent 70%)}
-        .hero-orb-1{width:420px;height:420px;top:-90px;left:-70px;animation:float-orb 8s ease-in-out infinite}
-        .hero-orb-2{width:320px;height:320px;bottom:50px;left:28%;animation:float-orb 11s ease-in-out infinite reverse}
-        .hero-orb-3{width:220px;height:220px;top:38%;left:52%;animation:float-orb 7s ease-in-out infinite 2s}
+        .hero-content{position:relative;z-index:2;display:flex;flex-direction:column;min-height:100vh;padding:clamp(28px,4.2vw,64px) clamp(30px,4.6vw,72px) 28px;width:100%;box-sizing:border-box}
 
-        .hero-content{position:relative;z-index:2;padding:2.5rem 2.75rem 2.75rem;width:100%;max-width:760px;box-sizing:border-box;color:#fff}
+        .hero-badge{align-self:flex-start;display:inline-flex;align-items:center;padding:.4rem;border:1px solid rgba(255,255,255,.32);border-radius:999px;background:rgba(255,255,255,.12);backdrop-filter:blur(10px);margin-bottom:1.5rem;box-shadow:0 1px 0 rgba(255,255,255,.45) inset,0 -1px 2px rgba(0,0,0,.22) inset,0 6px 14px rgba(3,17,47,.35),0 1px 0 rgba(255,255,255,.08)}
+        .hero-badge-logo-wrap{display:flex;align-items:center;justify-content:center;height:44px;padding:0 .9rem;border-radius:999px;background:#fff;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 1px 3px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.55);flex-shrink:0}
+        .hero-badge-logo{height:28px;width:auto;object-fit:contain;display:block}
+        .hero-badge-text{line-height:1}
+        .hero-dot{width:7px;height:7px;border-radius:50%;background:#70b7ff;box-shadow:0 0 10px #70b7ff;animation:pulse-dot 2s ease-in-out infinite;flex-shrink:0}
 
-        .hero-badge{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);padding:.35rem .85rem;border-radius:999px;margin-bottom:1.35rem;border:1px solid rgba(255,255,255,.14)}
-        .hero-dot{width:7px;height:7px;border-radius:50%;background:#60a5fa;box-shadow:0 0 7px #60a5fa;animation:pulse-dot 2s ease-in-out infinite;flex-shrink:0}
+        .hero-message{margin:auto 0;max-width:640px;padding:20px 0}
+        .hero-overline{margin:0 0 .7rem;color:#98c7ff;text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;font-weight:800}
+        .hero-title{margin:0;font-size:clamp(2rem,3.6vw,3.4rem);line-height:1.04;letter-spacing:-.03em;font-weight:800}
+        .hero-desc{max-width:36rem;margin:1.15rem 0 0;color:rgba(255,255,255,.8);font-size:.92rem;line-height:1.65}
+        .hero-programmes{display:flex;flex-wrap:wrap;gap:9px;margin-top:1.35rem}
+        .programme{display:inline-flex;align-items:center;gap:8px;padding:.5rem .8rem;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:rgba(4,22,59,.36);backdrop-filter:blur(9px);font-size:.72rem;font-weight:700}
+        .programme::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+        .maternal{color:#f090b4}
+        .newborn{color:#c8a0f0}
+        .child{color:#a8d77e}
 
-        .hero-title{font-size:2.15rem;font-weight:800;line-height:1.13;letter-spacing:-.04em;margin:0 0 .8rem}
-        .hero-title em{font-style:normal;background:linear-gradient(120deg,#93c5fd,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-        .hero-desc{font-size:.875rem;line-height:1.65;opacity:.75;margin-bottom:1.5rem;font-weight:400;max-width:480px}
+        .impact-wrap{width:100%;margin-top:auto}
+        .impact-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;color:rgba(255,255,255,.75);font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+        .why-link{border:0;background:transparent;padding:0;color:#fff;text-decoration:none;letter-spacing:.02em;text-transform:none;font-size:.72rem;font-weight:700;cursor:pointer;font-family:inherit}
+        .why-link:hover{text-decoration:underline}
+        .impact-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+        .impact-card{min-height:78px;display:flex;align-items:center;gap:10px;padding:.85rem;border:1px solid rgba(255,255,255,.14);border-radius:13px;background:rgba(255,255,255,.09);backdrop-filter:blur(14px)}
+        .impact-icon{flex:0 0 26px;width:26px;height:26px;display:grid;place-items:center;border-radius:8px;background:rgba(126,190,255,.16);color:#9dccff;font-weight:900;font-size:.85rem}
+        .impact-card strong,.impact-card span{display:block}
+        .impact-card strong{font-size:1.4rem;line-height:1;letter-spacing:-.02em}
+        .impact-card div span{margin-top:.35rem;color:rgba(255,255,255,.6);font-size:.58rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+        .hero-supported{margin:.9rem 0 0;color:rgba(255,255,255,.45);font-size:.62rem;text-align:center}
+        .hero-supported b{color:rgba(255,255,255,.75)}
 
-        /* ── Crisis / urgency panel ──────────────────────────────────────── */
-        .crisis-panel{background:#ffffff;border:1px solid #fecaca;border-radius:13px;padding:1rem 1.1rem 1.05rem;margin-bottom:1.25rem;box-shadow:0 10px 28px rgba(0,0,0,.22)}
-        .crisis-label{display:flex;align-items:center;gap:.4rem;font-size:.63rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#dc2626;margin-bottom:.75rem}
-        .crisis-label svg{width:12px;height:12px;stroke:#dc2626;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-        .crisis-stats{display:flex;gap:.9rem;margin-bottom:.7rem}
-        .crisis-stat{flex:1;min-width:0}
-        .crisis-val{font-size:1.5rem;font-weight:800;letter-spacing:-.03em;line-height:1;color:#b91c1c}
-        .crisis-lbl{font-size:.62rem;line-height:1.4;color:#64748b;font-weight:500;margin-top:.3rem}
-        .crisis-note{font-size:.71rem;line-height:1.55;color:#334155;font-weight:500;border-top:1px solid #fee2e2;padding-top:.65rem;margin-bottom:.35rem}
-        .crisis-note strong{color:#b91c1c;font-weight:700}
-        .crisis-source{font-size:.58rem;color:#94a3b8;font-weight:500;letter-spacing:.01em}
-
-        /* ── "Why This Platform Exists" popup ────────────────────────────── */
+        /* ── "Why this matters" popup ────────────────────────────────────── */
         [x-cloak]{display:none!important}
         .crisis-modal-backdrop{position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1.5rem;animation:fade-in .25s ease both}
         .crisis-modal{position:relative;background:#fff;border-radius:18px;max-width:480px;width:100%;padding:1.85rem 1.85rem 1.6rem;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:fade-up .35s cubic-bezier(.16,1,.3,1) both;max-height:88vh;overflow-y:auto}
@@ -323,109 +256,90 @@
         .crisis-modal-note{font-size:.82rem;line-height:1.65;color:#334155;font-weight:500;margin-bottom:.9rem}
         .crisis-modal-note strong{color:#b91c1c;font-weight:700}
         .crisis-modal-source{font-size:.65rem;color:#94a3b8;font-weight:500;margin-bottom:1.35rem}
-        .crisis-modal-cta{width:100%;padding:.85rem 1.25rem;background:linear-gradient(135deg,#1245A8,#1A54C8);color:#fff;border:none;border-radius:11px;cursor:pointer;font-family:inherit;font-size:.86rem;font-weight:700;transition:all .2s;box-shadow:0 4px 16px rgba(18,69,168,.28)}
-        .crisis-modal-cta:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(18,69,168,.36)}
+        .crisis-modal-cta{width:100%;padding:.85rem 1.25rem;background:linear-gradient(135deg,#0f57ac,#196fd1);color:#fff;border:none;border-radius:11px;cursor:pointer;font-family:inherit;font-size:.86rem;font-weight:700;transition:all .2s;box-shadow:0 4px 16px rgba(23,105,194,.28)}
+        .crisis-modal-cta:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(23,105,194,.36)}
         .crisis-modal-cta:active{transform:translateY(0)}
         @media(max-width:520px){
             .crisis-modal{padding:1.5rem 1.35rem 1.35rem}
             .crisis-modal-stats{flex-direction:column;gap:.85rem}
         }
 
-        .live-label{display:flex;align-items:center;gap:.4rem;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;opacity:.55;margin-bottom:.6rem}
-
-        .hero-stats{display:flex;border-top:1px solid rgba(255,255,255,.11);border-bottom:1px solid rgba(255,255,255,.11);padding:.85rem 0;margin-bottom:1.5rem}
-        .hero-stats > div{flex:1;text-align:center;border-right:1px solid rgba(255,255,255,.09);padding:0 .5rem}
-        .hero-stats > div:last-child{border-right:none}
-        .stat-val{font-size:1.4rem;font-weight:800;letter-spacing:-.025em;line-height:1}
-        .stat-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;opacity:.5;margin-top:.3rem;font-weight:600}
-
-        .hero-features{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:1.4rem}
-        .feature-card{display:flex;align-items:flex-start;gap:.6rem;padding:.65rem .7rem;border-radius:11px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);transition:background .25s,border-color .25s,transform .25s}
-        .feature-card:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.18);transform:translateY(-2px)}
-        .feature-icon{width:30px;height:30px;border-radius:8px;flex-shrink:0;background:rgba(147,197,253,.18);display:flex;align-items:center;justify-content:center;margin-top:1px}
-        .feature-icon svg{width:15px;height:15px;stroke:#93c5fd;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-        .feature-text{display:flex;flex-direction:column;gap:.12rem;min-width:0}
-        .feature-text strong{font-size:.74rem;font-weight:700;color:#fff;line-height:1.25}
-        .feature-text span{font-size:.67rem;line-height:1.45;opacity:.58;font-weight:400}
-
-        .hero-workflow{background:rgba(0,0,0,.18);backdrop-filter:blur(10px);border-radius:11px;padding:.7rem 1rem;margin-bottom:1.2rem;border:1px solid rgba(255,255,255,.07)}
-        .workflow-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;opacity:.45;margin-bottom:.5rem}
-        .workflow-steps{display:flex;align-items:center;gap:0}
-        .wf-step{display:flex;align-items:center;gap:.3rem;flex:1;min-width:0}
-        .wf-num{width:20px;height:20px;border-radius:50%;flex-shrink:0;background:rgba(147,197,253,.18);border:1.5px solid rgba(147,197,253,.35);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:800;color:#93c5fd}
-        .wf-step span{font-size:.63rem;font-weight:600;opacity:.72;line-height:1.25;white-space:nowrap}
-        .wf-arrow{flex-shrink:0;margin:0 .1rem;opacity:.25}
-        .wf-arrow svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-
-        .hero-trust{display:flex;align-items:center;flex-wrap:wrap;gap:.4rem;font-size:.62rem;opacity:.4;font-weight:500;padding-top:.8rem;border-top:1px solid rgba(255,255,255,.08)}
-        .trust-label{font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-right:.1rem}
-        .trust-sep{opacity:.35}
-
         /* ── Right panel ─────────────────────────────────────────────────── */
-        .auth-right{flex:1;display:flex;align-items:center;justify-content:center;background:#f8faff;background-image:radial-gradient(circle,rgba(26,84,200,.05) 1px,transparent 1px);background-size:22px 22px;overflow-y:auto;padding:2rem 1.5rem}
-        .auth-box{width:100%;max-width:420px}
+        .auth-right{flex:1;position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f7f9fc;background-image:radial-gradient(circle at 1px 1px,rgba(23,105,194,.07) 1px,transparent 0);background-size:22px 22px;overflow-y:auto;padding:40px clamp(20px,2.5vw,36px) 40px clamp(30px,4vw,70px)}
+        .auth-box{position:relative;z-index:2;width:calc(100% + 50px);max-width:600px;margin-left:clamp(-64px,-4vw,-24px);padding:2.1rem 2.35rem 1.6rem;border:1px solid rgba(165,181,202,.45);border-radius:22px;background:rgba(255,255,255,.97);box-shadow:0 28px 70px rgba(4,25,65,.18),0 4px 16px rgba(4,25,65,.06)}
 
         /* ── MoH Logo ────────────────────────────────────────────────────── */
-        .moh-logo-wrap{display:flex;align-items:center;justify-content:flex-start;padding-bottom:1.4rem;margin-bottom:1.5rem;border-bottom:2px solid #DBEAFE}
-        .moh-logo-img{height:72px;width:auto;max-width:100%;object-fit:contain;object-position:left center;display:block}
+        .moh-logo-wrap{display:flex;align-items:center;justify-content:flex-start;padding-bottom:1.1rem;margin-bottom:1.35rem;border-bottom:1px solid #e7edf5}
+        .moh-logo-img{height:auto;max-height:60px;width:auto;max-width:100%;object-fit:contain;object-position:left center;display:block}
 
         /* ── Auth headings ───────────────────────────────────────────────── */
-        .auth-h1{font-size:1.5rem;font-weight:800;color:#111827;letter-spacing:-.03em;margin:0 0 .35rem;line-height:1.2}
-        .auth-sub{font-size:.87rem;color:#6b7280;margin:0 0 1.5rem;line-height:1.5}
+        .auth-intro{margin:0 0 1.4rem}
+        .login-kicker{margin:0 0 .5rem;color:var(--blue);font-size:.65rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+        .auth-h1{margin:0;color:#101b2c;font-size:1.6rem;font-weight:800;line-height:1.15;letter-spacing:-.03em}
+        .auth-sub{margin:.55rem 0 0;color:#6b7789;font-size:.82rem;line-height:1.55}
 
         /* ── Submit button ───────────────────────────────────────────────── */
-        .auth-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem 1.5rem;margin-top:1.25rem;background:linear-gradient(135deg,#1245A8,#1A54C8);color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:inherit;font-size:.9rem;font-weight:700;letter-spacing:-.01em;transition:all .2s;box-shadow:0 4px 16px rgba(18,69,168,.32)}
-        .auth-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(18,69,168,.42)}
-        .auth-btn:active{transform:translateY(0);box-shadow:0 2px 8px rgba(18,69,168,.25)}
+        .auth-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem 1.5rem;margin-top:1.1rem;background:linear-gradient(135deg,#0f57ac,#196fd1);color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:inherit;font-size:.9rem;font-weight:750;letter-spacing:-.01em;transition:all .2s;box-shadow:0 11px 22px rgba(23,105,194,.24)}
+        .auth-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(23,105,194,.34)}
+        .auth-btn:active{transform:translateY(0);box-shadow:0 2px 8px rgba(23,105,194,.22)}
         .auth-btn:disabled{opacity:.6;cursor:wait;transform:none!important}
         .auth-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
         .btn-idle{display:flex;align-items:center;gap:.4rem}
         .btn-loading{display:none;align-items:center;gap:.4rem}
 
         /* ── Footer links ────────────────────────────────────────────────── */
-        .login-footer{display:flex;justify-content:flex-end;margin-top:.5rem;margin-bottom:.1rem}
-        .login-footer-center{justify-content:center;margin-top:1.25rem}
-        .forgot-link{font-size:.76rem;font-weight:600;color:#1245A8;text-decoration:none;transition:color .15s}
-        .forgot-link:hover{color:#0D3A8E}
+        .login-footer{display:flex;justify-content:flex-end;margin-top:.35rem;margin-bottom:.1rem}
+        .login-footer-center{justify-content:center;margin-top:1.1rem}
+        .forgot-link{font-size:.76rem;font-weight:700;color:var(--blue);text-decoration:none;transition:color .15s}
+        .forgot-link:hover{color:#0d3a8e}
+
+        /* ── Secure-access footer strip ──────────────────────────────────── */
+        .secure-strip{margin:1.4rem -2.35rem -1.6rem;padding:.9rem 1.5rem;border-radius:0 0 21px 21px;background:#f4f8fd;color:#64748b;font-size:.62rem;font-weight:650;text-align:center}
+        .secure-strip span{display:inline-grid;place-items:center;width:16px;height:16px;margin-right:.4rem;border-radius:50%;background:#dcedff;color:var(--blue)}
+
+        /* ── Mobile "why this matters" ────────────────────────────────────── */
+        .mobile-matters{display:none}
+        .mobile-matters summary{color:var(--blue);font-weight:750;cursor:pointer;font-size:.78rem}
 
         /* ── Spinner ─────────────────────────────────────────────────────── */
         .spin{animation:spin .8s linear infinite}
 
         /* ── Filament input overrides ────────────────────────────────────── */
         .auth-box .fi-fo-field-wrp{margin-bottom:.35rem}
-        .auth-box .fi-fo-field-wrp-label label{font-size:.82rem!important;font-weight:600!important;color:#374151!important;margin-bottom:.35rem!important}
+        .auth-box .fi-fo-field-wrp-label label{font-size:.78rem!important;font-weight:700!important;color:#26364e!important;margin-bottom:.4rem!important}
         .auth-box .fi-input-wrp{
-            border-radius:11px!important;
-            border-color:#d1d5db!important;
+            height:49px!important;
+            border-radius:12px!important;
+            border-color:#d5deea!important;
             background:#fff!important;
+            box-shadow:none!important;
             transition:border-color .18s,box-shadow .18s!important;
         }
         .auth-box .fi-input-wrp:focus-within{
-            border-color:#1A54C8!important;
-            box-shadow:0 0 0 3.5px rgba(26,84,200,.13)!important;
+            border-color:var(--blue)!important;
+            box-shadow:0 0 0 4px rgba(23,105,194,.11)!important;
         }
 
-        /* Compact inline prefix — remove separator, tighten spacing */
         .auth-box .fi-input-wrp-prefix{
             border-inline-end:none!important;
             border-right:none!important;
-            padding-inline-start:.75rem!important;
+            padding-inline-start:.8rem!important;
             padding-inline-end:.25rem!important;
             gap:.25rem!important;
         }
-        /* Icon size */
         .auth-box .fi-input-wrp-icon{
             width:1rem!important;
             height:1rem!important;
-            color:#9ca3af!important;
+            color:#9aa7b7!important;
             flex-shrink:0!important;
         }
-        /* Reduce input left padding since icon is inline */
         .auth-box .fi-fo-text-input .fi-input{
             padding-inline-start:.35rem!important;
+            font-size:.83rem!important;
+            color:#16243a!important;
         }
+        .auth-box .fi-fo-text-input .fi-input::placeholder{color:#a2adbb!important}
 
-        /* Suffix (password reveal button) */
         .auth-box .fi-input-wrp-suffix{
             border-inline-start:none!important;
             border-left:none!important;
@@ -436,20 +350,19 @@
         .auth-box .fi-input-wrp-suffix button{
             padding:.35rem!important;
             border-radius:6px!important;
-            color:#9ca3af!important;
+            color:#9aa7b7!important;
             transition:color .15s,background .15s!important;
         }
         .auth-box .fi-input-wrp-suffix .fi-ac-action button:hover,
         .auth-box .fi-input-wrp-suffix button:hover{
-            color:#1A54C8!important;
-            background:rgba(26,84,200,.08)!important;
+            color:var(--blue)!important;
+            background:rgba(23,105,194,.08)!important;
         }
         .auth-box .fi-input-wrp-suffix svg{
             width:1rem!important;
             height:1rem!important;
         }
 
-        /* Fix browser autofill background bleeding */
         .auth-box .fi-input:-webkit-autofill,
         .auth-box .fi-input:-webkit-autofill:hover,
         .auth-box .fi-input:-webkit-autofill:focus,
@@ -461,24 +374,33 @@
             transition:background-color 9999s ease-in-out 0s;
         }
 
-        /* Checkbox styling */
-        .auth-box .fi-fo-checkbox label{font-size:.82rem!important;color:#374151!important}
+        .auth-box .fi-fo-checkbox label{font-size:.78rem!important;color:#58677b!important;font-weight:500!important}
+        .auth-box .fi-checkbox-input{accent-color:var(--blue)!important}
 
         /* ── Responsive ──────────────────────────────────────────────────── */
         @media(max-width:1100px){
-            .hero-features{grid-template-columns:1fr}
-            .hero-content{padding:2rem 2.25rem 2.5rem}
-        }
-        @media(max-width:900px){
-            /* Hide blue hero completely on tablet/mobile */
-            .auth-hero{display:none!important}
             html,body{overflow:auto!important}
-            .auth-right{flex:1;padding:2rem 1.5rem}
+            .auth-shell{flex-wrap:wrap;height:auto;min-height:auto;align-content:flex-start}
+            .auth-hero{display:block;flex:0 0 100%;overflow-y:visible;min-height:auto}
+            .hero-bg,.hero-gradient{position:absolute;width:100%;height:100%}
+            .hero-content{min-height:480px;padding:1.5rem 1.75rem}
+            .hero-title{font-size:2.2rem}
+            .impact-grid{grid-template-columns:repeat(2,1fr)}
+            .hero-supported{display:none}
+            .auth-right{flex:0 0 100%;height:auto;min-height:auto;padding:0 1.25rem 1.75rem}
+            .auth-box{margin:-24px 0 0;width:100%}
         }
-        @media(max-width:600px){
-            .auth-right{padding:1.5rem 1rem}
-            .moh-logo-img{height:56px}
-            .auth-h1{font-size:1.3rem}
+        @media(max-width:780px){
+            .hero-content{padding:1.25rem 1.1rem 1rem}
+            .hero-title{font-size:1.8rem}
+            .hero-desc{font-size:.8rem}
+            .impact-card{min-height:auto;display:block;text-align:center;padding:.6rem .4rem}
+            .impact-icon{display:none}
+            .impact-card strong{font-size:1.1rem}
+            .impact-card div span{font-size:.5rem;white-space:normal}
+            .auth-box{padding:1.6rem 1.4rem 1.25rem;border-radius:18px}
+            .secure-strip{margin:1.2rem -1.4rem -1.25rem;border-radius:0 0 17px 17px}
+            .mobile-matters{display:block;width:100%;margin-top:1rem;padding:0 .5rem;color:#617086;font-size:.72rem;text-align:center}
         }
     </style>
 </div>

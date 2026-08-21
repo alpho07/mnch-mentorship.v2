@@ -134,7 +134,7 @@ class MentorshipClass extends Model {
      * - Each module.start() opens attendance link + creates progress records
      * - Enrollment link stays open so late enrollees can still join
      */
-    public function start(): void {
+    public function start(bool $notify = true): void {
         if (!$this->canStart()) {
             throw new \LogicException(
                             "Class [{$this->id}] cannot be started. Status: {$this->status}. " .
@@ -157,6 +157,10 @@ class MentorshipClass extends Model {
                 $module->start(notify: false);
             }
         });
+
+        if (! $notify) {
+            return;
+        }
 
         app(\App\Services\ClassLifecycleNotificationService::class)->classStarted($this);
     }

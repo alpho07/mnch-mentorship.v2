@@ -65,6 +65,8 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
             'chat_setup_button_enabled' => Setting::getBool(Setting::CHAT_SETUP_BUTTON_ENABLED),
             'mnchgpt_button_enabled' => Setting::getBool(Setting::MNCHGPT_BUTTON_ENABLED),
             'quick_setup_button_enabled' => Setting::getBool(Setting::QUICK_SETUP_BUTTON_ENABLED),
+            'stall_reminder_enabled' => Setting::getBool(Setting::STALL_REMINDER_ENABLED, true),
+            'stall_reminder_threshold_days' => Setting::getInt(Setting::STALL_REMINDER_THRESHOLD_DAYS, 7),
         ]);
     }
 
@@ -162,6 +164,41 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
                             }),
                     ])
                     ->columns(5),
+
+                Forms\Components\Section::make('Stalled Mentorship Reminders')
+                    ->description('Mentorships stuck in draft — no class created, no mentee enrolled, or mentees enrolled but no curriculum modules assigned — email the assigned mentor once they\'ve been inactive past this threshold. A mentorship won\'t be reminded again until another full threshold period has passed.')
+                    ->icon('heroicon-o-bell-alert')
+                    ->schema([
+                        Forms\Components\Toggle::make('stall_reminder_enabled')
+                            ->label('Send stalled-mentorship reminders')
+                            ->helperText('Runs daily via the scheduler (mentorships:send-stall-reminders).')
+                            ->onColor('success')
+                            ->offColor('danger')
+                            ->live()
+                            ->afterStateUpdated(function (bool $state): void {
+                                Setting::setBool(Setting::STALL_REMINDER_ENABLED, $state);
+                                Notification::make()
+                                    ->title($state ? 'Stall reminders enabled' : 'Stall reminders disabled')
+                                    ->success()
+                                    ->send();
+                            }),
+                        Forms\Components\TextInput::make('stall_reminder_threshold_days')
+                            ->label('Days of inactivity before reminding')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(90)
+                            ->suffix('days')
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function ($state): void {
+                                $days = max(1, (int) $state);
+                                Setting::set(Setting::STALL_REMINDER_THRESHOLD_DAYS, (string) $days);
+                                Notification::make()
+                                    ->title("Threshold set to {$days} day(s)")
+                                    ->success()
+                                    ->send();
+                            }),
+                    ])
+                    ->columns(2),
             ])
             ->statePath('data');
     }

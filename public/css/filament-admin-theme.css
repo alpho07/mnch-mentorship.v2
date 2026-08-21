@@ -380,9 +380,9 @@
     border-color: transparent !important;
     color: white !important;
     font-weight: 600 !important;
-    border-radius: 10px !important;
+    border-radius: var(--mnch-radius-sm) !important;
     box-shadow: 0 2px 8px rgba(0,151,167,0.28) !important;
-    transition: all 0.15s ease !important;
+    transition: var(--mnch-transition) !important;
 }
 .fi-btn.fi-btn-color-primary:hover {
     background: linear-gradient(135deg, #00838F 0%, #006064 100%) !important;
@@ -392,17 +392,28 @@
 
 /* Secondary / gray button */
 .fi-btn.fi-btn-color-gray {
-    border-radius: 10px !important;
+    border-radius: var(--mnch-radius-sm) !important;
     font-weight: 500 !important;
     border-color: #DCF2F4 !important;
     color: #1A3030 !important;
+    transition: var(--mnch-transition) !important;
 }
-.fi-btn.fi-btn-color-gray:hover { border-color: #0097A7 !important; color: #0097A7 !important; }
+.fi-btn.fi-btn-color-gray:hover {
+    border-color: #0097A7 !important;
+    color: #0097A7 !important;
+    box-shadow: var(--mnch-shadow-sm) !important;
+    transform: translateY(-1px) !important;
+}
 
 /* Danger button */
 .fi-btn.fi-btn-color-danger {
-    border-radius: 10px !important;
+    border-radius: var(--mnch-radius-sm) !important;
     font-weight: 600 !important;
+    transition: var(--mnch-transition) !important;
+}
+.fi-btn.fi-btn-color-danger:hover {
+    box-shadow: var(--mnch-shadow-sm) !important;
+    transform: translateY(-1px) !important;
 }
 
 /* Outlined buttons */
@@ -443,28 +454,29 @@ input.fi-input,
 textarea.fi-input,
 .fi-fo-text-input input,
 .fi-fo-textarea textarea {
-    border-radius: 10px !important;
+    border-radius: var(--mnch-radius-sm) !important;
     border-color: #B2EBF2 !important;
     background: #FAFFFE !important;
     color: #052020 !important;
     font-size: 14px !important;
-    transition: all 0.15s ease !important;
+    transition: var(--mnch-transition) !important;
 }
 input.fi-input:focus,
 textarea.fi-input:focus,
 .fi-fo-text-input input:focus,
 .fi-fo-textarea textarea:focus {
     border-color: #0097A7 !important;
-    box-shadow: 0 0 0 3px rgba(0,151,167,0.15) !important;
+    box-shadow: var(--mnch-shadow-sm), 0 0 0 3px rgba(0,151,167,0.15) !important;
     background: white !important;
 }
 
 /* Select inputs */
 .fi-fo-select select,
 .fi-fo-select .fi-select-input {
-    border-radius: 10px !important;
+    border-radius: var(--mnch-radius-sm) !important;
     border-color: #B2EBF2 !important;
     color: #052020 !important;
+    transition: var(--mnch-transition) !important;
 }
 
 /* Helper / hint text */
@@ -812,17 +824,24 @@ textarea.fi-input:focus,
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    INPUTS / SELECTS / TEXTAREAS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* `.fi-input-wrp` is the visible field box (border/ring/shadow) Filament
+   renders around every text input, select, and textarea — the `.fi-input`
+   element itself is `border-none`, so radius/shadow only read as intended
+   on the wrapper. */
+.fi-input-wrp {
+    border-radius: var(--mnch-radius-sm) !important;
+    transition: var(--mnch-transition) !important;
+}
+
+.fi-input-wrp:focus-within {
+    box-shadow: var(--mnch-shadow-sm) !important;
+}
+
 .fi-input,
 .fi-select-input,
 .fi-textarea {
     border-radius: var(--mnch-radius-sm) !important;
     transition: var(--mnch-transition) !important;
-}
-
-.fi-input:focus,
-.fi-select-input:focus,
-.fi-textarea:focus {
-    box-shadow: var(--mnch-shadow-sm) !important;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

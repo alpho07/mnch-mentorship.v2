@@ -29,6 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.active' => \App\Http\Middleware\EnsureUserIsActive::class,
             'prevent-stale-cache' => \App\Http\Middleware\PreventStalePageCache::class,
         ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\TrackUserActivity::class,
+            \App\Http\Middleware\TrackPageVisit::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 

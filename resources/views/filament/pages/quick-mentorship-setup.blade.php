@@ -1,7 +1,12 @@
 <x-filament-panels::page>
     @script
     <script>
-        $wire.on('scroll-top', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        // Each wizard step reveals the next section further down the page
+        // (Basics -> First Class -> Modules -> Mentees -> Invite all stack
+        // in one page, gated by ->visible()), so after saving a step the
+        // newly-revealed section is below the fold, not above it — scroll
+        // to the bottom of the page to bring it into view, not the top.
+        $wire.on('scroll-to-next-step', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
     </script>
     @endscript
 

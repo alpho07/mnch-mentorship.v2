@@ -45,6 +45,20 @@ class Setting extends Model
 
     public const BACKUP_LAST_SCHEDULED_RUN_AT = 'backup_last_scheduled_run_at';
 
+    /**
+     * Master switch for the scheduled "your mentorship has stalled" reminder
+     * — see mentorships:send-stall-reminders and MentorshipStallReminderService.
+     */
+    public const STALL_REMINDER_ENABLED = 'stall_reminder_enabled';
+
+    /**
+     * Days of inactivity (no class created, no mentee enrolled, no modules
+     * assigned) before a draft mentorship becomes eligible for a reminder.
+     * Also the minimum gap enforced between repeat reminders for the same
+     * mentorship, so it isn't re-sent daily once past the threshold.
+     */
+    public const STALL_REMINDER_THRESHOLD_DAYS = 'stall_reminder_threshold_days';
+
     protected $fillable = [
         'key',
         'value',
@@ -74,5 +88,10 @@ class Setting extends Model
     public static function setBool(string $key, bool $value): void
     {
         static::set($key, $value ? '1' : '0');
+    }
+
+    public static function getInt(string $key, int $default = 0): int
+    {
+        return (int) static::get($key, (string) $default);
     }
 }

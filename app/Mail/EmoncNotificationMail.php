@@ -37,7 +37,7 @@ class EmoncNotificationMail extends Mailable implements ShouldQueue
             with: [
                 'user' => $this->user,
                 'heading' => $this->heading,
-                'message' => $this->message,
+                'bodyText' => $this->message,
                 'actionUrl' => $this->actionUrl,
                 'actionText' => $this->actionText,
             ],

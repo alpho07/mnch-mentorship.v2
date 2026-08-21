@@ -84,6 +84,7 @@ class User extends Authenticatable implements FilamentUser
             'can_create_mentorships' => 'boolean',
             'supervisor_id' => 'integer',
             'report_section_preferences' => 'array',
+            'last_seen_at' => 'datetime',
         ];
     }
 

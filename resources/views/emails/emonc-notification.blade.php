@@ -25,7 +25,7 @@
         </div>
         <div class="body">
             <p>Hello {{ $user->first_name ?? $user->name }},</p>
-            <p>{{ $message }}</p>
+            <p>{{ $bodyText }}</p>
             @if($actionUrl && $actionText)
                 <div class="action">
                     <a href="{{ $actionUrl }}">{{ $actionText }}</a>

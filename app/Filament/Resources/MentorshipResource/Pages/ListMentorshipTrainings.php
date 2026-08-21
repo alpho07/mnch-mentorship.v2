@@ -171,7 +171,13 @@ class ListMentorshipTrainings extends ListRecords
 
         return ClassParticipant::query()
             ->whereHas('mentorshipClass.training', function (Builder $query) use ($user) {
-                $query->where('type', 'facility_mentorship');
+                // Matches getScopedBaseQuery()/getQuickStats()'s is_pilot
+                // filter — without it this undercounted nothing but
+                // over-counted mentees from pilot/trial mentorships,
+                // disagreeing with the "total"/"active" figures on the same
+                // subheading line and with MentorshipStatsService's mentee
+                // count shown elsewhere on this page.
+                $query->where('type', 'facility_mentorship')->where('is_pilot', false);
 
                 if (! $user->hasRole(['super_admin', 'admin', 'division'])) {
                     $query->where('mentor_id', $user->id);
