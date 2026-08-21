@@ -5,7 +5,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;color:#374151;padding:8px 0;border-top:1px solid #f1f5f9;">
                 <div>
                     <span style="font-weight:600;">{{ $user->name }}</span>
-                    <span style="color:#9ca3af;"> — {{ $user->roles->first()?->name }}</span>
+                    <span style="color:#9ca3af;"> — {{ $user->roles->pluck('name')->join(', ') ?: '—' }}</span>
                 </div>
                 <div style="text-align:right;">
                     <div>{{ $user->currentPageVisit?->route_name ?? $user->currentPageVisit?->path ?? '—' }}</div>

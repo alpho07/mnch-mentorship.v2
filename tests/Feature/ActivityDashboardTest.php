@@ -103,6 +103,26 @@ class ActivityDashboardTest extends TestCase
             });
     }
 
+    public function test_currently_online_section_shows_all_of_a_users_roles(): void
+    {
+        $admin = User::factory()->create(['name' => 'Admin Viewer']);
+        Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $admin->assignRole('super_admin');
+
+        Role::firstOrCreate(['name' => 'facility_mentor', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'facility_mentor_lead', 'guard_name' => 'web']);
+        $online = User::factory()->create(['name' => 'Multi Role Person', 'last_seen_at' => now()->subMinutes(2)]);
+        $online->assignRole(['facility_mentor', 'facility_mentor_lead']);
+
+        $this->actingAs($admin);
+
+        $response = $this->get(ActivityDashboard::getUrl().'#currently-online');
+
+        $response->assertOk();
+        $response->assertSee('Multi Role Person');
+        $response->assertSee('facility_mentor, facility_mentor_lead');
+    }
+
     public function test_refresh_online_recomputes_without_touching_login_range_data(): void
     {
         $admin = User::factory()->create();

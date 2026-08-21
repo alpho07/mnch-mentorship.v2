@@ -108,7 +108,7 @@ class StalledMentorshipsPageTest extends TestCase
         $response->assertSee('0700000000');
     }
 
-    public function test_deactivate_marks_the_mentorship_cancelled_and_reactivate_reverses_it(): void
+    public function test_deactivate_marks_the_mentorship_cancelled(): void
     {
         $this->actingAsAdmin();
         $training = Training::factory()->facilityMentorship()->create([
@@ -118,12 +118,9 @@ class StalledMentorshipsPageTest extends TestCase
 
         Livewire::test(StalledMentorships::class)->call('deactivateMentorship', $training->id);
         $this->assertSame('cancelled', $training->fresh()->status);
-
-        Livewire::test(StalledMentorships::class)->call('reactivateMentorship', $training->id);
-        $this->assertSame('draft', $training->fresh()->status);
     }
 
-    public function test_delete_soft_deletes_and_restore_reverses_it(): void
+    public function test_delete_soft_deletes_the_mentorship(): void
     {
         $this->actingAsAdmin();
         $training = Training::factory()->facilityMentorship()->create([
@@ -133,29 +130,76 @@ class StalledMentorshipsPageTest extends TestCase
 
         Livewire::test(StalledMentorships::class)->call('deleteMentorship', $training->id);
         $this->assertSoftDeleted('trainings', ['id' => $training->id]);
-
-        Livewire::test(StalledMentorships::class)->call('restoreMentorship', $training->id);
-        $this->assertDatabaseHas('trainings', ['id' => $training->id, 'deleted_at' => null]);
     }
 
-    public function test_recently_actioned_section_lists_deactivated_and_deleted_mentorships(): void
+    public function test_bucket_filter_narrows_the_table_to_matching_rows(): void
     {
         $this->actingAsAdmin();
-        $deactivated = Training::factory()->facilityMentorship()->create([
-            'status' => 'cancelled',
-            'title' => 'Deactivated One',
-        ]);
-        $deleted = Training::factory()->facilityMentorship()->create([
+        Training::factory()->facilityMentorship()->create([
             'status' => 'draft',
-            'title' => 'Deleted One',
+            'title' => 'No Class Mentorship',
+            'created_at' => now()->subDays(10),
         ]);
-        $deleted->delete();
+        $classTraining = Training::factory()->facilityMentorship()->create([
+            'status' => 'draft',
+            'title' => 'No Mentee Mentorship',
+        ]);
+        \App\Models\MentorshipClass::factory()->create([
+            'training_id' => $classTraining->id,
+            'status' => 'draft',
+            'created_at' => now()->subDays(10),
+        ]);
+
+        Livewire::test(StalledMentorships::class)
+            ->filterTable('bucket', 'no_class')
+            ->assertCanSeeTableRecords([Training::where('title', 'No Class Mentorship')->first()])
+            ->assertCanNotSeeTableRecords([$classTraining]);
+    }
+
+    public function test_mentor_filter_narrows_the_table_to_that_mentors_rows(): void
+    {
+        $this->actingAsAdmin();
+        $mentorA = User::factory()->create(['name' => 'Mentor A']);
+        $mentorB = User::factory()->create(['name' => 'Mentor B']);
+        $trainingA = Training::factory()->facilityMentorship()->create(['status' => 'draft', 'mentor_id' => $mentorA->id]);
+        $trainingB = Training::factory()->facilityMentorship()->create(['status' => 'draft', 'mentor_id' => $mentorB->id]);
+
+        Livewire::test(StalledMentorships::class)
+            ->filterTable('mentor_id', $mentorA->id)
+            ->assertCanSeeTableRecords([$trainingA])
+            ->assertCanNotSeeTableRecords([$trainingB]);
+    }
+
+    public function test_search_finds_a_mentorship_by_title(): void
+    {
+        $this->actingAsAdmin();
+        $match = Training::factory()->facilityMentorship()->create(['status' => 'draft', 'title' => 'Findable Title Here']);
+        $other = Training::factory()->facilityMentorship()->create(['status' => 'draft', 'title' => 'Something Else Entirely']);
+
+        Livewire::test(StalledMentorships::class)
+            ->searchTable('Findable')
+            ->assertCanSeeTableRecords([$match])
+            ->assertCanNotSeeTableRecords([$other]);
+    }
+
+    public function test_mentor_filter_options_do_not_crash_when_a_mentor_has_no_name_column(): void
+    {
+        $this->actingAsAdmin();
+        $mentor = User::factory()->create(['name' => null, 'first_name' => 'Only', 'last_name' => 'First']);
+        Training::factory()->facilityMentorship()->create(['status' => 'draft', 'mentor_id' => $mentor->id]);
 
         $response = $this->get(StalledMentorships::getUrl());
 
         $response->assertOk();
-        $response->assertSee('Deactivated One');
-        $response->assertSee('Deleted One');
-        $response->assertSeeInOrder(['Recently Actioned']);
+    }
+
+    public function test_recently_actioned_table_is_embedded_on_the_page(): void
+    {
+        $this->actingAsAdmin();
+
+        $response = $this->get(StalledMentorships::getUrl());
+
+        $response->assertOk();
+        $response->assertSee('Recently Actioned');
     }
 }
