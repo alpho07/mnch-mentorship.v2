@@ -146,6 +146,14 @@ class ResourceController extends Controller
         return view('frontend.home', $data);
     }
 
+    /**
+     * Note: buildMentorshipCoverageByCounty/ByFacility and $mentoredFacilities
+     * below all require status IN ('active','completed') — a draft
+     * mentorship that never actually started (see Training::canActivate())
+     * must not inflate the public "N mentorships / view map" coverage
+     * figures, the same rule already applied to the Ongoing/Closed homepage
+     * sections in home().
+     */
     private function buildTrainingInsights(): array
     {
         $today = now()->startOfDay();
@@ -197,6 +205,7 @@ class ResourceController extends Controller
         $mentoredFacilities = Training::query()
             ->where('type', 'facility_mentorship')
             ->live()
+            ->whereIn('status', ['active', 'completed'])
             ->whereNotNull('facility_id')
             ->distinct('facility_id')
             ->count('facility_id');
@@ -332,6 +341,7 @@ class ResourceController extends Controller
         $counts = Training::query()
             ->where('type', 'facility_mentorship')
             ->live()
+            ->whereIn('status', ['active', 'completed'])
             ->whereNotNull('county_id')
             ->when($programIds, fn ($query) => $query->whereIn('program_id', $programIds))
             ->with('county:id,name')
@@ -383,6 +393,7 @@ class ResourceController extends Controller
         $trainings = Training::query()
             ->where('type', 'facility_mentorship')
             ->live()
+            ->whereIn('status', ['active', 'completed'])
             ->whereNotNull('county_id')
             ->whereNotNull('facility_id')
             ->when($programIds, fn ($query) => $query->whereIn('program_id', $programIds))

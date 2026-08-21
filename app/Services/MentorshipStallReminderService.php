@@ -34,16 +34,25 @@ class MentorshipStallReminderService
      * the last reminder was itself more than a threshold-period ago). Used
      * by both the admin center listing and the scheduled command.
      *
+     * $countyIds, when given, scopes to mentorships in those counties
+     * (a lead mentor's geographic scope) — combined with $mentorId (if both
+     * given) as "mine OR in my counties", not an intersection, so a lead
+     * still sees their own mentorship even if it's missing a county_id.
+     *
      * @return Collection<int, array{training: Training, class: ?MentorshipClass, bucket: string, last_activity_at: Carbon, days_stalled: int, last_reminded_at: ?Carbon, due: bool}>
      */
-    public function stalled(?int $thresholdDays = null, ?int $mentorId = null): Collection
+    public function stalled(?int $thresholdDays = null, ?int $mentorId = null, ?array $countyIds = null): Collection
     {
         $thresholdDays ??= Setting::getInt(Setting::STALL_REMINDER_THRESHOLD_DAYS, 7);
 
         $trainings = Training::where('type', 'facility_mentorship')
             ->where('is_pilot', false)
             ->where('status', 'draft')
-            ->when($mentorId, fn ($query) => $query->where('mentor_id', $mentorId))
+            ->when($mentorId && $countyIds, fn ($query) => $query->where(function ($q) use ($mentorId, $countyIds) {
+                $q->where('mentor_id', $mentorId)->orWhereIn('county_id', $countyIds);
+            }))
+            ->when($mentorId && ! $countyIds, fn ($query) => $query->where('mentor_id', $mentorId))
+            ->when(! $mentorId && $countyIds, fn ($query) => $query->whereIn('county_id', $countyIds))
             ->with(['mentorshipClasses.participants', 'mentorshipClasses.classModules'])
             ->get();
 

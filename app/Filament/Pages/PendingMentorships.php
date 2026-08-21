@@ -2,19 +2,33 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\User;
 use App\Services\MentorshipStallReminderService;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 
 /**
- * A mentor's own "needs attention" list — every facility mentorship they
- * own that's stalled in draft (no class, no mentee, or no modules
- * assigned), with a direct link to whichever step is actually blocking it.
- * Scoped strictly to the logged-in mentor via mentor_id — see
- * StalledMentorships for the admin-facing, all-mentors equivalent.
+ * The "needs attention" list for stalled facility mentorships, scoped to
+ * who's looking:
+ *   - Above-site users (super_admin, admin, division, national,
+ *     division_lead, national_mentor_lead — see User::isAboveSite()) see
+ *     everyone's.
+ *   - Lead mentors (county/subcounty/facility/spoke lead roles) see their
+ *     own plus anything in their geographic scope (User::scopedCountyIds()).
+ *   - Everyone else sees only mentorships they're the mentor on.
+ * See StalledMentorships for the admin ops page (reminders, deactivate,
+ * delete) — this page is view + continue only, no destructive actions,
+ * since a lead seeing a peer's mentorship shouldn't be able to delete it.
  */
 class PendingMentorships extends Page
 {
+    private const LEAD_ROLES = [
+        'county_mentor_lead',
+        'subcounty_mentor_lead',
+        'facility_mentor_lead',
+        'spoke_mentor_lead',
+    ];
+
     protected static ?string $navigationIcon = 'heroicon-o-clock';
 
     protected static ?string $navigationLabel = 'Pending Mentorships';
@@ -46,9 +60,27 @@ class PendingMentorships extends Page
             return null;
         }
 
-        $count = app(MentorshipStallReminderService::class)->stalled(mentorId: auth()->id())->count();
+        $count = static::scopedStalled(auth()->user())->count();
 
         return $count > 0 ? (string) $count : null;
+    }
+
+    /**
+     * @return Collection<int, array{training: \App\Models\Training, class: ?\App\Models\MentorshipClass, bucket: string, last_activity_at: \Illuminate\Support\Carbon, days_stalled: int, last_reminded_at: ?\Illuminate\Support\Carbon, due: bool}>
+     */
+    private static function scopedStalled(User $user): Collection
+    {
+        $service = app(MentorshipStallReminderService::class);
+
+        if ($user->isAboveSite()) {
+            return $service->stalled();
+        }
+
+        if ($user->hasRole(self::LEAD_ROLES)) {
+            return $service->stalled(mentorId: $user->id, countyIds: $user->scopedCountyIds()->toArray());
+        }
+
+        return $service->stalled(mentorId: $user->id);
     }
 
     /**
@@ -58,7 +90,7 @@ class PendingMentorships extends Page
     {
         $service = app(MentorshipStallReminderService::class);
 
-        return $service->stalled(mentorId: auth()->id())
+        return static::scopedStalled(auth()->user())
             ->sortByDesc('days_stalled')
             ->map(function (array $row) use ($service) {
                 $row['continueUrl'] = $service->continueUrl($row['training'], $row['class'], $row['bucket']);
@@ -70,6 +102,9 @@ class PendingMentorships extends Page
 
     protected function getViewData(): array
     {
-        return ['pending' => $this->getPending()];
+        return [
+            'pending' => $this->getPending(),
+            'showsEveryone' => auth()->user()->isAboveSite() || auth()->user()->hasRole(self::LEAD_ROLES),
+        ];
     }
 }

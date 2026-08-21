@@ -1,6 +1,10 @@
 <x-filament-panels::page>
     <p class="fi-section-header-description text-sm text-gray-500 dark:text-gray-400">
-        Mentorships you're set as mentor for that haven't started yet — pick up where you left off.
+        @if ($showsEveryone)
+            Mentorships that haven't started yet — yours and everyone in your scope. Pick up where they left off.
+        @else
+            Mentorships you're set as mentor for that haven't started yet — pick up where you left off.
+        @endif
     </p>
 
     <div class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
@@ -9,6 +13,9 @@
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
                         <th class="px-4 py-3 text-xs font-semibold uppercase text-gray-500">Mentorship</th>
+                        @if ($showsEveryone)
+                            <th class="px-4 py-3 text-xs font-semibold uppercase text-gray-500">Mentor</th>
+                        @endif
                         <th class="px-4 py-3 text-xs font-semibold uppercase text-gray-500">Status</th>
                         <th class="px-4 py-3 text-xs font-semibold uppercase text-gray-500">Created</th>
                         <th class="px-4 py-3 text-xs font-semibold uppercase text-gray-500"></th>
@@ -20,6 +27,11 @@
                             <td class="px-4 py-3 font-medium">
                                 {{ $row['training']->title ?: 'Untitled mentorship' }}
                             </td>
+                            @if ($showsEveryone)
+                                <td class="px-4 py-3 text-sm text-gray-500">
+                                    {{ $row['training']->mentor?->name ?? 'Unassigned' }}
+                                </td>
+                            @endif
                             <td class="px-4 py-3">
                                 <x-filament::badge :color="match ($row['bucket']) {
                                     'no_class' => 'danger',
@@ -46,8 +58,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500">
-                                Nothing pending — every mentorship you own has been started.
+                            <td colspan="{{ $showsEveryone ? 5 : 4 }}" class="px-4 py-8 text-center text-sm text-gray-500">
+                                Nothing pending — every mentorship in scope has been started.
                             </td>
                         </tr>
                     @endforelse

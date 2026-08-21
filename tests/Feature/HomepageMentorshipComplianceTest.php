@@ -77,4 +77,24 @@ class HomepageMentorshipComplianceTest extends TestCase
         $response->assertOk();
         $response->assertSee('Real Upcoming Mentorship');
     }
+
+    public function test_the_view_map_ribbon_count_excludes_stalled_draft_mentorships(): void
+    {
+        $county = \App\Models\County::factory()->create();
+        Training::factory()->facilityMentorship()->create([
+            'status' => 'active',
+            'county_id' => $county->id,
+        ]);
+        // Never started — must not inflate the public coverage count.
+        Training::factory()->facilityMentorship()->create([
+            'status' => 'draft',
+            'county_id' => $county->id,
+        ]);
+
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('1 Mentorship');
+        $response->assertDontSee('2 Mentorships');
+    }
 }
