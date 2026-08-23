@@ -10,10 +10,11 @@ use App\Models\MentorshipStallReminder;
 use App\Models\Setting;
 use App\Models\Training;
 use App\Models\User;
+use App\Support\NotificationEvents;
+use App\Support\SafeMailer;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -137,22 +138,23 @@ class MentorshipStallReminderService
             ? route('filament.admin.resources.mentorship.edit', ['record' => $training->id])
             : null;
 
-        Notification::make()
-            ->title($heading)
-            ->body($message)
-            ->warning()
-            ->sendToDatabase($mentor);
+        if ($mentor->wantsNotification(NotificationEvents::MENTORSHIP_STALL_REMINDER, NotificationEvents::CHANNEL_DATABASE)) {
+            Notification::make()
+                ->title($heading)
+                ->body($message)
+                ->warning()
+                ->sendToDatabase($mentor);
+        }
 
-        if (empty($mentor->email)) {
+        if (! $mentor->wantsNotification(NotificationEvents::MENTORSHIP_STALL_REMINDER, NotificationEvents::CHANNEL_MAIL)) {
             return;
         }
 
-        try {
-            Mail::to($mentor->email)
-                ->queue(new EmoncNotificationMail($mentor, $heading, $heading, $message, $actionUrl, 'Open Mentorship'));
-        } catch (\Throwable $e) {
-            report($e);
-        }
+        SafeMailer::queue(
+            $mentor,
+            new EmoncNotificationMail($mentor, $heading, $heading, $message, $actionUrl, 'Open Mentorship'),
+            NotificationEvents::MENTORSHIP_STALL_REMINDER
+        );
     }
 
     /**

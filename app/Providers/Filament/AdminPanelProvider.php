@@ -50,6 +50,10 @@ class AdminPanelProvider extends PanelProvider
             ->defaultThemeMode(ThemeMode::Light)
             ->maxContentWidth(MaxWidth::Full)
             ->sidebarCollapsibleOnDesktop()
+            ->databaseNotifications()
+            // Near-real-time bell updates without a websocket server —
+            // BROADCAST_CONNECTION stays on "log" until a WS host exists.
+            ->databaseNotificationsPolling('15s')
             ->globalSearch(AppGlobalSearchProvider::class)
             ->renderHook(
                 PanelsRenderHook::HEAD_END,

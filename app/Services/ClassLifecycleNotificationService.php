@@ -5,8 +5,9 @@ namespace App\Services;
 use App\Mail\EmoncNotificationMail;
 use App\Models\ClassModule;
 use App\Models\MentorshipClass;
+use App\Support\NotificationEvents;
+use App\Support\SafeMailer;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -24,6 +25,7 @@ class ClassLifecycleNotificationService
 
         $this->notifyInvitedMentees(
             $class,
+            NotificationEvents::MENTORSHIP_CLASS_STARTED,
             'Class Started',
             "{$class->name} Has Started",
             "\"{$class->name}\" ({$trainingTitle}) has started. You can now access its modules and confirm attendance as sessions run."
@@ -36,7 +38,7 @@ class ClassLifecycleNotificationService
 
         $this->notifyEnrolledMentees(
             $class,
-            'Class Completed',
+            NotificationEvents::MENTORSHIP_CLASS_COMPLETED,
             "{$class->name} Has Ended",
             "\"{$class->name}\" ({$trainingTitle}) has ended. Thank you for participating — check your progress for final results."
         );
@@ -53,6 +55,7 @@ class ClassLifecycleNotificationService
 
         $this->notifyInvitedMentees(
             $class,
+            NotificationEvents::MENTORSHIP_MODULE_STARTED,
             'Module Started',
             "{$moduleName} Has Started",
             "\"{$moduleName}\" has started in {$class->name}. Confirm your attendance once the session begins."
@@ -65,17 +68,17 @@ class ClassLifecycleNotificationService
     // broadcast "module ended" email here would double-notify. classStarted()/
     // classCompleted()/moduleStarted() above are genuinely new coverage.
 
-    private function notifyInvitedMentees(MentorshipClass $class, string $databaseTitle, string $emailSubject, string $emailMessage): void
+    private function notifyInvitedMentees(MentorshipClass $class, string $eventKey, string $databaseTitle, string $emailSubject, string $emailMessage): void
     {
-        $this->notifyMentees($class, $databaseTitle, $emailSubject, $emailMessage, onlyInvitedWithEmail: true);
+        $this->notifyMentees($class, $eventKey, $databaseTitle, $emailSubject, $emailMessage, onlyInvitedWithEmail: true);
     }
 
-    private function notifyEnrolledMentees(MentorshipClass $class, string $databaseTitle, string $emailSubject, string $emailMessage): void
+    private function notifyEnrolledMentees(MentorshipClass $class, string $eventKey, string $databaseTitle, string $emailSubject, string $emailMessage): void
     {
-        $this->notifyMentees($class, $databaseTitle, $emailSubject, $emailMessage, onlyInvitedWithEmail: false);
+        $this->notifyMentees($class, $eventKey, $databaseTitle, $emailSubject, $emailMessage, onlyInvitedWithEmail: false);
     }
 
-    private function notifyMentees(MentorshipClass $class, string $databaseTitle, string $emailSubject, string $emailMessage, bool $onlyInvitedWithEmail): void
+    private function notifyMentees(MentorshipClass $class, string $eventKey, string $databaseTitle, string $emailSubject, string $emailMessage, bool $onlyInvitedWithEmail): void
     {
         $actionUrl = Route::has('mentee.class.progress') ? route('mentee.class.progress', $class->id) : null;
 
@@ -94,23 +97,23 @@ class ClassLifecycleNotificationService
             ->filter();
 
         foreach ($users as $user) {
-            Notification::make()
-                ->title($databaseTitle)
-                ->body($emailMessage)
-                ->success()
-                ->sendToDatabase($user);
+            if ($user->wantsNotification($eventKey, NotificationEvents::CHANNEL_DATABASE)) {
+                Notification::make()
+                    ->title($databaseTitle)
+                    ->body($emailMessage)
+                    ->success()
+                    ->sendToDatabase($user);
+            }
 
-            if (empty($user->email)) {
+            if (! $user->wantsNotification($eventKey, NotificationEvents::CHANNEL_MAIL)) {
                 continue;
             }
 
-            try {
-                Mail::to($user->email)
-                    ->queue(new EmoncNotificationMail($user, $emailSubject, $emailSubject, $emailMessage, $actionUrl, 'View My Progress'));
-            } catch (\Throwable $e) {
-                // Fail silently — don't block class/module lifecycle transitions for email errors.
-                report($e);
-            }
+            SafeMailer::queue(
+                $user,
+                new EmoncNotificationMail($user, $emailSubject, $emailSubject, $emailMessage, $actionUrl, 'View My Progress'),
+                $eventKey
+            );
         }
     }
 }

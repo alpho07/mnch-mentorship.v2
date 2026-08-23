@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Notifications;
 
 use App\Models\StockRequest;
+use App\Notifications\Concerns\FilamentDatabasePayload;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -9,15 +11,16 @@ use Illuminate\Notifications\Notification;
 
 class StockRequestDispatched extends Notification implements ShouldQueue
 {
+    use FilamentDatabasePayload;
     use Queueable;
 
     public function __construct(
         public StockRequest $stockRequest
     ) {}
 
-    public function via($notifiable): array
+    public function eventKey(): string
     {
-        return ['mail', 'database', 'broadcast'];
+        return \App\Support\NotificationEvents::STOCK_REQUEST_DISPATCHED;
     }
 
     public function toMail($notifiable): MailMessage
@@ -27,7 +30,7 @@ class StockRequestDispatched extends Notification implements ShouldQueue
 
         // Build dispatched items list
         $itemsList = $this->stockRequest->items
-            ->filter(fn($item) => ($item->quantity_dispatched ?? 0) > 0)
+            ->filter(fn ($item) => ($item->quantity_dispatched ?? 0) > 0)
             ->map(function ($item) {
                 $dispatched = $item->quantity_dispatched ?? 0;
                 $approved = $item->quantity_approved ?? 0;
@@ -41,8 +44,8 @@ class StockRequestDispatched extends Notification implements ShouldQueue
         $pendingItems = '';
         if ($isPartialDispatch) {
             $pendingItems = $this->stockRequest->items
-                ->filter(fn($item) => ($item->balance_quantity ?? 0) > 0)
-                ->map(fn($item) => "• {$item->inventoryItem->name}: {$item->balance_quantity} {$item->inventoryItem->unit_of_measure}")
+                ->filter(fn ($item) => ($item->balance_quantity ?? 0) > 0)
+                ->map(fn ($item) => "• {$item->inventoryItem->name}: {$item->balance_quantity} {$item->inventoryItem->unit_of_measure}")
                 ->join("\n");
         }
 
@@ -50,7 +53,7 @@ class StockRequestDispatched extends Notification implements ShouldQueue
             ->subject("🚚 Items {$statusText} - {$this->stockRequest->request_number}")
             ->greeting("Hello {$notifiable->first_name},")
             ->line("Great news! Your stock request items have been {$statusText} and are on their way to your facility.")
-            ->line("**Dispatch Details:**")
+            ->line('**Dispatch Details:**')
             ->line("- Request #: {$this->stockRequest->request_number}")
             ->line("- Dispatched by: {$this->stockRequest->dispatchedBy->full_name}")
             ->line("- Dispatch Date: {$this->stockRequest->dispatch_date->format('M j, Y g:i A')}")
@@ -62,34 +65,35 @@ class StockRequestDispatched extends Notification implements ShouldQueue
             ->when($this->stockRequest->estimated_arrival, function ($message) {
                 return $message->line("- Expected Arrival: {$this->stockRequest->estimated_arrival->format('M j, Y g:i A')}");
             })
-            ->when(!$this->stockRequest->estimated_arrival, function ($message) {
-                return $message->line("- Expected Arrival: Within 2-3 business days");
+            ->when(! $this->stockRequest->estimated_arrival, function ($message) {
+                return $message->line('- Expected Arrival: Within 2-3 business days');
             })
-            ->line("")
-            ->line("**Dispatched Items:**")
+            ->line('')
+            ->line('**Dispatched Items:**')
             ->line($itemsList)
             ->when($isPartialDispatch && $pendingItems, function ($message) use ($pendingItems) {
-                return $message->line("")
-                    ->line("**⚠️ Pending Items (Stock Not Available):**")
+                return $message->line('')
+                    ->line('**⚠️ Pending Items (Stock Not Available):**')
                     ->line($pendingItems)
-                    ->line("")
-                    ->line("**Note:** The remaining items will be dispatched when stock becomes available.");
+                    ->line('')
+                    ->line('**Note:** The remaining items will be dispatched when stock becomes available.');
             })
-            ->line("")
-            ->line("**Value Summary:**")
-            ->line("- Dispatched Value: KES " . number_format($this->stockRequest->total_dispatched_value, 2))
+            ->line('')
+            ->line('**Value Summary:**')
+            ->line('- Dispatched Value: KES '.number_format($this->stockRequest->total_dispatched_value, 2))
             ->when($isPartialDispatch, function ($message) {
                 $pending = $this->stockRequest->total_approved_value - $this->stockRequest->total_dispatched_value;
-                return $message->line("- Pending Value: KES " . number_format($pending, 2));
+
+                return $message->line('- Pending Value: KES '.number_format($pending, 2));
             })
-            ->line("")
-            ->line("**Next Steps:**")
-            ->line("• Prepare to receive the items at your facility")
-            ->line("• Ensure proper storage space is available")
-            ->line("• Verify all items upon arrival")
-            ->line("• Check quantities and condition of received items")
-            ->line("• Update your inventory records after receipt")
-            ->line("• Report any discrepancies immediately")
+            ->line('')
+            ->line('**Next Steps:**')
+            ->line('• Prepare to receive the items at your facility')
+            ->line('• Ensure proper storage space is available')
+            ->line('• Verify all items upon arrival')
+            ->line('• Check quantities and condition of received items')
+            ->line('• Update your inventory records after receipt')
+            ->line('• Report any discrepancies immediately')
             ->when($this->stockRequest->tracking_number, function ($message) {
                 return $message->line("• Track shipment using: {$this->stockRequest->tracking_number}");
             })
@@ -99,10 +103,9 @@ class StockRequestDispatched extends Notification implements ShouldQueue
 
     public function toDatabase($notifiable): array
     {
-        return [
+        return $this->filamentPayload([
             'type' => 'stock_request_dispatched',
-            'title' => 'Items Dispatched',
-            'message' => "Items for request #{$this->stockRequest->request_number} have been dispatched (KES " . number_format($this->stockRequest->total_dispatched_value, 2) . ")",
+            'message' => "Items for request #{$this->stockRequest->request_number} have been dispatched (KES ".number_format($this->stockRequest->total_dispatched_value, 2).')',
             'stock_request_id' => $this->stockRequest->id,
             'request_number' => $this->stockRequest->request_number,
             'facility_name' => $this->stockRequest->requestingFacility->name,
@@ -111,7 +114,27 @@ class StockRequestDispatched extends Notification implements ShouldQueue
             'dispatched_value' => $this->stockRequest->total_dispatched_value,
             'is_partial' => $this->stockRequest->status === 'partially_dispatched',
             'action_url' => "/admin/stock-requests/{$this->stockRequest->id}",
-        ];
+        ]);
+    }
+
+    protected function notificationTitle(): string
+    {
+        return 'Items Dispatched';
+    }
+
+    protected function notificationBody(): string
+    {
+        return "Items for request #{$this->stockRequest->request_number} have been dispatched (KES ".number_format($this->stockRequest->total_dispatched_value, 2).')';
+    }
+
+    protected function notificationIcon(): string
+    {
+        return 'heroicon-o-truck';
+    }
+
+    protected function notificationColor(): string
+    {
+        return 'info';
     }
 
     public function toBroadcast($notifiable): array

@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Notifications;
 
 use App\Models\StockRequest;
+use App\Notifications\Concerns\FilamentDatabasePayload;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -9,6 +11,7 @@ use Illuminate\Notifications\Notification;
 
 class StockRequestStatusUpdate extends Notification implements ShouldQueue
 {
+    use FilamentDatabasePayload;
     use Queueable;
 
     public function __construct(
@@ -17,14 +20,14 @@ class StockRequestStatusUpdate extends Notification implements ShouldQueue
         public ?string $actionUrl = null
     ) {}
 
-    public function via($notifiable): array
+    public function eventKey(): string
     {
-        return ['mail', 'database', 'broadcast'];
+        return \App\Support\NotificationEvents::STOCK_STATUS_UPDATE;
     }
 
     public function toMail($notifiable): MailMessage
     {
-        $statusIcon = match($this->stockRequest->status) {
+        $statusIcon = match ($this->stockRequest->status) {
             'pending' => '⏳',
             'approved', 'partially_approved' => '✅',
             'rejected' => '❌',
@@ -38,11 +41,11 @@ class StockRequestStatusUpdate extends Notification implements ShouldQueue
             ->subject("{$statusIcon} Stock Request Update - {$this->stockRequest->request_number}")
             ->greeting("Hello {$notifiable->first_name},")
             ->line("There's an update on your stock request:")
-            ->line("")
+            ->line('')
             ->line("**Request #:** {$this->stockRequest->request_number}")
-            ->line("**Current Status:** " . ucfirst(str_replace('_', ' ', $this->stockRequest->status)))
+            ->line('**Current Status:** '.ucfirst(str_replace('_', ' ', $this->stockRequest->status)))
             ->line("**Update:** {$this->updateMessage}")
-            ->line("")
+            ->line('')
             ->when($this->actionUrl, function ($message) {
                 return $message->action('View Details', $this->actionUrl);
             })
@@ -51,15 +54,34 @@ class StockRequestStatusUpdate extends Notification implements ShouldQueue
 
     public function toDatabase($notifiable): array
     {
-        return [
+        return $this->filamentPayload([
             'type' => 'stock_request_status_update',
-            'title' => 'Stock Request Update',
             'message' => $this->updateMessage,
             'stock_request_id' => $this->stockRequest->id,
             'request_number' => $this->stockRequest->request_number,
             'status' => $this->stockRequest->status,
             'action_url' => $this->actionUrl,
-        ];
+        ]);
+    }
+
+    protected function notificationTitle(): string
+    {
+        return 'Stock Request Update';
+    }
+
+    protected function notificationBody(): string
+    {
+        return $this->updateMessage;
+    }
+
+    protected function notificationIcon(): string
+    {
+        return 'heroicon-o-arrow-path';
+    }
+
+    protected function notificationColor(): string
+    {
+        return 'info';
     }
 
     public function toBroadcast($notifiable): array

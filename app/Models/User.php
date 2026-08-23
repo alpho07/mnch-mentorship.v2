@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasNotificationPreferences;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens,Notifiable;
     use HasFactory,
+        HasNotificationPreferences,
         HasRoles,
         Notifiable,
         SoftDeletes;

@@ -1,6 +1,8 @@
 <?php
+
 namespace App\Notifications;
 
+use App\Notifications\Concerns\FilamentDatabasePayload;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -8,6 +10,7 @@ use Illuminate\Notifications\Notification;
 
 class BulkRequestProcessingResult extends Notification implements ShouldQueue
 {
+    use FilamentDatabasePayload;
     use Queueable;
 
     public function __construct(
@@ -15,9 +18,9 @@ class BulkRequestProcessingResult extends Notification implements ShouldQueue
         public string $action // 'approved' or 'rejected'
     ) {}
 
-    public function via($notifiable): array
+    public function eventKey(): string
     {
-        return ['mail', 'database'];
+        return \App\Support\NotificationEvents::STOCK_BULK_RESULT;
     }
 
     public function toMail($notifiable): MailMessage
@@ -30,46 +33,46 @@ class BulkRequestProcessingResult extends Notification implements ShouldQueue
         $successList = '';
         if ($successCount > 0) {
             $requests = $this->results['approved'] ?? $this->results['rejected'] ?? [];
-            $successList = collect($requests)->take(10)->map(fn($req) => "• {$req}")->join("\n");
+            $successList = collect($requests)->take(10)->map(fn ($req) => "• {$req}")->join("\n");
             if (count($requests) > 10) {
-                $successList .= "\n• ... and " . (count($requests) - 10) . " more";
+                $successList .= "\n• ... and ".(count($requests) - 10).' more';
             }
         }
 
         $failedList = '';
         if ($failedCount > 0) {
             $failed = collect($this->results['failed'])->take(5);
-            $failedList = $failed->map(fn($item) => "• {$item['request_number']}: {$item['reason']}")->join("\n");
+            $failedList = $failed->map(fn ($item) => "• {$item['request_number']}: {$item['reason']}")->join("\n");
             if (count($this->results['failed']) > 5) {
-                $failedList .= "\n• ... and " . (count($this->results['failed']) - 5) . " more";
+                $failedList .= "\n• ... and ".(count($this->results['failed']) - 5).' more';
             }
         }
 
         return (new MailMessage)
             ->subject("📋 Bulk Stock Request Processing Complete - {$successCount} {$actionText}")
             ->greeting("Hello {$notifiable->first_name},")
-            ->line("Your bulk stock request processing operation has been completed.")
-            ->line("")
-            ->line("**Processing Summary:**")
+            ->line('Your bulk stock request processing operation has been completed.')
+            ->line('')
+            ->line('**Processing Summary:**')
             ->line("- Action: {$actionText}")
             ->line("- Successfully {$this->action}: {$successCount} requests")
             ->line("- Failed: {$failedCount} requests")
             ->line("- Errors: {$errorCount} requests")
             ->when($successCount > 0, function ($message) use ($successList) {
-                return $message->line("")
+                return $message->line('')
                     ->line("**Successfully {$this->action} Requests:**")
                     ->line($successList);
             })
             ->when($failedCount > 0, function ($message) use ($failedList) {
-                return $message->line("")
-                    ->line("**Failed Requests:**")
+                return $message->line('')
+                    ->line('**Failed Requests:**')
                     ->line($failedList);
             })
             ->when($errorCount > 0, function ($message) {
-                return $message->line("")
-                    ->line("**⚠️ Errors Encountered:**")
-                    ->line("Some requests could not be processed due to system errors.")
-                    ->line("Please check individual requests and try again if needed.");
+                return $message->line('')
+                    ->line('**⚠️ Errors Encountered:**')
+                    ->line('Some requests could not be processed due to system errors.')
+                    ->line('Please check individual requests and try again if needed.');
             })
             ->action('View Requests', url('/admin/stock-request-notifications'))
             ->line('Thank you for efficiently managing our inventory system!');
@@ -77,16 +80,30 @@ class BulkRequestProcessingResult extends Notification implements ShouldQueue
 
     public function toDatabase($notifiable): array
     {
-        return [
+        return $this->filamentPayload([
             'type' => 'bulk_request_processing',
-            'title' => 'Bulk Processing Complete',
-            'message' => "Bulk {$this->action} completed: " . count($this->results['approved'] ?? $this->results['rejected'] ?? []) . " successful",
+            'message' => "Bulk {$this->action} completed: ".count($this->results['approved'] ?? $this->results['rejected'] ?? []).' successful',
             'action' => $this->action,
             'results' => $this->results,
             'success_count' => count($this->results['approved'] ?? $this->results['rejected'] ?? []),
             'failed_count' => count($this->results['failed'] ?? []),
             'error_count' => count($this->results['errors'] ?? []),
             'action_url' => '/admin/stock-request-notifications',
-        ];
+        ]);
+    }
+
+    protected function notificationTitle(): string
+    {
+        return 'Bulk Processing Complete';
+    }
+
+    protected function notificationBody(): string
+    {
+        return "Bulk {$this->action} completed: ".count($this->results['approved'] ?? $this->results['rejected'] ?? []).' successful';
+    }
+
+    protected function notificationIcon(): string
+    {
+        return 'heroicon-o-list-bullet';
     }
 }

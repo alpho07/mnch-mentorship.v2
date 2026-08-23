@@ -9,8 +9,9 @@ use App\Models\ClassParticipant;
 use App\Models\MenteeModuleProgress;
 use App\Models\QuizAttempt;
 use App\Models\User;
+use App\Support\NotificationEvents;
+use App\Support\SafeMailer;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Mail;
 
 class EmoncNotificationService
 {
@@ -25,6 +26,7 @@ class EmoncNotificationService
 
         $this->notify(
             $user,
+            NotificationEvents::EMONC_ACTIVITY_COMPLETED,
             'Activity Completed',
             "Activity Completed — {$moduleName}",
             "All activities for {$moduleName} have been marked as completed. Your module progress is now complete.",
@@ -46,7 +48,7 @@ class EmoncNotificationService
         $moduleName = $classModule->programModule?->name ?? 'a module';
         $menteeName = $progress->classParticipant?->user?->name ?? 'A mentee';
         $type = $attempt->attempt_type === 'pre_test' ? 'Pre-Test' : 'Post-Test';
-        $score = $attempt->score . '%';
+        $score = $attempt->score.'%';
 
         $recipients = collect([$mentor])->filter();
         $coMentors = $training->coMentors()
@@ -61,13 +63,14 @@ class EmoncNotificationService
         foreach ($recipients as $recipient) {
             $this->notify(
                 $recipient,
+                NotificationEvents::EMONC_QUIZ_SUBMITTED,
                 "{$type} Submitted — {$score}",
                 "{$type} Submitted by {$menteeName}",
                 "{$menteeName} has submitted the {$type} for {$moduleName} and scored {$score}.",
                 MentorshipTrainingResource::getUrl('module-mentees', [
                     'training' => $training->id,
-                    'class'    => $classModule->mentorship_class_id,
-                    'module'   => $classModule->id,
+                    'class' => $classModule->mentorship_class_id,
+                    'module' => $classModule->id,
                 ]),
                 'View Mentee Progress'
             );
@@ -100,6 +103,7 @@ class EmoncNotificationService
         foreach ($recipients as $recipient) {
             $this->notify(
                 $recipient,
+                NotificationEvents::EMONC_VIDEO_SUBMITTED,
                 'Hands-on Video Submitted',
                 'Video Ready for Review',
                 "{$menteeName} has submitted a hands-on video for {$moduleName}. Please review it when ready.",
@@ -123,6 +127,7 @@ class EmoncNotificationService
 
         $this->notify(
             $user,
+            NotificationEvents::EMONC_VIDEO_REVIEWED,
             'Video Review Result',
             "Video Review — {$status}",
             "Your hands-on video for {$moduleName} has been reviewed and {$status}.{$notes}",
@@ -142,6 +147,7 @@ class EmoncNotificationService
 
         $this->notify(
             $user,
+            NotificationEvents::EMONC_MENTOR_APPROVED,
             'Mentor Approval Received',
             'Approved for Certification',
             "Your mentor has approved you for certification for {$class->name}. The Head DRMH will now review and certify you.",
@@ -154,6 +160,7 @@ class EmoncNotificationService
         foreach ($headDrmhUsers as $headDrmh) {
             $this->notify(
                 $headDrmh,
+                NotificationEvents::EMONC_MENTOR_APPROVED,
                 'Certification Pending',
                 'Mentee Awaiting Certification',
                 "{$user->name} has been mentor-approved for {$class->name} and is awaiting Head DRMH certification.",
@@ -174,6 +181,7 @@ class EmoncNotificationService
 
         $this->notify(
             $user,
+            NotificationEvents::EMONC_CERTIFIED,
             'Certificate Issued',
             'You Are Certified',
             "Congratulations! You have been certified for {$class->name}. You can now download your certificate.",
@@ -195,6 +203,7 @@ class EmoncNotificationService
 
         $this->notify(
             $user,
+            NotificationEvents::EMONC_FEEDBACK_WRITTEN,
             'Mentor Feedback Received',
             "New Feedback — {$moduleName}",
             "Your mentor has written feedback on your progress in {$moduleName}. Review it on your dashboard.",
@@ -216,6 +225,7 @@ class EmoncNotificationService
 
         $this->notify(
             $user,
+            NotificationEvents::EMONC_MODULE_COMPLETED,
             'Module Completed',
             "Module Completed — {$moduleName}",
             "You've completed {$moduleName}. Great work!",
@@ -224,24 +234,21 @@ class EmoncNotificationService
         );
     }
 
-    private function notify(User $user, string $databaseTitle, string $emailSubject, string $emailMessage, ?string $actionUrl, ?string $actionText): void
+    private function notify(User $user, string $eventKey, string $databaseTitle, string $emailSubject, string $emailMessage, ?string $actionUrl, ?string $actionText): void
     {
-        // In-app notification
-        Notification::make()
-            ->title($databaseTitle)
-            ->body(strip_tags($emailMessage))
-            ->success()
-            ->sendToDatabase($user);
+        // In-app notification — only if the recipient hasn't opted out
+        if ($user->wantsNotification($eventKey, NotificationEvents::CHANNEL_DATABASE)) {
+            Notification::make()
+                ->title($databaseTitle)
+                ->body(strip_tags($emailMessage))
+                ->success()
+                ->sendToDatabase($user);
+        }
 
-        // Email notification
-        if (! empty($user->email)) {
-            try {
-                Mail::to($user->email)
-                    ->send(new EmoncNotificationMail($user, $emailSubject, $emailSubject, $emailMessage, $actionUrl, $actionText));
-            } catch (\Throwable $e) {
-                // Fail silently — don't block business logic for email errors
-                report($e);
-            }
+        // Email notification — failures are logged with context by SafeMailer,
+        // never allowed to block business logic
+        if (! empty($user->email) && $user->wantsNotification($eventKey, NotificationEvents::CHANNEL_MAIL)) {
+            SafeMailer::send($user, new EmoncNotificationMail($user, $emailSubject, $emailSubject, $emailMessage, $actionUrl, $actionText), $eventKey);
         }
     }
 }
