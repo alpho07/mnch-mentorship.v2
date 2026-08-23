@@ -19,17 +19,17 @@ class MentorAnalyticsDashboardService
     {
         // Scope trainings visible to this viewer
         if ($viewer === null || $viewer->hasRole(self::SENIOR_ROLES)) {
-            $trainingIds = Training::where('type', 'facility_mentorship')->where('is_pilot', false)->pluck('id');
+            $trainingIds = Training::where('type', 'facility_mentorship')->dashboardVisible()->pluck('id');
         } else {
             $asLead = Training::where('mentor_id', $viewer->id)
-                ->where('type', 'facility_mentorship')->where('is_pilot', false)->pluck('id');
+                ->where('type', 'facility_mentorship')->dashboardVisible()->pluck('id');
             $asCo   = MentorshipCoMentor::where('user_id', $viewer->id)
                 ->where('status', 'accepted')->pluck('training_id');
             $trainingIds = $asLead->merge($asCo)->unique()->values();
         }
 
         $trainings = Training::whereIn('id', $trainingIds)
-            ->where('type', 'facility_mentorship')->where('is_pilot', false)
+            ->where('type', 'facility_mentorship')->dashboardVisible()
             ->whereNotNull('mentor_id')
             ->when(!empty($filters['program_id']),   fn ($q) => $q->where('program_id', $filters['program_id']))
             ->when(!empty($filters['county_id']),    fn ($q) => $q->whereHas('facility.subcounty', fn ($q2) => $q2->where('county_id', $filters['county_id'])))
@@ -308,7 +308,6 @@ class MentorAnalyticsDashboardService
         return array_slice($insights, 0, 5);
     }
 }
-
 
 
 

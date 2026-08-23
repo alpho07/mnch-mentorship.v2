@@ -77,6 +77,21 @@ class Training extends Model
         return $query->where('is_pilot', false);
     }
 
+    /**
+     * Trainings that are safe to expose in the public analytics dashboards.
+     * A null status is retained for legacy records; pilot and draft records
+     * must remain hidden.
+     */
+    public function scopeDashboardVisible(Builder $query): Builder
+    {
+        return $query
+            ->where('is_pilot', false)
+            ->where(function (Builder $query) {
+                $query->whereNull('status')
+                    ->orWhereNotIn('status', ['draft', 'pilot']);
+            });
+    }
+
     public function scopePilot(Builder $query): Builder
     {
         return $query->where('is_pilot', true);

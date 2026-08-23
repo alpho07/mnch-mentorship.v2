@@ -99,7 +99,7 @@ class AnalyticsDashboardController extends Controller {
             $mentorDepartments = \App\Models\Department::orderBy('name')->get(['id', 'name']);
 
             // All lead mentors for mentor dropdown (unfiltered — needed to build the select)
-            $mentorUsers = \App\Models\Training::where('type', 'facility_mentorship')->where('is_pilot', false)
+            $mentorUsers = \App\Models\Training::where('type', 'facility_mentorship')->dashboardVisible()
                 ->whereNotNull('mentor_id')
                 ->with('mentor:id,name')
                 ->get()
@@ -944,7 +944,7 @@ class AnalyticsDashboardController extends Controller {
      * query builder already scoped to type = facility_mentorship.
      */
     private function applyLiveMentorshipConstraint($query): void {
-        $query->where('is_pilot', false)
+        $query->dashboardVisible()
             ->whereIn('status', ['active', 'completed'])
             ->whereHas('mentorshipClasses.participants', fn ($q) => $q->whereIn('status', ['enrolled', 'active', 'completed']));
     }
@@ -1393,7 +1393,7 @@ class AnalyticsDashboardController extends Controller {
         $baseQuery = TrainingParticipant::whereHas('training', function ($query) use ($trainingType, $year, $trainingId, $mode) {
             $query->where('type', $trainingType);
             if ($mode !== 'training') {
-                $query->where('is_pilot', false);
+                $query->dashboardVisible();
             }
             if (!empty($year)) {
                 $query->whereYear('start_date', $year);
@@ -2099,7 +2099,7 @@ class AnalyticsDashboardController extends Controller {
             // still excludes pilots and mentee-less trainings.
             $statusQuery = Training::where('type', $trainingType);
             if ($mode !== 'training') {
-                $statusQuery->where('is_pilot', false)
+                $statusQuery->dashboardVisible()
                     ->whereHas('mentorshipClasses.participants', fn ($q) => $q->whereIn('status', ['enrolled', 'active', 'completed']));
             }
             if (!empty($year)) $statusQuery->whereYear('start_date', $year);
@@ -2131,7 +2131,7 @@ class AnalyticsDashboardController extends Controller {
                     ->when($hasGeoFilter, fn ($q) => $q->whereHas('user.facility', $geoScope))
                     ->whereBetween('registration_date', [$ms, $me])->count();
                 } else {
-                    $cnt = Training::where('type', 'facility_mentorship')->where('is_pilot', false)
+                    $cnt = Training::where('type', 'facility_mentorship')->dashboardVisible()
                         ->when($hasGeoFilter, fn ($q) => $q->whereHas('facility', $geoScope))
                         ->whereBetween('start_date', [$ms, $me])
                         ->count();
@@ -2152,7 +2152,7 @@ class AnalyticsDashboardController extends Controller {
                     ->when($hasGeoFilter, fn ($q) => $q->whereHas('user.facility', $geoScope))
                     ->count();
             } else {
-                $pilotFilter = fn ($q) => $q->where('is_pilot', false);
+                $pilotFilter = fn ($q) => $q->dashboardVisible();
                 $curCount  = Training::where('type', $trainingType)->when(true, $pilotFilter)->whereYear('start_date', $curYear)
                     ->when($hasGeoFilter, fn ($q) => $q->whereHas('facility', $geoScope))
                     ->count();
@@ -2245,7 +2245,7 @@ class AnalyticsDashboardController extends Controller {
                     ->get(['id', 'title', 'status', 'start_date'])
                     ->map(fn($t) => ['title' => $t->title, 'count' => $t->p_count, 'status' => $t->status])
                     ->toArray()
-                : Training::where('type', 'facility_mentorship')->where('is_pilot', false)
+                : Training::where('type', 'facility_mentorship')->dashboardVisible()
                     ->when(!empty($year), fn($q) => $q->whereYear('start_date', $year))
                     ->when($hasGeoFilter, fn ($q) => $q->whereHas('facility', $geoScope))
                     ->get(['id', 'title', 'status', 'start_date'])

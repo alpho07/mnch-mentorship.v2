@@ -88,6 +88,7 @@ class ResourceController extends Controller
             // so. "Upcoming" is exempt — by definition it hasn't started
             // yet, so draft is exactly the correct, legitimate state there.
             $ongoingMentorships = Training::where('type', 'facility_mentorship')
+                ->dashboardVisible()
                 ->where('status', 'active')
                 ->where('start_date', '<=', $now)
                 ->where('end_date', '>=', $now)
@@ -97,6 +98,7 @@ class ResourceController extends Controller
                 ->get();
 
             $upcomingMentorships = Training::where('type', 'facility_mentorship')
+                ->dashboardVisible()
                 ->whereIn('status', ['draft', 'active'])
                 ->where('start_date', '>', $now)
                 ->with(['county', 'facility'])
@@ -105,6 +107,7 @@ class ResourceController extends Controller
                 ->get();
 
             $closedMentorships = Training::where('type', 'facility_mentorship')
+                ->dashboardVisible()
                 ->where('status', 'completed')
                 ->where('end_date', '<', $now)
                 ->where('end_date', '>=', $now->copy()->subDays(30))
@@ -115,6 +118,7 @@ class ResourceController extends Controller
 
             // EmONC mentorships with null dates — derive status from classes
             $emoncNoDates = Training::where('type', 'facility_mentorship')
+                ->dashboardVisible()
                 ->where('status', '!=', 'cancelled')
                 ->whereNull('start_date')
                 ->whereNull('end_date')

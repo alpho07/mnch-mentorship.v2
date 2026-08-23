@@ -22,6 +22,7 @@ class EmoncDashboardService
 
         $trainings = Training::whereIn('id', $trainingIds)
             ->where('type', 'facility_mentorship')
+            ->dashboardVisible()
             ->with(['facility.subcounty.county', 'facility.facilityType', 'program', 'mentor'])
             ->get();
 
@@ -68,11 +69,15 @@ class EmoncDashboardService
     private function trainingIdsFor(?User $user): array
     {
         if ($user === null || $user->hasRole(self::SENIOR_ROLES)) {
-            return Training::where('type', 'facility_mentorship')->pluck('id')->toArray();
+            return Training::where('type', 'facility_mentorship')
+                ->dashboardVisible()
+                ->pluck('id')
+                ->toArray();
         }
 
         $asLead = Training::where('mentor_id', $user->id)
             ->where('type', 'facility_mentorship')
+            ->dashboardVisible()
             ->pluck('id');
 
         $asCo = MentorshipCoMentor::where('user_id', $user->id)
