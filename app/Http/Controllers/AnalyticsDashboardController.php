@@ -295,7 +295,8 @@ class AnalyticsDashboardController extends Controller {
             } else {
                 // For mentorship, count facilities that host mentorship programs
                 $facilitiesWithPrograms = Facility::whereHas('trainings', function ($query) use ($selectedYear, $trainingId) {
-                    $query->where('type', 'facility_mentorship')->where('is_pilot', false);
+                    $query->where('type', 'facility_mentorship');
+                    $this->applyLiveMentorshipConstraint($query);
                     if (!empty($selectedYear)) {
                         $query->whereYear('start_date', $selectedYear);
                     }
@@ -960,9 +961,7 @@ class AnalyticsDashboardController extends Controller {
      * query builder already scoped to type = facility_mentorship.
      */
     private function applyLiveMentorshipConstraint($query): void {
-        $query->dashboardVisible()
-            ->whereIn('status', ['active', 'completed'])
-            ->whereHas('mentorshipClasses.participants', fn ($q) => $q->whereIn('status', ['enrolled', 'active', 'completed']));
+        $query->liveMentorship();
     }
 
     /**
@@ -2523,9 +2522,9 @@ class AnalyticsDashboardController extends Controller {
     {
         $selectedYear = $request->get('year', '');
 
-        $mentorships = Training::where('type', 'facility_mentorship')->where('is_pilot', false)
-            ->where('status', '!=', 'draft')
+        $mentorships = Training::where('type', 'facility_mentorship')
             ->where('facility_id', $facility->id)
+            ->tap(fn ($q) => $this->applyLiveMentorshipConstraint($q))
             ->when(!empty($selectedYear), fn($q) => $q->whereYear('start_date', $selectedYear))
             ->with([
                 'mentor',
