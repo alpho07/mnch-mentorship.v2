@@ -4,6 +4,7 @@ namespace App\Models\Concerns;
 
 use App\Models\UserNotificationPreference;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Arr;
 
 /**
  * Adds per-user notification channel preferences on top of the standard
@@ -44,8 +45,16 @@ trait HasNotificationPreferences
     }
 
     /**
-     * The raw saved map — used to pre-fill the preferences form. Missing
-     * entries mean "on", which the form expresses as explicit true toggles.
+     * The saved map, normalised so every known event/channel is present (missing
+     * entries mean "on", which the form expresses as explicit true toggles).
+     *
+     * The returned array uses the same nested shape that Filament form fields
+     * expect: event keys contain dots (e.g. "mentorship.class_started"), and
+     * Filament treats dotted field names as nested state paths, so the data
+     * must be expanded into a nested array via Arr::set(). The raw stored
+     * JSON column keeps flat dotted keys (see wantsNotification() /
+     * saveNotificationChannels()), so this method is the bridge between the
+     * two representations.
      */
     public function notificationChannelMap(): array
     {
@@ -55,16 +64,23 @@ trait HasNotificationPreferences
             $saved = [];
         }
 
-        foreach (\App\Support\NotificationEvents::all() as $event => $meta) {
-            foreach ([\App\Support\NotificationEvents::CHANNEL_MAIL, \App\Support\NotificationEvents::CHANNEL_DATABASE] as $channel) {
-                $eventChannels = is_array($saved[$event] ?? null) ? $saved[$event] : [];
+        $map = [];
 
-                $saved[$event][$channel] = $eventChannels[$channel] ?? true;
+        foreach (\App\Support\NotificationEvents::all() as $event => $meta) {
+            $eventChannels = is_array($saved[$event] ?? null) ? $saved[$event] : [];
+
+            $values = [];
+
+            foreach ([\App\Support\NotificationEvents::CHANNEL_MAIL, \App\Support\NotificationEvents::CHANNEL_DATABASE] as $channel) {
+                $values[$channel] = (bool) ($eventChannels[$channel] ?? true);
             }
-            unset($saved[$event]['broadcast']);
+
+            // Expand the dotted event key into a nested path so Filament's
+            // fill() matches the dotted field-name state paths.
+            Arr::set($map, $event, $values);
         }
 
-        return $saved;
+        return $map;
     }
 
     public function saveNotificationChannels(array $channels): void
