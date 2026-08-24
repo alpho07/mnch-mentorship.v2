@@ -20,6 +20,7 @@ use App\Services\MentorAnalyticsDashboardService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
@@ -34,7 +35,8 @@ class AnalyticsDashboardController extends Controller
         // ── Role-based geographic scoping ────────────────────────────────
         // Pre-fill county/subcounty/facility filters for non-above-site users
         // when those params aren't explicitly set (e.g. via the Filament embed).
-        $user = auth()->user();
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
         if ($user && ! $user->isAboveSite()) {
             if ($user->hasRole('county_mentor_lead') && ! $request->filled('county_id')) {
                 $request->merge(['county_id' => $user->counties()->value('counties.id')]);
@@ -80,7 +82,9 @@ class AnalyticsDashboardController extends Controller
                 'department_id' => $request->get('department_id'),
             ];
 
-            $data = app(MentorAnalyticsDashboardService::class)->build(auth()->user(), $mentorFilters);
+            /** @var \App\Models\User|null $user */
+            $user = Auth::user();
+            $data = app(MentorAnalyticsDashboardService::class)->build($user, $mentorFilters);
             $mentorKpis = $data['kpis'];
             $mentorMatrix = $data['matrix'];
             $mentorCharts = $data['chartData'];
@@ -119,7 +123,9 @@ class AnalyticsDashboardController extends Controller
         }
 
         if ($mode === 'emonc') {
-            $emoncData = app(EmoncDashboardService::class)->build(auth()->user());
+            /** @var \App\Models\User|null $user */
+            $user = Auth::user();
+            $emoncData = app(EmoncDashboardService::class)->build($user);
             $emoncKpis = $emoncData['kpis'];
             $emoncMatrix = $emoncData['completionMatrix'];
             $emoncChartData = $emoncData['chartData'];
