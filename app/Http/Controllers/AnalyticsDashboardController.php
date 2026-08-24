@@ -579,8 +579,13 @@ class AnalyticsDashboardController extends Controller {
         $county = County::findOrFail($countyId);
 
         // Get facilities with mentorship programs
+        // Apply the same "live mentorship" constraint used by getCountyPrograms()
+        // so the drill-down count matches the top-level map count. Without this,
+        // the sidebar included draft/pending trainings and trainings with no
+        // enrolled participants, inflating the count (e.g. 16 vs 8 for Murang'a).
         $facilities = Facility::whereHas('trainings', function ($query) use ($selectedYear) {
-            $query->where('type', 'facility_mentorship')->where('is_pilot', false);
+            $query->where('type', 'facility_mentorship');
+            $this->applyLiveMentorshipConstraint($query);
             if (!empty($selectedYear)) {
                 $query->whereYear('start_date', $selectedYear);
             }
@@ -591,7 +596,8 @@ class AnalyticsDashboardController extends Controller {
         ->with(['subcounty', 'facilityType'])
         ->withCount([
             'trainings as mentorship_count' => function ($query) use ($selectedYear) {
-                $query->where('type', 'facility_mentorship')->where('is_pilot', false);
+                $query->where('type', 'facility_mentorship');
+                $this->applyLiveMentorshipConstraint($query);
                 if (!empty($selectedYear)) {
                     $query->whereYear('start_date', $selectedYear);
                 }
@@ -604,7 +610,10 @@ class AnalyticsDashboardController extends Controller {
                         ->join('mentorship_classes', 'trainings.id', '=', 'mentorship_classes.training_id')
                         ->join('class_participants', 'mentorship_classes.id', '=', 'class_participants.mentorship_class_id')
                         ->whereColumn('trainings.facility_id', 'facilities.id')
-                        ->where('trainings.type', 'facility_mentorship')->where('trainings.is_pilot', false);
+                        ->where('trainings.type', 'facility_mentorship')
+                        ->where('trainings.is_pilot', false)
+                        ->whereIn('trainings.status', ['active', 'completed'])
+                        ->whereIn('class_participants.status', ['enrolled', 'active', 'completed']);
                 if (!empty($selectedYear)) {
                     $query->whereYear('trainings.start_date', $selectedYear);
                 }
@@ -650,8 +659,14 @@ class AnalyticsDashboardController extends Controller {
         $facility = Facility::with(['facilityType', 'subcounty'])->findOrFail($facilityId);
 
         // Get mentorship programs for this facility
-        $mentorships = Training::where('type', 'facility_mentorship')->where('is_pilot', false)
+        // Use the same "live mentorship" constraint as the county-level view
+        // and the top-level map so counts stay consistent at every drill-down
+        // level (active/completed statuses with enrolled participants only).
+        $mentorships = Training::where('type', 'facility_mentorship')
                 ->where('facility_id', $facilityId)
+                ->tap(function ($query) {
+                    $this->applyLiveMentorshipConstraint($query);
+                })
                 ->when(!empty($selectedYear), function ($query) use ($selectedYear) {
                     $query->whereYear('start_date', $selectedYear);
                 })
@@ -662,6 +677,7 @@ class AnalyticsDashboardController extends Controller {
         $menteeCounts = ClassParticipant::query()
                 ->join('mentorship_classes', 'class_participants.mentorship_class_id', '=', 'mentorship_classes.id')
                 ->whereIn('mentorship_classes.training_id', $mentorships->pluck('id'))
+                ->whereIn('class_participants.status', ['enrolled', 'active', 'completed'])
                 ->groupBy('mentorship_classes.training_id')
                 ->selectRaw('mentorship_classes.training_id, COUNT(DISTINCT class_participants.user_id) as mentees_count')
                 ->pluck('mentees_count', 'training_id');
