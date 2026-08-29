@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Support\NotificationEvents;
-use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Toggle;
@@ -48,7 +47,7 @@ class NotificationPreferences extends Page implements HasForms
             $fields = [];
 
             foreach ($events as $event => $meta) {
-                $fields[] = Fieldset::make($meta['label'])
+                $fields[] = Section::make($meta['label'])
                     ->description($meta['description'])
                     ->columns([
                         'default' => 1,
