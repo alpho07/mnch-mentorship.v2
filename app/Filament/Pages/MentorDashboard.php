@@ -55,6 +55,7 @@ class MentorDashboard extends Page
         }
         $user = auth()->user();
         $count = Training::where('type', 'facility_mentorship')
+            ->liveMentorship()
             ->when(! $user->hasRole(self::SENIOR_ROLES), fn ($q) => $q->forMentorOrCoMentor($user->id))
             ->count();
 
@@ -118,9 +119,9 @@ class MentorDashboard extends Page
             $this->mentorshipsPage = 1;
             $this->insights = [
                 'mentees_needing_attention' => 0,
-                'low_attendance_classes'    => 0,
-                'stalled_modules'           => 0,
-                'recs_coverage'             => 100,
+                'low_attendance_classes' => 0,
+                'stalled_modules' => 0,
+                'recs_coverage' => 100,
             ];
             $this->priorityQueue = [];
 
@@ -271,9 +272,9 @@ class MentorDashboard extends Page
 
                     return match ($filter) {
                         'newborn' => $programName === 'newborn care',
-                        'infant'  => $programName === 'infant and child care',
-                        'emonc'   => str_contains($programName, 'emonc') || str_contains($programName, 'maternal'),
-                        default   => str_contains($programName, $filter),
+                        'infant' => $programName === 'infant and child care',
+                        'emonc' => str_contains($programName, 'emonc') || str_contains($programName, 'maternal'),
+                        default => str_contains($programName, $filter),
                     };
                 })
                 ->values()
@@ -453,26 +454,27 @@ class MentorDashboard extends Page
 
     private function getMyTrainingIds(int $userId): array
     {
-        // Senior roles see all live (non-pilot) facility mentorships as a summary view
+        // Senior roles see all live facility mentorships as a summary view
         if (auth()->user()->hasRole(self::SENIOR_ROLES)) {
             return Training::where('type', 'facility_mentorship')
-                ->where('is_pilot', false)
+                ->liveMentorship()
                 ->pluck('id')
                 ->toArray();
         }
 
         $asLead = Training::where('mentor_id', $userId)
             ->where('type', 'facility_mentorship')
-            ->where('is_pilot', false)
+            ->liveMentorship()
             ->pluck('id');
 
         $asCoMentor = MentorshipCoMentor::where('user_id', $userId)
             ->where('status', 'accepted')
             ->pluck('training_id');
 
-        // Filter co-mentor training IDs to also exclude pilots
+        // Apply live mentorship constraint: active/completed with enrolled mentees
         $asCoMentor = Training::whereIn('id', $asCoMentor)
-            ->where('is_pilot', false)
+            ->where('type', 'facility_mentorship')
+            ->liveMentorship()
             ->pluck('id');
 
         $trainingIds = $asLead->merge($asCoMentor)->unique()->values();
