@@ -332,6 +332,16 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(ResourceDownload::class);
     }
 
+    public function pageVisits(): HasMany
+    {
+        return $this->hasMany(PageVisit::class)->orderByDesc('id');
+    }
+
+    public function loginLogs(): HasMany
+    {
+        return $this->hasMany(LoginLog::class)->orderByDesc('id');
+    }
+
     // Authorization Helper Methods
     public function isAboveSite(): bool
     {

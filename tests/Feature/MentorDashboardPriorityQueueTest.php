@@ -35,6 +35,7 @@ class MentorDashboardPriorityQueueTest extends TestCase
         $training = Training::factory()->facilityMentorship()->create([
             'program_id' => $program->id,
             'mentor_id' => $mentor->id,
+            'status' => 'active',
         ]);
         $class = MentorshipClass::factory()->create(['training_id' => $training->id, 'status' => 'active']);
         $programModule = ProgramModule::factory()->create(['program_id' => $program->id]);

@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\MentorDashboard;
+use App\Models\ClassParticipant;
+use App\Models\MentorshipClass;
 use App\Models\Program;
 use App\Models\Setting;
 use App\Models\Training;
@@ -35,14 +37,21 @@ class MentorDashboardProgramScopeTest extends TestCase
         $mentor->assignRole('facility_mentor');
         $this->grantDashboardAccess($mentor);
 
-        Training::factory()->facilityMentorship()->create([
+        $t1 = Training::factory()->facilityMentorship()->create([
             'mentor_id' => $mentor->id,
             'program_id' => $emonc->id,
+            'status' => 'active',
         ]);
-        Training::factory()->facilityMentorship()->create([
+        $c1 = MentorshipClass::factory()->create(['training_id' => $t1->id, 'status' => 'active']);
+        ClassParticipant::factory()->create(['mentorship_class_id' => $c1->id, 'user_id' => User::factory()->create()->id]);
+
+        $t2 = Training::factory()->facilityMentorship()->create([
             'mentor_id' => $mentor->id,
             'program_id' => $newborn->id,
+            'status' => 'active',
         ]);
+        $c2 = MentorshipClass::factory()->create(['training_id' => $t2->id, 'status' => 'active']);
+        ClassParticipant::factory()->create(['mentorship_class_id' => $c2->id, 'user_id' => User::factory()->create()->id]);
 
         $this->actingAs($mentor);
 
@@ -62,14 +71,21 @@ class MentorDashboardProgramScopeTest extends TestCase
         $mentor->assignRole('facility_mentor');
         $this->grantDashboardAccess($mentor);
 
-        Training::factory()->facilityMentorship()->create([
+        $t1 = Training::factory()->facilityMentorship()->create([
             'mentor_id' => $mentor->id,
             'program_id' => $emonc->id,
+            'status' => 'active',
         ]);
-        Training::factory()->facilityMentorship()->create([
+        $c1 = MentorshipClass::factory()->create(['training_id' => $t1->id, 'status' => 'active']);
+        ClassParticipant::factory()->create(['mentorship_class_id' => $c1->id, 'user_id' => User::factory()->create()->id]);
+
+        $t2 = Training::factory()->facilityMentorship()->create([
             'mentor_id' => $mentor->id,
             'program_id' => $newborn->id,
+            'status' => 'active',
         ]);
+        $c2 = MentorshipClass::factory()->create(['training_id' => $t2->id, 'status' => 'active']);
+        ClassParticipant::factory()->create(['mentorship_class_id' => $c2->id, 'user_id' => User::factory()->create()->id]);
 
         $this->actingAs($mentor);
 

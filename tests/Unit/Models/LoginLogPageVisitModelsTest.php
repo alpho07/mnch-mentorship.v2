@@ -61,5 +61,22 @@ class LoginLogPageVisitModelsTest extends TestCase
 
         $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $user->refresh()->last_seen_at);
     }
-}
 
+    public function test_user_has_page_visits_relationship(): void
+    {
+        $user = User::factory()->create();
+
+        PageVisit::create(['user_id' => $user->id, 'route_name' => 'filament.admin.pages.dashboard', 'path' => '/admin', 'created_at' => now()]);
+
+        $this->assertTrue($user->pageVisits->contains(fn ($v) => $v->path === '/admin'));
+    }
+
+    public function test_user_has_login_logs_relationship(): void
+    {
+        $user = User::factory()->create();
+
+        LoginLog::create(['user_id' => $user->id, 'logged_in_at' => now()]);
+
+        $this->assertTrue($user->loginLogs->contains(fn ($l) => $l->user_id === $user->id));
+    }
+}

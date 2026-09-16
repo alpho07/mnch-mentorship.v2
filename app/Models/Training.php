@@ -92,6 +92,20 @@ class Training extends Model
             });
     }
 
+    /**
+     * Facility-mentorship trainings that are "live" enough for the analytics
+     * dashboards: non-pilot, active/completed status, and with at least one
+     * enrolled/active/completed participant. Applies dashboardVisible() too,
+     * so callers need not chain both.
+     */
+    public function scopeLiveMentorship(Builder $query): Builder
+    {
+        return $query
+            ->dashboardVisible()
+            ->whereIn('status', ['active', 'completed'])
+            ->whereHas('mentorshipClasses.participants', fn ($q) => $q->whereIn('status', ['enrolled', 'active', 'completed']));
+    }
+
     public function scopePilot(Builder $query): Builder
     {
         return $query->where('is_pilot', true);
