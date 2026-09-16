@@ -217,6 +217,8 @@ php artisan storage:link
 5. **Mobile API in flux** — The project has a growing `/api/v1` mobile API layer. `docs/mobile-mentorship-training-flow.md` documents the current state and known backend risks (e.g., unresolved conflict markers in some controllers, enrollment rule mismatches, missing endpoints).
 6. **Resource access** — Always query resources with `Resource::accessibleTo($user)` rather than filtering collections after fetch.
 7. **Geographic scoping** — Most non-admin queries should respect `scopedCountyIds()` / `scopedFacilityIds()`.
+8. **Public dashboard cards exclude pilots and drafts** — The homepage Ongoing / Upcoming / Completed mentorship cards (`ResourceController::home()`) and the analytics dashboards must never show pilot runs or drafts. Use the `Training::dashboardVisible()` scope (non-pilot + non-draft, retaining legacy null statuses) for any public-facing or analytics mentorship listing; plain `Training::live()` alone only excludes pilots.
+9. **Notification preferences are opt-out** — Every notification send site consults `User::wantsNotification(event, channel)` (see `App\Support\NotificationEvents` catalog) before touching a channel; inventory notifications share this via the `FilamentDatabasePayload` trait. New events must be added to the catalog so they appear on the "My Notifications" page.
 
 ---
 
