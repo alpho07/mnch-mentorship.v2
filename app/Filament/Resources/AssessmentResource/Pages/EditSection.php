@@ -12,8 +12,8 @@ use App\Services\CadreMatrixSyncService;
 use App\Services\DynamicFormBuilder;
 use App\Services\DynamicScoringService;
 use Filament\Forms;
-use Filament\Forms\Components\Actions as FormActions;
 use Filament\Forms\Components\Actions\Action as FormAction;
+use Filament\Forms\Components\Actions as FormActions;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -28,8 +28,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
  */
 class EditSection extends EditRecord
 {
-    use HasSectionNavigation;
     use GuardsLockedAssessment;
+    use HasSectionNavigation;
 
     protected static string $resource = AssessmentResource::class;
 
@@ -43,13 +43,19 @@ class EditSection extends EditRecord
      * initialization. Record resolution, section resolution, and the
      * authorization check are replicated here in the right order instead.
      */
-    public function mount(int|string $record): void
+    /**
+     * $sectionCode is the {sectionCode} route segment, which Filament passes
+     * in by name. It falls back to reading the route directly so nothing
+     * depends on the argument being supplied — and taking it as a parameter
+     * means the page can be mounted without a routed request behind it.
+     */
+    public function mount(int|string $record, ?string $sectionCode = null): void
     {
         // Scoped via the resource's own getEloquentQuery() — an assessor
         // can't reach another assessor's section-edit page directly by URL.
         $this->record = AssessmentResource::getEloquentQuery()->findOrFail($record);
 
-        $sectionCode = request()->route('sectionCode');
+        $sectionCode ??= request()->route('sectionCode');
 
         $section = $this->record->assessmentType
             ?->sections()
@@ -109,6 +115,11 @@ class EditSection extends EditRecord
             }
 
             $data[$fieldName] = $responseValue;
+
+            // Third column of the indicators table (IndicatorTableRenderer).
+            // Always hydrated, not just when true, so unticking a row and
+            // saving actually clears the flag.
+            $data[$fieldName.'_not_applicable'] = (bool) $resp->not_applicable;
 
             if ($resp->explanation) {
                 $data[$fieldName.'_explanation'] = $resp->explanation;

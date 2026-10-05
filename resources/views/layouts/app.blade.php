@@ -394,6 +394,7 @@
                             <li><a href="{{ route('categories.index') }}" class="text-gray-400 hover:text-primary-400 text-sm transition-colors">Categories</a></li>
                             <li><a href="{{ route('resources.browse') }}" class="text-gray-400 hover:text-primary-400 text-sm transition-colors">Browse</a></li>
                             <li><a href="{{ url('analytics/dashboard') }}" class="text-gray-400 hover:text-primary-400 text-sm transition-colors">Analytics Map</a></li>
+                            <li><a href="https://mnchkenyamentorship.org/MNCH%20Mentorship.apk" class="text-gray-400 hover:text-primary-400 text-sm transition-colors inline-flex items-center gap-2" download><i class="fas fa-mobile-screen-button text-primary-400 text-xs"></i>MNCH Mobile App</a></li>
                         </ul>
                     </div>
 

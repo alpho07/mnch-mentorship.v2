@@ -39,6 +39,12 @@ trait HasSectionNavigation
 
         $result = [];
 
+        // Commodity-matrix completion is derived from the responses on
+        // record (every visible department fully answered), not from the
+        // stored flag — see CommodityMatrixProgressService. sync() also
+        // writes the derived value back so allSectionsComplete() agrees.
+        $matrixComplete = null;
+
         foreach ($sections as $section) {
             $route = match ($section->resolvedKind()) {
                 'question_group' => AssessmentResource::getUrl('edit-section', [
@@ -54,9 +60,13 @@ trait HasSectionNavigation
                 continue;
             }
 
+            $done = $section->resolvedKind() === 'commodity_matrix'
+                ? ($matrixComplete ??= app(\App\Services\CommodityMatrixProgressService::class)->sync($this->record))
+                : ($progress[$section->code] ?? false);
+
             $result[$section->code] = [
                 'label' => $section->name,
-                'done' => $progress[$section->code] ?? false,
+                'done' => $done,
                 'route' => $route,
             ];
         }

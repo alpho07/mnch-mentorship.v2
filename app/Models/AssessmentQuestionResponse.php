@@ -5,32 +5,37 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AssessmentQuestionResponse extends Model {
-
+class AssessmentQuestionResponse extends Model
+{
     protected $fillable = [
         'assessment_id',
         'assessment_question_id',
         'response_value',
+        'not_applicable',
         'explanation',
         'metadata',
         'score',
     ];
+
     protected $casts = [
         'metadata' => 'array',
+        'not_applicable' => 'boolean',
         'score' => 'float',
     ];
 
     /**
      * Assessment this response belongs to
      */
-    public function assessment(): BelongsTo {
+    public function assessment(): BelongsTo
+    {
         return $this->belongsTo(Assessment::class, 'assessment_id');
     }
 
     /**
      * Question this response is for
      */
-    public function question(): BelongsTo {
+    public function question(): BelongsTo
+    {
         return $this->belongsTo(AssessmentQuestion::class, 'assessment_question_id');
     }
 }

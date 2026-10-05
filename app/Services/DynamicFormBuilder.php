@@ -27,6 +27,14 @@ class DynamicFormBuilder
             ];
         }
 
+        // Indicator sections are a long run of same-shaped counts, which
+        // read better as a question | number | N/A table than as the
+        // stacked fields the generic path below produces. Delegated rather
+        // than branched inline — this method is already doing enough.
+        if (\App\Services\FormKernel\IndicatorTableRenderer::handles($questions->first()->section?->code)) {
+            return \App\Services\FormKernel\IndicatorTableRenderer::build($questions, $assessmentId);
+        }
+
         // Letter (a, b, c, ...) any question that's part of a genuine
         // multi-item split (indent_level >= 1, sharing `group` with its
         // run) — see LineItemGrouper. The letter is baked into a CLONED
@@ -327,10 +335,18 @@ class DynamicFormBuilder
                 }
                 $responseValue = null;
             } else {
-                if (! array_key_exists($fieldName, $data)) {
+                // The value field alone isn't enough to decide the question
+                // was on the submitted form: a row marked "not applicable"
+                // renders its input disabled, and a disabled Filament field
+                // can drop out of the submitted state entirely. The N/A key
+                // is then the only evidence the row was there at all.
+                $notApplicableKey = "{$fieldName}_not_applicable";
+
+                if (! array_key_exists($fieldName, $data) && ! array_key_exists($notApplicableKey, $data)) {
                     continue;
                 }
-                $responseValue = $data[$fieldName];
+
+                $responseValue = $data[$fieldName] ?? null;
             }
 
             $explanation = $data["{$fieldName}_explanation"] ?? null;
@@ -403,6 +419,18 @@ class DynamicFormBuilder
                 $score = $question->scoring_map[$responseValue] ?? 0;
             }
 
+            // "Does not apply to this facility" — distinct from a blank
+            // (not collected yet) and from 0 (collected, and it was zero).
+            // The count is dropped rather than kept alongside the flag, so
+            // a value typed before the box was ticked can't survive as a
+            // contradiction the report would have to arbitrate.
+            $notApplicable = (bool) ($data["{$fieldName}_not_applicable"] ?? false);
+
+            if ($notApplicable) {
+                $responseValue = null;
+                $score = null;
+            }
+
             AssessmentQuestionResponse::updateOrCreate(
                 [
                     'assessment_id' => $assessmentId,
@@ -410,6 +438,7 @@ class DynamicFormBuilder
                 ],
                 [
                     'response_value' => $responseValue,
+                    'not_applicable' => $notApplicable,
                     'explanation' => $explanation,
                     'metadata' => $metadata,
                     'score' => $score,

@@ -39,6 +39,7 @@ class ClassLifecycleNotificationService
         $this->notifyEnrolledMentees(
             $class,
             NotificationEvents::MENTORSHIP_CLASS_COMPLETED,
+            'Class Ended',
             "{$class->name} Has Ended",
             "\"{$class->name}\" ({$trainingTitle}) has ended. Thank you for participating — check your progress for final results."
         );

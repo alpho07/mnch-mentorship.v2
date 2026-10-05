@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Assessment;
+use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentSection;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -646,7 +647,12 @@ class AssessmentPdfReportService {
         $toArray = fn ($collection) => $collection->map(function ($response) {
                     return [
                         'question' => $this->stripLegacyNumbering($response->question->question_text),
-                        'response' => $response->response_value ?? '0',
+                        // A row the assessor marked "does not apply" reads
+                        // as N/A, never as the 0 an unanswered row falls
+                        // back to — the whole point of the flag is that
+                        // this facility has no count here, which is not
+                        // the same claim as a count of zero.
+                        'response' => $response->not_applicable ? 'N/A' : ($response->response_value ?? '0'),
                         'group' => $response->question->group,
                         'indent_level' => (int) ($response->question->indent_level ?? 0),
                     ];
@@ -659,7 +665,7 @@ class AssessmentPdfReportService {
         // computed percentage — there's nothing to divide it by.
         $admissionsRow = [[
             'question' => 'Total number of newborn admissions for the last complete month',
-            'response' => $responsesByCode->get('IND_NEWBORN_ADMISSIONS')?->response_value ?? 'N/A',
+            'response' => $this->rawCount($responsesByCode->get('IND_NEWBORN_ADMISSIONS')) ?? 'N/A',
             'group' => null,
             'indent_level' => 0,
         ]];
@@ -674,6 +680,19 @@ class AssessmentPdfReportService {
     }
 
     /**
+     * The usable count on a response, or null when there isn't one — the
+     * response is missing, or the assessor marked the question as not
+     * applying to this facility. Callers treat null as N/A.
+     */
+    private function rawCount(?AssessmentQuestionResponse $response): ?string {
+        if (! $response || $response->not_applicable) {
+            return null;
+        }
+
+        return $response->response_value;
+    }
+
+    /**
      * @param  array<int, array{0: string, 1: string, 2: string}>  $definitions  [label, numerator code, denominator code]
      * @param  \Illuminate\Support\Collection  $responsesByCode  Keyed by question_code.
      */
@@ -681,13 +700,16 @@ class AssessmentPdfReportService {
         $result = [];
 
         foreach ($definitions as [$label, $numeratorCode, $denominatorCode]) {
-            $numerator = $responsesByCode->get($numeratorCode)?->response_value;
-            $denominator = $responsesByCode->get($denominatorCode)?->response_value;
+            $numerator = $this->rawCount($responsesByCode->get($numeratorCode));
+            $denominator = $this->rawCount($responsesByCode->get($denominatorCode));
 
             // Both counts must actually be answered, and the denominator
             // must be a real population (0 admissions means "not
             // applicable this period", not "0%") — otherwise show N/A
-            // rather than a misleading computed value.
+            // rather than a misleading computed value. A count the
+            // assessor marked "does not apply" arrives here as null and so
+            // takes the same N/A path: a proportion built on a term this
+            // facility doesn't have isn't 0%, it's unanswerable.
             if (! is_numeric($numerator) || ! is_numeric($denominator) || (float) $denominator <= 0) {
                 $result[] = ['question' => $label, 'response' => 'N/A', 'group' => null, 'indent_level' => 0];
 

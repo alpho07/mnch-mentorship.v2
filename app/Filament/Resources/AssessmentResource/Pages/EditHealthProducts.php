@@ -19,8 +19,8 @@ use Illuminate\Support\Collection;
 
 class EditHealthProducts extends EditRecord
 {
-    use HasSectionNavigation;
     use GuardsLockedAssessment;
+    use HasSectionNavigation;
 
     protected static string $resource = AssessmentResource::class;
 
@@ -155,6 +155,13 @@ class EditHealthProducts extends EditRecord
                 ->viewData(fn () => [
                     'departments' => $this->visibleDepartments,
                     'activeDepartmentId' => $this->activeDepartment->id,
+                    // So a tab shows at a glance whether it still has
+                    // unanswered commodities — the section only completes
+                    // once none of them do.
+                    'incompleteDepartmentIds' => $this->matrixProgress()
+                        ->incompleteDepartments($this->record)
+                        ->pluck('id')
+                        ->all(),
                     'baseUrl' => AssessmentResource::getUrl('edit-health-products', ['record' => $this->record->id]),
                 ])
                 ->columnSpanFull(),
@@ -212,10 +219,7 @@ class EditHealthProducts extends EditRecord
         app(\App\Services\CommodityScoringService::class)
             ->recalculateDepartmentScore($this->record->id, $departmentId);
 
-        $progress = $this->record->section_progress ?? [];
-        $progress[$this->section->code] = true;
-        $this->record->section_progress = $progress;
-        $this->record->save();
+        $this->syncSectionProgress();
 
         $departmentName = AssessmentDepartment::find($departmentId)?->name ?? 'Department';
 
@@ -231,31 +235,44 @@ class EditHealthProducts extends EditRecord
     }
 
     /**
-     * The department immediately after the active one in tab order, or null
-     * if the active department is the last one.
+     * The next department that still has unanswered commodities — searched
+     * forward from the active tab first, then wrapping to the ones before
+     * it, so a department skipped earlier isn't silently left behind.
+     * Null once every visible department is fully answered.
      */
-    private function nextDepartment(): ?AssessmentDepartment
+    private function nextIncompleteDepartment(): ?AssessmentDepartment
     {
+        $incompleteIds = $this->matrixProgress()
+            ->incompleteDepartments($this->record)
+            ->pluck('id')
+            ->flip();
+
+        if ($incompleteIds->isEmpty()) {
+            return null;
+        }
+
         $currentIndex = $this->visibleDepartments->search(
             fn (AssessmentDepartment $d) => $d->id === $this->activeDepartment->id
         );
 
-        if ($currentIndex === false) {
-            return null;
-        }
+        $ordered = $currentIndex === false
+            ? $this->visibleDepartments
+            : $this->visibleDepartments->slice($currentIndex + 1)
+                ->concat($this->visibleDepartments->slice(0, $currentIndex));
 
-        return $this->visibleDepartments->get($currentIndex + 1);
+        return $ordered->first(fn (AssessmentDepartment $d) => $incompleteIds->has($d->id));
     }
 
     /**
-     * Overrides HasSectionNavigation's version: saving a department should
-     * move to the next department tab within Health Products first, and
-     * only fall through to the next top-level assessment section (or the
-     * dashboard) once every department here has been saved.
+     * Overrides HasSectionNavigation's version: saving a department moves to
+     * the next department tab that still has unanswered commodities, and
+     * only falls through to the next top-level assessment section (or the
+     * dashboard) once every department in this matrix is fully answered —
+     * which is also when the section itself flips to complete.
      */
     protected function getRedirectUrl(): string
     {
-        $nextDepartment = $this->nextDepartment();
+        $nextDepartment = $this->nextIncompleteDepartment();
 
         if ($nextDepartment) {
             return AssessmentResource::getUrl('edit-health-products', ['record' => $this->record->id])
@@ -263,6 +280,23 @@ class EditHealthProducts extends EditRecord
         }
 
         return $this->getNextSectionRoute();
+    }
+
+    private function matrixProgress(): \App\Services\CommodityMatrixProgressService
+    {
+        return app(\App\Services\CommodityMatrixProgressService::class);
+    }
+
+    /**
+     * Marks every commodity_matrix section on this template complete/
+     * incomplete from the responses now on record, rather than flipping
+     * this page's own section to true on the first department saved.
+     */
+    private function syncSectionProgress(): void
+    {
+        $service = $this->matrixProgress();
+        $service->forget($this->record);
+        $service->sync($this->record);
     }
 
     private function responsesByQuestionCode(): array
@@ -402,10 +436,7 @@ class EditHealthProducts extends EditRecord
                 ->recalculateDepartmentScore($this->record->id, $departmentId);
         }
 
-        $progress = $this->record->section_progress ?? [];
-        $progress[$this->section->code] = true;
-        $this->record->section_progress = $progress;
-        $this->record->save();
+        $this->syncSectionProgress();
 
         unset($data['commodities'], $data['commodities_quantity']);
 
@@ -498,4 +529,3 @@ class EditHealthProducts extends EditRecord
         return "Health Products - {$this->record->facility->name}";
     }
 }
-

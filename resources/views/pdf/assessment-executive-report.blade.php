@@ -15,7 +15,7 @@
             box-sizing: border-box;
         }
         
-        body {
+        body { 
             font-family: 'DejaVu Sans', Arial, sans-serif;
             font-size: 9pt;
             color: #1f2937;

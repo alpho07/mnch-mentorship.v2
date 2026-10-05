@@ -1051,53 +1051,53 @@ class ManageClassMentees extends Page implements HasTable
                     $hasModules = $this->class->classModules()->exists();
 
                     return ($hasMentees && $hasModules) ? 'Yes, Start Class' : 'Close';
-                })
-                ->action(function () {
-                    $menteeCount = ClassParticipant::where('mentorship_class_id', $this->class->id)->count();
-                    $moduleCount = $this->class->classModules()->count();
+                 })
+                    ->action(function () {
+                        $menteeCount = ClassParticipant::where('mentorship_class_id', $this->class->id)->count();
+                        $moduleCount = $this->class->classModules()->count();
 
-                    // ── Block: no mentees ────────────────────────────────────────────
-                    if ($menteeCount === 0) {
-                        Notification::make()
-                            ->warning()
-                            ->title('Add Mentees First')
-                            ->body('Use "Add from List" to enrol existing users, or "Add Mentee" to create a new account.')
-                            ->persistent()
-                            ->send();
+                        // ── Block: no mentees ────────────────────────────────────────────
+                        if ($menteeCount === 0) {
+                            Notification::make()
+                                ->warning()
+                                ->title('Add Mentees First')
+                                ->body('Use "Add from List" to enrol existing users, or "Add Mentee" to create a new account.')
+                                ->persistent()
+                                ->send();
 
-                        return;
-                    }
+                            return;
+                        }
 
-                    // ── Block: no modules ────────────────────────────────────────────
-                    if ($moduleCount === 0) {
-                        Notification::make()
-                            ->warning()
-                            ->title('No Modules Assigned')
-                            ->body('Go to the Modules page and assign at least one module before starting.')
-                            ->persistent()
-                            ->send();
+                        // ── Block: no modules ────────────────────────────────────────────
+                        if ($moduleCount === 0) {
+                            Notification::make()
+                                ->warning()
+                                ->title('No Modules Assigned')
+                                ->body('Go to the Modules page and assign at least one module before starting.')
+                                ->persistent()
+                                ->send();
 
-                        return;
-                    }
+                            return;
+                        }
 
-                    // ── All clear → start ────────────────────────────────────────────
-                    try {
-                        $this->class->start();
-                        $this->class = $this->class->fresh();
+                        // ── All clear → start ────────────────────────────────────────────
+                        try {
+                            $this->class->start();
+                            $this->class = $this->class->fresh();
 
-                        Notification::make()
-                            ->success()
-                            ->title('Class Started')
-                            ->body("All {$moduleCount} module(s) now in progress. Attendance active for {$menteeCount} mentee(s).")
-                            ->send();
-                    } catch (\LogicException $e) {
-                        Notification::make()
-                            ->danger()
-                            ->title('Cannot Start Class')
-                            ->body($e->getMessage())
-                            ->send();
-                    }
-                }),
+                            Notification::make()
+                                ->success()
+                                ->title('Class Started')
+                                ->body("All {$moduleCount} module(s) now in progress. Attendance active for {$menteeCount} mentee(s).")
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Cannot Start Class')
+                                ->body($e->getMessage())
+                                ->send();
+                        }
+                    }),
             Actions\Action::make('end_class')
                 ->label('End Class')
                 ->icon('heroicon-o-stop')
@@ -1112,7 +1112,7 @@ class ManageClassMentees extends Page implements HasTable
                     'This action cannot be undone.'
                 )
                 ->modalSubmitActionLabel('Yes, End Class')
-                ->action(function () {
+                 ->action(function () {
                     try {
                         $this->class->complete();
                         $this->class = $this->class->fresh();
@@ -1122,7 +1122,7 @@ class ManageClassMentees extends Page implements HasTable
                             ->title('Class Ended')
                             ->body('All modules completed. Enrollment and attendance links are now inactive.')
                             ->send();
-                    } catch (\LogicException $e) {
+                    } catch (\Throwable $e) {
                         Notification::make()
                             ->danger()
                             ->title('Cannot End Class')

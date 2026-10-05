@@ -8,6 +8,7 @@ use App\Models\AssessmentDepartment;
 use App\Models\Commodity;
 use App\Models\CommodityCategory;
 use App\Models\AssessmentCommodityResponse;
+use App\Services\CommodityMatrixProgressService;
 use App\Services\CommodityScoringService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,9 +17,10 @@ use Illuminate\Support\Facades\Cache;
 class HealthProductsController extends Controller {
 
     public function __construct(
-            private readonly CommodityScoringService $scoringService
+            private readonly CommodityScoringService $scoringService,
+            private readonly CommodityMatrixProgressService $matrixProgress
     ) {
-        
+
     }
 
     // =========================================================================
@@ -118,8 +120,11 @@ class HealthProductsController extends Controller {
     // POST /api/v1/assessments/{assessment}/health-products
     //
     // Accepts either:
-    //   - All departments at once (marks section complete)
+    //   - All departments at once
     //   - A single department via optional "department_id" (Save & Next flow)
+    //
+    // Either way the section is marked complete only once every visible
+    // department has every visible applicable commodity answered.
     //
     // Body: { "department_id": 1 (optional), "responses": [...] }
     // =========================================================================
@@ -158,14 +163,19 @@ class HealthProductsController extends Controller {
             $this->scoringService->recalculateDepartmentScore($assessment->id, $departmentId);
         }
 
-        // Only mark section complete when saving all departments at once
-        // (per-dept Save & Next sends department_id, so we skip this)
-        if (!$request->filled('department_id')) {
-            $progress = $assessment->section_progress ?? [];
-            $progress['health_products'] = true;
-            $assessment->section_progress = $progress;
-            $assessment->save();
-        }
+        // Section completion is derived from the responses now on record,
+        // for every commodity_matrix section on this assessment's template —
+        // not written as a hardcoded 'health_products' key on an
+        // all-departments save. That literal belonged to no section on a
+        // template that names its matrix differently, and skipped the
+        // sibling matrix section on template 2 (which has both
+        // `department_health_products` and `health_products`), leaving it
+        // permanently pending. Deriving also means the department_id /
+        // all-departments distinction no longer matters: a Save & Next that
+        // happens to finish the matrix completes the section, and an
+        // all-departments POST that is actually partial no longer claims it.
+        $this->matrixProgress->forget($assessment);
+        $this->matrixProgress->sync($assessment);
 
         Cache::forget("assessment.{$assessment->id}.report");
 

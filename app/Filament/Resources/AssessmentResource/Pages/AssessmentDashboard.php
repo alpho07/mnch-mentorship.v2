@@ -169,6 +169,15 @@ class AssessmentDashboard extends Page
             ->orderBy('order')
             ->get() ?? collect();
 
+        // Commodity-matrix completion is derived from the responses on
+        // record rather than read from section_progress — the stored flag
+        // was set on the first department saved (over-reporting), and only
+        // ever on the one commodity_matrix section EditHealthProducts
+        // resolved, leaving any sibling matrix section stuck on "Pending".
+        // sync() writes the derived value back so allSectionsComplete()
+        // and the submit gate agree with what's shown here.
+        $matrixComplete = null;
+
         foreach ($sections as $section) {
             $kind = $section->resolvedKind();
 
@@ -190,7 +199,9 @@ class AssessmentDashboard extends Page
                 'key' => $section->code,
                 'label' => $section->name,
                 'route' => $route,
-                'done' => $progress[$section->code] ?? false,
+                'done' => $kind === 'commodity_matrix'
+                    ? ($matrixComplete ??= app(\App\Services\CommodityMatrixProgressService::class)->sync($this->record))
+                    : ($progress[$section->code] ?? false),
                 'icon' => $section->icon ?: match ($kind) {
                     'human_resources' => 'heroicon-o-user-group',
                     'commodity_matrix' => 'heroicon-o-cube',
@@ -242,11 +253,20 @@ class AssessmentDashboard extends Page
         ];
     }
 
+    /**
+     * Mirrors submitAssessment()'s own gate. The raw section_progress array
+     * can't be used directly: mount() seeds a false entry for *every*
+     * active section including informational ones, which have no page and
+     * can never be marked done — so `! in_array(false, $progress)` kept the
+     * Submit button hidden forever on any template with one.
+     */
     private function canSubmit(): bool
     {
-        $progress = $this->record->section_progress ?? [];
+        // Refreshes the commodity_matrix flags from the responses on record
+        // before the gate reads them.
+        $this->getAllSections();
 
-        return $progress && ! in_array(false, $progress, true);
+        return $this->record->allSectionsComplete();
     }
 
     protected function getViewData(): array

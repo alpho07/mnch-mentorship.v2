@@ -17,6 +17,7 @@ use App\Http\Controllers\ModuleAttendanceController;
 use App\Http\Controllers\RagChatStreamController;
 use App\Http\Controllers\RagDocumentDownloadController;
 use App\Http\Controllers\RagMediaController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 /*
@@ -169,8 +170,37 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::prefix('analytics/dashboard')->name('analytics.dashboard.')->group(function () {
-    // Main dashboard
-    Route::get('/', [AnalyticsDashboardController::class, 'index'])->name('index');
+    // Main dashboard.
+    //
+    // ?mode=national-dashboard renders the national executive brief instead
+    // of the map. Handled ahead of the controller so the brief stays public
+    // alongside the rest of this (unauthenticated) analytics group — the
+    // Division circulates the link outside the platform.
+    Route::get('/', function (Request $request) {
+        if ($request->get('mode') === 'national-dashboard') {
+            return response()->view('reports.executive-brief-public', [
+                'brief' => app(\App\Services\ExecutiveBriefService::class)->build(),
+            ]);
+        }
+
+        return app(AnalyticsDashboardController::class)->index($request);
+    })->name('index');
+
+    // The same brief as a PDF, for circulation.
+    Route::get('/executive-brief.pdf', function () {
+        $brief = app(\App\Services\ExecutiveBriefService::class)->build();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.executive-brief', ['brief' => $brief])
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'defaultFont' => 'DejaVu Sans',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => false,
+            ]);
+
+        return $pdf->stream('MOH-Newborn-Child-Health-Mentorship-Brief-'
+            .$brief['meta']['generatedAt']->format('Y-m-d').'.pdf');
+    })->name('executive-brief.pdf');
 
     // GeoJSON endpoint for map data (REQUIRED for map to work)
     Route::get('/geojson', [AnalyticsDashboardController::class, 'geojson'])->name('heatmap.geojson');
@@ -501,44 +531,51 @@ Route::prefix('api/v1')->name('api.')->middleware('throttle:api')->group(functio
 
 // ===== UTILITY & SEO ROUTES =====
 Route::get('/health', function () {
-    return cache()->remember('health_check', 60, function () {
-        return response()->json([
+    $data = cache()->remember('health_check', 60, function () {
+        return [
             'status' => 'ok',
-            'timestamp' => now(),
+            'timestamp' => now()->toISOString(),
             'resources_count' => \App\Models\Resource::published()->count(),
             'categories_count' => \App\Models\ResourceCategory::active()->count(),
-        ]);
+        ];
     });
+
+    return response()->json($data);
 })->name('health');
 
 Route::get('/sitemap.xml', function () {
-    return cache()->remember('sitemap', 3600, function () {
+    $data = cache()->remember('sitemap', 3600, function () {
         $resources = \App\Models\Resource::published()
             ->public()
             ->select(['slug', 'updated_at'])
-            ->get();
+            ->get()
+            ->toArray();
 
         $categories = \App\Models\ResourceCategory::active()
             ->select(['slug', 'updated_at'])
-            ->get();
+            ->get()
+            ->toArray();
 
-        return response()->view('sitemap', compact('resources', 'categories'))
-            ->header('Content-Type', 'text/xml');
+        return compact('resources', 'categories');
     });
+
+    return response()->view('sitemap', $data)
+        ->header('Content-Type', 'text/xml');
 })->name('sitemap');
 
 Route::get('/feed', function () {
-    return cache()->remember('rss_feed', 1800, function () {
-        $resources = \App\Models\Resource::published()
+    $resources = cache()->remember('rss_feed', 1800, function () {
+        return \App\Models\Resource::published()
             ->public()
             ->latest('published_at')
             ->limit(20)
             ->with(['author', 'category'])
-            ->get();
-
-        return response()->view('feed.rss', compact('resources'))
-            ->header('Content-Type', 'application/rss+xml');
+            ->get()
+            ->toArray();
     });
+
+    return response()->view('feed.rss', compact('resources'))
+        ->header('Content-Type', 'application/rss+xml');
 })->name('feed');
 
 Route::get('/robots.txt', function () {
