@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Assessment;
 use App\Services\AssessmentComparisonService;
+use App\Services\AssessmentPdfReportService;
+use App\Services\ConditionalLogicEvaluator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 
@@ -55,6 +57,17 @@ class AssessmentExecutiveDashboardController extends Controller
 
         $aId = $assessment->id;
 
+        // Resolves a question's display_conditions against every response
+        // on this assessment (not just whichever section is being pulled
+        // below) — a condition can reference a question in a different
+        // section, as INFOSYS_DOC_TYPE does for both the EMR questions and
+        // the paper-register table further down.
+        $responsesByCode = DB::table('assessment_question_responses')
+            ->join('assessment_questions', 'assessment_questions.id', '=', 'assessment_question_responses.assessment_question_id')
+            ->where('assessment_question_responses.assessment_id', $aId)
+            ->pluck('assessment_question_responses.response_value', 'assessment_questions.question_code')
+            ->all();
+
         // ── Section scores ────────────────────────────────────────────────────
         $sectionScores = DB::table('assessment_section_scores')
             ->join('assessment_sections', 'assessment_sections.id', '=', 'assessment_section_scores.assessment_section_id')
@@ -94,14 +107,22 @@ class AssessmentExecutiveDashboardController extends Controller
                     ->where('assessment_question_responses.assessment_id', '=', $aId);
             })
             ->where('assessment_sections.code', 'infrastructure')
+            ->where(fn ($q) => $this->inTemplateOrAnswered($q, $assessment))
+            // Unanswered questions are excluded at the query itself, not just
+            // filtered out of the view — they shouldn't factor into counts or
+            // insights for this section either.
+            ->whereNotNull('assessment_question_responses.response_value')
+            ->where('assessment_question_responses.response_value', '!=', '')
             ->select(
                 'assessment_questions.question_code',
                 'assessment_questions.question_text',
+                'assessment_questions.display_conditions',
                 'assessment_question_responses.response_value',
                 'assessment_question_responses.score',
             )
             ->orderBy('assessment_questions.id')
             ->get();
+        $infraResponses = $this->filterVisibleRows($infraResponses, $responsesByCode);
 
         // ── Skills Lab ────────────────────────────────────────────────────────
         $skillsResponses = DB::table('assessment_questions')
@@ -111,15 +132,18 @@ class AssessmentExecutiveDashboardController extends Controller
                     ->where('assessment_question_responses.assessment_id', '=', $aId);
             })
             ->where('assessment_sections.code', 'skills_lab')
+            ->where(fn ($q) => $this->inTemplateOrAnswered($q, $assessment))
             ->select(
                 'assessment_questions.question_code',
                 'assessment_questions.question_text',
                 'assessment_questions.is_scored',
+                'assessment_questions.display_conditions',
                 'assessment_question_responses.response_value',
                 'assessment_question_responses.score',
             )
             ->orderBy('assessment_questions.id')
             ->get();
+        $skillsResponses = $this->filterVisibleRows($skillsResponses, $responsesByCode);
 
         $skillsMaster = $skillsResponses->firstWhere('question_code', 'SKILLS_MASTER');
         $hasDedicatedLab = $skillsMaster && $skillsMaster->response_value === 'Yes';
@@ -135,16 +159,24 @@ class AssessmentExecutiveDashboardController extends Controller
                     ->where('assessment_question_responses.assessment_id', '=', $aId);
             })
             ->where('assessment_sections.code', 'information_systems')
+            ->where(fn ($q) => $this->inTemplateOrAnswered($q, $assessment))
+            // Unanswered questions are excluded at the query itself, not just
+            // filtered out of the view — they shouldn't factor into counts or
+            // insights for this section either.
+            ->whereNotNull('assessment_question_responses.response_value')
+            ->where('assessment_question_responses.response_value', '!=', '')
             ->select(
                 'assessment_questions.question_code',
                 'assessment_questions.question_text',
                 'assessment_questions.is_scored',
                 'assessment_questions.group',
+                'assessment_questions.display_conditions',
                 'assessment_question_responses.response_value',
                 'assessment_question_responses.score',
             )
             ->orderBy('assessment_questions.id')
             ->get();
+        $infoResponses = $this->filterVisibleRows($infoResponses, $responsesByCode);
 
         // The MoH-form Available/Completeness pairs (see
         // AssessmentPdfReportService::getInformationSystemsDetails, which
@@ -169,12 +201,6 @@ class AssessmentExecutiveDashboardController extends Controller
             })
             ->values();
 
-        // $infoResponses itself stays the full list — generateInsights()
-        // and detectStraightLining() below need every scored row,
-        // grouped or not, to count "missing" correctly. Only the grid
-        // rendering (dashboard blade) uses this trimmed-down version.
-        $infoResponsesUngrouped = $infoResponses->filter(fn ($r) => $r->group === null)->values();
-
         // ── Quality of Care ───────────────────────────────────────────────────
         $qocAll = DB::table('assessment_questions')
             ->join('assessment_sections', 'assessment_sections.id', '=', 'assessment_questions.assessment_section_id')
@@ -183,16 +209,18 @@ class AssessmentExecutiveDashboardController extends Controller
                     ->where('assessment_question_responses.assessment_id', '=', $aId);
             })
             ->where('assessment_sections.code', 'quality_of_care')
+            ->where(fn ($q) => $this->inTemplateOrAnswered($q, $assessment))
             ->select(
                 'assessment_questions.question_code',
                 'assessment_questions.question_text',
                 'assessment_questions.is_scored',
+                'assessment_questions.display_conditions',
                 'assessment_question_responses.response_value',
                 'assessment_question_responses.score',
             )
             ->orderBy('assessment_questions.id')
-            ->get()
-            ->keyBy('question_code');
+            ->get();
+        $qocAll = $this->filterVisibleRows($qocAll, $responsesByCode)->keyBy('question_code');
 
         // ── Human Resources ───────────────────────────────────────────────────
         // human_resource_responses.cadre_id references assessment_cadres
@@ -260,12 +288,54 @@ class AssessmentExecutiveDashboardController extends Controller
             ? round($deptScores->avg('percentage'), 1)
             : 0;
 
+        $commodityGaps = $this->commodityGapsByCategory($aId);
+
+        // ── Newborn & Paediatric Indicators ───────────────────────────────────
+        // Same proportions the assessment summary reports, as numbers.
+        $indicatorMetrics = collect(app(AssessmentPdfReportService::class)->getIndicatorMetrics($assessment))
+            ->map(function ($m) {
+                $m['status'] = $this->indicatorStatus($m);
+                $m['short'] = \Illuminate\Support\Str::limit(preg_replace('/^Proportion of /', '', $m['label']), 90);
+
+                return $m;
+            });
+        $indicatorInsights = $this->generateIndicatorInsights($indicatorMetrics);
+
+        // When the facility has an earlier round of the same assessment
+        // (baseline → midline → endline …), show movement since then.
+        $previousRoundLabel = null;
+        $previous = $this->previousAssessment($assessment);
+        if ($previous && $indicatorMetrics->isNotEmpty()) {
+            $previousRoundLabel = $previous->round_display.($previous->assessment_date ? ', '.$previous->assessment_date->format('M Y') : '');
+            $prevByLabel = collect(app(AssessmentPdfReportService::class)->getIndicatorMetrics($previous))->keyBy('label');
+            $indicatorMetrics = $indicatorMetrics->map(function ($m) use ($prevByLabel) {
+                $prevPct = $prevByLabel->get($m['label'])['pct'] ?? null;
+                $m['prev_pct'] = $prevPct;
+                $m['delta'] = ($prevPct !== null && $m['pct'] !== null) ? round($m['pct'] - $prevPct, 1) : null;
+
+                return $m;
+            });
+            if ($trend = $this->indicatorTrendInsight($indicatorMetrics, $previousRoundLabel)) {
+                array_unshift($indicatorInsights, $trend);
+            }
+        }
+
         // ── CEO Insights ──────────────────────────────────────────────────────
         $insights = $this->generateInsights(
             $assessment, $sectionScores, $infraResponses, $hasDedicatedLab,
             $skillsMissing, $infoResponses, $qocAll, $hrRows, $deptScores,
-            $hrCoverage, $overallCommodityPct
+            $hrCoverage, $overallCommodityPct, $commodityGaps
         );
+
+        // Headline indicator findings join the executive summary too.
+        foreach (array_slice(array_filter($indicatorInsights, fn ($i) => $i['type'] !== 'success'), 0, 2) as $i) {
+            $insights[] = $i;
+        }
+
+        // Infrastructure and Information Systems show this same insight
+        // inline in their own section instead of a per-question table.
+        $infraInsight = collect($insights)->firstWhere('area', 'Infrastructure');
+        $infoInsight = collect($insights)->firstWhere('area', 'Information Systems');
 
         // ── Data Quality ─────────────────────────────────────────────────────
         $sectionCompleteness = $this->buildSectionCompleteness($sectionScores);
@@ -275,17 +345,27 @@ class AssessmentExecutiveDashboardController extends Controller
             $sectionScores, $hrCoverage, $overallCommodityPct, $deptScores
         );
 
+        // A completeness result always exists once any section has been
+        // scored — this reads it out loud instead of leaving the
+        // percentage bars to speak for themselves with no narrative,
+        // which read as blank when nothing else in this array triggered.
+        $completenessInsight = $this->generateCompletenessInsight($sectionCompleteness, $overallCompleteness);
+        if ($completenessInsight) {
+            array_unshift($dataQualityInsights, $completenessInsight);
+        }
+
         return compact(
             'assessment',
             'sectionScores',
             'infraResponses',
+            'infraInsight',
+            'infoInsight',
             'skillsResponses',
             'skillsMaster',
             'hasDedicatedLab',
             'skillsAvailable',
             'skillsMissing',
             'infoResponses',
-            'infoResponsesUngrouped',
             'infoDataToolsTable',
             'qocAll',
             'hrRows',
@@ -300,7 +380,39 @@ class AssessmentExecutiveDashboardController extends Controller
             'overallCompleteness',
             'straightLiningFlags',
             'dataQualityInsights',
+            'indicatorMetrics',
+            'indicatorInsights',
+            'previousRoundLabel',
         );
+    }
+
+    /**
+     * Drops rows whose question's display_conditions no longer resolve to
+     * visible given the assessment's current answers — same evaluator
+     * DynamicFormBuilder (live form) and AssessmentPdfReportService (PDF/
+     * HTML report) use, so this dashboard can't show a question, or a
+     * whole conditional table like "Data Collection Tools & Registers",
+     * that the data-entry screen itself currently hides (e.g. answered
+     * before INFOSYS_DOC_TYPE was changed from "Paper based" to "EMR").
+     *
+     * @param  \Illuminate\Support\Collection<int, \stdClass>  $rows  Each row must carry a `display_conditions` column (raw JSON string or null, as returned by DB::table()).
+     * @param  array<string, mixed>  $responsesByCode
+     */
+    private function filterVisibleRows(\Illuminate\Support\Collection $rows, array $responsesByCode): \Illuminate\Support\Collection
+    {
+        return $rows->filter(function ($row) use ($responsesByCode) {
+            $conditions = $row->display_conditions ?? null;
+
+            if (is_string($conditions)) {
+                $conditions = json_decode($conditions, true);
+            }
+
+            if (empty($conditions)) {
+                return true;
+            }
+
+            return ConditionalLogicEvaluator::isVisible($conditions, fn (string $code) => $responsesByCode[$code] ?? null);
+        })->values();
     }
 
     /**
@@ -340,6 +452,45 @@ class AssessmentExecutiveDashboardController extends Controller
         $answered = $valid->sum('answered');
 
         return $total > 0 ? round(($answered / $total) * 100, 1) : 0.0;
+    }
+
+    /**
+     * Narrates the completeness bars instead of leaving them as bare
+     * percentages with no accompanying read — null only when there's
+     * nothing scored yet to narrate (buildSectionCompleteness() returned
+     * nothing valid), which is the one case actually worth calling blank.
+     *
+     * @return array{type: string, icon: string, area: string, text: string}|null
+     */
+    private function generateCompletenessInsight($sectionCompleteness, float $overallCompleteness): ?array
+    {
+        $valid = $sectionCompleteness->where('valid', true);
+
+        if ($valid->isEmpty()) {
+            return null;
+        }
+
+        $incomplete = $valid->filter(fn ($sc) => $sc['percentage'] < 100);
+
+        if ($incomplete->isEmpty()) {
+            return ['type' => 'success', 'icon' => 'check-double', 'area' => 'Data Quality', 'text' => "Every scored section was fully answered — {$overallCompleteness}% overall response completeness. This is a complete dataset to base decisions on."];
+        }
+
+        $complete = $valid->filter(fn ($sc) => $sc['percentage'] >= 100)->pluck('name')->all();
+        $gaps = $incomplete->map(fn ($sc) => "{$sc['name']} ({$sc['display']})")->all();
+
+        $openingPart = ! empty($complete)
+            ? $this->naturalJoin($complete).' '.(count($complete) === 1 ? 'was' : 'were').' fully answered, but '
+            : '';
+
+        $text = "{$openingPart}gaps remain in {$this->naturalJoin($gaps)}, bringing overall response completeness to {$overallCompleteness}%. Completing these sections would give a fuller picture of the facility's readiness.";
+
+        return [
+            'type' => $overallCompleteness >= 70 ? 'warning' : 'danger',
+            'icon' => 'magnifying-glass-chart',
+            'area' => 'Data Quality',
+            'text' => ucfirst($text),
+        ];
     }
 
     /**
@@ -438,6 +589,400 @@ class AssessmentExecutiveDashboardController extends Controller
         return $insights;
     }
 
+    /**
+     * Turns a Yes/No question's text into a noun phrase that reads
+     * naturally inside a sentence — "Do you have a NICU?" becomes "a NICU",
+     * "Is there a triage area...?" becomes "a triage area...". Strips
+     * legacy baked-in numbering first (the same way
+     * AssessmentPdfReportService does for the PDF/HTML report), then the
+     * usual truncate-at-parenthesis/strip-punctuation cleanup, then the
+     * question's own interrogative prefix. Only the common prefixes this
+     * codebase's question text actually uses are handled; anything else is
+     * returned lightly lower-cased rather than guessed at further.
+     */
+    private function toFeaturePhrase(string $text): string
+    {
+        $text = AssessmentPdfReportService::stripLegacyNumbering($text);
+        $text = trim(str_replace(['?', '.'], '', explode('(', $text)[0]));
+
+        $prefixes = [
+            '/^Do you have\s+/i',
+            '/^Does (?:the|this|your) facility have\s+/i',
+            '/^Is there\s+/i',
+            '/^Are there\s+/i',
+            '/^Does\s+/i',
+            '/^Is\s+/i',
+            '/^Are\s+/i',
+        ];
+
+        foreach ($prefixes as $pattern) {
+            $stripped = preg_replace($pattern, '', $text, 1);
+            if ($stripped !== $text) {
+                return lcfirst($stripped);
+            }
+        }
+
+        return lcfirst($text);
+    }
+
+    /**
+     * Converts a set of same-answer rows into narrative phrases, collapsing
+     * the common "{Stem}: {Detail}" pattern (e.g. three separate "Does the
+     * EMR generate the following Reports: X" rows, one per report) into a
+     * single clause — "the EMR generate the following Reports including X,
+     * Y, and Z" — instead of repeating that stem's own clunky phrase once
+     * per distinct detail, which reads as broken/robotic rather than
+     * narrative. Exact duplicate phrases (a handful of templates carry a
+     * genuinely duplicated question) are deduplicated for display — this
+     * doesn't touch scoring, only how the sentence reads.
+     *
+     * @param  \Illuminate\Support\Collection<int, \stdClass>  $rows  Rows carrying a `question_text` column.
+     * @return array<int, string>
+     */
+    private function narrativePhrases(\Illuminate\Support\Collection $rows): array
+    {
+        $grouped = $rows->groupBy(function ($r) {
+            $text = AssessmentPdfReportService::stripLegacyNumbering($r->question_text);
+            $text = trim(explode('(', $text)[0]);
+
+            return str_contains($text, ':') ? trim(explode(':', $text, 2)[0]) : $text;
+        });
+
+        $phrases = [];
+
+        foreach ($grouped as $stem => $group) {
+            $hasColon = str_contains(trim(explode('(', AssessmentPdfReportService::stripLegacyNumbering($group->first()->question_text))[0]), ':');
+
+            if ($group->count() > 1 && $hasColon) {
+                $details = $group->map(function ($r) {
+                    $text = AssessmentPdfReportService::stripLegacyNumbering($r->question_text);
+                    $text = trim(str_replace('?', '', explode('(', $text)[0]));
+
+                    return trim(explode(':', $text, 2)[1] ?? '');
+                })->filter()->all();
+
+                $phrases[] = $this->toFeaturePhrase($stem).' including '.$this->naturalJoin($details);
+            } else {
+                foreach ($group as $r) {
+                    $phrases[] = $this->toFeaturePhrase($r->question_text);
+                }
+            }
+        }
+
+        return array_values(array_unique($phrases));
+    }
+
+    /**
+     * "a NICU" / "a NICU and a PICU" / "a NICU, a PICU, and a triage area" —
+     * standard natural-language list joining with an Oxford comma.
+     */
+    private function naturalJoin(array $items): string
+    {
+        $items = array_values($items);
+        $count = count($items);
+
+        if ($count === 0) {
+            return '';
+        }
+        if ($count === 1) {
+            return $items[0];
+        }
+        if ($count === 2) {
+            return "{$items[0]} and {$items[1]}";
+        }
+
+        $last = array_pop($items);
+
+        return implode(', ', $items).', and '.$last;
+    }
+
+    /**
+     * Keeps a narrative sentence from turning into an unreadable run-on
+     * when a section has a dozen+ answered items — names up to $max of
+     * them and rolls the rest into "among N others" rather than listing
+     * every single one.
+     */
+    private function summarizeList(array $items, int $max = 3): string
+    {
+        $items = array_values($items);
+
+        if (count($items) <= $max) {
+            return $this->naturalJoin($items);
+        }
+
+        $shown = array_slice($items, 0, $max);
+        $remaining = count($items) - $max;
+
+        return $this->naturalJoin($shown).", among {$remaining} other".($remaining === 1 ? '' : 's');
+    }
+
+    /**
+     * Keep every question of the assessment's own template, plus any
+     * question from another template (older or newer) that this
+     * assessment actually has an answer for — so answers given to
+     * questions from a previous template are never left out. Expects the
+     * query to join assessment_sections and left-join this assessment's
+     * assessment_question_responses.
+     */
+    private function inTemplateOrAnswered($q, Assessment $assessment): void
+    {
+        $q->where('assessment_sections.assessment_type_id', $assessment->assessment_type_id)
+            ->orWhere(function ($w) {
+                $w->whereNotNull('assessment_question_responses.response_value')
+                    ->where('assessment_question_responses.response_value', '!=', '');
+            });
+    }
+
+    /**
+     * The same facility's immediately preceding round of this assessment
+     * type (baseline before midline, midline before endline …), using the
+     * ordering the comparison tab uses.
+     */
+    private function previousAssessment(Assessment $assessment): ?Assessment
+    {
+        $siblings = $this->comparisonService->getComparableAssessments($assessment);
+        $index = $siblings->search(fn (Assessment $a) => $a->id === $assessment->id);
+
+        return ($index === false || $index === 0) ? null : $siblings->get($index - 1);
+    }
+
+    /**
+     * Movement in indicator performance since the previous round. "Better"
+     * respects direction: a rise in a coverage measure or a fall in a
+     * burden/mortality measure both count as improvement. Changes under
+     * 2 points are treated as stable.
+     */
+    private function indicatorTrendInsight($metrics, string $previousLabel): ?array
+    {
+        $moved = $metrics->filter(fn ($m) => $m['delta'] !== null && $m['direction'] !== 'context');
+        if ($moved->isEmpty()) {
+            return null;
+        }
+
+        $better = fn ($m) => $m['direction'] === 'higher' ? $m['delta'] : -$m['delta'];
+        $improved = $moved->filter(fn ($m) => $better($m) >= 2)->sortByDesc($better)->values();
+        $declined = $moved->filter(fn ($m) => $better($m) <= -2)->sortBy($better)->values();
+        $fmt = fn ($m) => lcfirst($m['short']).' ('.($m['delta'] > 0 ? '+' : '').$m['delta'].' pts)';
+
+        $parts = [];
+        if ($improved->isNotEmpty()) {
+            $parts[] = "{$improved->count()} improved, led by ".$this->naturalJoin($improved->take(2)->map($fmt)->all());
+        }
+        if ($declined->isNotEmpty()) {
+            $parts[] = "{$declined->count()} regressed, notably ".$this->naturalJoin($declined->take(2)->map($fmt)->all());
+        }
+        $stable = $moved->count() - $improved->count() - $declined->count();
+        if ($stable > 0) {
+            $parts[] = "{$stable} unchanged";
+        }
+
+        $type = $declined->isEmpty() ? 'success' : ($improved->isEmpty() ? 'danger' : 'warning');
+        $closing = match ($type) {
+            'success' => ' The gains since the earlier assessment show mentorship is translating into practice.',
+            'danger' => ' No indicator has improved since the earlier assessment — the approach needs to be revisited with the facility team.',
+            default => ' Sustain what is working and focus mentorship on the indicators that slipped.',
+        };
+
+        return [
+            'type' => $type,
+            'icon' => 'chart-line',
+            'area' => 'Progress since '.$previousLabel,
+            'text' => 'Of '.$moved->count().' comparable indicators: '.implode('; ', $parts).'.'.$closing,
+        ];
+    }
+
+    /**
+     * good / warning / danger / na for one indicator proportion.
+     * Coverage measures: >=80 good, 50-79 warning, <50 danger.
+     * Burden measures: <=10 good, <=25 warning, else danger; mortality
+     * measures: 0 good, any death warning, >=5% danger.
+     * Context measures (case-mix) are not judged.
+     */
+    private function indicatorStatus(array $m): string
+    {
+        if ($m['pct'] === null) {
+            return 'na';
+        }
+
+        return match ($m['direction']) {
+            'higher' => $m['pct'] >= 80 ? 'good' : ($m['pct'] >= 50 ? 'warning' : 'danger'),
+            'lower' => str_contains($m['label'], ' died')
+                ? ($m['pct'] == 0 ? 'good' : ($m['pct'] < 5 ? 'warning' : 'danger'))
+                : ($m['pct'] <= 10 ? 'good' : ($m['pct'] <= 25 ? 'warning' : 'danger')),
+            default => 'context',
+        };
+    }
+
+    /**
+     * Narrative insights from the indicator proportions: care-coverage gaps
+     * per group, burden/mortality flags, strengths, and how much could not
+     * be calculated.
+     */
+    private function generateIndicatorInsights($metrics): array
+    {
+        $insights = [];
+        $judged = $metrics->whereIn('status', ['good', 'warning', 'danger']);
+        if ($judged->isEmpty()) {
+            return $insights;
+        }
+
+        $fmt = fn ($m) => lcfirst($m['short'])." ({$m['pct']}%)";
+
+        // Care-coverage gaps, per group, weakest first
+        foreach (['Newborn', 'Paediatric'] as $group) {
+            $gaps = $judged->where('group', $group)->where('direction', 'higher')
+                ->whereIn('status', ['warning', 'danger'])->sortBy('pct')->values();
+            if ($gaps->isEmpty()) {
+                continue;
+            }
+            $worst = $gaps->take(2)->filter(fn ($m) => $m['why'])->map(fn ($m) => $m['why'].'.')->implode(' ');
+            $insights[] = [
+                'type' => $gaps->contains('status', 'danger') ? 'danger' : 'warning',
+                'icon' => $group === 'Newborn' ? 'baby' : 'child',
+                'area' => "{$group} Indicators",
+                'text' => "Care delivery falls short on {$gaps->count()} {$group} ".($gaps->count() === 1 ? 'indicator' : 'indicators').': '
+                    .$this->naturalJoin($gaps->take(4)->map($fmt)->all()).($gaps->count() > 4 ? ', among others' : '').'. '
+                    .$worst.' Every one of these is a step in the file review that mentorship can directly strengthen.',
+            ];
+        }
+
+        // Burden / mortality measures
+        $burden = $judged->where('direction', 'lower')->whereIn('status', ['warning', 'danger'])->sortByDesc('pct')->values();
+        if ($burden->isNotEmpty()) {
+            $insights[] = [
+                'type' => $burden->contains('status', 'danger') ? 'danger' : 'warning',
+                'icon' => 'heartbeat',
+                'area' => 'Outcome Indicators',
+                'text' => 'Outcome measures need attention: '.$this->naturalJoin($burden->take(3)->map($fmt)->all()).'. '
+                    .$burden->take(2)->filter(fn ($m) => $m['why'])->map(fn ($m) => $m['why'].'.')->implode(' ')
+                    .' These figures are where care gaps show up as preventable harm, so they should be tracked month on month.',
+            ];
+        }
+
+        // Strengths
+        $strong = $judged->where('direction', 'higher')->where('status', 'good')->sortByDesc('pct')->values();
+        if ($strong->isNotEmpty()) {
+            $insights[] = [
+                'type' => 'success',
+                'icon' => 'check-circle',
+                'area' => 'Indicator Strengths',
+                'text' => 'Strong performance on '.$this->naturalJoin($strong->take(3)->map($fmt)->all()).($strong->count() > 3 ? ', and '.($strong->count() - 3).' more' : '').'. These practices are embedded and can anchor peer learning with other facilities.',
+            ];
+        }
+
+        // What couldn't be calculated
+        $na = $metrics->where('status', 'na')->count();
+        if ($na > 0) {
+            $insights[] = [
+                'type' => $na > $metrics->count() / 2 ? 'warning' : 'info',
+                'icon' => 'database',
+                'area' => 'Indicator Data',
+                'text' => "{$na} of {$metrics->count()} indicators could not be calculated because the numerator or denominator is missing, zero or marked not applicable. Complete these counts from the registers so performance on them can be judged.",
+            ];
+        }
+
+        return $insights;
+    }
+
+    /**
+     * Availability and missing items per commodity category (grouped by
+     * name, because the same category exists once per assessment type).
+     */
+    private function commodityGapsByCategory(int $aId): array
+    {
+        $rows = DB::table('assessment_commodity_responses as r')
+            ->join('commodities as c', 'c.id', '=', 'r.commodity_id')
+            ->join('commodity_categories as cc', 'cc.id', '=', 'c.commodity_category_id')
+            ->where('r.assessment_id', $aId)
+            ->select('cc.name as category', 'c.name as commodity', 'r.available')
+            ->get();
+
+        return $rows->groupBy(fn ($r) => strtoupper(trim($r->category)))
+            ->map(function ($g, $cat) {
+                $missing = $g->where('available', 0)->pluck('commodity')->unique()
+                    // Bare sizes like "00" or "G23" mean nothing without their parent item
+                    ->filter(fn ($n) => preg_match('/[a-z]{4,}/i', $n))->values();
+
+                return [
+                    'category' => $cat,
+                    'pct' => round($g->where('available', 1)->count() / max($g->count(), 1) * 100, 1),
+                    'missing' => $missing->all(),
+                ];
+            })
+            ->filter(fn ($c) => $c['pct'] < 75)
+            ->sortBy('pct')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Plain-language statement of what the weakest commodity categories mean
+     * for patient outcomes.
+     */
+    private function commodityClinicalImpact(array $gaps): string
+    {
+        if (empty($gaps)) {
+            return '';
+        }
+
+        $impact = [
+            'AIRWAY' => ['airway and oxygen supplies', 'A newborn or child who cannot be suctioned, oxygenated or ventilated within minutes of presenting is at immediate risk of death or permanent brain injury — birth asphyxia and severe pneumonia remain leading causes of newborn and child mortality'],
+            'BREATHING' => ['breathing-support supplies', 'Without pulse oximetry, oxygen delivery and bubble CPAP, hypoxia and respiratory distress go undetected or untreated, which is how preventable pneumonia and prematurity complications become deaths'],
+            'CIRCULATION' => ['circulation and IV-access supplies', 'Shock from sepsis, dehydration or bleeding kills within hours; without cannulas, intraosseous needles, fluids and monitors, resuscitation cannot start'],
+            'DISABILITY' => ['neurological and glucose-monitoring supplies', 'Undetected hypoglycaemia and seizures cause irreversible brain damage and death, and both are cheap to detect and treat when the tools are available'],
+            'EXPOSURE' => ['temperature-management supplies', 'Hypothermia is a silent killer of small babies; thermometers and warming equipment are what keep a stable newborn from becoming a critical one'],
+            'MEDICATION' => ['essential medicines', 'Missing first-line antibiotics, anticonvulsants, caffeine, antenatal steroids or glucose means a diagnosed illness cannot be treated, turning a curable condition into a fatal one'],
+            'MEDICINE/DRUGS' => ['essential medicines', 'Missing first-line antibiotics, anticonvulsants, caffeine, antenatal steroids or glucose means a diagnosed illness cannot be treated, turning a curable condition into a fatal one'],
+            'LABORATORY' => ['laboratory and point-of-care tests', 'Without bedside glucose, haemoglobin, malaria and bilirubin tests, treatment is guesswork and dangerous conditions are found too late'],
+            'INFECTION PREVENTION' => ['infection prevention supplies', 'Sick newborns and children are highly susceptible, so missing hand hygiene, sterile and disinfection supplies drive hospital-acquired sepsis and outbreaks'],
+            'INFECTION PREVENTION AND CONTROL (IPC)' => ['infection prevention supplies', 'Sick newborns and children are highly susceptible, so missing hand hygiene, sterile and disinfection supplies drive hospital-acquired sepsis and outbreaks'],
+            'NUTRITION ASSESSMENT' => ['nutrition assessment tools', 'Without MUAC tapes, scales and length boards, severe malnutrition goes unrecognised, and malnourished children are far more likely to die from common infections'],
+            'OTHER NEWBORN' => ['newborn care supplies', 'Items such as kangaroo-care, feeding and thermal-care supplies are what separate a surviving small baby from a deteriorating one'],
+            'OTHER PAEDIATRIC' => ['paediatric care supplies', 'These supplies underpin routine assessment and treatment of sick children, and gaps push care towards delay or referral'],
+            'TRIAGE' => ['triage supplies', 'Triage is how the sickest child is seen first; without it, children with emergency signs wait in the same queue as everyone else'],
+            'ORT CORNER' => ['oral rehydration supplies', 'Diarrhoea is easily treated with ORS and zinc, yet it still kills children when these are not on hand'],
+        ];
+
+        // Match on keywords so renamed/variant categories ("Airway & Oxygen",
+        // "MEDICINES") still resolve; anything unknown gets a generic line.
+        $resolve = function (string $category) use ($impact) {
+            if (isset($impact[$category])) {
+                return $impact[$category];
+            }
+            foreach ([
+                'AIRWAY' => 'AIRWAY', 'OXYGEN' => 'AIRWAY', 'BREATH' => 'BREATHING', 'CIRCULAT' => 'CIRCULATION',
+                'DISABILIT' => 'DISABILITY', 'EXPOSURE' => 'EXPOSURE', 'MEDIC' => 'MEDICATION', 'DRUG' => 'MEDICATION',
+                'LAB' => 'LABORATORY', 'INFECTION' => 'INFECTION PREVENTION', 'IPC' => 'INFECTION PREVENTION',
+                'NUTRITION' => 'NUTRITION ASSESSMENT', 'NEWBORN' => 'OTHER NEWBORN', 'PAED' => 'OTHER PAEDIATRIC',
+                'TRIAGE' => 'TRIAGE', 'ORT' => 'ORT CORNER',
+            ] as $needle => $key) {
+                if (str_contains($category, $needle)) {
+                    return $impact[$key];
+                }
+            }
+
+            return [
+                strtolower($category).' supplies',
+                'Each of these items supports a step in assessing or treating a sick newborn or child, so shortages translate into delayed or missed care',
+            ];
+        };
+
+        $parts = [];
+        foreach (array_slice($gaps, 0, 3) as $gap) {
+            $meta = $resolve($gap['category']);
+            $examples = array_slice($gap['missing'], 0, 3);
+            $examplesText = $examples ? ' (e.g. '.$this->naturalJoin($examples).')' : '';
+            $parts[] = ucfirst($meta[0])." at {$gap['pct']}%{$examplesText}. {$meta[1]}.";
+        }
+
+        if (empty($parts)) {
+            return '';
+        }
+
+        return ' These are not administrative gaps — they are survival gaps. Weakest areas: '.implode(' ', $parts)
+            .' Closing these shortfalls is one of the fastest, lowest-cost ways to reduce preventable newborn and child deaths at this facility.';
+    }
+
     private function generateInsights(
         Assessment $assessment,
         $sectionScores,
@@ -450,6 +995,7 @@ class AssessmentExecutiveDashboardController extends Controller
         $deptScores,
         float $hrCoverage,
         float $commodityPct,
+        array $commodityGaps = [],
     ): array {
         $insights = [];
         $overall = (float) ($assessment->overall_percentage ?? 0);
@@ -463,15 +1009,27 @@ class AssessmentExecutiveDashboardController extends Controller
             $insights[] = ['type' => 'danger', 'icon' => 'exclamation-triangle', 'area' => 'Overall', 'text' => "This facility scored {$overall}% overall — significant gaps remain. A structured improvement plan with hands-on mentorship is recommended before formal rollout."];
         }
 
-        // Infrastructure
+        // Infrastructure — narrated, positivity first: what's in place is
+        // woven into an opening sentence before the gaps are raised, rather
+        // than two flat "Working well / Missing" lists.
         $infraScore = $sectionScores->get('infrastructure');
         if ($infraScore) {
-            $missingInfra = $infraResponses->filter(fn ($r) => $r->response_value === 'No')->pluck('question_text');
-            if ($missingInfra->isNotEmpty()) {
-                $list = $missingInfra->map(fn ($t) => trim(str_replace(['?', '.'], '', explode('(', $t)[0])))->implode('; ');
-                $insights[] = ['type' => 'warning', 'icon' => 'building', 'area' => 'Infrastructure', 'text' => "Missing infrastructure elements: {$list}. These gaps directly limit clinical capacity and should be flagged for capital planning."];
-            } else {
+            $pct = (float) $infraScore->percentage;
+            $presentInfra = $this->narrativePhrases($infraResponses->filter(fn ($r) => $r->response_value === 'Yes'));
+            $missingInfra = $this->narrativePhrases($infraResponses->filter(fn ($r) => $r->response_value === 'No'));
+
+            if (empty($missingInfra)) {
                 $insights[] = ['type' => 'success', 'icon' => 'building', 'area' => 'Infrastructure', 'text' => 'All infrastructure indicators are met. The facility has the physical environment required to deliver quality newborn and paediatric care.'];
+            } else {
+                $opening = match (true) {
+                    $pct >= 80 => 'The data shows strong infrastructure for newborn and paediatric care',
+                    $pct >= 50 => 'The data shows a developing infrastructure base for newborn and paediatric care',
+                    default => 'The data shows significant infrastructure gaps for newborn and paediatric care',
+                };
+                $strengthPart = ! empty($presentInfra) ? ', with '.$this->summarizeList($presentInfra).' already in place' : '';
+                $text = "{$opening}{$strengthPart}. However, the facility currently lacks {$this->naturalJoin($missingInfra)} — closing these gaps would strengthen its ability to manage both mother and newborn safely, particularly for higher-risk cases.";
+
+                $insights[] = ['type' => $pct >= 50 ? 'warning' : 'danger', 'icon' => 'building', 'area' => 'Infrastructure', 'text' => $text];
             }
         }
 
@@ -491,43 +1049,84 @@ class AssessmentExecutiveDashboardController extends Controller
         // Human Resources
         if ($hrRows->isNotEmpty()) {
             $topCadre = $hrRows->sortByDesc('total_in_facility')->first();
+            $totalStaff = $hrRows->sum('total_in_facility');
+
+            // Coverage per training programme (trained / all staff) and per cadre
+            $programmes = [
+                'etat_plus' => 'ETAT+',
+                'comprehensive_newborn_care' => 'Comprehensive Newborn Care',
+                'imnci' => 'IMNCI',
+                'type_1_diabetes' => 'Type-1 Diabetes',
+                'essential_newborn_care' => 'Essential Newborn Care',
+            ];
+            $programmeCoverage = collect($programmes)->map(fn ($label, $col) => [
+                'label' => $label,
+                'trained' => (int) $hrRows->sum($col),
+                'pct' => $totalStaff > 0 ? round(min($hrRows->sum($col) / $totalStaff, 1) * 100, 1) : 0,
+            ])->sortBy('pct')->values();
+            $weakest = $programmeCoverage->first();
+            $strongest = $programmeCoverage->last();
+            $untrainedCadres = $hrRows->filter(fn ($r) => $r->total_in_facility > 0 && $r->total_trained == 0)->pluck('cadre');
+
+            $coverageDetail = '';
+            if ($totalStaff > 0 && $strongest['pct'] !== $weakest['pct']) {
+                $coverageDetail = " Coverage is highest for {$strongest['label']} ({$strongest['pct']}% of staff) and lowest for {$weakest['label']} ({$weakest['pct']}%).";
+            } elseif ($totalStaff > 0) {
+                $coverageDetail = " Coverage is uniform across programmes at {$weakest['pct']}% of staff.";
+            }
+            if ($untrainedCadres->isNotEmpty()) {
+                $coverageDetail .= ' No trained staff recorded for: '.$untrainedCadres->take(4)->implode(', ').($untrainedCadres->count() > 4 ? ' and '.($untrainedCadres->count() - 4).' more' : '').'.';
+            }
+
             if ($hrCoverage < 30) {
-                $insights[] = ['type' => 'danger', 'icon' => 'users', 'area' => 'Human Resources', 'text' => "Only {$hrCoverage}% of staff have received any specialist training. This represents a critical capacity gap requiring an urgent training plan for all cadres, prioritising {$topCadre->cadre}."];
+                $insights[] = ['type' => 'danger', 'icon' => 'users', 'area' => 'Human Resources', 'text' => "Only {$hrCoverage}% of staff have received any specialist training. This represents a critical capacity gap requiring an urgent training plan for all cadres, prioritising {$topCadre->cadre}.".$coverageDetail];
             } elseif ($hrCoverage < 60) {
-                $insights[] = ['type' => 'warning', 'icon' => 'users', 'area' => 'Human Resources', 'text' => "{$hrCoverage}% of staff have received specialist training. While progress is visible, targeted refresher courses are needed to achieve full competency across all cadres."];
+                $insights[] = ['type' => 'warning', 'icon' => 'users', 'area' => 'Human Resources', 'text' => "{$hrCoverage}% of staff have received specialist training. While progress is visible, targeted refresher courses are needed to achieve full competency across all cadres.".$coverageDetail];
             } else {
-                $insights[] = ['type' => 'success', 'icon' => 'users', 'area' => 'Human Resources', 'text' => "{$hrCoverage}% staff training coverage achieved. The workforce is well-trained and can effectively absorb mentorship interventions."];
+                $insights[] = ['type' => 'success', 'icon' => 'users', 'area' => 'Human Resources', 'text' => "{$hrCoverage}% staff training coverage achieved. The workforce is well-trained and can effectively absorb mentorship interventions.".$coverageDetail];
             }
         }
 
         // Health Products
         $lowestDept = $deptScores->sortBy('percentage')->first();
+        $clinicalImpact = $this->commodityClinicalImpact($commodityGaps);
         if ($commodityPct < 50) {
-            $insights[] = ['type' => 'danger', 'icon' => 'capsules', 'area' => 'Health Products', 'text' => "Commodity availability is critically low at {$commodityPct}% overall".($lowestDept ? " — {$lowestDept->department} is the weakest department at {$lowestDept->percentage}%" : '').'. Emergency procurement is needed to ensure patient safety.'];
+            $insights[] = ['type' => 'danger', 'icon' => 'capsules', 'area' => 'Health Products', 'text' => "Commodity availability is critically low at {$commodityPct}% overall".($lowestDept ? " — {$lowestDept->department} is the weakest department at {$lowestDept->percentage}%" : '').'. Emergency procurement is needed to ensure patient safety.'.$clinicalImpact];
         } elseif ($commodityPct < 75) {
-            $insights[] = ['type' => 'warning', 'icon' => 'capsules', 'area' => 'Health Products', 'text' => "Commodity availability at {$commodityPct}% is below target".($lowestDept ? "; {$lowestDept->department} needs immediate restocking at {$lowestDept->percentage}%" : '').'. A supply chain review is recommended.'];
+            $insights[] = ['type' => 'warning', 'icon' => 'capsules', 'area' => 'Health Products', 'text' => "Commodity availability at {$commodityPct}% is below target".($lowestDept ? "; {$lowestDept->department} needs immediate restocking at {$lowestDept->percentage}%" : '').'. A supply chain review is recommended.'.$clinicalImpact];
         } else {
-            $insights[] = ['type' => 'success', 'icon' => 'capsules', 'area' => 'Health Products', 'text' => "Good commodity availability at {$commodityPct}%. The facility is well-stocked to deliver clinical care across departments."];
+            $insights[] = ['type' => 'success', 'icon' => 'capsules', 'area' => 'Health Products', 'text' => "Good commodity availability at {$commodityPct}%. The facility is well-stocked to deliver clinical care across departments.".$clinicalImpact];
         }
 
-        // Information Systems
+        // Information Systems — same narrated, positivity-first treatment.
         $infoScore = $sectionScores->get('information_systems');
         if ($infoScore) {
-            $missingInfo = $infoResponses->filter(fn ($r) => $r->is_scored && $r->response_value === 'No')->count();
-            if ($missingInfo > 4) {
-                $insights[] = ['type' => 'danger', 'icon' => 'database', 'area' => 'Information Systems', 'text' => "{$missingInfo} key information system elements are absent. Without complete records, data-driven decision making is compromised and M&E targets cannot be tracked."];
-            } elseif ($missingInfo > 0) {
-                $insights[] = ['type' => 'warning', 'icon' => 'database', 'area' => 'Information Systems', 'text' => "{$missingInfo} records or registers are missing. Completing the documentation system is needed to support reliable monitoring of newborn and paediatric outcomes."];
-            } else {
+            $scoredInfo = $infoResponses->filter(fn ($r) => $r->is_scored);
+            $presentInfo = $this->narrativePhrases($scoredInfo->filter(fn ($r) => $r->response_value === 'Yes'));
+            $missingInfo = $this->narrativePhrases($scoredInfo->filter(fn ($r) => $r->response_value === 'No'));
+
+            if (empty($missingInfo)) {
                 $insights[] = ['type' => 'success', 'icon' => 'database', 'area' => 'Information Systems', 'text' => 'All information system elements are in place. The facility has a strong data infrastructure to support evidence-based care and mentorship follow-up.'];
+            } else {
+                $count = count($missingInfo);
+                $opening = $count > 4
+                    ? 'The data points to meaningful gaps in record-keeping and data systems'
+                    : 'The data shows a reasonably solid record-keeping and data system';
+                $strengthPart = ! empty($presentInfo) ? ', with '.$this->summarizeList($presentInfo).' already functioning well' : '';
+                $text = "{$opening}{$strengthPart}. However, {$this->naturalJoin($missingInfo)} ".($count === 1 ? 'is' : 'are')." still missing — without these, data-driven decision making is compromised and M&E targets become harder to track.";
+
+                $insights[] = ['type' => $count > 4 ? 'danger' : 'warning', 'icon' => 'database', 'area' => 'Information Systems', 'text' => $text];
             }
         }
 
         // Quality of Care
         $qocScore = $sectionScores->get('quality_of_care');
         if ($qocScore) {
-            $hasNeonatalAudit = ($qocAll->get('QOC_NEONATAL_AUDIT')->response_value ?? '') === 'Yes';
-            $hasChildAudit = ($qocAll->get('QOC_CHILD_AUDIT')->response_value ?? '') === 'Yes';
+            // The audit questions are coded QOC_*_AUDIT in the 2025 form and
+            // QOC_*_AUDITS in the 2026 one.
+            $firstAnswer = fn (array $codes) => collect($codes)->map(fn ($c) => $qocAll->get($c)->response_value ?? null)->first(fn ($v) => $v !== null && $v !== '');
+            $hasNeonatalAudit = $firstAnswer(['QOC_NEONATAL_AUDITS', 'QOC_NEONATAL_AUDIT']) === 'Yes';
+            $hasChildAudit = $firstAnswer(['QOC_CHILD_AUDITS', 'QOC_CHILD_AUDIT']) === 'Yes';
             $auditFreq = $qocAll->get('QOC_AUDIT_FREQUENCY')->response_value ?? null;
 
             if ($hasNeonatalAudit && $hasChildAudit) {

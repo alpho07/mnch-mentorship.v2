@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Assessment;
 use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentSection;
+use App\Models\MainCadre;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class AssessmentPdfReportService {
@@ -187,17 +188,34 @@ class AssessmentPdfReportService {
     }
 
     /**
+     * Every section with this code, across ALL assessment templates.
+     * An assessment can hold answers to questions from an older template
+     * (e.g. the 2025 QOC_NEONATAL_AUDIT on a 2026 assessment), and those
+     * rows are the assessment's own data — scoping to its current template
+     * would leave them out of the report. The responses queries are
+     * already limited to this assessment, so this only widens which
+     * questions are recognised.
+     *
+     * @return array<int, int>
+     */
+    private function sectionIdsForCode(string $code): array {
+        return AssessmentSection::where('code', $code)->pluck('id')->all();
+    }
+
+    /**
      * Get infrastructure details
      */
     protected function getInfrastructureDetails(Assessment $assessment): array {
-        $sectionId = AssessmentSection::where('code', 'infrastructure')->where('assessment_type_id', $assessment->assessment_type_id)->value('id');
+        $sectionIds = $this->sectionIdsForCode('infrastructure');
 
         $responses = $assessment->questionResponses()
-                ->whereHas('question', function ($q) use ($sectionId) {
-                    $q->where('assessment_section_id', $sectionId);
+                ->whereHas('question', function ($q) use ($sectionIds) {
+                    $q->whereIn('assessment_section_id', $sectionIds);
                 })
                 ->with('question')
                 ->get();
+
+        $responses = $this->filterVisibleResponses($assessment, $responses);
 
         // For PDF (detailed structure)
         $nbuResponse = $responses->where('question.question_code', 'INFRA_NBU')->first();
@@ -256,14 +274,21 @@ class AssessmentPdfReportService {
      * Get skills lab details
      */
     protected function getSkillsLabDetails(Assessment $assessment): array {
-        $sectionId = AssessmentSection::where('code', 'skills_lab')->where('assessment_type_id', $assessment->assessment_type_id)->value('id');
+        $sectionIds = $this->sectionIdsForCode('skills_lab');
 
         $responses = $assessment->questionResponses()
-                ->whereHas('question', function ($q) use ($sectionId) {
-                    $q->where('assessment_section_id', $sectionId);
+                ->whereHas('question', function ($q) use ($sectionIds) {
+                    $q->whereIn('assessment_section_id', $sectionIds);
                 })
                 ->with('question')
                 ->get();
+
+        // A follow-up question's response row can outlive the answer it
+        // depended on — e.g. SKILLS_HAS_LAB flipped from Yes to No after its
+        // Yes-only follow-ups were already answered. Those stale rows are
+        // never deleted, so without this filter the report would show
+        // answers to questions the form no longer displays.
+        $responses = $this->filterVisibleResponses($assessment, $responses);
 
         $hasSkillsLab = $responses->where('question.question_code', 'SKILLS_MASTER')->first()?->response_value === 'Yes';
 
@@ -298,13 +323,29 @@ class AssessmentPdfReportService {
      * Get human resources details
      */
     protected function getHumanResourcesDetails(Assessment $assessment): array {
+        // Mirrors EditHumanResources::defaultExcludedCadreIds() — null means
+        // the assessor never customized the selection via "Manage Cadres",
+        // which defaults to excluding only the catch-all "Others" cadre.
+        $excludedCadreIds = $assessment->excluded_cadre_ids ?? MainCadre::where('is_active', true)
+            ->where('assessment_type_id', $assessment->assessment_type_id)
+            ->where('name', 'Others')
+            ->pluck('id')
+            ->toArray();
+
+        // A deactivated cadre (is_active = false) or one unchecked via
+        // "Manage Cadres" for this assessment is hidden from the report,
+        // but its HumanResourceResponse row is left untouched — re-activate
+        // the cadre, or re-check it for this assessment, and the same
+        // figures reappear here unchanged.
         $responses = $assessment->humanResourceResponses()
+                ->whereNotIn('cadre_id', $excludedCadreIds)
                 ->whereHas('cadre', function ($query) {
-                    $query->whereNotIn('name', [
-                        'County Officer',
-                        'National Officer',
-                        'Medical Officer Intern',
-                    ]);
+                    $query->where('is_active', true)
+                        ->whereNotIn('name', [
+                            'County Officer',
+                            'National Officer',
+                            'Medical Officer Intern',
+                        ]);
                 })
                 ->with('cadre')
                 ->get();
@@ -420,14 +461,16 @@ class AssessmentPdfReportService {
      * Get information systems details
      */
     protected function getInformationSystemsDetails(Assessment $assessment): array {
-        $sectionId = AssessmentSection::where('code', 'information_systems')->where('assessment_type_id', $assessment->assessment_type_id)->value('id');
+        $sectionIds = $this->sectionIdsForCode('information_systems');
 
         $responses = $assessment->questionResponses()
-                ->whereHas('question', function ($q) use ($sectionId) {
-                    $q->where('assessment_section_id', $sectionId);
+                ->whereHas('question', function ($q) use ($sectionIds) {
+                    $q->whereIn('assessment_section_id', $sectionIds);
                 })
                 ->with('question')
                 ->get();
+
+        $responses = $this->filterVisibleResponses($assessment, $responses);
 
         // The 24 MoH-form Available/Completeness pairs share a
         // "Data Collection Tools & Registers|Form|{formName}" group and
@@ -495,14 +538,16 @@ class AssessmentPdfReportService {
      * Get quality of care details
      */
     protected function getQualityOfCareDetails(Assessment $assessment): array {
-        $sectionId = AssessmentSection::where('code', 'quality_of_care')->where('assessment_type_id', $assessment->assessment_type_id)->value('id');
+        $sectionIds = $this->sectionIdsForCode('quality_of_care');
 
         $responses = $assessment->questionResponses()
-                ->whereHas('question', function ($q) use ($sectionId) {
-                    $q->where('assessment_section_id', $sectionId);
+                ->whereHas('question', function ($q) use ($sectionIds) {
+                    $q->whereIn('assessment_section_id', $sectionIds);
                 })
                 ->with('question')
                 ->get();
+
+        $responses = $this->filterVisibleResponses($assessment, $responses);
 
         // For PDF - keep as collections
         $yesNoCollection = $responses->filter(function ($response) {
@@ -629,22 +674,59 @@ class AssessmentPdfReportService {
     ];
 
     /**
+     * How each proportion should be read, keyed by its numerator code.
+     * 'higher' = a coverage/quality-of-care measure (more is better);
+     * 'lower'  = a burden or outcome measure (less is better);
+     * 'context' = describes the case-mix and is not judged good or bad.
+     */
+    private const INDICATOR_META = [
+        'IND_NEWBORN_O2SAT_TAKEN' => ['higher', 'Newborn', 'Pulse oximetry at admission is how hypoxia and critical congenital heart disease are caught before a baby deteriorates'],
+        'IND_NEWBORN_RBS_TAKEN' => ['higher', 'Newborn', 'Unchecked blood sugar in sick newborns leads to hypoglycaemic seizures and brain injury'],
+        'IND_NEWBORN_HEADTOTOE' => ['higher', 'Newborn', 'A recorded admission examination is the basis for spotting danger signs and sepsis early'],
+        'IND_NEWBORN_HYPOTHERMIA' => ['lower', 'Newborn', 'Hypothermia at admission points to failures in the warm chain from birth to the ward, and cold babies die more often'],
+        'IND_NEWBORN_BIRTH_ASPHYXIA' => ['lower', 'Newborn', 'Birth asphyxia is a leading cause of newborn death and disability; a high share signals gaps in intrapartum care and resuscitation'],
+        'IND_NEWBORN_LT34_ADMISSIONS' => ['context', 'Newborn', 'The share of preterm admissions determines how much specialist care the unit must be ready to deliver'],
+        'IND_NEWBORN_LT34_CAFFEINE' => ['higher', 'Newborn', 'Caffeine citrate reduces apnoea and the need for ventilation in preterm babies'],
+        'IND_NEWBORN_ANTENATAL_CORTICOSTEROIDS' => ['higher', 'Newborn', 'Antenatal steroids mature the preterm lung and are one of the most effective ways to prevent preterm respiratory deaths'],
+        'IND_NEWBORN_LT32_ADMISSIONS' => ['context', 'Newborn', 'Very preterm admissions need CPAP, thermal support and feeding support to survive'],
+        'IND_NEWBORN_LT32_CPAP' => ['higher', 'Newborn', 'CPAP is the main life-saving treatment for respiratory distress syndrome in very preterm babies'],
+        'IND_NEWBORN_LT2500G_KMC' => ['higher', 'Newborn', 'Kangaroo mother care cuts mortality in small babies and is among the cheapest interventions available'],
+        'IND_NEWBORN_KMC_WITHIN_2HRS' => ['higher', 'Newborn', 'Early KMC initiation is when it saves the most lives'],
+        'IND_NEWBORN_KMC_DURING_STAY' => ['higher', 'Newborn', 'KMC during the stay supports warmth, feeding and bonding for small and sick babies'],
+        'IND_PAED_SEVERE_PNEUMONIA_OXYGEN' => ['higher', 'Paediatric', 'Oxygen is the life-saving treatment for hypoxaemic severe pneumonia, a leading killer of children under five'],
+        'IND_PAED_OXYGEN_CORRECT_PRESCRIPTION' => ['higher', 'Paediatric', 'Oxygen given at the wrong flow or by the wrong device is less effective and can harm'],
+        'IND_PAED_PNEUMONIA_AMOXICILLIN' => ['higher', 'Paediatric', 'Amoxicillin DT is first-line treatment for pneumonia; delayed or wrong antibiotics let treatable disease become severe'],
+        'IND_PAED_SEVERE_PNEUMONIA_DEATHS' => ['lower', 'Paediatric', 'Deaths among children with severe pneumonia show whether oxygen, antibiotics and monitoring are reaching them in time'],
+        'IND_PAED_DIARRHOEA_ORS' => ['higher', 'Paediatric', 'ORS and zinc are the proven, low-cost treatment that prevent dehydration deaths from diarrhoea'],
+        'IND_PAED_HYPOVOLEMIC_SHOCK' => ['higher', 'Paediatric', 'Children in shock from diarrhoea die within hours unless given the correct volume of fluid'],
+        'IND_PAED_RBS' => ['higher', 'Paediatric', 'Blood sugar checks catch hypoglycaemia, a common and rapidly fatal complication in sick children'],
+        'IND_PAED_MALNUTRITION_OUTPATIENT' => ['higher', 'Paediatric', 'Outpatient screening is the main chance to find malnutrition before a child becomes critically ill'],
+        'IND_PAED_MALNUTRITION_INPATIENT' => ['higher', 'Paediatric', 'Malnourished inpatients are far more likely to die from common infections unless recognised and managed'],
+        'IND_PAED_T1DM_BASAL_BOLUS' => ['higher', 'Paediatric', 'A basal-bolus regimen gives children with type 1 diabetes safer glucose control and fewer DKA episodes'],
+        'IND_PAED_DKA_DEATHS' => ['lower', 'Paediatric', 'DKA deaths are largely preventable with early recognition, fluids and insulin'],
+    ];
+
+    /**
      * Get newborn & paediatric indicators details — split by the same
      * "Newborn Indicators"/"Paediatric Indicators" group IndicatorsSeeder
      * tags each question with, matching the two collapsible sections the
      * live form renders.
      */
     protected function getIndicatorsDetails(Assessment $assessment): array {
-        $sectionId = AssessmentSection::where('code', 'newborn_paediatric_indicators')->where('assessment_type_id', $assessment->assessment_type_id)->value('id');
+        $sectionIds = $this->sectionIdsForCode('newborn_paediatric_indicators');
 
         $responses = $assessment->questionResponses()
-                ->whereHas('question', function ($q) use ($sectionId) {
-                    $q->where('assessment_section_id', $sectionId);
+                ->whereHas('question', function ($q) use ($sectionIds) {
+                    $q->whereIn('assessment_section_id', $sectionIds);
                 })
                 ->with('question')
                 ->get();
 
-        $toArray = fn ($collection) => $collection->map(function ($response) {
+        $responses = $this->filterVisibleResponses($assessment, $responses);
+
+        // A question the assessor marked "does not apply" is left out of the
+        // report altogether rather than shown as an N/A row.
+        $toArray = fn ($collection) => $collection->reject(fn ($response) => $response->not_applicable)->map(function ($response) {
                     return [
                         'question' => $this->stripLegacyNumbering($response->question->question_text),
                         // A row the assessor marked "does not apply" reads
@@ -663,7 +745,7 @@ class AssessmentPdfReportService {
         // Admissions is the denominator for almost every other proportion
         // below it, so it's shown first as a plain count rather than a
         // computed percentage — there's nothing to divide it by.
-        $admissionsRow = [[
+        $admissionsRow = $responsesByCode->get('IND_NEWBORN_ADMISSIONS')?->not_applicable ? [] : [[
             'question' => 'Total number of newborn admissions for the last complete month',
             'response' => $this->rawCount($responsesByCode->get('IND_NEWBORN_ADMISSIONS')) ?? 'N/A',
             'group' => null,
@@ -677,6 +759,93 @@ class AssessmentPdfReportService {
             'paediatric_proportions_array' => $this->computeProportions(self::PAEDIATRIC_PROPORTIONS, $responsesByCode),
             'all_responses' => $responses,
         ];
+    }
+
+    /**
+     * Structured version of the report's proportion tables, using the same
+     * definitions and N/A rules, for consumers that need numbers rather
+     * than display strings (e.g. the executive dashboard).
+     *
+     * @return array<int, array{group: string, label: string, numerator: ?float, denominator: ?float, pct: ?float, direction: string, why: string}>
+     */
+    public function getIndicatorMetrics(Assessment $assessment): array {
+        $sectionIds = $this->sectionIdsForCode('newborn_paediatric_indicators');
+
+        if (empty($sectionIds)) {
+            return [];
+        }
+
+        $responses = $assessment->questionResponses()
+                ->whereHas('question', fn ($q) => $q->whereIn('assessment_section_id', $sectionIds))
+                ->with('question')
+                ->get();
+
+        $byCode = $this->filterVisibleResponses($assessment, $responses)->keyBy('question.question_code');
+
+        $metrics = [];
+        foreach ([...self::NEWBORN_PROPORTIONS, ...self::PAEDIATRIC_PROPORTIONS] as [$label, $numCode, $denCode]) {
+            if ($this->isMarkedNotApplicable($byCode, $numCode, $denCode)) {
+                continue;
+            }
+
+            [$direction, $group, $why] = self::INDICATOR_META[$numCode] ?? ['context', 'Other', ''];
+            $num = $this->rawCount($byCode->get($numCode));
+            $den = $this->rawCount($byCode->get($denCode));
+            $computable = is_numeric($num) && is_numeric($den) && (float) $den > 0;
+
+            $metrics[] = [
+                'group' => $group,
+                'label' => $label,
+                'numerator' => is_numeric($num) ? (float) $num : null,
+                'denominator' => is_numeric($den) ? (float) $den : null,
+                'pct' => $computable ? round((float) $num / (float) $den * 100, 1) : null,
+                'direction' => $direction,
+                'why' => $why,
+            ];
+        }
+
+        return $metrics;
+    }
+
+    /**
+     * Drops responses whose question's display_conditions no longer
+     * resolve to visible given the assessment's current answers — same
+     * evaluator DynamicFormBuilder (live form) and DynamicScoringService
+     * (scoring) use, so the report can't show a question the form itself
+     * would currently hide. Conditions may reference a question outside
+     * $responses' own section, so the resolver is built from every response
+     * on the assessment, not just the ones passed in.
+     */
+    private function filterVisibleResponses(Assessment $assessment, \Illuminate\Support\Collection $responses): \Illuminate\Support\Collection {
+        $responsesByCode = AssessmentQuestionResponse::query()
+                ->where('assessment_id', $assessment->id)
+                ->join('assessment_questions', 'assessment_questions.id', '=', 'assessment_question_responses.assessment_question_id')
+                ->pluck('assessment_question_responses.response_value', 'assessment_questions.question_code')
+                ->all();
+
+        return $responses->filter(function ($response) use ($responsesByCode) {
+            $conditions = $response->question->display_conditions ?? null;
+
+            if (empty($conditions)) {
+                return true;
+            }
+
+            return ConditionalLogicEvaluator::isVisible($conditions, fn (string $code) => $responsesByCode[$code] ?? null);
+        })->values();
+    }
+
+    /**
+     * True when the numerator or denominator question of a proportion was
+     * explicitly marked "does not apply" for this assessment.
+     */
+    private function isMarkedNotApplicable($responsesByCode, string ...$codes): bool {
+        foreach ($codes as $code) {
+            if ($responsesByCode->get($code)?->not_applicable) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -700,6 +869,12 @@ class AssessmentPdfReportService {
         $result = [];
 
         foreach ($definitions as [$label, $numeratorCode, $denominatorCode]) {
+            // A term the assessor marked "does not apply" removes the whole
+            // proportion from the report instead of listing it as N/A.
+            if ($this->isMarkedNotApplicable($responsesByCode, $numeratorCode, $denominatorCode)) {
+                continue;
+            }
+
             $numerator = $this->rawCount($responsesByCode->get($numeratorCode));
             $denominator = $this->rawCount($responsesByCode->get($denominatorCode));
 
@@ -760,7 +935,7 @@ class AssessmentPdfReportService {
      * caller gets clean text regardless of which convention that
      * particular question's row predates.
      */
-    private function stripLegacyNumbering(string $text): string {
+    public static function stripLegacyNumbering(string $text): string {
         return preg_replace('/^\d+\.\s*/', '', $text);
     }
 }

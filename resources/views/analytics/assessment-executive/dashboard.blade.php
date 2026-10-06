@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Executive Assessment Report — {{ $assessment->facility->name }}</title>
+<title>Executive Assessment Report — {{ $assessment->facility?->name ?? "Unknown facility" }}</title>
 @php $isPdf = $isPdf ?? false; @endphp
 
 @if(!$isPdf)
@@ -177,30 +177,6 @@ body {
 .chart-wrap-title { font-size: .82rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 1rem; }
 .chart-canvas-wrap { position: relative; height: 240px; }
 
-/* ── Indicator table ─────────────────────────────────────────────────── */
-.indicator-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: .7rem;
-}
-.indicator-item {
-    display: flex; align-items: flex-start; gap: .6rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 9px;
-    padding: .6rem .8rem;
-}
-.indicator-dot {
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: .65rem; flex-shrink: 0; margin-top: .1rem;
-}
-.dot-yes  { background: #d1fae5; color: #065f46; }
-.dot-no   { background: #fee2e2; color: #991b1b; }
-.dot-na   { background: #f1f5f9; color: #94a3b8; }
-.indicator-text { font-size: .78rem; color: #334155; line-height: 1.35; }
-
 /* ── Insight cards ───────────────────────────────────────────────────── */
 .insights-wrap { display: flex; flex-direction: column; gap: .7rem; margin-bottom: 1.5rem; }
 .insight-card {
@@ -212,10 +188,12 @@ body {
 .insight-card.success { background: #f0fdf4; border-color: #16a34a; }
 .insight-card.warning { background: #fffbeb; border-color: #d97706; }
 .insight-card.danger  { background: #fff1f2; border-color: #dc2626; }
+.insight-card.info    { background: #eff6ff; border-color: #2563eb; }
 .insight-icon { font-size: 1rem; width: 20px; flex-shrink: 0; padding-top: .1rem; }
 .insight-card.success .insight-icon { color: #16a34a; }
 .insight-card.warning .insight-icon { color: #d97706; }
 .insight-card.danger  .insight-icon { color: #dc2626; }
+.insight-card.info    .insight-icon { color: #2563eb; }
 .insight-area { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; opacity: .6; }
 .insight-text { font-size: .82rem; color: #1e293b; line-height: 1.45; }
 
@@ -326,7 +304,7 @@ body {
 
 {{-- ── Cover ────────────────────────────────────────────────────────── --}}
 <div class="cover">
-    <div class="cover-title">{{ $assessment->facility->name }}</div>
+    <div class="cover-title">{{ $assessment->facility?->name ?? "Unknown facility" }}</div>
     <div class="cover-sub">Executive Assessment Report &mdash; {{ ucfirst($assessment->assessment_type) }} Assessment</div>
     <span class="cover-badge {{ $gradeBadge }}">
         {{ strtoupper($assessment->overall_grade ?? 'Incomplete') }}
@@ -348,9 +326,9 @@ body {
     </div>
 
     <div class="cover-meta">
-        <div class="cover-meta-item"><i class="fas fa-map-marker-alt"></i> {{ $assessment->facility->subcounty->county->name ?? '—' }} County</div>
-        <div class="cover-meta-item"><i class="fas fa-sitemap"></i> {{ $assessment->facility->subcounty->name ?? '—' }} Subcounty</div>
-        @if($assessment->facility->facilityLevel)
+        <div class="cover-meta-item"><i class="fas fa-map-marker-alt"></i> {{ $assessment->facility?->subcounty?->county->name ?? '—' }} County</div>
+        <div class="cover-meta-item"><i class="fas fa-sitemap"></i> {{ $assessment->facility?->subcounty?->name ?? '—' }} Subcounty</div>
+        @if($assessment->facility?->facilityLevel)
         <div class="cover-meta-item"><i class="fas fa-hospital"></i> {{ $assessment->facility->facilityLevel->name }}</div>
         @endif
         <div class="cover-meta-item"><i class="fas fa-user-md"></i> Assessor: {{ $assessment->assessor_name }}</div>
@@ -398,6 +376,8 @@ body {
 </div>
 
 {{-- ── Data Quality ─────────────────────────────────────────────────── --}}
+{{-- Temporarily hidden: remove "false" to restore --}}
+@if(false)
 <div class="section-wrap">
     <div class="section-header">
         <div class="section-icon" style="background:#f5f3ff;color:#7c3aed;"><i class="fas fa-magnifying-glass-chart"></i></div>
@@ -446,10 +426,10 @@ body {
         </div>
         @endif
 
-        {{-- Cross-section relationship insights --}}
+        {{-- Completeness narrative + cross-section relationship insights --}}
         @if(!empty($dataQualityInsights))
         <div>
-            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:.75rem;">Relationships Across Sections</div>
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:.75rem;">Data Quality Insights</div>
             <div class="insights-wrap">
                 @foreach($dataQualityInsights as $insight)
                 <div class="insight-card {{ $insight['type'] }}">
@@ -470,6 +450,7 @@ body {
 
     </div>
 </div>
+@endif
 
 {{-- ── Charts Row ───────────────────────────────────────────────────── --}}
 @if(!$isPdf && $sectionScores->isNotEmpty())
@@ -490,6 +471,8 @@ body {
 @endif
 
 {{-- ── 1. Infrastructure ────────────────────────────────────────────── --}}
+{{-- Temporarily hidden: remove "false" to restore --}}
+@if(false)
 <div class="section-wrap">
     <div class="section-header">
         <div class="section-icon" style="background:#eff6ff;color:#2563eb;"><i class="fas fa-building"></i></div>
@@ -503,23 +486,15 @@ body {
         @endif
     </div>
     <div class="section-body">
-        <div class="indicator-grid">
-            @foreach($infraResponses as $item)
-            @php
-                $yes = $item->response_value === 'Yes';
-                $answered = !is_null($item->response_value);
-            @endphp
-            <div class="indicator-item">
-                <div class="indicator-dot {{ $answered ? ($yes ? 'dot-yes' : 'dot-no') : 'dot-na' }}">
-                    @if(!$answered) <i class="fas fa-minus"></i>
-                    @elseif($yes) <i class="fas fa-check"></i>
-                    @else <i class="fas fa-times"></i>
-                    @endif
-                </div>
-                <div class="indicator-text">{{ $item->question_text }}</div>
+        @if($infraInsight)
+        <div class="insight-card {{ $infraInsight['type'] }}">
+            <div class="insight-icon"><i class="fas fa-{{ $infraInsight['icon'] }}"></i></div>
+            <div>
+                <div class="insight-area">{{ $infraInsight['area'] }}</div>
+                <div class="insight-text">{{ $infraInsight['text'] }}</div>
             </div>
-            @endforeach
         </div>
+        @endif
 
         @if($sectionScores->has('infrastructure'))
         @php $ss = $sectionScores->get('infrastructure'); @endphp
@@ -530,6 +505,7 @@ body {
         @endif
     </div>
 </div>
+@endif
 
 {{-- ── 2. Skills Lab ────────────────────────────────────────────────── --}}
 <div class="section-wrap">
@@ -553,7 +529,7 @@ body {
                     {{ $hasDedicatedLab ? 'Dedicated Skills Lab: Present' : 'Dedicated Skills Lab: Not Present' }}
                 </div>
                 @if(!$hasDedicatedLab)
-                @php $hasRoom = $skillsResponses->firstWhere('question_code','SKILLS_ROOM'); @endphp
+                @php $hasRoom = $skillsResponses->firstWhere('question_code','SKILLS_NO_ROOM_SPACE'); @endphp
                 <div style="font-size:.75rem;color:#64748b;margin-top:.15rem;">
                     Alternative room/space: {{ ($hasRoom && $hasRoom->response_value === 'Yes') ? 'Available' : 'Not available' }}
                 </div>
@@ -561,38 +537,24 @@ body {
             </div>
         </div>
 
-        {{-- Available items --}}
-        @if($skillsAvailable->isNotEmpty())
-        <div style="margin-bottom:.75rem;">
-            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:.5rem;">Available Items ({{ $skillsAvailable->count() }})</div>
-            <div class="indicator-grid">
-                @foreach($skillsAvailable->take(12) as $item)
-                <div class="indicator-item">
-                    <div class="indicator-dot dot-yes"><i class="fas fa-check"></i></div>
-                    <div class="indicator-text">{{ Str::limit($item->question_text, 70) }}</div>
-                </div>
+        @if($skillsResponses->isNotEmpty())
+        <div style="overflow-x:auto;">
+        <table class="data-table">
+            <thead><tr><th>Equipment / Item</th><th style="width:15%;text-align:center;">Status</th></tr></thead>
+            <tbody>
+                @foreach($skillsResponses as $item)
+                <tr>
+                    <td>{{ $item->question_text }}</td>
+                    <td style="text-align:center;">
+                        @if($item->response_value === 'Yes') <span class="pill-green score-pill" style="margin:0;">Yes</span>
+                        @elseif($item->response_value === 'No') <span class="pill-red score-pill" style="margin:0;">No</span>
+                        @else <span class="pill-gray score-pill" style="margin:0;">{{ $item->response_value ?? 'Not Answered' }}</span>
+                        @endif
+                    </td>
+                </tr>
                 @endforeach
-                @if($skillsAvailable->count() > 12)
-                <div class="indicator-item" style="background:none;border-color:transparent;color:#64748b;font-size:.75rem;align-items:center;">
-                    + {{ $skillsAvailable->count() - 12 }} more available
-                </div>
-                @endif
-            </div>
-        </div>
-        @endif
-
-        {{-- Missing scored items --}}
-        @if($skillsMissing->isNotEmpty())
-        <div>
-            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#dc2626;margin-bottom:.5rem;">Missing Scored Items ({{ $skillsMissing->count() }})</div>
-            <div class="indicator-grid">
-                @foreach($skillsMissing as $item)
-                <div class="indicator-item" style="background:#fff1f2;border-color:#fecaca;">
-                    <div class="indicator-dot dot-no"><i class="fas fa-times"></i></div>
-                    <div class="indicator-text">{{ Str::limit($item->question_text, 70) }}</div>
-                </div>
-                @endforeach
-            </div>
+            </tbody>
+        </table>
         </div>
         @endif
     </div>
@@ -750,6 +712,8 @@ body {
 </div>
 
 {{-- ── 5. Information Systems ───────────────────────────────────────── --}}
+{{-- Temporarily hidden: remove "false" to restore --}}
+@if(false)
 <div class="section-wrap">
     <div class="section-header">
         <div class="section-icon" style="background:#f0f9ff;color:#0369a1;"><i class="fas fa-database"></i></div>
@@ -763,26 +727,15 @@ body {
         @endif
     </div>
     <div class="section-body">
-        @php
-            $infoScored   = $infoResponsesUngrouped->where('is_scored', 1);
-        @endphp
-        <div class="indicator-grid">
-            @foreach($infoScored as $item)
-            @php
-                $yes = $item->response_value === 'Yes';
-                $answered = !is_null($item->response_value);
-            @endphp
-            <div class="indicator-item">
-                <div class="indicator-dot {{ $answered ? ($yes ? 'dot-yes' : 'dot-no') : 'dot-na' }}">
-                    @if(!$answered) <i class="fas fa-minus"></i>
-                    @elseif($yes) <i class="fas fa-check"></i>
-                    @else <i class="fas fa-times"></i>
-                    @endif
-                </div>
-                <div class="indicator-text">{{ $item->question_text }}</div>
+        @if($infoInsight)
+        <div class="insight-card {{ $infoInsight['type'] }}">
+            <div class="insight-icon"><i class="fas fa-{{ $infoInsight['icon'] }}"></i></div>
+            <div>
+                <div class="insight-area">{{ $infoInsight['area'] }}</div>
+                <div class="insight-text">{{ $infoInsight['text'] }}</div>
             </div>
-            @endforeach
         </div>
+        @endif
 
         @if($infoDataToolsTable->isNotEmpty())
         <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin:1.2rem 0 .5rem;">Data Collection Tools &amp; Registers</div>
@@ -816,6 +769,7 @@ body {
         @endif
     </div>
 </div>
+@endif
 
 {{-- ── 6. Quality of Care ───────────────────────────────────────────── --}}
 <div class="section-wrap">
@@ -833,36 +787,37 @@ body {
     <div class="section-body">
         {{-- Scored: audit indicators --}}
         @php
-            $auditItems = ['QOC_NEONATAL_AUDIT','QOC_AUDIT_FREQUENCY','QOC_CHILD_AUDIT'];
+            // Death-audit questions, whichever form version coded them
+            // (QOC_*_AUDIT, QOC_*_AUDITS, MoH 527, KHIS upload, register…).
+            $auditItems = $qocAll->keys()
+                ->filter(fn ($c) => preg_match('/^QOC_(NEONATAL|CHILD)_|^QOC_AUDIT_/', $c) === 1)
+                ->values()->all();
         @endphp
+        @if(!empty($auditItems))
         <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:.6rem;">Audit Practices</div>
-        <div class="indicator-grid" style="margin-bottom:1.2rem;">
-            @foreach($auditItems as $code)
-            @if($qocAll->has($code))
-            @php
-                $item = $qocAll->get($code);
-                $val  = $item->response_value;
-                $yes  = $val === 'Yes';
-                $answered = !is_null($val);
-            @endphp
-            <div class="indicator-item">
-                <div class="indicator-dot {{ $answered ? ($yes ? 'dot-yes' : 'dot-no') : 'dot-na' }}">
-                    @if(!$answered) <i class="fas fa-minus"></i>
-                    @elseif($yes) <i class="fas fa-check"></i>
-                    @elseif($code === 'QOC_AUDIT_FREQUENCY') <i class="fas fa-clock"></i>
-                    @else <i class="fas fa-times"></i>
-                    @endif
-                </div>
-                <div class="indicator-text">
-                    {{ $item->question_text }}
-                    @if($code === 'QOC_AUDIT_FREQUENCY' && $val)
-                        <br><strong>{{ $val }}</strong>
-                    @endif
-                </div>
-            </div>
-            @endif
-            @endforeach
+        <div style="overflow-x:auto;margin-bottom:1.2rem;">
+        <table class="data-table">
+            <thead><tr><th>Question</th><th style="width:15%;text-align:center;">Response</th></tr></thead>
+            <tbody>
+                @foreach($auditItems as $code)
+                @if($qocAll->has($code))
+                @php $item = $qocAll->get($code); $val = $item->response_value; @endphp
+                <tr>
+                    <td>{{ $item->question_text }}</td>
+                    <td style="text-align:center;">
+                        @if($val === 'Yes') <span class="pill-green score-pill" style="margin:0;">Yes</span>
+                        @elseif($val === 'No') <span class="pill-red score-pill" style="margin:0;">No</span>
+                        @elseif($code === 'QOC_AUDIT_FREQUENCY' && $val) <span class="pill-gray score-pill" style="margin:0;">{{ $val }}</span>
+                        @else <span class="pill-gray score-pill" style="margin:0;">Not Answered</span>
+                        @endif
+                    </td>
+                </tr>
+                @endif
+                @endforeach
+            </tbody>
+        </table>
         </div>
+        @endif
 
         {{-- Newborn stats --}}
         @php
@@ -911,8 +866,114 @@ body {
         </table>
         </div>
         @endif
+
+        {{-- All other answered Quality of Care questions --}}
+        @php
+            $shownCodes = array_merge($auditItems, $newbornStats, $paedStats);
+            $otherAnswered = $qocAll->filter(fn($i) => !in_array($i->question_code, $shownCodes, true)
+                && $i->response_value !== null && $i->response_value !== '');
+        @endphp
+        @if($otherAnswered->isNotEmpty())
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:.5rem;margin-top:1rem;">Other Responses</div>
+        <div style="overflow-x:auto;">
+        <table class="data-table">
+            <thead><tr><th>Question</th><th style="width:20%;text-align:center;">Response</th></tr></thead>
+            <tbody>
+                @foreach($otherAnswered as $item)
+                @php $val = $item->response_value; @endphp
+                <tr>
+                    <td>{{ $item->question_text }}</td>
+                    <td style="text-align:center;">
+                        @if($val === 'Yes') <span class="pill-green score-pill" style="margin:0;">Yes</span>
+                        @elseif($val === 'No') <span class="pill-red score-pill" style="margin:0;">No</span>
+                        @else <span style="font-weight:600;">{{ $val }}</span>
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        </div>
+        @endif
     </div>
 </div>
+
+{{-- ── 7. Newborn & Paediatric Indicators ───────────────────────────── --}}
+@if($indicatorMetrics->isNotEmpty())
+<div class="section-wrap">
+    <div class="section-header">
+        <div class="section-icon" style="background:#eff6ff;color:#2563eb;"><i class="fas fa-chart-bar"></i></div>
+        <div style="flex:1;">
+            <div class="section-title">Newborn &amp; Paediatric Indicators</div>
+            <div class="section-sub">Proportions calculated from the file-review counts in the assessment summary</div>
+        </div>
+    </div>
+    <div class="section-body">
+        @if(!empty($indicatorInsights))
+        <div class="insights-wrap">
+            @foreach($indicatorInsights as $insight)
+            <div class="insight-card {{ $insight['type'] }}">
+                <div class="insight-icon"><i class="fas fa-{{ $insight['icon'] }}"></i></div>
+                <div>
+                    <div class="insight-area">{{ $insight['area'] }}</div>
+                    <div class="insight-text">{{ $insight['text'] }}</div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
+
+        @foreach(['Newborn' => 'Newborn Indicators', 'Paediatric' => 'Paediatric Indicators'] as $group => $heading)
+        @php $rows = $indicatorMetrics->where('group', $group); @endphp
+        @if($rows->isNotEmpty())
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin:1rem 0 .5rem;">{{ $heading }}</div>
+        <div style="overflow-x:auto;">
+        <table class="data-table">
+            <thead><tr><th>Indicator</th><th style="width:16%;text-align:right;">Count</th><th style="width:26%;">Performance</th>@if($previousRoundLabel)<th style="width:14%;text-align:right;">vs {{ $previousRoundLabel }}</th>@endif</tr></thead>
+            <tbody>
+                @foreach($rows as $m)
+                @php
+                    $color = ['good' => '#10b981', 'warning' => '#f59e0b', 'danger' => '#ef4444'][$m['status']] ?? '#94a3b8';
+                    $lowerIsBetter = $m['direction'] === 'lower';
+                @endphp
+                <tr>
+                    <td>{{ $m['short'] }}@if($lowerIsBetter) <span style="color:#94a3b8;font-size:.7rem;">(lower is better)</span>@endif</td>
+                    <td style="text-align:right;">
+                        @if($m['pct'] !== null) {{ number_format($m['numerator']) }}/{{ number_format($m['denominator']) }}
+                        @else — @endif
+                    </td>
+                    <td>
+                        @if($m['pct'] !== null)
+                        <div style="display:flex;align-items:center;gap:.5rem;">
+                            <div style="flex:1;background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;">
+                                <div style="width:{{ min($m['pct'], 100) }}%;background:{{ $color }};height:8px;"></div>
+                            </div>
+                            <span style="font-weight:700;color:{{ $color }};min-width:3rem;text-align:right;">{{ $m['pct'] }}%</span>
+                        </div>
+                        @else
+                        <span class="pill-gray score-pill" style="margin:0;">N/A</span>
+                        @endif
+                    </td>
+                    @if($previousRoundLabel)
+                    @php
+                        $d = $m['delta'] ?? null;
+                        $improving = $d !== null && ($lowerIsBetter ? $d < 0 : $d > 0);
+                        $dColor = $d === null || abs($d) < 2 ? '#94a3b8' : ($improving ? '#16a34a' : '#dc2626');
+                    @endphp
+                    <td style="text-align:right;font-weight:600;color:{{ $dColor }};white-space:nowrap;">
+                        @if($d === null) — @else {{ $d > 0 ? '▲' : ($d < 0 ? '▼' : '•') }} {{ $d > 0 ? '+' : '' }}{{ $d }} pts @endif
+                    </td>
+                    @endif
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        </div>
+        @endif
+        @endforeach
+    </div>
+</div>
+@endif
 
 </div>{{-- end #mnch-tab-overview --}}
 
