@@ -278,9 +278,12 @@ body {
 {{-- ── Toolbar ──────────────────────────────────────────────────────── --}}
 <div class="toolbar no-print" style="margin-top:1.25rem;">
     <a href="{{ url()->previous() }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
+    {{-- Temporarily hidden: change @if(false) to @if(true) to restore --}}
+    @if(false)
     <a href="{{ route('assessment.executive.export', $assessment) }}" class="btn btn-teal" target="_blank">
         <i class="fas fa-file-pdf"></i> Export PDF
     </a>
+    @endif
     <a href="/admin/assessments/{{ $assessment->id }}/summary" class="btn btn-outline" target="_blank">
         <i class="fas fa-file-alt"></i> Full Report
     </a>
