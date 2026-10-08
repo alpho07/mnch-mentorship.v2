@@ -327,10 +327,12 @@ class AssessmentExecutiveDashboardController extends Controller
             $hrCoverage, $overallCommodityPct, $commodityGaps
         );
 
-        // Headline indicator findings join the executive summary too.
-        foreach (array_slice(array_filter($indicatorInsights, fn ($i) => $i['type'] !== 'success'), 0, 2) as $i) {
-            $insights[] = $i;
-        }
+        // Outcome, strengths and data-coverage findings sit in Executive Insights
+        // under the Paediatric Indicators heading (not in the indicators section).
+        $execIndicatorInsights = array_values(array_filter(
+            $indicatorInsights,
+            fn ($i) => in_array($i['area'], ['Outcome Indicators', 'Indicator Strengths', 'Indicator Data'], true)
+        ));
 
         // Infrastructure and Information Systems show this same insight
         // inline in their own section instead of a per-question table.
@@ -381,7 +383,7 @@ class AssessmentExecutiveDashboardController extends Controller
             'straightLiningFlags',
             'dataQualityInsights',
             'indicatorMetrics',
-            'indicatorInsights',
+            'execIndicatorInsights',
             'previousRoundLabel',
         );
     }
@@ -1131,11 +1133,11 @@ class AssessmentExecutiveDashboardController extends Controller
 
             if ($hasNeonatalAudit && $hasChildAudit) {
                 $freqText = $auditFreq ? " (frequency: {$auditFreq})" : '';
-                $insights[] = ['type' => 'success', 'icon' => 'heartbeat', 'area' => 'Quality of Care', 'text' => "Both neonatal and child death audits are conducted{$freqText}. This is a strong quality indicator demonstrating a learning culture that can be reinforced through mentorship."];
+                $insights[] = ['type' => 'success', 'icon' => 'heartbeat', 'area' => 'Quality of Care (Death Audits)', 'text' => "Both neonatal and child death audits are conducted{$freqText}. This is a strong quality indicator demonstrating a learning culture that can be reinforced through mentorship."];
             } elseif ($hasNeonatalAudit || $hasChildAudit) {
-                $insights[] = ['type' => 'warning', 'icon' => 'heartbeat', 'area' => 'Quality of Care', 'text' => 'Partial audit practice — only one of neonatal/child audits is conducted. Completing the audit cycle for both cohorts is essential to close the mortality review loop.'];
+                $insights[] = ['type' => 'warning', 'icon' => 'heartbeat', 'area' => 'Quality of Care (Death Audits)', 'text' => 'Partial audit practice — only one of neonatal/child audits is conducted. Completing the audit cycle for both cohorts is essential to close the mortality review loop.'];
             } else {
-                $insights[] = ['type' => 'danger', 'icon' => 'heartbeat', 'area' => 'Quality of Care', 'text' => 'No death audits are being conducted. Establishing a routine mortality review process is a critical first step towards quality improvement.'];
+                $insights[] = ['type' => 'danger', 'icon' => 'heartbeat', 'area' => 'Quality of Care (Death Audits)', 'text' => 'No death audits are being conducted. Establishing a routine mortality review process is a critical first step towards quality improvement.'];
             }
         }
 

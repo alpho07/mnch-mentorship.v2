@@ -375,6 +375,20 @@ body {
             </div>
             @endforeach
         </div>
+        @if(!empty($execIndicatorInsights))
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin:1.2rem 0 .6rem;">Paediatric Indicators</div>
+        <div class="insights-wrap">
+            @foreach($execIndicatorInsights as $insight)
+            <div class="insight-card {{ $insight['type'] }}">
+                <div class="insight-icon"><i class="fas fa-{{ $insight['icon'] }}"></i></div>
+                <div>
+                    <div class="insight-area">{{ $insight['area'] }}</div>
+                    <div class="insight-text">{{ $insight['text'] }}</div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
     </div>
 </div>
 
@@ -779,7 +793,7 @@ body {
     <div class="section-header">
         <div class="section-icon" style="background:#fff1f2;color:#e11d48;"><i class="fas fa-heartbeat"></i></div>
         <div style="flex:1;">
-            <div class="section-title">Quality of Care</div>
+            <div class="section-title">Quality of Care (Death Audits)</div>
             <div class="section-sub">Death audits and clinical outcome indicators</div>
         </div>
         @if($sectionScores->has('quality_of_care'))
@@ -912,20 +926,6 @@ body {
         </div>
     </div>
     <div class="section-body">
-        @if(!empty($indicatorInsights))
-        <div class="insights-wrap">
-            @foreach($indicatorInsights as $insight)
-            <div class="insight-card {{ $insight['type'] }}">
-                <div class="insight-icon"><i class="fas fa-{{ $insight['icon'] }}"></i></div>
-                <div>
-                    <div class="insight-area">{{ $insight['area'] }}</div>
-                    <div class="insight-text">{{ $insight['text'] }}</div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-        @endif
-
         @foreach(['Newborn' => 'Newborn Indicators', 'Paediatric' => 'Paediatric Indicators'] as $group => $heading)
         @php $rows = $indicatorMetrics->where('group', $group); @endphp
         @if($rows->isNotEmpty())
