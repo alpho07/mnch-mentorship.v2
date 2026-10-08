@@ -15,6 +15,23 @@ class AssessmentResource extends JsonResource {
             'county' => $this->facility?->subcounty?->county?->name,
             'subcounty' => $this->facility?->subcounty?->name,
             'assessment_type' => $this->assessment_type,
+            'assessment_type_id' => $this->assessment_type_id,
+            'template' => $this->when($this->assessment_type_id, function () {
+                $type = $this->assessmentType;
+
+                return $type ? [
+                    'id' => $type->id,
+                    'name' => $type->name,
+                    'code' => $type->code,
+                    'version' => $type->version,
+                    'is_active' => (bool) $type->is_active,
+                    // Retired templates keep working for assessments already on them.
+                    'is_retired' => $type->trashed(),
+                ] : null;
+            }),
+            'round' => $this->round ?: ($this->assessment_type ?: 'baseline'),
+            'round_label' => $this->round_label,
+            'round_display' => $this->round_display,
             'assessment_date' => $this->assessment_date instanceof \Carbon\Carbon ? $this->assessment_date->toDateString() : $this->assessment_date,
             'assessor_name' => $this->assessor_name,
             'assessor_contact' => $this->assessor_contact,
@@ -23,6 +40,11 @@ class AssessmentResource extends JsonResource {
             'overall_score' => $this->overall_score,
             'overall_percentage' => $this->overall_percentage,
             'overall_grade' => $this->overall_grade,
+            'is_locked' => (bool) $this->is_locked,
+            'locked_at' => $this->locked_at?->toIso8601String(),
+            'can_edit' => $this->isOpenForEditing(),
+            'can_reopen' => $this->when($request->user(), fn () => ($this->status === 'completed' || $this->is_locked)
+                && $request->user()->hasRole(['admin', 'super_admin'])),
             'completed_at' => $this->completed_at instanceof \Carbon\Carbon ? $this->completed_at->toDateString() : $this->completed_at,
             'created_at'  => $this->created_at?->toIso8601String(),
             'is_trashed'  => $this->deleted_at !== null,

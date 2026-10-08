@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\BulkStoreResponsesRequest;
+use App\Http\Controllers\Api\Concerns\GuardsClosedAssessment;
 use App\Models\Assessment;
 use App\Models\AssessmentQuestion;
 use App\Models\AssessmentQuestionResponse;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class AssessmentResponseController extends Controller {
+
+    use GuardsClosedAssessment;
 
     public function __construct(
             private readonly DynamicScoringService $scoringService
@@ -57,7 +60,9 @@ class AssessmentResponseController extends Controller {
         }
 
         // Per-section answered/total for progress rings
-        $sections = AssessmentSection::active()
+        // Only the sections of the template this assessment was started on
+        $sections = $assessment->templateSections()
+                ->where('is_active', true)
                 ->ordered()
                 ->with(['questions' => fn($q) => $q->active()->ordered()->select('id', 'assessment_section_id', 'question_code')])
                 ->get(['id', 'code']);
@@ -82,18 +87,19 @@ class AssessmentResponseController extends Controller {
     public function bulkStore(BulkStoreResponsesRequest $request, Assessment $assessment): JsonResponse {
         $this->authorize('update', $assessment);
 
-        if ($assessment->status === 'completed') {
-            return response()->json(['message' => 'Completed assessments cannot be modified.'], 403);
+        if ($closed = $this->rejectIfClosed($assessment)) {
+            return $closed;
         }
 
         $sectionCode = $request->input('section_code');
         $responses = $request->input('responses', []);
         $explanations = $request->input('explanations', []);
 
-        $section = AssessmentSection::where('code', $sectionCode)->where('is_active', true)->first();
+        // Codes are only unique per template — resolve within this assessment's own
+        $section = $assessment->templateSections()->where('code', $sectionCode)->where('is_active', true)->first();
 
         if (!$section) {
-            return response()->json(['message' => "Section '{$sectionCode}' not found or inactive."], 422);
+            return response()->json(['message' => "Section '{$sectionCode}' not found or inactive for this assessment's template."], 422);
         }
 
         $questions = AssessmentQuestion::where('assessment_section_id', $section->id)
@@ -168,7 +174,10 @@ class AssessmentResponseController extends Controller {
     public function show(Request $request, Assessment $assessment, string $questionCode): JsonResponse {
         $this->authorize('view', $assessment);
 
-        $question = AssessmentQuestion::where('question_code', $questionCode)->where('is_active', true)->first();
+        $question = AssessmentQuestion::where('question_code', $questionCode)
+                ->whereIn('assessment_section_id', $assessment->templateSections()->select('id'))
+                ->where('is_active', true)
+                ->first();
 
         if (!$question) {
             return response()->json(['message' => "Question '{$questionCode}' not found."], 404);

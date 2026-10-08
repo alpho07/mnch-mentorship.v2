@@ -129,7 +129,12 @@ class DynamicScoringService
      */
     public function recalculateAllSections(int $assessmentId): void
     {
-        $sections = AssessmentSection::active()->scored()->get();
+        // Only this assessment's own template: codes/sections of other
+        // templates must not get score rows or skew the overall percentage.
+        $typeId = Assessment::whereKey($assessmentId)->value('assessment_type_id');
+        $sections = AssessmentSection::active()->scored()
+            ->when($typeId, fn ($q) => $q->where('assessment_type_id', $typeId))
+            ->get();
 
         foreach ($sections as $section) {
             self::recalculateSectionScore($assessmentId, $section->id);
@@ -175,7 +180,9 @@ class DynamicScoringService
     public function getAssessmentSummary(int $assessmentId): array
     {
         $assessment = Assessment::findOrFail($assessmentId);
-        $sections = AssessmentSection::active()->scored()->ordered()->get();
+        $sections = AssessmentSection::active()->scored()->ordered()
+            ->when($assessment->assessment_type_id, fn ($q, $typeId) => $q->where('assessment_type_id', $typeId))
+            ->get();
         $summary = [];
 
         foreach ($sections as $section) {

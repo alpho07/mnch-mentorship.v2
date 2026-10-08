@@ -32,7 +32,8 @@ class ReportController extends Controller {
             'questionResponses.question.section',
         ]);
 
-        $sections = AssessmentSection::active()
+        $sections = $assessment->templateSections()
+                ->where('is_active', true)
                 ->ordered()
                 ->whereNotIn('code', self::EXCLUDED_FROM_REPORT)
                 ->get();
@@ -73,6 +74,11 @@ class ReportController extends Controller {
                         'county' => $assessment->facility->subcounty->county->name ?? null,
                         'subcounty' => $assessment->facility->subcounty->name ?? null,
                         'assessment_type' => $assessment->assessment_type,
+                        'assessment_type_id' => $assessment->assessment_type_id,
+                        'template_name' => $assessment->assessmentType?->name,
+                        'round' => $assessment->round ?: $assessment->assessment_type,
+                        'round_label' => $assessment->round_label,
+                        'is_locked' => (bool) $assessment->is_locked,
                         'assessment_date' => $assessment->assessment_date,
                         'assessor_name' => $assessment->assessor_name,
                         'assessor_contact' => $assessment->assessor_contact,
@@ -206,6 +212,7 @@ class ReportController extends Controller {
     public function dashboard(Request $request): JsonResponse {
         $userId = $request->user()->id;
         $assessments = Assessment::where('assessor_id', $userId)
+                ->when($request->filled('template_id'), fn ($q) => $q->where('assessment_type_id', $request->template_id))
                 ->with('sectionScores.section')
                 ->get();
 
@@ -213,12 +220,13 @@ class ReportController extends Controller {
         $avgScore = $completed->count() ? round($completed->avg('overall_percentage'), 1) : 0;
 
         $sections = AssessmentSection::active()->ordered()
+                ->when($request->filled('template_id'), fn ($q) => $q->where('assessment_type_id', $request->template_id))
                 ->whereNotIn('code', self::EXCLUDED_FROM_REPORT)
                 ->get();
 
         $sectionAvgs = $sections->map(function ($section) use ($completed) {
                     $scores = $completed->flatMap(
-                            fn($a) => $a->sectionScores->where('section.code', $section->code)->pluck('percentage')
+                            fn($a) => $a->sectionScores->where('assessment_section_id', $section->id)->pluck('percentage')
                     );
                     return [
                         'code' => $section->code,
@@ -257,17 +265,19 @@ class ReportController extends Controller {
         $userId = $request->user()->id;
         $completed = Assessment::where('assessor_id', $userId)
                 ->where('status', 'completed')
+                ->when($request->filled('template_id'), fn ($q) => $q->where('assessment_type_id', $request->template_id))
                 ->with('sectionScores.section')
                 ->get();
 
         $sections = AssessmentSection::active()->ordered()
+                ->when($request->filled('template_id'), fn ($q) => $q->where('assessment_type_id', $request->template_id))
                 ->whereNotIn('code', self::EXCLUDED_FROM_REPORT)
                 ->get();
 
         return response()->json([
                     'data' => $sections->map(function ($section) use ($completed) {
                         $scores = $completed->flatMap(
-                                fn($a) => $a->sectionScores->where('section.code', $section->code)->pluck('percentage')
+                                fn($a) => $a->sectionScores->where('assessment_section_id', $section->id)->pluck('percentage')
                         );
                         return [
                             'code' => $section->code,

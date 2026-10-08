@@ -103,6 +103,10 @@ Route::prefix('v1')->name('api.v1.')->middleware(MobileApiCors::class)->group(fu
             Route::get('{section}', [AssessmentSectionController::class, 'show'])->name('show');
         });
 
+        // ── Assessment templates (what can be started + their schemas) ─────────
+        Route::get('assessment-templates', [\App\Http\Controllers\Api\AssessmentTemplateController::class, 'index'])->name('assessment-templates.index');
+        Route::get('assessment-templates/{id}', [\App\Http\Controllers\Api\AssessmentTemplateController::class, 'show'])->whereNumber('id')->name('assessment-templates.show');
+
         // ── Assessments ───────────────────────────────────────────────────────
         Route::prefix('assessments')->name('assessments.')->group(function () {
             Route::get('/', [AssessmentController::class, 'index'])->name('index');
@@ -111,10 +115,13 @@ Route::prefix('v1')->name('api.v1.')->middleware(MobileApiCors::class)->group(fu
             Route::put('{assessment}', [AssessmentController::class, 'update'])->name('update');
             Route::delete('{assessment}', [AssessmentController::class, 'destroy'])->name('destroy');
             Route::post('{assessment}/submit', [AssessmentController::class, 'submit'])->name('submit');
+            Route::post('{assessment}/reopen', [AssessmentController::class, 'reopen'])->name('reopen');
+            Route::get('{assessment}/schema', [\App\Http\Controllers\Api\AssessmentTemplateController::class, 'forAssessment'])->name('schema');
 
             // ── Human Resources ───────────────────────────────────────────────
             Route::get('{assessment}/human-resources', [HumanResourceController::class, 'index'])->name('human-resources.index');
             Route::post('{assessment}/human-resources', [HumanResourceController::class, 'store'])->name('human-resources.store');
+            Route::put('{assessment}/human-resources/cadres', [HumanResourceController::class, 'manageCadres'])->name('human-resources.cadres');
 
             // ── Health Products ───────────────────────────────────────────────
             Route::get('{assessment}/health-products', [HealthProductsController::class, 'index'])->name('health-products.index');
@@ -128,6 +135,8 @@ Route::prefix('v1')->name('api.v1.')->middleware(MobileApiCors::class)->group(fu
             Route::get('{assessment}/team', [AssessmentTeamController::class, 'show'])->name('team.show');
             Route::get('{assessment}/team/eligible', [AssessmentTeamController::class, 'eligible'])->name('team.eligible');
             Route::post('{assessment}/team', [AssessmentTeamController::class, 'store'])->name('team.store');
+            Route::delete('{assessment}/team/{user}', [AssessmentTeamController::class, 'destroy'])->name('team.destroy');
+            Route::put('{assessment}/team/{user}/role', [AssessmentTeamController::class, 'updateRole'])->name('team.role');
 
             // ── Responses ─────────────────────────────────────────────────────
             Route::prefix('{assessment}/responses')->name('responses.')->group(function () {

@@ -43,6 +43,55 @@ class AssessmentTeamController extends Controller {
         ]);
     }
 
+    /**
+     * DELETE /api/v1/assessments/{assessment}/team/{user}
+     * Remove a member. The only team lead can't be removed (transfer lead first).
+     */
+    public function destroy(Request $request, Assessment $assessment, \App\Models\User $user, AssessmentTeamService $teamService): JsonResponse {
+        abort_unless($assessment->canManageTeam($request->user()->id), 403);
+
+        if (! $assessment->isTeamMember($user->id)) {
+            return response()->json(['message' => 'That user is not on this assessment team.'], 404);
+        }
+
+        try {
+            $teamService->removeMember($assessment, $user->id, $request->user()->id);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'message' => 'Team member removed.',
+            ...$this->teamPayload($assessment->fresh(), $teamService, $request->user()->id),
+        ]);
+    }
+
+    /**
+     * PUT /api/v1/assessments/{assessment}/team/{user}/role
+     * Body: { "role": "team_lead" | "member" }
+     *
+     * team_lead = transfer the lead role to this member (current lead becomes
+     * a member). member = demote a lead (administrators only, needs another lead).
+     */
+    public function updateRole(Request $request, Assessment $assessment, \App\Models\User $user, AssessmentTeamService $teamService): JsonResponse {
+        abort_unless($assessment->canManageTeam($request->user()->id), 403);
+
+        $data = $request->validate(['role' => ['required', 'in:team_lead,member']]);
+
+        try {
+            $data['role'] === 'team_lead'
+                ? $teamService->promoteToTeamLead($assessment, $user->id, $request->user()->id)
+                : $teamService->demoteToMember($assessment, $user->id, $request->user()->id);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'message' => $data['role'] === 'team_lead' ? "{$user->name} is now the team lead." : "{$user->name} is now a team member.",
+            ...$this->teamPayload($assessment->fresh(), $teamService, $request->user()->id),
+        ]);
+    }
+
     private function teamPayload(Assessment $assessment, AssessmentTeamService $teamService, int $userId): array {
         $members = $teamService->getTeamForDisplay($assessment)->map(fn ($member) => [
             'id' => $member->id,
@@ -60,6 +109,8 @@ class AssessmentTeamController extends Controller {
             ],
             'team_members' => $members->where('role', 'member')->values(),
             'can_manage_team' => $assessment->canManageTeam($userId),
+            'is_locked' => (bool) $assessment->is_locked,
+            'status' => $assessment->status,
         ];
     }
 }

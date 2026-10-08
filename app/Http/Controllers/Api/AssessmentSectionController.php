@@ -50,7 +50,20 @@ class AssessmentSectionController extends Controller {
      * Excludes facility_profile and bed_capacity — these are informational
      * sections not part of the scored assessment form.
      */
-    public function fullSchema(): JsonResponse {
+    public function fullSchema(\Illuminate\Http\Request $request, \App\Services\AssessmentSchemaService $schemas): JsonResponse {
+        // Template-aware: ?assessment_type_id=N returns just that template's
+        // schema (any template, including retired ones). Without it the legacy
+        // all-sections response is kept for older app builds.
+        if ($request->filled('assessment_type_id')) {
+            $type = \App\Models\AssessmentType::withTrashed()->findOrFail($request->assessment_type_id);
+
+            return response()->json([
+                'template' => $schemas->templateSummary($type),
+                'data' => $schemas->forTemplate($type),
+                'generated' => now()->toIso8601String(),
+            ]);
+        }
+
         $schema = Cache::remember('api.sections.full_schema', now()->addHours(12), function () {
             $sections = AssessmentSection::active()
                     ->ordered()

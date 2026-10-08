@@ -114,9 +114,34 @@ class Assessment extends Model
         return $this->belongsTo(Facility::class);
     }
 
+    /**
+     * withTrashed: an assessment must keep resolving its template (and so its
+     * sections, questions and progress) even after that template is retired
+     * or soft-deleted — previous templates must never orphan their assessments.
+     */
     public function assessmentType(): BelongsTo
     {
-        return $this->belongsTo(AssessmentType::class);
+        return $this->belongsTo(AssessmentType::class)->withTrashed();
+    }
+
+    /**
+     * Sections belonging to THIS assessment's template. Section/question codes
+     * are only unique per template, so anything looking sections up by code
+     * must go through here. Legacy rows with no template fall back to all
+     * sections (the pre-template behaviour).
+     */
+    public function templateSections(): \Illuminate\Database\Eloquent\Builder
+    {
+        return AssessmentSection::query()
+            ->when($this->assessment_type_id, fn ($q, $typeId) => $q->where('assessment_type_id', $typeId));
+    }
+
+    /**
+     * Open = can still be edited: not completed and not locked.
+     */
+    public function isOpenForEditing(): bool
+    {
+        return $this->status !== 'completed' && ! $this->is_locked;
     }
 
     public function assessor(): BelongsTo

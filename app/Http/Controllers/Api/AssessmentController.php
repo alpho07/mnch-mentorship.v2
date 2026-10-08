@@ -8,12 +8,19 @@ use App\Http\Requests\Api\UpdateAssessmentRequest;
 use App\Http\Resources\Api\AssessmentResource;
 use App\Models\Assessment;
 use App\Models\AssessmentSection;
+use App\Models\AssessmentType;
+use App\Services\AssessmentSchemaService;
+use App\Services\AssessmentTeamService;
+use App\Services\CommodityMatrixProgressService;
+use App\Http\Controllers\Api\Concerns\GuardsClosedAssessment;
 use App\Services\DynamicScoringService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AssessmentController extends Controller {
+
+    use GuardsClosedAssessment;
 
     public function __construct(
             private readonly DynamicScoringService $scoringService
@@ -34,6 +41,7 @@ class AssessmentController extends Controller {
                     'facility.subcounty.county',
                     'sectionScores.section',
                     'teamMembers',
+                    'assessmentType',
                 ])
                 ->latest();
 
@@ -67,6 +75,14 @@ class AssessmentController extends Controller {
             $query->where('assessment_type', $request->type);
         }
 
+        if ($request->filled('template_id')) {
+            $query->where('assessment_type_id', $request->template_id);
+        }
+
+        if ($request->filled('round')) {
+            $query->where('round', $request->round);
+        }
+
         // Delta sync: return all records updated after the given timestamp (no pagination)
         if ($request->filled('since')) {
             $since = \Carbon\Carbon::parse($request->since);
@@ -98,48 +114,69 @@ class AssessmentController extends Controller {
     /**
      * POST /api/v1/assessments
      *
-     * Creates a new assessment (Step 1: Facility & Assessor only).
-     * Returns the assessment with its generated ID so the mobile app
-     * can immediately start saving responses section by section.
+     * Creates an assessment on a chosen template + round, mirroring the web
+     * create form. Returns the assessment so the app can start saving
+     * responses section by section.
+     *
+     * Legacy clients (no assessment_type_id) get the default template and
+     * their `assessment_type` value is used as the round.
      */
-    public function store(StoreAssessmentRequest $request): JsonResponse {
+    public function store(StoreAssessmentRequest $request, AssessmentSchemaService $schemas, AssessmentTeamService $teamService): JsonResponse {
         $user = $request->user();
 
-        // Ensure no duplicate in-progress assessment for same facility + type
-        $existing = Assessment::where('facility_id', $request->facility_id)
-                ->where('assessment_type', $request->assessment_type)
-                ->where('assessor_id', $user->id)
-                ->where('status', 'in_progress')
-                ->first();
+        $template = $request->filled('assessment_type_id')
+            ? AssessmentType::active()->find($request->assessment_type_id)
+            : $schemas->defaultTemplate();
 
-        if ($existing) {
+        if (! $template) {
             return response()->json([
-                        'message' => 'You already have an in-progress assessment for this facility and type.',
-                        'assessment' => new AssessmentResource($existing->load(['facility.subcounty.county', 'sectionScores.section'])),
-                            ], 409);
+                'message' => 'The selected assessment template is not available.',
+                'errors' => ['assessment_type_id' => ['The selected assessment template is not available.']],
+            ], 422);
         }
 
-        // Build initial section_progress from all active sections
-        $sectionProgress = AssessmentSection::active()
-                ->ordered()
-                ->pluck('code')
-                ->mapWithKeys(fn($code) => [$code => false])
-                ->toArray();
+        $round = $request->input('round') ?? $request->input('assessment_type') ?? 'baseline';
+        $roundLabel = $round === 'other' ? $request->input('round_label') : null;
+
+        // One assessment per facility, per template, per round ("other"
+        // rounds are told apart by label) — same rule as the web form.
+        $existing = $this->findDuplicate($request->facility_id, $template->id, $round, $roundLabel);
+
+        if ($existing) {
+            $payload = ['message' => 'An assessment for this facility, template and round already exists.'];
+
+            if ($this->canSee($user, $existing)) {
+                $payload['assessment'] = new AssessmentResource(
+                    $existing->load(['facility.subcounty.county', 'sectionScores.section', 'teamMembers', 'assessmentType'])
+                );
+            }
+
+            return response()->json($payload, 409);
+        }
 
         $assessment = Assessment::create([
             'facility_id' => $request->facility_id,
-            'assessment_type' => $request->assessment_type,
+            'assessment_type_id' => $template->id,
+            // Legacy enum column only knows baseline/midline/endline.
+            'assessment_type' => in_array($round, ['baseline', 'midline', 'endline'], true) ? $round : 'baseline',
+            'round' => $round,
+            'round_label' => $roundLabel,
             'assessment_date' => $request->assessment_date,
             'assessor_id' => $user->id,
             'assessor_name' => $user->name,
             'assessor_contact' => $user->email,
+            'created_by' => $user->id,
             'status' => 'in_progress',
-            'section_progress' => $sectionProgress,
+            'section_progress' => $this->initialProgress($template),
         ]);
+
+        if ($request->filled('member_ids')) {
+            $teamService->addMembers($assessment, $request->input('member_ids'), $user->id);
+        }
 
         return response()->json([
                     'message' => 'Assessment created. Continue by submitting responses for each section.',
-                    'assessment' => new AssessmentResource($assessment->load(['facility.subcounty.county', 'teamMembers'])),
+                    'assessment' => new AssessmentResource($assessment->load(['facility.subcounty.county', 'teamMembers', 'assessmentType'])),
                         ], 201);
     }
 
@@ -154,6 +191,7 @@ class AssessmentController extends Controller {
             'sectionScores.section',
             'questionResponses.question.section',
             'teamMembers',
+            'assessmentType',
         ]);
 
         return response()->json([
@@ -164,33 +202,73 @@ class AssessmentController extends Controller {
     /**
      * PUT /api/v1/assessments/{assessment}
      *
-     * Updates editable header fields (date, type).
-     * Responses are updated via the /responses endpoint.
+     * Updates header fields (date, round). The template can only be changed
+     * while the assessment has no answers yet — otherwise saved responses
+     * would no longer match the template's questions.
      */
     public function update(UpdateAssessmentRequest $request, Assessment $assessment): JsonResponse {
         $this->authorize('update', $assessment);
 
-        if ($assessment->status === 'completed') {
-            return response()->json(['message' => 'Completed assessments cannot be modified.'], 403);
+        if ($closed = $this->rejectIfClosed($assessment)) {
+            return $closed;
         }
 
-        $assessment->update($request->validated());
+        $data = $request->validated();
+
+        if (isset($data['assessment_type_id']) && (int) $data['assessment_type_id'] !== (int) $assessment->assessment_type_id) {
+            if ($this->hasAnswers($assessment)) {
+                return response()->json([
+                    'message' => 'The template cannot be changed once responses have been saved.',
+                    'errors' => ['assessment_type_id' => ['The template cannot be changed once responses have been saved.']],
+                ], 422);
+            }
+
+            $template = AssessmentType::active()->find($data['assessment_type_id']);
+
+            if (! $template) {
+                return response()->json(['message' => 'The selected assessment template is not available.'], 422);
+            }
+
+            $data['section_progress'] = $this->initialProgress($template);
+        }
+
+        // Legacy `assessment_type` doubles as the round for older clients.
+        if (! isset($data['round']) && isset($data['assessment_type'])) {
+            $data['round'] = $data['assessment_type'];
+        }
+
+        if (isset($data['round'])) {
+            $data['assessment_type'] = in_array($data['round'], ['baseline', 'midline', 'endline'], true) ? $data['round'] : 'baseline';
+            $data['round_label'] = $data['round'] === 'other' ? ($data['round_label'] ?? $assessment->round_label) : null;
+        }
+
+        $templateId = (int) ($data['assessment_type_id'] ?? $assessment->assessment_type_id);
+        $round = $data['round'] ?? $assessment->round;
+        $label = $round === 'other' ? ($data['round_label'] ?? $assessment->round_label) : null;
+
+        if ($round && $this->findDuplicate($assessment->facility_id, $templateId, $round, $label, $assessment->id)) {
+            return response()->json([
+                'message' => 'An assessment for this facility, template and round already exists.',
+            ], 409);
+        }
+
+        $assessment->update($data);
 
         return response()->json([
                     'message' => 'Assessment updated.',
-                    'assessment' => new AssessmentResource($assessment->fresh(['facility.subcounty.county', 'teamMembers'])),
+                    'assessment' => new AssessmentResource($assessment->fresh(['facility.subcounty.county', 'teamMembers', 'assessmentType'])),
         ]);
     }
 
     /**
      * DELETE /api/v1/assessments/{assessment}
      *
-     * Soft-deletes a draft/in-progress assessment.
+     * Soft-deletes an open (draft/in-progress, unlocked) assessment.
      */
     public function destroy(Request $request, Assessment $assessment): JsonResponse {
         $this->authorize('delete', $assessment);
 
-        if ($assessment->status === 'completed') {
+        if ($assessment->status === 'completed' || $assessment->is_locked) {
             return response()->json(['message' => 'Completed assessments cannot be deleted.'], 403);
         }
 
@@ -202,47 +280,76 @@ class AssessmentController extends Controller {
     /**
      * POST /api/v1/assessments/{assessment}/submit
      *
-     * Finalises the assessment:
-     * 1. Validates all required sections are complete
-     * 2. Runs scoring across all sections
-     * 3. Sets status → completed
+     * Closes the assessment — same as the web "Mark as Complete":
+     * 1. Every real section of the assessment's own template must be done
+     * 2. Scores the template's sections
+     * 3. Sets status → completed AND locks it (read-only until reopened)
      */
-    public function submit(Request $request, Assessment $assessment): JsonResponse {
+    public function submit(Request $request, Assessment $assessment, CommodityMatrixProgressService $matrixProgress): JsonResponse {
         $this->authorize('update', $assessment);
 
-        if ($assessment->status === 'completed') {
+        if ($assessment->status === 'completed' || $assessment->is_locked) {
             return response()->json(['message' => 'Assessment already submitted.'], 409);
         }
 
-        // Check all sections are marked done
-        $progress = $assessment->section_progress ?? [];
-        $incomplete = collect($progress)->filter(fn($done) => $done === false)->keys()->values();
+        // Refresh derived (commodity matrix) flags before the gate reads
+        // them — same as the web dashboard does.
+        $matrixProgress->sync($assessment);
+        $assessment->refresh();
 
-        if ($incomplete->isNotEmpty()) {
+        if (! $assessment->allSectionsComplete()) {
             return response()->json([
                         'message' => 'Cannot submit. Some sections are incomplete.',
-                        'incomplete_sections' => $incomplete,
+                        'incomplete_sections' => $this->incompleteSections($assessment),
                             ], 422);
         }
 
-        DB::transaction(function () use ($assessment) {
-            // Run full scoring
+        DB::transaction(function () use ($assessment, $request) {
+            // Score only this assessment's own template
             $this->scoringService->recalculateAllSections($assessment->id);
 
-            // Reload to get fresh scores
             $assessment->refresh();
 
             $assessment->update([
                 'status' => 'completed',
                 'completed_at' => now(),
-                'completed_by' => request()->user()->id,
+                'completed_by' => $request->user()->id,
             ]);
+            $assessment->lock($request->user()->id);
         });
 
         return response()->json([
                     'message' => 'Assessment submitted successfully.',
                     'assessment' => new AssessmentResource(
-                            $assessment->fresh(['facility.subcounty.county', 'sectionScores.section', 'teamMembers'])
+                            $assessment->fresh(['facility.subcounty.county', 'sectionScores.section', 'teamMembers', 'assessmentType'])
+                    ),
+        ]);
+    }
+
+    /**
+     * POST /api/v1/assessments/{assessment}/reopen
+     *
+     * Reopens a closed assessment for editing. Admin / super_admin only —
+     * the same rule as the web "Reopen" action.
+     */
+    public function reopen(Request $request, Assessment $assessment): JsonResponse {
+        $this->authorize('view', $assessment);
+
+        if (! $request->user()->hasRole(['admin', 'super_admin'])) {
+            return response()->json(['message' => 'Only an administrator can reopen a completed assessment.'], 403);
+        }
+
+        if ($assessment->status !== 'completed' && ! $assessment->is_locked) {
+            return response()->json(['message' => 'This assessment is not closed.'], 409);
+        }
+
+        $assessment->update(['status' => 'in_progress']);
+        $assessment->unlock();
+
+        return response()->json([
+                    'message' => 'Assessment reopened.',
+                    'assessment' => new AssessmentResource(
+                            $assessment->fresh(['facility.subcounty.county', 'sectionScores.section', 'teamMembers', 'assessmentType'])
                     ),
         ]);
     }
@@ -250,13 +357,23 @@ class AssessmentController extends Controller {
     /**
      * PUT /api/v1/assessments/{assessment}/sections/{sectionCode}/progress
      *
-     * Marks a section as done/undone.
-     * Called by the mobile app after saving a section's responses.
+     * Marks a section as done/undone. The code is resolved against the
+     * assessment's own template (codes are only unique per template).
      */
     public function updateSectionProgress(Request $request, Assessment $assessment, string $sectionCode): JsonResponse {
         $this->authorize('update', $assessment);
 
+        if ($closed = $this->rejectIfClosed($assessment)) {
+            return $closed;
+        }
+
         $request->validate(['done' => 'required|boolean']);
+
+        $section = $assessment->templateSections()->where('code', $sectionCode)->first();
+
+        if (! $section) {
+            return response()->json(['message' => "Section '{$sectionCode}' does not belong to this assessment's template."], 422);
+        }
 
         $progress = $assessment->section_progress ?? [];
         $progress[$sectionCode] = $request->boolean('done');
@@ -267,5 +384,50 @@ class AssessmentController extends Controller {
                     'message' => 'Section progress updated.',
                     'section_progress' => $progress,
         ]);
+    }
+
+    // ------------------------------------------------------------------
+
+    /** Progress map for a template: its real (non-informational) active sections, all pending. */
+    private function initialProgress(AssessmentType $template): array {
+        return $template->sections()->active()->ordered()->get()
+            ->filter(fn (AssessmentSection $s) => $s->resolvedKind() !== 'informational')
+            ->mapWithKeys(fn (AssessmentSection $s) => [$s->code => false])
+            ->all();
+    }
+
+    private function findDuplicate(int $facilityId, int $templateId, string $round, ?string $label, ?int $exceptId = null): ?Assessment {
+        return Assessment::where('facility_id', $facilityId)
+            ->where('assessment_type_id', $templateId)
+            ->where('round', $round)
+            ->when($round === 'other', fn ($q) => $q->where('round_label', $label))
+            ->when($exceptId, fn ($q) => $q->where('id', '!=', $exceptId))
+            ->first();
+    }
+
+    private function canSee($user, Assessment $assessment): bool {
+        return $user->hasRole(['admin', 'super_admin'])
+            || $user->isAboveSite()
+            || $assessment->assessor_id === $user->id
+            || $assessment->created_by === $user->id
+            || $assessment->isTeamMember($user->id);
+    }
+
+    private function hasAnswers(Assessment $assessment): bool {
+        return $assessment->questionResponses()->exists()
+            || $assessment->humanResourceResponses()->exists()
+            || $assessment->commodityResponses()->exists();
+    }
+
+    /** Real sections of the template that are not yet marked done. */
+    private function incompleteSections(Assessment $assessment): array {
+        $progress = $assessment->section_progress ?? [];
+
+        return $assessment->templateSections()->active()->ordered()->get()
+            ->filter(fn (AssessmentSection $s) => $s->resolvedKind() !== 'informational')
+            ->reject(fn (AssessmentSection $s) => ($progress[$s->code] ?? false) === true)
+            ->pluck('code')
+            ->values()
+            ->all();
     }
 }
