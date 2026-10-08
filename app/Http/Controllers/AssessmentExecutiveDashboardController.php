@@ -34,12 +34,12 @@ class AssessmentExecutiveDashboardController extends Controller
         $data = $this->buildDashboardData($assessment);
         $data['isPdf'] = true;
 
-        $pdf = Pdf::loadView('analytics.assessment-executive.dashboard', $data)
+        $pdf = Pdf::loadView('pdf.assessment-executive-dashboard', $data)
             ->setPaper('a4', 'portrait')
             ->setOptions([
                 'isHtml5ParserEnabled' => true,
                 'isRemoteEnabled' => true,
-                'defaultFont' => 'sans-serif',
+                'defaultFont' => 'DejaVu Sans',
             ]);
 
         $filename = 'executive-assessment-'.$assessment->id.'-'.now()->format('Ymd').'.pdf';
@@ -94,6 +94,10 @@ class AssessmentExecutiveDashboardController extends Controller
                 if ($ss->total_questions === self::JUNK_COUNT_SENTINEL || $ss->answered_questions === self::JUNK_COUNT_SENTINEL) {
                     $ss->total_questions = null;
                     $ss->answered_questions = null;
+                }
+
+                if ($ss->code === 'quality_of_care') {
+                    $ss->name = 'Quality of Care (Death Audits)';
                 }
 
                 return $ss;

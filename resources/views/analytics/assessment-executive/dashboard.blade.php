@@ -278,12 +278,9 @@ body {
 {{-- ── Toolbar ──────────────────────────────────────────────────────── --}}
 <div class="toolbar no-print" style="margin-top:1.25rem;">
     <a href="{{ url()->previous() }}" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> Back</a>
-    {{-- Temporarily hidden: change @if(false) to @if(true) to restore --}}
-    @if(false)
     <a href="{{ route('assessment.executive.export', $assessment) }}" class="btn btn-teal" target="_blank">
         <i class="fas fa-file-pdf"></i> Export PDF
     </a>
-    @endif
     <a href="/admin/assessments/{{ $assessment->id }}/summary" class="btn btn-outline" target="_blank">
         <i class="fas fa-file-alt"></i> Full Report
     </a>
@@ -344,7 +341,7 @@ body {
     @foreach($sectionScores as $code => $ss)
     <div class="score-strip-card {{ $stripClass($ss->grade) }}">
         <div class="score-strip-pct" style="color:{{ $scoreColor($ss->grade) }}">{{ number_format($ss->percentage, 1) }}%</div>
-        <div class="score-strip-name">{{ Str::limit($ss->name, 28) }}</div>
+        <div class="score-strip-name">{{ Str::limit($ss->name, 32) }}</div>
     </div>
     @endforeach
     @if($sectionScores->isEmpty())
