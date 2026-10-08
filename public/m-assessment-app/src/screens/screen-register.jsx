@@ -50,11 +50,22 @@ export function RegisterScreen({ onRegistered, onBack, onGoToForgotPassword }) {
     const [saving, setSaving]           = useState(false);
     const [done, setDone]               = useState(false);
 
-    useEffect(() => {
-        api.registerLookups.cadres().then(d => setCadres(Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [])).catch(() => {});
-        api.registerLookups.departments().then(d => setDeptments(Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [])).catch(() => {});
-        api.registerLookups.counties().then(d => setCounties(Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [])).catch(() => {});
-    }, []);
+    // Names of lookups that failed to load, so the UI can say so and offer a retry
+    // instead of showing empty dropdowns with no explanation.
+    const [lookupFailed, setLookupFailed] = useState([]);
+
+    const loadLookups = () => {
+        setLookupFailed([]);
+        const toList = d => Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
+        const load = (name, call, set) => call()
+            .then(d => set(toList(d)))
+            .catch(() => setLookupFailed(prev => [...prev, name]));
+        load("cadres", api.registerLookups.cadres, setCadres);
+        load("departments", api.registerLookups.departments, setDeptments);
+        load("counties", api.registerLookups.counties, setCounties);
+    };
+
+    useEffect(() => { loadLookups(); }, []);
 
     useEffect(() => {
         if (!countyId) { setFacilities([]); setFacilityId(""); return; }
@@ -293,6 +304,18 @@ export function RegisterScreen({ onRegistered, onBack, onGoToForgotPassword }) {
                                 This phone number is already registered to another account. Please contact your system administrator to update the account.
                             </div>
                         )}
+                    </div>
+                )}
+
+                {lookupFailed.length > 0 && (
+                    <div role="alert" style={{ background: "#FEF2F2", border: "1px solid #FECACA", color: "#B91C1C",
+                        borderRadius: 12, padding: "10px 12px", fontSize: 13, marginBottom: 14,
+                        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                        <span>Couldn't load {lookupFailed.join(", ")}. Check your connection.</span>
+                        <button type="button" onClick={loadLookups} style={{ background: "none", border: "none",
+                            color: "#B91C1C", fontWeight: 700, fontSize: 13, cursor: "pointer", textDecoration: "underline" }}>
+                            Retry
+                        </button>
                     </div>
                 )}
 
