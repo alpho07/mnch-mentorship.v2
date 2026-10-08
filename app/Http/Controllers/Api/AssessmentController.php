@@ -329,14 +329,14 @@ class AssessmentController extends Controller {
     /**
      * POST /api/v1/assessments/{assessment}/reopen
      *
-     * Reopens a closed assessment for editing. Admin / super_admin only —
-     * the same rule as the web "Reopen" action.
+     * Reopens a closed assessment for editing. Allowed for the assessment's
+     * team lead and for administrators (Assessment::canToggleLock).
      */
     public function reopen(Request $request, Assessment $assessment): JsonResponse {
         $this->authorize('view', $assessment);
 
-        if (! $request->user()->hasRole(['admin', 'super_admin'])) {
-            return response()->json(['message' => 'Only an administrator can reopen a completed assessment.'], 403);
+        if (! $assessment->canToggleLock($request->user()->id)) {
+            return response()->json(['message' => 'Only the team lead or an administrator can reopen this assessment.'], 403);
         }
 
         if ($assessment->status !== 'completed' && ! $assessment->is_locked) {

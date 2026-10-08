@@ -274,7 +274,7 @@ class ListAssessments extends ListRecords
                             && $record->allSectionsComplete())
                         ->requiresConfirmation()
                         ->modalHeading('Mark Assessment as Complete')
-                        ->modalDescription('This will lock the assessment. It cannot be edited further, even by the team lead — only an admin can reopen it.')
+                        ->modalDescription('This will lock the assessment. It cannot be edited further, even by the team lead — only the team lead or an admin can reopen it.')
                         ->modalSubmitActionLabel('Mark as Complete')
                         ->action(function ($record): void {
                             $record->update([
@@ -296,7 +296,7 @@ class ListAssessments extends ListRecords
                         ->icon('heroicon-o-lock-open')
                         ->color('danger')
                         ->visible(fn ($record) => $record->status === 'completed'
-                            && auth()->user()?->hasRole(['admin', 'super_admin']))
+                            && $record->canToggleLock(auth()->id()))
                         ->requiresConfirmation()
                         ->modalHeading('Reopen Assessment')
                         ->modalDescription('This unlocks the assessment so it can be edited again.')

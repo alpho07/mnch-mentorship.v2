@@ -26,7 +26,7 @@ class ViewAssessmentSummary extends ViewRecord {
                         && $this->record->allSectionsComplete())
                     ->requiresConfirmation()
                     ->modalHeading('Mark Assessment as Complete')
-                    ->modalDescription('This will lock the assessment. It cannot be edited further, even by the team lead — only an admin can reopen it.')
+                    ->modalDescription('This will lock the assessment. It cannot be edited further, even by the team lead — only the team lead or an admin can reopen it.')
                     ->modalSubmitActionLabel('Mark as Complete')
                     ->action(function () {
                         $this->record->update([
@@ -46,7 +46,7 @@ class ViewAssessmentSummary extends ViewRecord {
                     ->icon('heroicon-o-lock-open')
                     ->color('danger')
                     ->visible(fn() => $this->record->status === 'completed'
-                        && auth()->user()?->hasRole(['admin', 'super_admin']))
+                        && $this->record->canToggleLock(auth()->id()))
                     ->requiresConfirmation()
                     ->modalHeading('Reopen Assessment')
                     ->modalDescription('This unlocks the assessment so it can be edited again.')

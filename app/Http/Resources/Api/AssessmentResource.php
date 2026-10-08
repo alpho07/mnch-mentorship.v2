@@ -44,7 +44,7 @@ class AssessmentResource extends JsonResource {
             'locked_at' => $this->locked_at?->toIso8601String(),
             'can_edit' => $this->isOpenForEditing(),
             'can_reopen' => $this->when($request->user(), fn () => ($this->status === 'completed' || $this->is_locked)
-                && $request->user()->hasRole(['admin', 'super_admin'])),
+                && $this->canToggleLock($request->user()->id)),
             'completed_at' => $this->completed_at instanceof \Carbon\Carbon ? $this->completed_at->toDateString() : $this->completed_at,
             'created_at'  => $this->created_at?->toIso8601String(),
             'is_trashed'  => $this->deleted_at !== null,

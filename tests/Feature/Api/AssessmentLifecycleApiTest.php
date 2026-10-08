@@ -252,13 +252,14 @@ class AssessmentLifecycleApiTest extends TestCase
         $this->as($this->assessor)->postJson("/api/v1/assessments/{$assessment->id}/submit")->assertStatus(409);
     }
 
-    public function test_only_an_admin_can_reopen_and_editing_resumes(): void
+    public function test_only_the_lead_or_an_admin_can_reopen_and_editing_resumes(): void
     {
         $assessment = $this->readyToSubmit();
         $this->as($this->assessor)->putJson("/api/v1/assessments/{$assessment->id}/sections/infrastructure/progress", ['done' => true]);
         $this->as($this->assessor)->postJson("/api/v1/assessments/{$assessment->id}/submit")->assertOk();
 
-        $this->as($this->assessor)->postJson("/api/v1/assessments/{$assessment->id}/reopen")->assertStatus(403);
+        // A user who isn't on the team can't reopen; the lead (and admins) can.
+        $this->as($this->user('assessor'))->postJson("/api/v1/assessments/{$assessment->id}/reopen")->assertStatus(403);
 
         $admin = $this->user('admin');
         $this->as($admin)->postJson("/api/v1/assessments/{$assessment->id}/reopen")
@@ -275,13 +276,24 @@ class AssessmentLifecycleApiTest extends TestCase
         $this->as($admin)->postJson("/api/v1/assessments/{$assessment->id}/reopen")->assertStatus(409);
     }
 
-    public function test_can_reopen_flag_is_only_true_for_admins_on_closed_assessments(): void
+    public function test_team_lead_can_reopen_their_assessment(): void
     {
         $assessment = $this->readyToSubmit();
         $this->as($this->assessor)->putJson("/api/v1/assessments/{$assessment->id}/sections/infrastructure/progress", ['done' => true]);
         $this->as($this->assessor)->postJson("/api/v1/assessments/{$assessment->id}/submit")->assertOk();
 
-        $this->as($this->assessor)->getJson("/api/v1/assessments/{$assessment->id}")->assertJsonPath('data.can_reopen', false);
+        $this->as($this->assessor)->postJson("/api/v1/assessments/{$assessment->id}/reopen")
+            ->assertOk()->assertJsonPath('assessment.can_edit', true);
+    }
+
+    public function test_can_reopen_flag_is_true_for_the_lead_and_admins_but_not_outsiders(): void
+    {
+        $assessment = $this->readyToSubmit();
+        $this->as($this->assessor)->putJson("/api/v1/assessments/{$assessment->id}/sections/infrastructure/progress", ['done' => true]);
+        $this->as($this->assessor)->postJson("/api/v1/assessments/{$assessment->id}/submit")->assertOk();
+
+        $this->as($this->assessor)->getJson("/api/v1/assessments/{$assessment->id}")->assertJsonPath('data.can_reopen', true);
+        $this->as($this->user('assessor'))->getJson("/api/v1/assessments/{$assessment->id}")->assertJsonPath('data.can_reopen', false);
         $this->as($this->user('admin'))->getJson("/api/v1/assessments/{$assessment->id}")->assertJsonPath('data.can_reopen', true);
     }
 

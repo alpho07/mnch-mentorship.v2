@@ -204,7 +204,7 @@ class EditHealthProducts extends EditRecord
         if ($this->record->is_locked && ! auth()->user()?->hasRole(['admin', 'super_admin'])) {
             Notification::make()
                 ->title('Assessment is locked')
-                ->body('This assessment has been marked complete and locked. Only an admin can reopen it.')
+                ->body('This assessment has been marked complete and locked. Only the team lead or an admin can reopen it.')
                 ->warning()
                 ->send();
 

@@ -235,7 +235,7 @@ class AssessmentDashboard extends Page
         Notification::make()
             ->success()
             ->title('Assessment submitted')
-            ->body('Assessment successfully completed and locked. Only an admin can reopen it.')
+            ->body('Assessment successfully completed and locked. Only the team lead or an admin can reopen it.')
             ->send();
 
         return redirect(AssessmentResource::getUrl());
