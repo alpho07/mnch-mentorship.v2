@@ -16,10 +16,22 @@ class RegisterApiTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // In-memory test DB: assessment_cadres.assessment_type_id has an FK to assessment_types.
+        foreach ([1, 2] as $id) {
+            \DB::table('assessment_types')->insertOrIgnore([
+                'id' => $id, 'name' => "Type {$id}", 'code' => "T{$id}",
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+    }
+
     private function payload(array $override = []): array
     {
         $facility = Facility::factory()->create();
-        $cadre = MainCadre::firstOrCreate(['name' => 'Nurse'], ['is_active' => true, 'order' => 1]);
+        $cadre = MainCadre::firstOrCreate(['name' => 'Nurse'], ['is_active' => true, 'order' => 1, 'assessment_type_id' => 2]);
         $dept = Department::firstOrCreate(['name' => 'Maternity']);
 
         return array_merge([
@@ -38,8 +50,9 @@ class RegisterApiTest extends TestCase
 
     public function test_cadres_and_departments_are_public_and_populated(): void
     {
-        MainCadre::create(['name' => 'Nurse', 'is_active' => true, 'order' => 1]);
-        MainCadre::create(['name' => 'Retired', 'is_active' => false, 'order' => 2]);
+        MainCadre::create(['name' => 'Nurse', 'is_active' => true, 'order' => 1, 'assessment_type_id' => 2]);
+        MainCadre::create(['name' => 'Retired', 'is_active' => false, 'order' => 2, 'assessment_type_id' => 2]);
+        MainCadre::create(['name' => 'Type One', 'is_active' => true, 'order' => 3, 'assessment_type_id' => 1]);
         Department::create(['name' => 'Maternity']);
 
         $this->getJson('/api/v1/register-lookups/cadres')
@@ -110,5 +123,14 @@ class RegisterApiTest extends TestCase
             'email' => 'new@example.com', 'phone' => '0711111111',
             'county_id' => $other->subcounty->county_id,
         ]))->assertStatus(422)->assertJsonValidationErrors(['facility_id']);
+    }
+
+    public function test_register_rejects_cadre_outside_assessment_type_2(): void
+    {
+        Role::firstOrCreate(['name' => 'mentee', 'guard_name' => 'web']);
+        $typeOne = MainCadre::create(['name' => 'Type One', 'is_active' => true, 'order' => 3, 'assessment_type_id' => 1]);
+
+        $this->postJson('/api/v1/auth/register', $this->payload(['cadre_id' => $typeOne->id]))
+            ->assertStatus(422)->assertJsonValidationErrors(['cadre_id']);
     }
 }

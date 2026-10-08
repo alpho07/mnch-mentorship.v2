@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 /**
  * Public (unauthenticated) self-registration for the mobile app.
@@ -23,9 +24,13 @@ use Illuminate\Support\Str;
  */
 class RegisterController extends Controller
 {
+    /** Cadres offered at sign-up: active ones of assessment type 2 only. */
+    private const CADRE_ASSESSMENT_TYPE_ID = 2;
+
     public function cadres(): JsonResponse
     {
         $cadres = MainCadre::where('is_active', true)
+            ->where('assessment_type_id', self::CADRE_ASSESSMENT_TYPE_ID)
             ->orderBy('order')
             ->get(['id', 'name']);
 
@@ -80,7 +85,9 @@ class RegisterController extends Controller
             'last_name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:50', 'unique:users,phone'],
-            'cadre_id' => ['required', 'integer', 'exists:'.(new MainCadre)->getTable().',id'],
+            'cadre_id' => ['required', 'integer', Rule::exists((new MainCadre)->getTable(), 'id')
+                ->where('is_active', true)
+                ->where('assessment_type_id', self::CADRE_ASSESSMENT_TYPE_ID)],
             'department_id' => ['required', 'integer', 'exists:departments,id'],
             'role' => ['required', 'in:mentee,facility_mentor'],
             'county_id' => ['required', 'integer', 'exists:counties,id'],
