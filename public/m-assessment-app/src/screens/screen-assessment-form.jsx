@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { T, calcGrade, isQuestionVisible, getSectionCompletion, GRADE_COLOR, GRADE_BG } from "../constants.js";
+import { T, calcGrade, isQuestionVisible, getSectionCompletion, sectionKind, GRADE_COLOR, GRADE_BG } from "../constants.js";
 import { BackButton, ProgressBar } from "../components/shared-components.jsx";
 import { SectionIcon } from "../components/section-icons.jsx";
 import { QuestionCard, MortalityThreeMonthInput } from "../components/question-inputs.jsx";
@@ -9,9 +9,11 @@ import { HealthProductsScreen } from "./screen-health-products.jsx";
 import api from "../services/api.service.js";
 import offlineStore from "../services/offline-store.js";
 
+// Keyed by section KIND (not code): each template names its sections differently,
+// e.g. template 2's commodity matrix is "department_health_products".
 const SPECIAL_SECTIONS = {
     human_resources: HumanResourcesScreen,
-    health_products: HealthProductsScreen,
+    commodity_matrix: HealthProductsScreen,
 };
 
 const AUTO_SAVE_DELAY = 30000; // 30 seconds
@@ -97,8 +99,8 @@ function AutoSavePill({ status }) {
 // ── Section card ──────────────────────────────────────────────────────────────
 function SectionCard({ section, completedSections, responses, onOpen, index, specialProgress }) {
     const isCompleted = completedSections.has(section.code);
-    const isHr = section.code === "human_resources";
-    const isHp = section.code === "health_products";
+    const isHr = sectionKind(section) === "human_resources";
+    const isHp = sectionKind(section) === "commodity_matrix";
 
     let completion;
     if (isHr && specialProgress?.hr) {
@@ -219,10 +221,10 @@ function ProgressHeader({ sections, completedSections, responses, onBack, specia
     // Sum answered/total across all sections, using special progress for HR/HP
     let totalAnswered = 0, totalRequired = 0;
     sections.forEach(s => {
-        if (s.code === "human_resources" && specialProgress?.hr) {
+        if (sectionKind(s) === "human_resources" && specialProgress?.hr) {
             totalAnswered += specialProgress.hr.answered;
             totalRequired += specialProgress.hr.total;
-        } else if (s.code === "health_products" && specialProgress?.hp) {
+        } else if (sectionKind(s) === "commodity_matrix" && specialProgress?.hp) {
             totalAnswered += specialProgress.hp.answered;
             totalRequired += specialProgress.hp.total;
         } else {
@@ -530,8 +532,13 @@ export function AssessmentFormScreen({ user, sections, editAssessment, onBack, o
         setSaving(true);
         setSaveError(null);
         try {
-            await api.assessments.submit(assessmentId);
-            onComplete(assessmentId);
+            const res = await api.assessments.submit(assessmentId);
+            // Hand back the closed assessment (the server returns it, locked). When the
+            // submit was only queued offline, show it as closed locally until it syncs.
+            const closed = res?.assessment ?? {
+                ...editAssessment, status: "completed", is_locked: true, can_edit: false,
+            };
+            onComplete(closed);
         } catch (e) {
             setSaveError(e.message || "Failed to submit. Please retry.");
             setSaving(false);
@@ -547,7 +554,7 @@ export function AssessmentFormScreen({ user, sections, editAssessment, onBack, o
 
     // ── Section view ───────────────────────────────────────────────────────────
     if (view === "section" && activeSection) {
-        const SpecialScreen = SPECIAL_SECTIONS[activeSection.code];
+        const SpecialScreen = SPECIAL_SECTIONS[sectionKind(activeSection)];
         if (SpecialScreen) {
             return (
                 <SpecialScreen

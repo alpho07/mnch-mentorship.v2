@@ -49,7 +49,7 @@ async function refreshCount() {
 //   "assessments.submit"       → { assessmentId }
 //   "humanResources.save"      → { assessmentId, responses }
 //   "healthProducts.save"      → { assessmentId, responses, departmentId? }
-//   "assessments.create"       → { tempId, facility_id, assessment_type, assessment_date }
+//   "assessments.create"       → { tempId, facility_id, assessment_type, assessment_type_id?, round?, round_label?, member_ids?, assessment_date }
 //   "mentorships.create"        → { tempId, payload }
 //   "mentorships.update"        → { id, payload }
 //   "mentorships.submit"        → { id }
@@ -266,8 +266,16 @@ async function executeOp(rawApi, op) {
             // Inner try/catch: 409 must be handled here, not by flush()'s 4xx discard handler,
             // because we need to run ID migration before the op is dequeued.
             try {
+                // Ops queued by older builds only carry facility/type/date; newer ones
+                // also carry the template + round, which must be replayed too.
                 const response = await rawApi.assessments.create(
-                    op.facility_id, op.assessment_type, op.assessment_date
+                    op.facility_id, op.assessment_type, op.assessment_date,
+                    {
+                        ...(op.assessment_type_id ? { assessment_type_id: op.assessment_type_id } : {}),
+                        ...(op.round ? { round: op.round } : {}),
+                        ...(op.round === "other" ? { round_label: op.round_label } : {}),
+                        ...(op.member_ids?.length ? { member_ids: op.member_ids } : {}),
+                    }
                 );
                 const realId = response?.assessment?.id;
                 if (!realId) {

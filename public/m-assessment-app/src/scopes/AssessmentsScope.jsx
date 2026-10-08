@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api.service.js';
-import { calcGrade, Z } from '../constants.js';
+import { calcGrade, Z, overallPercent } from '../constants.js';
 import { AssessmentAnalyticsHomeScreen } from '../screens/screen-analytics-home.jsx';
 import { AssessmentsListScreen } from '../screens/screen-assessments-list.jsx';
 import { AssessmentDetailScreen } from '../screens/screen-assessment-detail.jsx';
@@ -28,20 +28,21 @@ function BottomNav({ active, onChange }) {
     );
 }
 
-const SCORED = ['infrastructure', 'skills_lab', 'information_systems', 'quality_of_care'];
 function enrichAssessment(a) {
     if (!a) return a;
-    const ss = a.section_scores ?? {};
-    const vals = SCORED.map(c => { const n = Number(ss[c]?.percentage); return isNaN(n) ? null : n; }).filter(v => v !== null);
-    const pct = vals.length ? vals.reduce((x, y) => x + y, 0) / 4 : null;
-    return { ...a, section_scores: ss, section_progress: a.section_progress ?? {}, responses: a.responses ?? {}, overall_percentage: pct ?? (Number(a.overall_percentage) || null), overall_grade: pct != null ? calcGrade(pct) : a.overall_grade };
+    const base = { ...a, section_scores: a.section_scores ?? {}, section_progress: a.section_progress ?? {}, responses: a.responses ?? {} };
+    // Original template keeps its (4 sections ÷ 4) figure; other templates use the server's score.
+    const pct = overallPercent(base);
+    return { ...base, overall_percentage: pct ?? (Number(a.overall_percentage) || null), overall_grade: pct != null ? calcGrade(pct) : a.overall_grade };
 }
 
 export function AssessmentsScope({ user, onLogout, onUserUpdate }) {
     const [tab, setTab]     = useState('home');
     const [modal, setModal] = useState(null);
     const [assessments, setAssessments]         = useState([]);
-    const [sections, setSections]               = useState([]);
+    const [sections, setSections]               = useState([]);   // legacy global schema (assessments with no template)
+    const [templates, setTemplates]             = useState({ data: [], default_template_id: null });
+    const [schemas, setSchemas]                 = useState({});   // templateId -> sections[]
     const [facilities, setFacilities]           = useState([]);
     const [sectionAverages]                     = useState([]);
     const [loading, setLoading]                 = useState(true);
@@ -53,28 +54,45 @@ export function AssessmentsScope({ user, onLogout, onUserUpdate }) {
             api.assessments.list(),
             api.sections.fullSchema(),
             api.facilities.list(),
-        ]).then(([aRes, sRes, fRes]) => {
+            api.templates.list(),
+        ]).then(([aRes, sRes, fRes, tRes]) => {
             if (!mounted) return;
             if (aRes.status === 'fulfilled') { const arr = Array.isArray(aRes.value?.data) ? aRes.value.data : Array.isArray(aRes.value) ? aRes.value : []; setAssessments(arr.map(enrichAssessment)); }
             else { setError(aRes.reason?.message ?? 'Failed to load'); }
             if (sRes.status === 'fulfilled') { const arr = Array.isArray(sRes.value) ? sRes.value : Array.isArray(sRes.value?.data) ? sRes.value.data : []; setSections(arr); }
             if (fRes.status === 'fulfilled') { const arr = Array.isArray(fRes.value) ? fRes.value : Array.isArray(fRes.value?.data) ? fRes.value.data : []; setFacilities(arr); }
+            let tpls = { data: [], default_template_id: null };
+            if (tRes.status === 'fulfilled' && Array.isArray(tRes.value?.data)) { tpls = tRes.value; setTemplates(tpls); }
             setLoading(false);
+
+            // Fetch the schema of every template in play: the ones that can be started AND the
+            // ones existing assessments were created on (which may since have been retired).
+            const arr = aRes.status === 'fulfilled' ? (Array.isArray(aRes.value?.data) ? aRes.value.data : Array.isArray(aRes.value) ? aRes.value : []) : [];
+            const ids = [...new Set([...tpls.data.map(t => t.id), ...arr.map(a => a.assessment_type_id)].filter(Boolean))];
+            ids.forEach(id => api.templates.schema(id)
+                .then(sec => { if (mounted) setSchemas(prev => ({ ...prev, [id]: sec })); })
+                .catch(() => {}));
         });
         return () => { mounted = false; };
     }, []);
 
+    // An assessment is rendered with the schema of ITS OWN template; older records with no
+    // template fall back to the legacy global schema.
+    function sectionsFor(a) { return (a?.assessment_type_id && schemas[a.assessment_type_id]) || sections; }
+    // Replace an assessment everywhere after it changed (reopened, submitted, ...).
+    function applyUpdate(updated) { const e = enrichAssessment(updated); setAssessments(prev => prev.map(x => x.id === e.id ? e : x)); setModal(m => m?.data?.id === e.id ? { ...m, data: e } : m); return e; }
+
     function refreshAssessments() { api.assessments.list().then(data => { const arr = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []; setAssessments(arr.map(enrichAssessment)); }).catch(() => {}); }
 
-    if (modal?.type === 'detail') return <AssessmentDetailScreen assessment={modal.data} sections={sections} onBack={() => setModal(null)} onContinue={(a) => setModal({ type: 'form', data: a })} onViewReport={() => setModal({ type: 'report', data: modal.data })} onTeamUpdated={(updated) => { setAssessments(prev => prev.map(item => item.id === updated.id ? updated : item)); setModal({ type: 'detail', data: updated }); }} onDelete={(a) => { api.assessments.delete(a.id).then(() => { setAssessments(prev => prev.filter(x => x.id !== a.id)); setModal(null); }).catch(() => {}); }} />;
-    if (modal?.type === 'form') return <AssessmentFormScreen user={user} sections={sections} editAssessment={modal.data} onBack={() => setModal({ type: 'detail', data: modal.data })} onComplete={(a) => { const enriched = enrichAssessment(a); setAssessments(prev => prev.map(x => x.id === enriched.id ? enriched : x)); setModal({ type: 'detail', data: enriched }); }} />;
+    if (modal?.type === 'detail') return <AssessmentDetailScreen assessment={modal.data} sections={sectionsFor(modal.data)} onAssessmentChanged={applyUpdate} onBack={() => setModal(null)} onContinue={(a) => setModal({ type: 'form', data: a })} onViewReport={() => setModal({ type: 'report', data: modal.data })} onTeamUpdated={(updated) => { setAssessments(prev => prev.map(item => item.id === updated.id ? updated : item)); setModal({ type: 'detail', data: updated }); }} onDelete={(a) => { api.assessments.delete(a.id).then(() => { setAssessments(prev => prev.filter(x => x.id !== a.id)); setModal(null); }).catch(() => {}); }} />;
+    if (modal?.type === 'form') return <AssessmentFormScreen user={user} sections={sectionsFor(modal.data)} editAssessment={modal.data} onBack={() => setModal({ type: 'detail', data: modal.data })} onComplete={(a) => { const enriched = enrichAssessment(a); setAssessments(prev => prev.map(x => x.id === enriched.id ? enriched : x)); setModal({ type: 'detail', data: enriched }); }} />;
     if (modal?.type === 'report') return <AssessmentReportScreen assessment={modal.data} onBack={() => setModal({ type: 'detail', data: modal.data })} />;
     if (modal?.type === 'emailJobs') return <EmailJobsScreen onBack={() => setModal(null)} />;
 
     return (
         <div style={{ paddingBottom: 64, minHeight: '100vh', background: '#f0f4f8' }}>
             {tab === 'home' && <AssessmentAnalyticsHomeScreen user={user} />}
-            {tab === 'assessments' && <AssessmentsListScreen assessments={assessments} sections={sections} onView={(a) => setModal({ type: 'detail', data: a })} loading={loading} onCreate={(a) => { const enriched = enrichAssessment(a); setAssessments(prev => [...prev, enriched]); setModal({ type: 'detail', data: enriched }); }} facilities={facilities} user={user} openSheet={false} onSheetClose={() => {}} />}
+            {tab === 'assessments' && <AssessmentsListScreen assessments={assessments} sections={sections} sectionsFor={sectionsFor} templates={templates} schemas={schemas} onView={(a) => setModal({ type: 'detail', data: a })} loading={loading} onCreate={(a) => { const enriched = enrichAssessment(a); setAssessments(prev => [...prev, enriched]); setModal({ type: 'detail', data: enriched }); }} facilities={facilities} user={user} openSheet={false} onSheetClose={() => {}} />}
             {tab === 'reports' && <ReportsScreen user={user} assessments={assessments} sectionAverages={sectionAverages} loading={loading} onViewAssessment={(a) => setModal({ type: 'detail', data: a })} onViewEmailJobs={() => setModal({ type: 'emailJobs' })} />}
             <BottomNav active={tab} onChange={setTab} />
         </div>

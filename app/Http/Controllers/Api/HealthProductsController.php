@@ -54,7 +54,7 @@ class HealthProductsController extends Controller {
         $commodities = Commodity::whereIn('id', $commodityIds)
                 ->where('is_active', true)
                 ->orderBy('order')
-                ->get(['id', 'name', 'description', 'order', 'commodity_category_id'])
+                ->get(['id', 'name', 'description', 'order', 'commodity_category_id', 'requires_quantity'])
                 ->groupBy('commodity_category_id');
 
         $saved = AssessmentCommodityResponse::where('assessment_id', $assessment->id)
@@ -75,6 +75,7 @@ class HealthProductsController extends Controller {
                                 'commodity_id' => $c->id,
                                 'name' => $c->name,
                                 'description' => $c->description,
+                                'requires_quantity' => (bool) $c->requires_quantity,
                                 'available' => $r === null ? null : (bool) $r->available,
                                 'not_applicable' => $r !== null && (bool) $r->not_applicable,
                                 'quantity' => $r?->quantity,

@@ -308,16 +308,27 @@ export const _rawApi = {
         submit: (id) => post('/assessments/' + id + '/submit'),
         updateSectionProgress: (assessmentId, sectionCode, done) =>
             put('/assessments/' + assessmentId + '/sections/' + sectionCode + '/progress', {done}),
-        create: (facility_id, assessment_type, assessment_date) =>
-            post('/assessments', {facility_id, assessment_type, assessment_date}),
+        // extra: { assessment_type_id, round, round_label, member_ids } — all optional;
+        // older queued ops (facility/type/date only) still replay fine.
+        create: (facility_id, assessment_type, assessment_date, extra = {}) =>
+            post('/assessments', {facility_id, assessment_type, assessment_date, ...extra}),
+        reopen: (id) => post('/assessments/' + id + '/reopen'),
         team: (assessmentId) => get('/assessments/' + assessmentId + '/team'),
         eligibleTeamMembers: (assessmentId) => get('/assessments/' + assessmentId + '/team/eligible'),
         addTeamMembers: (assessmentId, memberIds) => post('/assessments/' + assessmentId + '/team', {member_ids: memberIds}),
+        removeTeamMember: (assessmentId, userId) => del('/assessments/' + assessmentId + '/team/' + userId),
+        setTeamRole: (assessmentId, userId, role) => put('/assessments/' + assessmentId + '/team/' + userId + '/role', {role}),
+    },
+    templates: {
+        list: () => get('/assessment-templates'),
+        schema: (id) => get('/assessment-templates/' + id),
     },
     humanResources: {
         get: (assessmentId) => get('/assessments/' + assessmentId + '/human-resources'),
         save: (assessmentId, responses) =>
             post('/assessments/' + assessmentId + '/human-resources', {responses}),
+        manageCadres: (assessmentId, includedCadreIds) =>
+            put('/assessments/' + assessmentId + '/human-resources/cadres', {included_cadre_ids: includedCadreIds}),
     },
     healthProducts: {
         get: (assessmentId) => get('/assessments/' + assessmentId + '/health-products'),
@@ -620,6 +631,40 @@ const api = {
         },
     },
 
+    // ── Assessment templates (cached reads) ──────────────────────────────────
+    templates: {
+        // Active templates that can be started. Cached so the picker works offline.
+        list: async () => {
+            try {
+                const data = await _rawApi.templates.list();
+                if (Array.isArray(data?.data)) await offlineStore.setMeta('templates', data);
+                return data;
+            } catch (e) {
+                if (isNetworkError(e)) {
+                    const cached = await offlineStore.getMeta('templates');
+                    if (cached) return cached;
+                }
+                throw e;
+            }
+        },
+        // Full schema of ONE template (any template, including retired ones an
+        // existing assessment still uses). Returns the sections array.
+        schema: async (id) => {
+            try {
+                const data = await _rawApi.templates.schema(id);
+                const arr = Array.isArray(data?.data) ? data.data : [];
+                if (arr.length) await offlineStore.saveTemplateSchema(id, arr);
+                return arr;
+            } catch (e) {
+                if (isNetworkError(e)) {
+                    const cached = await offlineStore.getTemplateSchema(id);
+                    if (cached?.length) return cached;
+                }
+                throw e;
+            }
+        },
+    },
+
     // ── Assessments (cached reads, queued writes) ────────────────────────────
     assessments: {
         list: async (params) => {
@@ -701,17 +746,30 @@ const api = {
             }
         },
 
-        create: async (facility_id, assessment_type, assessment_date, facilityMeta, user, sectionCodes) => {
+        // payload: { facility_id, assessment_type_id, round, round_label, assessment_date, member_ids }
+        // meta:    { facilityMeta, user, template, sectionCodes } — offline-only, used to build
+        //          the provisional record when there's no network.
+        create: async (payload, meta = {}) => {
+            const {facility_id, assessment_date} = payload;
+            const round = payload.round ?? 'baseline';
+            // Legacy enum column only knows these three; "other" is carried by round/round_label.
+            const legacyType = ['baseline', 'midline', 'endline'].includes(round) ? round : undefined;
+            const extra = {
+                ...(payload.assessment_type_id ? {assessment_type_id: payload.assessment_type_id} : {}),
+                round,
+                ...(round === 'other' ? {round_label: payload.round_label} : {}),
+                ...(payload.member_ids?.length ? {member_ids: payload.member_ids} : {}),
+            };
             try {
-                const data = await _rawApi.assessments.create(facility_id, assessment_type, assessment_date);
+                const data = await _rawApi.assessments.create(facility_id, legacyType, assessment_date, extra);
                 const a = data?.assessment ?? data?.data ?? data;
                 if (a?.id) await offlineStore.saveAssessment(a);
                 return data;
             } catch (e) {
                 if (isNetworkError(e)) {
                     console.log('[API] Offline — creating provisional assessment');
+                    const {facilityMeta, user, template, sectionCodes} = meta;
                     const tempId = 'offline_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-                    // Build section_progress from cached schema codes
                     const sectionProgress = {};
                     (sectionCodes ?? []).forEach(code => { sectionProgress[code] = false; });
                     const provisional = {
@@ -721,11 +779,17 @@ const api = {
                         mfl_code: facilityMeta?.mfl_code ?? '',
                         county: facilityMeta?.county ?? '',
                         subcounty: facilityMeta?.subcounty ?? '',
-                        assessment_type,
+                        assessment_type: legacyType ?? 'baseline',
+                        assessment_type_id: payload.assessment_type_id ?? null,
+                        template: template ?? null,
+                        round,
+                        round_label: payload.round_label ?? null,
                         assessment_date,
                         assessor_id: user?.id ?? null,
                         assessor_name: user?.name ?? '',
                         status: 'in_progress',
+                        is_locked: false,
+                        can_edit: true,
                         section_progress: sectionProgress,
                         section_scores: {},
                         section_progress_detail: {},
@@ -739,7 +803,11 @@ const api = {
                         type: 'assessments.create',
                         tempId,
                         facility_id,
-                        assessment_type,
+                        assessment_type: legacyType,
+                        assessment_type_id: payload.assessment_type_id ?? null,
+                        round,
+                        round_label: payload.round_label ?? null,
+                        member_ids: payload.member_ids ?? [],
                         assessment_date,
                     });
                     return {_provisional: true, assessment: provisional};
@@ -747,6 +815,16 @@ const api = {
                 throw e;
             }
         },
+        // Reopening needs the server (it checks the lead/admin and unlocks) —
+        // online only, so a network failure is reported rather than queued.
+        reopen: async (id) => {
+            const data = await _rawApi.assessments.reopen(id);
+            const a = data?.assessment ?? data?.data;
+            if (a?.id) await offlineStore.saveAssessment(a);
+            return data;
+        },
+        removeTeamMember: _rawApi.assessments.removeTeamMember,
+        setTeamRole: _rawApi.assessments.setTeamRole,
         team: _rawApi.assessments.team,
         eligibleTeamMembers: _rawApi.assessments.eligibleTeamMembers,
         addTeamMembers: _rawApi.assessments.addTeamMembers,
@@ -783,6 +861,11 @@ const api = {
                 }
                 throw e;
             }
+        },
+        manageCadres: async (assessmentId, includedCadreIds) => {
+            const data = await _rawApi.humanResources.manageCadres(assessmentId, includedCadreIds);
+            if (data?.data) await offlineStore.saveHR(assessmentId, {structure: data.data});
+            return data;
         },
         save: async (assessmentId, responses) => {
             const existing = await offlineStore.getHR(assessmentId);
@@ -845,9 +928,15 @@ const api = {
                                     ...cat,
                                     commodities: cat.commodities.map(c => {
                                         const key = `${dept.department_id}_${c.commodity_id}`;
-                                        return cached.pendingFlat[key] !== undefined
-                                            ? { ...c, available: cached.pendingFlat[key] }
-                                            : c;
+                                        const pv = cached.pendingFlat[key];
+                                        const pq = cached.pendingQty?.[key];
+                                        if (pv === undefined) return c;
+                                        return {
+                                            ...c,
+                                            available: pv === 'na' ? false : pv,
+                                            not_applicable: pv === 'na',
+                                            ...(pq !== undefined && pq !== '' ? { quantity: Number(pq) } : {}),
+                                        };
                                     }),
                                 })),
                             }));
@@ -869,7 +958,7 @@ const api = {
             if (updatedStructure && Array.isArray(responses)) {
                 const respMap = {};
                 responses.forEach(r => {
-                    respMap[`${r.department_id}_${r.commodity_id}`] = r.available;
+                    respMap[`${r.department_id}_${r.commodity_id}`] = r;
                 });
                 updatedStructure = updatedStructure.map(dept => ({
                     ...dept,
@@ -877,8 +966,14 @@ const api = {
                         ...cat,
                         commodities: cat.commodities.map(c => {
                             const key = `${dept.department_id}_${c.commodity_id}`;
-                            return respMap[key] !== undefined
-                                ? { ...c, available: respMap[key] }
+                            const r = respMap[key];
+                            return r !== undefined
+                                ? {
+                                    ...c,
+                                    available: r.not_applicable ? false : r.available,
+                                    not_applicable: !!r.not_applicable,
+                                    quantity: r.available && r.quantity !== undefined ? r.quantity : null,
+                                }
                                 : c;
                         }),
                     })),
@@ -890,6 +985,7 @@ const api = {
                 ...(updatedStructure ? {structure: updatedStructure} : {}),
                 responses,
                 pendingFlat: null, // clear pending — structure is now up-to-date
+                pendingQty: null,
                 lastSaved: Date.now(),
             });
 

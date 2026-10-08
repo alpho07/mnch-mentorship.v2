@@ -53,6 +53,10 @@ export const T = {
     gradientWarm:    "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
 };
 
+// ─── Stacking order ──────────────────────────────────────────────────────────
+// (Same values the deployed bundle already uses; the export was missing from source.)
+export const Z = { navBar: 40, fab: 45, header: 100, sheet: 200, toast: 300 };
+
 // ─── Grade System ─────────────────────────────────────────────────────────────
 export const GRADE_COLOR = { green: "#10B981", yellow: "#F59E0B", red: "#EF4444" };
 export const GRADE_BG = { green: "#D1FAE5", yellow: "#FEF3C7", red: "#FEE2E2" };
@@ -75,6 +79,53 @@ export const SECTION_META = {
     information_systems: { icon: "💻", gradient: ["#06B6D4", "#0891B2"] },
     quality_of_care: { icon: "⭐", gradient: ["#EC4899", "#DB2777"] },
 };
+
+// ─── Template-aware section helpers ──────────────────────────────────────────
+// Templates name their sections differently (template 2's commodity matrix is
+// "department_health_products"), so the UI dispatches on the schema's `kind`
+// — "question_group" | "human_resources" | "commodity_matrix" — not on codes.
+// Older cached schemas have no `kind`; fall back to the two legacy codes.
+export function sectionKind(section) {
+    if (section?.kind) return section.kind;
+    if (section?.code === "human_resources") return "human_resources";
+    if (section?.code === "health_products") return "commodity_matrix";
+    return "question_group";
+}
+export const isSpecialSection = (section) => sectionKind(section) !== "question_group";
+
+// ─── Rounds ──────────────────────────────────────────────────────────────────
+export const ROUND_OPTIONS = [
+    { value: "baseline", label: "Baseline" },
+    { value: "midline", label: "Midline" },
+    { value: "endline", label: "Endline" },
+    { value: "other", label: "Other" },
+];
+
+export function roundLabel(assessment) {
+    const round = assessment?.round ?? assessment?.assessment_type;
+    if (!round) return "";
+    if (round === "other") return assessment?.round_label || "Other";
+    return round.charAt(0).toUpperCase() + round.slice(1);
+}
+
+// ─── Overall score ───────────────────────────────────────────────────────────
+// Original template: the app has always shown (sum of the 4 scored sections ÷ 4)
+// to match the server report. Any other template has its own section set, so
+// trust the percentage the server computed.
+const LEGACY_SCORED = ["infrastructure", "skills_lab", "information_systems", "quality_of_care"];
+export function overallPercent(assessment) {
+    const legacy = !assessment?.template || assessment.template.code === "STANDARD_FACILITY_ASSESSMENT";
+    if (legacy) {
+        const ss = assessment?.section_scores ?? {};
+        const vals = LEGACY_SCORED.map((c) => {
+            const n = Number(ss[c]?.percentage);
+            return isNaN(n) || ss[c]?.percentage == null ? null : n;
+        }).filter((v) => v !== null);
+        if (vals.length) return vals.reduce((a, b) => a + b, 0) / 4;
+    }
+    const n = Number(assessment?.overall_percentage);
+    return assessment?.overall_percentage == null || isNaN(n) ? null : n;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 export function generateLocalId() {

@@ -158,6 +158,10 @@ const offlineStore = {
     // ── Schema ───────────────────────────────────────────────────────────────
     getSchema: () => dbGet(STORES.schema, "full"),
     saveSchema: (data) => dbPut(STORES.schema, "full", data),
+    // Per-template schemas (keyed "template:<id>") — every template an
+    // assessment was started on is cached so it opens offline.
+    getTemplateSchema: (id) => dbGet(STORES.schema, "template:" + id),
+    saveTemplateSchema: (id, data) => dbPut(STORES.schema, "template:" + id, data),
 
     // ── Assessments ──────────────────────────────────────────────────────────
     getAssessments: () => dbGetAll(STORES.assessments),

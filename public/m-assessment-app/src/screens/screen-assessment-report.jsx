@@ -1,20 +1,7 @@
 import { useState, useEffect } from "react";
-import { T, GRADE_COLOR, GRADE_BG, GRADE_TEXT, calcGrade } from "../constants.js";
+import { T, GRADE_COLOR, GRADE_BG, GRADE_TEXT, calcGrade, sectionKind, overallPercent } from "../constants.js";
 import { BackButton, GradeBadge, ProgressBar } from "../components/shared-components.jsx";
 import api from "../services/api.service.js";
-
-// Overall score = sum of 4 scored section percentages / 4 (Blade formula)
-const SCORED_SECTION_CODES = ["infrastructure", "skills_lab", "information_systems", "quality_of_care"];
-function calcOverallScore(sectionScores) {
-    const vals = SCORED_SECTION_CODES.map(c => {
-        const raw = sectionScores[c]?.percentage;
-        if (raw == null) return null;
-        const n = Number(raw);
-        return isNaN(n) ? null : n;
-    }).filter(v => v !== null);
-    if (vals.length === 0) return null;
-    return vals.reduce((a, b) => a + b, 0) / 4;
-}
 
 const SECTION_ICONS = {
     infrastructure: "🏗️", skills_lab: "🔬", human_resources: "👥",
@@ -64,11 +51,12 @@ function ScoreRing({ pct, grade, size = 100 }) {
 function SectionScoreCard({ section, index }) {
     const [open, setOpen] = useState(false);
     const { code, percentage, grade, total_questions, answered_questions, responses } = section;
-    const name = SECTION_NAMES[code] ?? section.name ?? code;
+    // Template-specific name from the server first; the table is only a fallback.
+    const name = section.name ?? SECTION_NAMES[code] ?? code;
     const icon = SECTION_ICONS[code] ?? "📋";
     const color = GRADE_COLOR[grade] ?? "#9CA3AF";
     const pct = Number(percentage ?? 0); // keep as number for circle geometry
-    const isSpecial = code === "human_resources" || code === "health_products";
+    const isSpecial = sectionKind(section) !== "question_group";
 
     const RESPONSE_CHIP = {
         Yes:     { bg: "#D1FAE5", color: "#065F46", dot: "#10B981" },
@@ -539,7 +527,7 @@ export function AssessmentReportScreen({ assessment, onBack }) {
     };
 
     const sectionScores = assessment.section_scores ?? {};
-    const _calcPct = calcOverallScore(sectionScores);
+    const _calcPct = overallPercent(assessment);
     const pct = _calcPct ?? assessment.overall_percentage ?? report?.assessment?.overall_percentage ?? 0;
     const grade = _calcPct != null ? calcGrade(_calcPct) : (assessment.overall_grade ?? report?.assessment?.overall_grade);
     const sectionReports = report?.section_reports ?? [];
@@ -547,14 +535,15 @@ export function AssessmentReportScreen({ assessment, onBack }) {
     const gradeGradient = GRADE_GRADIENT[grade] ?? "linear-gradient(135deg, #374151, #6B7280)";
 
     // Section order: scored first, then special
-    const scoredReports = sectionReports.filter(s => !["human_resources", "health_products"].includes(s.code));
-    const hrReport = sectionReports.find(s => s.code === "human_resources");
-    const hpReport = sectionReports.find(s => s.code === "health_products");
+    const scoredReports = sectionReports.filter(s => sectionKind(s) === "question_group");
+    const hrReport = sectionReports.find(s => sectionKind(s) === "human_resources");
+    const hpReport = sectionReports.find(s => sectionKind(s) === "commodity_matrix");
+    const scoreOfKind = (kind) => Object.entries(sectionScores).find(([code, sc]) => sectionKind({ code, ...sc }) === kind)?.[1];
 
     // Fallback from section_scores if no full report
     const scoredFallback = Object.entries(sectionScores)
-        .filter(([code]) => !["human_resources", "health_products"].includes(code))
-        .map(([code, sc]) => ({ code, name: SECTION_NAMES[code] ?? sc.name ?? code, ...sc, responses: [] }));
+        .filter(([code, sc]) => sectionKind({ code, ...sc }) === "question_group")
+        .map(([code, sc]) => ({ code, name: sc.name ?? SECTION_NAMES[code] ?? code, ...sc, responses: [] }));
 
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -684,12 +673,12 @@ export function AssessmentReportScreen({ assessment, onBack }) {
                 ))}
 
                 {/* Special sections */}
-                {(hrReport || sectionScores.human_resources) && (
+                {(hrReport || scoreOfKind("human_resources")) && (
                     <SpecialCard title="Human Resources" icon="👥" code="human_resources" index={scoredReports.length || scoredFallback.length}>
                         <HrSection assessment={assessment} />
                     </SpecialCard>
                 )}
-                {(hpReport || sectionScores.health_products) && (
+                {(hpReport || scoreOfKind("commodity_matrix")) && (
                     <SpecialCard title="Health Products" icon="💊" code="health_products" index={(scoredReports.length || scoredFallback.length) + 1}>
                         <HpSection assessment={assessment} />
                     </SpecialCard>

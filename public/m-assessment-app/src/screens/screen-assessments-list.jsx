@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { T, GRADE_COLOR, GRADE_BG, GRADE_TEXT } from "../constants.js";
+import { T, GRADE_COLOR, GRADE_BG, GRADE_TEXT, roundLabel } from "../constants.js";
 import { GradeBadge, StatusChip, ProgressBar } from "../components/shared-components.jsx";
 import { SectionIcon } from "../components/section-icons.jsx";
 import { NewAssessmentSheet } from "./screen-new-assessment.jsx";
 
-export function AssessmentsListScreen({ assessments, sections, onView, loading, onCreate, facilities, user, openSheet, onSheetClose }) {
+export function AssessmentsListScreen({ assessments, sections, sectionsFor, templates, schemas, onView, loading, onCreate, facilities, user, openSheet, onSheetClose }) {
     const [filter, setFilter] = useState("all");
     const [showSheet, setShowSheet] = useState(false);
 
@@ -157,7 +157,7 @@ export function AssessmentsListScreen({ assessments, sections, onView, loading, 
                                         <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" />
                                         <line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                                     </svg>
-                                    {a.assessment_type} · {a.assessment_date}
+                                    {[a.template?.name, roundLabel(a), a.assessment_date].filter(Boolean).join(" · ")}
                                 </div>
                                 {(a.mfl_code || a.subcounty || a.county) && (
                                     <div style={{
@@ -178,9 +178,9 @@ export function AssessmentsListScreen({ assessments, sections, onView, loading, 
                                 }
                             </div>
                         </div>
-                        {a.status === "completed" && sections && sections.length > 0 && (
+                        {a.status === "completed" && (sectionsFor ? sectionsFor(a) : sections)?.length > 0 && (
                             <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                                {sections.map(s => {
+                                {(sectionsFor ? sectionsFor(a) : sections).map(s => {
                                     const sc = (a.section_scores || {})[s.code];
                                     return (
                                         <div key={s.code} style={{ flex: 1, textAlign: "center" }}>
@@ -231,7 +231,8 @@ export function AssessmentsListScreen({ assessments, sections, onView, loading, 
             {showSheet && (
                 <NewAssessmentSheet
                     facilities={facilities}
-                    sections={sections}
+                    templates={templates}
+                    schemas={schemas}
                     user={user}
                     onSubmit={(assessment) => {
                         setShowSheet(false);

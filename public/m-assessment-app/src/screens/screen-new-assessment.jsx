@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { T } from "../constants.js";
+import { T, ROUND_OPTIONS } from "../constants.js";
 import api from "../services/api.service.js";
 
 // ── Spinner (inline CSS animation) ────────────────────────────────────────────
@@ -39,11 +39,6 @@ function todayStr() {
     return `${yyyy}-${mm}-${dd}`;
 }
 
-// ── Assessment type pills ──────────────────────────────────────────────────────
-const TYPES = [
-    { value: "baseline", label: "Baseline" },
-];
-
 // ── Extract unique section codes from schema ──────────────────────────────────
 // sections can be:
 //   - an array of section objects  [{ code, name, questions, ... }, ...]
@@ -60,9 +55,25 @@ function extractSectionCodes(schemaSections) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-export function NewAssessmentSheet({ facilities, sections, user, onSubmit, onClose }) {
-    // Extract section codes for section_progress initialisation
-    const sectionCodes = useMemo(() => extractSectionCodes(sections), [sections]);
+export function NewAssessmentSheet({ facilities, templates, schemas, user, onSubmit, onClose }) {
+    // ── Template (which assessment to start) ───────────────────────────────────
+    const templateList = templates?.data ?? [];
+    const [templateId, setTemplateId] = useState(templates?.default_template_id ?? templateList[0]?.id ?? null);
+    const template = templateList.find((t) => t.id === templateId) ?? null;
+
+    // The chosen template's sections — needed offline to build the provisional
+    // assessment's progress map. Use the shared cache, else fetch it.
+    const [fetchedSchema, setFetchedSchema] = useState({});
+    useEffect(() => {
+        if (!templateId || schemas?.[templateId] || fetchedSchema[templateId]) return;
+        api.templates.schema(templateId)
+            .then((arr) => setFetchedSchema((prev) => ({ ...prev, [templateId]: arr })))
+            .catch(() => {});
+    }, [templateId, schemas, fetchedSchema]);
+    const sectionCodes = useMemo(
+        () => extractSectionCodes(schemas?.[templateId] ?? fetchedSchema[templateId]),
+        [schemas, fetchedSchema, templateId]
+    );
 
     // ── Slide-up animation ─────────────────────────────────────────────────────
     const [mounted, setMounted] = useState(false);
@@ -121,8 +132,9 @@ export function NewAssessmentSheet({ facilities, sections, user, onSubmit, onClo
         if (selectedFacility) setSelectedFacility(null);
     }
 
-    // ── Assessment type ────────────────────────────────────────────────────────
-    const [assessmentType, setAssessmentType] = useState("baseline");
+    // ── Round (baseline / midline / endline / other + label) ───────────────────
+    const [round, setRound] = useState("baseline");
+    const [roundLabelText, setRoundLabelText] = useState("");
 
     // ── Assessment date ────────────────────────────────────────────────────────
     const today = todayStr();
@@ -137,6 +149,8 @@ export function NewAssessmentSheet({ facilities, sections, user, onSubmit, onClo
     const canSubmit =
         !noCache &&
         selectedFacility &&
+        templateId &&
+        (round !== "other" || roundLabelText.trim()) &&
         assessmentDate &&
         !submitting;
 
@@ -159,16 +173,25 @@ export function NewAssessmentSheet({ facilities, sections, user, onSubmit, onClo
                 subcounty: selectedFacility.subcounty,
                 county: selectedFacility.county,
             };
-            // facilityMeta, user, sectionCodes are offline-only — used by api.service.js
-            // to build a provisional assessment when there's no network connection.
-            // Only facility_id, assessment_type, and assessment_date are sent to the server.
+            // The second argument is offline-only — api.service.js uses it to build a
+            // provisional assessment when there's no network connection.
             const data = await api.assessments.create(
-                selectedFacility.id,
-                assessmentType,
-                assessmentDate,
-                facilityMeta,
-                user,
-                sectionCodes,
+                {
+                    facility_id: selectedFacility.id,
+                    assessment_type_id: templateId,
+                    round,
+                    round_label: round === "other" ? roundLabelText.trim() : null,
+                    assessment_date: assessmentDate,
+                },
+                {
+                    facilityMeta,
+                    user,
+                    sectionCodes,
+                    template: template && {
+                        id: template.id, name: template.name, code: template.code,
+                        version: template.version, is_active: true, is_retired: false,
+                    },
+                },
             );
             const assessment = data?.assessment ?? data?.data ?? data;
             onSubmit(assessment);
@@ -370,44 +393,86 @@ export function NewAssessmentSheet({ facilities, sections, user, onSubmit, onClo
                         )}
                     </div>
 
-                    {/* ── Assessment type ──────────────────────────────────────── */}
+                    {/* ── Assessment template ──────────────────────────────────── */}
                     <div style={{ marginBottom: 18 }}>
                         <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.textMid, marginBottom: 6 }}>
-                            Assessment Type
+                            Assessment
                         </label>
-                        <div style={{
-                            display: "flex",
-                            borderRadius: 10,
-                            background: "#F3F4F6",
-                            padding: 3,
-                        }}>
-                            {TYPES.map((t) => {
-                                const active = assessmentType === t.value;
+                        {templateList.length === 0 ? (
+                            <div style={{ background: "#FEF3C7", color: "#92400E", borderRadius: 8, padding: "10px 14px", fontSize: 13 }}>
+                                Assessment templates not available offline. Please connect once to load them.
+                            </div>
+                        ) : (
+                            <div style={{ display: "grid", gap: 8 }}>
+                                {templateList.map((t) => {
+                                    const active = t.id === templateId;
+                                    return (
+                                        <button
+                                            key={t.id}
+                                            onClick={() => setTemplateId(t.id)}
+                                            style={{
+                                                textAlign: "left", borderRadius: 10, padding: "10px 14px", cursor: "pointer",
+                                                border: `1.5px solid ${active ? T.primary : T.border}`,
+                                                background: active ? `${T.primary}10` : "#fff",
+                                            }}
+                                        >
+                                            <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{t.name}</div>
+                                            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+                                                v{t.version}{t.category?.name ? ` · ${t.category.name}` : ""}{t.sections_count ? ` · ${t.sections_count} sections` : ""}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        {fieldErrors.assessment_type_id && (
+                            <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>
+                                {fieldErrors.assessment_type_id[0] ?? fieldErrors.assessment_type_id}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ── Round ────────────────────────────────────────────────── */}
+                    <div style={{ marginBottom: 18 }}>
+                        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.textMid, marginBottom: 6 }}>
+                            Round
+                        </label>
+                        <div style={{ display: "flex", borderRadius: 10, background: "#F3F4F6", padding: 3 }}>
+                            {ROUND_OPTIONS.map((r) => {
+                                const active = round === r.value;
                                 return (
                                     <button
-                                        key={t.value}
-                                        onClick={() => setAssessmentType(t.value)}
+                                        key={r.value}
+                                        onClick={() => setRound(r.value)}
                                         style={{
-                                            flex: 1,
-                                            borderRadius: 8,
-                                            padding: "8px 0",
-                                            fontSize: 13,
-                                            fontWeight: 600,
-                                            border: "none",
-                                            cursor: "pointer",
+                                            flex: 1, borderRadius: 8, padding: "8px 0", fontSize: 12, fontWeight: 600,
+                                            border: "none", cursor: "pointer", transition: "all 0.18s",
                                             background: active ? T.gradientPrimary : "transparent",
                                             color: active ? "#fff" : T.textMuted,
-                                            transition: "all 0.18s",
                                         }}
                                     >
-                                        {t.label}
+                                        {r.label}
                                     </button>
                                 );
                             })}
                         </div>
-                        {fieldErrors.assessment_type && (
+                        {round === "other" && (
+                            <input
+                                type="text"
+                                maxLength={100}
+                                placeholder='Specify round, e.g. "Post-COVID Re-assessment"'
+                                value={roundLabelText}
+                                onChange={(e) => setRoundLabelText(e.target.value)}
+                                style={{
+                                    width: "100%", boxSizing: "border-box", marginTop: 8, borderRadius: 10,
+                                    border: `1px solid ${fieldErrors.round_label ? "#EF4444" : T.border}`,
+                                    padding: "10px 14px", fontSize: 14, color: T.text, outline: "none", background: "#fff",
+                                }}
+                            />
+                        )}
+                        {(fieldErrors.round || fieldErrors.round_label) && (
                             <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4 }}>
-                                {fieldErrors.assessment_type[0] ?? fieldErrors.assessment_type}
+                                {[].concat(fieldErrors.round ?? fieldErrors.round_label)[0]}
                             </div>
                         )}
                     </div>
@@ -481,7 +546,7 @@ export function NewAssessmentSheet({ facilities, sections, user, onSubmit, onClo
                             color: "#92400E",
                             fontSize: 13,
                         }}>
-                            An assessment already exists for this facility, type, and date.{" "}
+                            An assessment already exists for this facility, assessment and round.{" "}
                             <button
                                 onClick={handleOpenExisting}
                                 style={{

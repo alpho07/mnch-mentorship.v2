@@ -56,6 +56,7 @@ class ReportController extends Controller {
                     return [
                         'code' => $section->code,
                         'name' => $section->name,
+                        'kind' => $section->resolvedKind(),
                         'icon' => $section->icon,
                         'color' => $section->color,
                         'percentage' => $score?->percentage ?? 0,
@@ -106,6 +107,7 @@ class ReportController extends Controller {
                             ->map(fn($s) => [
                                 'code' => $s->section->code,
                                 'name' => $s->section->name,
+                                'kind' => $s->section->resolvedKind(),
                                 'percentage' => $s->percentage,
                                 'grade' => $s->grade,
                                 'answered' => $s->answered_questions,

@@ -9,10 +9,11 @@ const AUTO_SAVE_DELAY = 25000; // 25s
 
 // ── Availability toggle ───────────────────────────────────────────────────────
 function AvailabilityToggle({ value, onChange }) {
-    // value: true | false | null (unanswered)
+    // value: true | false | "na" (not applicable) | null (unanswered)
     const opts = [
         { v: true, label: "Available", color: "#10B981", bg: "#D1FAE5", border: "#6EE7B7", icon: "✓" },
         { v: false, label: "Not Available", color: "#EF4444", bg: "#FEE2E2", border: "#FCA5A5", icon: "✗" },
+        { v: "na", label: "N/A", color: "#6B7280", bg: "#F3F4F6", border: "#D1D5DB", icon: "–" },
     ];
     return (
         <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
@@ -42,7 +43,7 @@ function AvailabilityToggle({ value, onChange }) {
 }
 
 // ── Flat commodity list (with category label as section divider) ───────────────
-function CommodityList({ department, deptId, responses, onChange }) {
+function CommodityList({ department, deptId, responses, onChange, quantities, onQuantity }) {
     // Render each category as a labelled group, commodities individually with no accordion
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -105,7 +106,7 @@ function CommodityList({ department, deptId, responses, onChange }) {
                                         padding: "11px 14px",
                                         borderBottom: i < category.commodities.length - 1 ? `1px solid ${T.borderLight}` : "none",
                                         display: "flex", alignItems: "center", gap: 10,
-                                        background: val === true ? "rgba(16,185,129,0.04)" : val === false ? "rgba(239,68,68,0.04)" : T.card,
+                                        background: val === true ? "rgba(16,185,129,0.04)" : val === false ? "rgba(239,68,68,0.04)" : val === "na" ? "rgba(107,114,128,0.06)" : T.card,
                                         transition: "background 0.15s",
                                     }}>
                                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -114,7 +115,17 @@ function CommodityList({ department, deptId, responses, onChange }) {
                                                 <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2, lineHeight: 1.3 }}>{c.description}</div>
                                             )}
                                         </div>
-                                        <AvailabilityToggle value={val === undefined ? null : val} onChange={v => onChange(key, v)} />
+                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                                            <AvailabilityToggle value={val === undefined ? null : val} onChange={v => onChange(key, v)} />
+                                            {val === true && c.requires_quantity && (
+                                                <input
+                                                    type="number" min="0" inputMode="numeric" placeholder="Quantity"
+                                                    value={quantities?.[key] ?? ""}
+                                                    onChange={e => onQuantity(key, e.target.value)}
+                                                    style={{ width: 96, padding: "5px 8px", borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 12, textAlign: "right", fontFamily: "inherit" }}
+                                                />
+                                            )}
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -147,7 +158,8 @@ function SavePill({ status }) {
 export function HealthProductsScreen({ assessment, onBack, onComplete }) {
     const [departments, setDepartments] = useState([]);
     const [activeDeptIdx, setActiveDeptIdx] = useState(0);
-    const [responses, setResponses] = useState({});
+    const [responses, setResponses] = useState({});     // key -> true | false | "na"
+    const [quantities, setQuantities] = useState({});   // key -> quantity (only for commodities that need one)
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [deptSaveStatus, setDeptSaveStatus] = useState({}); // { deptId: "idle"|"saving"|"saved"|"error" }
@@ -177,12 +189,14 @@ export function HealthProductsScreen({ assessment, onBack, onComplete }) {
 
                 // Hydrate from structure (api layer already merges saved offline values)
                 const init = {};
+                const qtyInit = {};
                 depts.forEach(dept => {
                     dept.categories.forEach(cat => {
                         cat.commodities.forEach(c => {
-                            if (c.available !== null && c.available !== undefined) {
-                                init[`${dept.department_id}_${c.commodity_id}`] = c.available;
-                            }
+                            const k = `${dept.department_id}_${c.commodity_id}`;
+                            if (c.not_applicable) init[k] = "na";
+                            else if (c.available !== null && c.available !== undefined) init[k] = c.available;
+                            if (c.quantity != null) qtyInit[k] = String(c.quantity);
                         });
                     });
                 });
@@ -192,8 +206,12 @@ export function HealthProductsScreen({ assessment, onBack, onComplete }) {
                 if (cached?.pendingFlat && typeof cached.pendingFlat === "object") {
                     Object.assign(init, cached.pendingFlat);
                 }
+                if (cached?.pendingQty && typeof cached.pendingQty === "object") {
+                    Object.assign(qtyInit, cached.pendingQty);
+                }
 
                 setResponses(init);
+                setQuantities(qtyInit);
             })
             .catch(e => setError(e.message || "Failed to load"))
             .finally(() => setLoading(false));
@@ -208,6 +226,8 @@ export function HealthProductsScreen({ assessment, onBack, onComplete }) {
         });
     };
 
+    const handleQuantity = (key, val) => setQuantities(prev => ({ ...prev, [key]: val }));
+
     // ── Persist every change to offline store (debounced 800ms) ───────────────
     // Ensures refresh before clicking Save still shows responses.
     useEffect(() => {
@@ -218,10 +238,23 @@ export function HealthProductsScreen({ assessment, onBack, onComplete }) {
             await offlineStore.saveHP(assessment.id, {
                 ...(existing ?? {}),
                 pendingFlat: responses,
+                pendingQty: quantities,
             });
         }, 800);
         return () => clearTimeout(pendingTimer.current);
-    }, [responses, assessment.id]);
+    }, [responses, quantities, assessment.id]);
+
+    // One API entry for a commodity: available / not applicable, plus a quantity when asked for.
+    const entryFor = useCallback((key) => {
+        const [department_id, commodity_id] = key.split("_").map(Number);
+        const v = responses[key];
+        if (v === "na") return { department_id, commodity_id, not_applicable: true };
+        const q = quantities[key];
+        return {
+            department_id, commodity_id, available: v,
+            ...(v === true && q !== undefined && q !== "" ? { quantity: Number(q) } : {}),
+        };
+    }, [responses, quantities]);
 
     // ── Save a single department's responses ───────────────────────────────────
     const saveDepartment = useCallback(async (dept, silent = false) => {
@@ -235,10 +268,7 @@ export function HealthProductsScreen({ assessment, onBack, onComplete }) {
             // Only send responses that have been answered for this dept
             const responseArray = commodityKeys
                 .filter(key => responses[key] !== undefined)
-                .map(key => {
-                    const [department_id, commodity_id] = key.split("_").map(Number);
-                    return { department_id, commodity_id, available: responses[key] };
-                });
+                .map(entryFor);
 
             if (responseArray.length === 0) {
                 if (!silent) setDeptSaveStatus(p => ({ ...p, [deptId]: "saved" }));
@@ -258,7 +288,7 @@ export function HealthProductsScreen({ assessment, onBack, onComplete }) {
             setTimeout(() => setDeptSaveStatus(p => ({ ...p, [deptId]: "idle" })), 4000);
             return false;
         }
-    }, [assessment.id, responses]);
+    }, [assessment.id, responses, entryFor]);
 
     // ── Auto-save current dept on response change ──────────────────────────────
     const activeDept = departments[activeDeptIdx];
@@ -287,10 +317,7 @@ export function HealthProductsScreen({ assessment, onBack, onComplete }) {
     const saveAllAndComplete = async () => {
         try {
             // Build full array for all answered responses
-            const responseArray = Object.entries(responses).map(([key, available]) => {
-                const [department_id, commodity_id] = key.split("_").map(Number);
-                return { department_id, commodity_id, available };
-            });
+            const responseArray = Object.keys(responses).map(entryFor);
             await api.healthProducts.save(assessment.id, responseArray);
             onComplete?.(assessment.id);
         } catch (e) {
@@ -425,6 +452,8 @@ export function HealthProductsScreen({ assessment, onBack, onComplete }) {
                             deptId={activeDept.department_id}
                             responses={responses}
                             onChange={handleChange}
+                            quantities={quantities}
+                            onQuantity={handleQuantity}
                         />
                     </>
                 ) : (

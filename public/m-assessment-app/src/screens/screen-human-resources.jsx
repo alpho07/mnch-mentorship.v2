@@ -14,6 +14,9 @@ const TRAINING_FIELDS = [
     { key: "essential_newborn_care", label: "Essential NB Care" },
 ];
 
+// Training areas that apply to a cadre (the server lists the N/A ones per cadre).
+const visibleFields = (cadre) => TRAINING_FIELDS.filter((f) => !(cadre.na_training_columns ?? []).includes(f.key));
+
 // ── Number stepper ─────────────────────────────────────────────────────────────
 function Stepper({ value, onChange, max }) {
     const n = parseInt(value, 10) || 0;
@@ -54,8 +57,11 @@ function Stepper({ value, onChange, max }) {
 // ── Cadre row ──────────────────────────────────────────────────────────────────
 function CadreRow({ cadre, values, onChange, isDirty }) {
     const [open, setOpen] = useState(false);
-    const totalInFacility = parseInt(values.total_in_facility, 10) || 0;
-    const trainedSum = TRAINING_FIELDS.reduce((s, f) => s + (parseInt(values[f.key], 10) || 0), 0);
+    // Rows such as "No of TOTs" have no staff total and/or skip some training areas.
+    const hidesTotal = !!cadre.hides_total_in_facility;
+    const fields = visibleFields(cadre);
+    const totalInFacility = hidesTotal ? 0 : (parseInt(values.total_in_facility, 10) || 0);
+    const trainedSum = fields.reduce((s, f) => s + (parseInt(values[f.key], 10) || 0), 0);
     const hasAny = totalInFacility > 0 || trainedSum > 0;
 
     return (
@@ -80,7 +86,7 @@ function CadreRow({ cadre, values, onChange, isDirty }) {
                     <div style={{ fontWeight: 700, fontSize: 14, color: T.text }}>{cadre.cadre_name}</div>
                     {hasAny ? (
                         <div style={{ fontSize: 11, color: "#7C3AED", marginTop: 2, fontWeight: 600 }}>
-                            {totalInFacility} total · {trainedSum} trained
+                            {hidesTotal ? `${trainedSum} trained` : `${totalInFacility} total · ${trainedSum} trained`}
                         </div>
                     ) : (
                         <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Not filled yet</div>
@@ -98,8 +104,8 @@ function CadreRow({ cadre, values, onChange, isDirty }) {
 
             {open && (
                 <div style={{ padding: "0 16px 16px", borderTop: `1px solid ${T.border}` }}>
-                    {/* Total staff count — always first */}
-                    <div style={{ paddingTop: 12, marginBottom: 4 }}>
+                    {/* Total staff count — first, unless this row has no staff total */}
+                    {!hidesTotal && <div style={{ paddingTop: 12, marginBottom: 4 }}>
                         <div style={{
                             display: "flex", justifyContent: "space-between", alignItems: "center",
                             padding: "10px 12px", background: "#F0F4FF", borderRadius: 10,
@@ -111,16 +117,16 @@ function CadreRow({ cadre, values, onChange, isDirty }) {
                             </div>
                             <Stepper value={values.total_in_facility ?? 0} onChange={v => onChange("total_in_facility", v)} />
                         </div>
-                    </div>
+                    </div>}
 
                     {/* Divider */}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 0 4px" }}>
                         <div style={{ height: 1, flex: 1, background: T.border }} />
-                        <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8 }}>Trained in 5 Areas</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: 0.8 }}>Trained in {fields.length} Area{fields.length === 1 ? "" : "s"}</span>
                         <div style={{ height: 1, flex: 1, background: T.border }} />
                     </div>
 
-                    {TRAINING_FIELDS.map(f => {
+                    {fields.map(f => {
                         const fieldVal = parseInt(values[f.key], 10) || 0;
                         const otherSum = trainedSum - fieldVal;
                         // Max for this field = remaining slots after other fields are filled
@@ -152,6 +158,9 @@ function CadreRow({ cadre, values, onChange, isDirty }) {
 // ── Main screen ────────────────────────────────────────────────────────────────
 export function HumanResourcesScreen({ assessment, onBack, onComplete }) {
     const [cadres, setCadres] = useState([]);
+    const [allCadres, setAllCadres] = useState([]);       // every cadre on the template, with an `included` flag
+    const [showManage, setShowManage] = useState(false);
+    const [included, setIncluded] = useState([]);
     const [values, setValues] = useState({});   // { cadreId: { etat_plus: 0, ... } }
     const [dirtyIds, setDirtyIds] = useState(new Set()); // cadreIds changed since last save
     const [loading, setLoading] = useState(true);
@@ -174,12 +183,13 @@ export function HumanResourcesScreen({ assessment, onBack, onComplete }) {
     useEffect(() => syncQueue.subscribe(s => setSyncStatus(s)), []);
 
     // ── Load ───────────────────────────────────────────────────────────────────
-    useEffect(() => {
+    const load = () => {
         setLoading(true);
-        api.humanResources.get(assessment.id)
+        return api.humanResources.get(assessment.id)
             .then(async res => {
                 const rows = Array.isArray(res?.data) ? res.data : [];
                 setCadres(rows);
+                setAllCadres(Array.isArray(res?.cadres) ? res.cadres : []);
 
                 // Build values from structure (may already be merged with saved offline data by api layer)
                 const init = {};
@@ -207,7 +217,21 @@ export function HumanResourcesScreen({ assessment, onBack, onComplete }) {
             })
             .catch(e => setError(e.message || "Failed to load"))
             .finally(() => setLoading(false));
-    }, [assessment.id]);
+    };
+    useEffect(() => { load(); }, [assessment.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // "Manage Cadres": pick which cadres exist at this facility (needs the server).
+    const openManage = () => { setIncluded(allCadres.filter(c => c.included).map(c => c.id)); setShowManage(true); };
+    const saveManage = async () => {
+        setError(null);
+        try {
+            await api.humanResources.manageCadres(assessment.id, included);
+            setShowManage(false);
+            await load();
+        } catch (e) {
+            setError(e?.message === "Failed to fetch" ? "You need to be online to change the cadre list." : (e?.message || "Could not update cadres"));
+        }
+    };
 
     // ── Persist changes to offline store automatically (debounced 800ms) ───────
     // Ensures that if user refreshes without clicking Save, their work is still there.
@@ -237,10 +261,11 @@ export function HumanResourcesScreen({ assessment, onBack, onComplete }) {
 
         // Validate: sum of training counts must not exceed total_in_facility
         const violations = cadres.filter(c => {
+            if (c.hides_total_in_facility) return false;
             const v = values[c.cadre_id] ?? {};
             const total = parseInt(v.total_in_facility, 10) || 0;
             if (total === 0) return false;
-            const sum = TRAINING_FIELDS.reduce((s, f) => s + (parseInt(v[f.key], 10) || 0), 0);
+            const sum = visibleFields(c).reduce((s, f) => s + (parseInt(v[f.key], 10) || 0), 0);
             return sum > total;
         });
 
@@ -253,8 +278,8 @@ export function HumanResourcesScreen({ assessment, onBack, onComplete }) {
         try {
             const responses = cadres.map(c => ({
                 cadre_id: c.cadre_id,
-                total_in_facility: values[c.cadre_id]?.total_in_facility ?? 0,
-                ...TRAINING_FIELDS.reduce((acc, f) => ({ ...acc, [f.key]: values[c.cadre_id]?.[f.key] ?? 0 }), {}),
+                total_in_facility: c.hides_total_in_facility ? null : (values[c.cadre_id]?.total_in_facility ?? 0),
+                ...visibleFields(c).reduce((acc, f) => ({ ...acc, [f.key]: values[c.cadre_id]?.[f.key] ?? 0 }), {}),
             }));
             await api.humanResources.save(assessment.id, responses);
             setDirtyIds(new Set());
@@ -303,8 +328,29 @@ export function HumanResourcesScreen({ assessment, onBack, onComplete }) {
                 </div>
             </div>
 
+            {showManage && (
+                <div onClick={() => setShowManage(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "flex-end" }}>
+                    <div onClick={e => e.stopPropagation()} style={{ background: "#fff", width: "100%", borderRadius: "20px 20px 0 0", padding: "18px 20px calc(18px + env(safe-area-inset-bottom, 0px))", maxHeight: "80vh", overflowY: "auto" }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: T.text }}>Manage cadres</div>
+                        <div style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 12px" }}>Untick cadres that aren't at this facility. Data already entered for them is kept.</div>
+                        {allCadres.map(c => (
+                            <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderTop: `1px solid ${T.borderLight}`, cursor: "pointer" }}>
+                                <input type="checkbox" checked={included.includes(c.id)} onChange={() => setIncluded(prev => prev.includes(c.id) ? prev.filter(i => i !== c.id) : [...prev, c.id])} />
+                                <span style={{ fontSize: 14, color: T.text }}>{c.name}</span>
+                            </label>
+                        ))}
+                        <button onClick={saveManage} style={{ width: "100%", marginTop: 14, padding: 14, border: "none", borderRadius: 12, background: T.gradientPrimary, color: "white", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>Save selection</button>
+                    </div>
+                </div>
+            )}
+
             {/* Content */}
             <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 100px", background: T.bg }}>
+                {!loading && allCadres.length > 0 && !isOffline && (
+                    <button onClick={openManage} style={{ marginBottom: 12, padding: "8px 12px", borderRadius: 10, border: `1px solid ${T.border}`, background: "white", color: T.primary, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                        ⚙ Manage cadres
+                    </button>
+                )}
                 {loading && (
                     <div style={{ textAlign: "center", padding: "40px 0", color: T.textMuted }}>
                         <div style={{ fontSize: 30, marginBottom: 8 }}>⏳</div>Loading cadres…

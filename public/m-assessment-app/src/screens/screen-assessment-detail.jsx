@@ -1,16 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import { T, GRADE_COLOR, GRADE_BG, calcGrade } from "../constants.js";
+import { T, GRADE_COLOR, GRADE_BG, calcGrade, sectionKind, isSpecialSection, roundLabel, overallPercent } from "../constants.js";
 import { BackButton, GradeBadge, StatusChip, ProgressBar } from "../components/shared-components.jsx";
 import { SectionIcon } from "../components/section-icons.jsx";
 import api from "../services/api.service.js";
 import offlineStore from "../services/offline-store.js";
+import { useConfirm } from "../hooks/useConfirm.jsx";
 
 const HR_FIELDS = ["etat_plus", "comprehensive_newborn_care", "imnci", "type_1_diabetes", "essential_newborn_care"];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Special sections that don't have dynamic question responses
-const SPECIAL_SECTIONS = ["human_resources", "health_products"];
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function SectionStatusChip({ done, inProgress, isSpecial }) {
     if (done) return (
@@ -23,19 +21,6 @@ function SectionStatusChip({ done, inProgress, isSpecial }) {
         <div style={{ padding: "4px 12px", borderRadius: 10, fontSize: 11, fontWeight: 700, background: T.borderLight, color: T.textMuted, border: `1px solid ${T.border}` }}>Not started</div>
     );
     return null;
-}
-
-// ── Scoring: overall = sum of 4 section percentages / 4 (matches server Blade) ──
-const SCORED_SECTIONS = ["infrastructure", "skills_lab", "information_systems", "quality_of_care"];
-function calcOverallFromSections(sectionScores) {
-    const vals = SCORED_SECTIONS.map(c => {
-        const raw = sectionScores[c]?.percentage;
-        if (raw == null) return null;
-        const n = Number(raw);
-        return isNaN(n) ? null : n;
-    }).filter(v => v !== null);
-    if (vals.length === 0) return null;
-    return vals.reduce((a, b) => a + b, 0) / 4;
 }
 
 // ── Tab: Overview ─────────────────────────────────────────────────────────────
@@ -67,7 +52,7 @@ function OverviewTab({ assessment, sections }) {
     }, [assessment.id]);
 
     // Always use client-side formula (sum of 4 sections ÷ 4); server value is fallback only
-    const overallPct = calcOverallFromSections(sectionScores) ?? assessment.overall_percentage;
+    const overallPct = overallPercent(assessment);
     const overallGrade = overallPct != null ? calcGrade(overallPct) : assessment.overall_grade;
 
     return (
@@ -124,14 +109,15 @@ function OverviewTab({ assessment, sections }) {
                     {sections.map((s, i) => {
                         const sc = sectionScores[s.code];
                         const done = sectionProgress[s.code] === true;
-                        const isSpecial = SPECIAL_SECTIONS.includes(s.code);
+                        const kind = sectionKind(s);
+                        const isSpecial = isSpecialSection(s);
                         const [g1] = s.gradient ?? [s.color ?? "#6B7280"];
                         const hasSc = sc && (sc.percentage != null);
 
                         // For special sections, check offline store progress
                         const spHr = specialProgress.hr;
                         const spHp = specialProgress.hp;
-                        const spData = s.code === "human_resources" ? spHr : s.code === "health_products" ? spHp : null;
+                        const spData = kind === "human_resources" ? spHr : kind === "commodity_matrix" ? spHp : null;
                         const spAnswered = spData?.answered ?? 0;
                         const spTotal = spData?.total ?? 0;
                         const spPct = spTotal > 0 ? Math.round((spAnswered / spTotal) * 100) : 0;
@@ -163,7 +149,7 @@ function OverviewTab({ assessment, sections }) {
                                         )}
                                         {!hasSc && isSpecial && spTotal > 0 && (
                                             <div style={{ fontSize: 11, color: effectiveDone ? "#059669" : T.textMuted, marginTop: 2 }}>
-                                                {s.code === "human_resources"
+                                                {kind === "human_resources"
                                                     ? `${spAnswered}/${spTotal} cadres responded`
                                                     : `${spAnswered}/${spTotal} commodities answered`}
                                             </div>
@@ -317,8 +303,8 @@ function ResponsesTab({ assessment, sections }) {
     return (
         <>
             {sections.map((s, sIdx) => {
-                const isHr = s.code === "human_resources";
-                const isHp = s.code === "health_products";
+                const isHr = sectionKind(s) === "human_resources";
+                const isHp = sectionKind(s) === "commodity_matrix";
                 const isSpecial = isHr || isHp;
                 const questions = isSpecial ? [] : (s.questions || []);
 
@@ -652,6 +638,8 @@ function TeamTab({ assessment, onTeamUpdated }) {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
+    const [busyId, setBusyId] = useState(null);
+    const { confirm, ConfirmDialog } = useConfirm();
 
     useEffect(() => {
         let active = true;
@@ -683,10 +671,38 @@ function TeamTab({ assessment, onTeamUpdated }) {
         } finally { setSaving(false); }
     };
 
+    // Remove a member, or hand the lead role to one. The server enforces who may do
+    // what (managers only; the sole lead can't be removed) and answers with the new team.
+    const changeTeam = async (member, action) => {
+        const isRemove = action === 'remove';
+        const ok = await confirm({
+            title: isRemove ? 'Remove team member?' : 'Transfer lead role?',
+            message: isRemove
+                ? `${member.name} will no longer have access to this assessment.`
+                : `${member.name} becomes the team lead and you become a regular member.`,
+            confirmLabel: isRemove ? 'Remove' : 'Transfer',
+            danger: isRemove,
+        });
+        if (!ok) return;
+        setBusyId(member.id); setError(null);
+        try {
+            const updated = isRemove
+                ? await api.assessments.removeTeamMember(assessment.id, member.id)
+                : await api.assessments.setTeamRole(assessment.id, member.id, 'team_lead');
+            setTeam(updated);
+            if (isRemove) setEligible(prev => prev.some(m => m.id === member.id) ? prev : [...prev, member]);
+            onTeamUpdated?.({ ...assessment, ...updated });
+        } catch (e) {
+            setError(e?.message ?? 'Could not update the team.');
+        } finally { setBusyId(null); }
+    };
+
     const lead = team.lead_assessor ?? { name: assessment.assessor_name, email: assessment.assessor_contact };
     const people = team.team_members ?? [];
 
     return <div style={{ display: 'grid', gap: 14 }}>
+        <ConfirmDialog />
+        {error && !team.can_manage_team && <div style={{ color: T.danger, fontSize: 12 }}>{error}</div>}
         <div style={{ background: 'white', borderRadius: T.radius, padding: 16, border: `1px solid ${T.border}` }}>
             <div style={{ color: T.textMuted, fontSize: 11, fontWeight: 800, letterSpacing: .7, textTransform: 'uppercase', marginBottom: 10 }}>Lead Assessor</div>
             <div style={{ fontSize: 15, fontWeight: 800, color: T.text }}>{lead?.name || 'Not assigned'}</div>
@@ -694,7 +710,13 @@ function TeamTab({ assessment, onTeamUpdated }) {
         </div>
         <div style={{ background: 'white', borderRadius: T.radius, padding: 16, border: `1px solid ${T.border}` }}>
             <div style={{ color: T.textMuted, fontSize: 11, fontWeight: 800, letterSpacing: .7, textTransform: 'uppercase', marginBottom: 8 }}>Team Members</div>
-            {loading ? <div style={{ color: T.textMuted, fontSize: 13 }}>Loading team…</div> : people.length ? people.map(member => <div key={member.id} style={{ padding: '10px 0', borderTop: `1px solid ${T.borderLight}` }}><div style={{ fontWeight: 700, color: T.text }}>{member.name}</div><div style={{ fontSize: 12, color: T.textMuted }}>{member.email}</div></div>) : <div style={{ color: T.textMuted, fontSize: 13 }}>No additional team members.</div>}
+            {loading ? <div style={{ color: T.textMuted, fontSize: 13 }}>Loading team…</div> : people.length ? people.map(member => <div key={member.id} style={{ padding: '10px 0', borderTop: `1px solid ${T.borderLight}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 700, color: T.text }}>{member.name}</div><div style={{ fontSize: 12, color: T.textMuted }}>{member.email}</div></div>
+                {team.can_manage_team && <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                    <button disabled={busyId === member.id} onClick={() => changeTeam(member, 'lead')} style={{ padding: '6px 10px', borderRadius: 10, border: `1px solid ${T.border}`, background: 'white', color: T.primary, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Make lead</button>
+                    <button disabled={busyId === member.id} onClick={() => changeTeam(member, 'remove')} aria-label={`Remove ${member.name}`} style={{ padding: '6px 10px', borderRadius: 10, border: '1px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Remove</button>
+                </div>}
+            </div>) : <div style={{ color: T.textMuted, fontSize: 13 }}>No additional team members.</div>}
         </div>
         {team.can_manage_team && <div style={{ background: 'white', borderRadius: T.radius, padding: 16, border: `1px solid ${T.border}` }}>
             <div style={{ color: T.textMuted, fontSize: 11, fontWeight: 800, letterSpacing: .7, textTransform: 'uppercase', marginBottom: 8 }}>Other Potential Members</div>
@@ -706,18 +728,35 @@ function TeamTab({ assessment, onTeamUpdated }) {
     </div>;
 }
 
-export function AssessmentDetailScreen({ assessment, sections, onBack, onContinue, onViewReport, onDelete, onTeamUpdated }) {
+export function AssessmentDetailScreen({ assessment, sections, onBack, onContinue, onViewReport, onDelete, onTeamUpdated, onAssessmentChanged }) {
     const [tab, setTab] = useState("overview");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const tabs = assessment.status === "completed"
         ? ["overview", "responses", "team", "report"]
         : ["overview", "responses", "team"];
-    const headerPct = calcOverallFromSections(assessment.section_scores ?? {}) ?? assessment.overall_percentage;
+    const headerPct = overallPercent(assessment);
     const headerGrade = headerPct != null ? calcGrade(headerPct) : assessment.overall_grade;
 
     // Show delete only when assessment is not completed (may have partial/no data)
-    const canDelete = assessment.status !== "completed" && onDelete;
+    const canDelete = assessment.status !== "completed" && !assessment.is_locked && onDelete;
+
+    // Closed assessments are read-only; the team lead or an admin can reopen them.
+    const [reopening, setReopening] = useState(false);
+    const [reopenError, setReopenError] = useState(null);
+    const closed = assessment.status === "completed" || assessment.is_locked;
+    const reopen = async () => {
+        setReopening(true); setReopenError(null);
+        try {
+            const res = await api.assessments.reopen(assessment.id);
+            const updated = res?.assessment ?? res?.data;
+            if (updated) onAssessmentChanged?.(updated);
+        } catch (e) {
+            setReopenError(e?.status === 0 || e?.message === "Failed to fetch"
+                ? "You need to be online to reopen an assessment."
+                : (e?.message ?? "Could not reopen the assessment."));
+        } finally { setReopening(false); }
+    };
 
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -774,8 +813,14 @@ export function AssessmentDetailScreen({ assessment, sections, onBack, onContinu
                     {assessment.facility_name || "Assessment"}
                 </div>
                 <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 3, animation: "fadeInUp 0.4s ease 0.05s both" }}>
-                    {[assessment.assessment_type, assessment.assessment_date].filter(Boolean).join(" · ")}
+                    {[assessment.template?.name, roundLabel(assessment), assessment.assessment_date].filter(Boolean).join(" · ")}
                 </div>
+                {assessment.template?.is_retired && (
+                    <div style={{ marginTop: 6, display: "inline-block", fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+                        color: "#FDE68A", background: "rgba(253,230,138,0.15)", borderRadius: 8, padding: "3px 8px" }}>
+                        Earlier template (v{assessment.template.version}) — still editable
+                    </div>
+                )}
                 <div style={{ marginTop: 10, animation: "fadeInUp 0.4s ease 0.1s both" }}>
                     {headerGrade
                         ? <GradeBadge grade={headerGrade} pct={Number(headerPct ?? 0).toFixed(1)} />
@@ -783,6 +828,17 @@ export function AssessmentDetailScreen({ assessment, sections, onBack, onContinu
                     }
                 </div>
             </div>
+
+            {closed && (
+                <div role="status" style={{
+                    margin: "10px 6px 0", padding: "10px 14px", borderRadius: 12, fontSize: 12.5, lineHeight: 1.45,
+                    background: "#FEF3C7", color: "#92400E", border: "1px solid #FDE68A",
+                }}>
+                    🔒 This assessment is closed and read-only.
+                    {assessment.can_reopen ? " Reopen it to make changes." : " Ask the team lead or an admin to reopen it."}
+                    {reopenError && <div style={{ color: "#B91C1C", marginTop: 4 }}>{reopenError}</div>}
+                </div>
+            )}
 
             {/* Tabs */}
             <div style={{
@@ -830,6 +886,20 @@ export function AssessmentDetailScreen({ assessment, sections, onBack, onContinu
                     </button>
                 </div>
             )}
+            {closed && assessment.can_reopen && tab !== "report" && (
+                <div style={{
+                    padding: "12px 16px", paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
+                    background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", borderTop: `1px solid ${T.border}`,
+                }}>
+                    <button onClick={reopen} disabled={reopening} style={{
+                        width: "100%", padding: 14, borderRadius: T.radius, border: `1.5px solid ${T.primary}`,
+                        background: "white", color: T.primary, fontSize: 15, fontWeight: 700,
+                        cursor: reopening ? "default" : "pointer", opacity: reopening ? 0.6 : 1,
+                    }}>
+                        {reopening ? "Reopening…" : "🔓 Reopen Assessment"}
+                    </button>
+                </div>
+            )}
             {assessment.status === "completed" && tab === "report" && onViewReport && (
                 <div style={{
                     padding: "12px 16px", paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
@@ -855,7 +925,7 @@ export function AssessmentDetailScreen({ assessment, sections, onBack, onContinu
 function ReportPreviewTab({ assessment, onViewFull }) {
     const sectionScores = assessment.section_scores ?? {};
     const sections = Object.entries(sectionScores);
-    const _calcPct = calcOverallFromSections(sectionScores);
+    const _calcPct = overallPercent(assessment);
     const pct = _calcPct ?? assessment.overall_percentage ?? 0;
     const grade = _calcPct != null ? calcGrade(_calcPct) : (assessment.overall_grade ?? null);
 
@@ -876,7 +946,7 @@ function ReportPreviewTab({ assessment, onViewFull }) {
                     <div>
                         {grade && <GradeBadge grade={grade} />}
                         <div style={{ fontSize: 12, color: T.textSub, marginTop: 4 }}>{assessment.facility_name}</div>
-                        <div style={{ fontSize: 11, color: T.textMuted }}>{assessment.assessment_date} · {assessment.assessment_type}</div>
+                        <div style={{ fontSize: 11, color: T.textMuted }}>{assessment.assessment_date} · {roundLabel(assessment)}</div>
                     </div>
                 </div>
                 <ProgressBar pct={pct} color={GRADE_COLOR[grade] ?? "#6B7280"} height={6} />

@@ -51,6 +51,7 @@ class AssessmentResource extends JsonResource {
             'section_scores' => $this->whenLoaded('sectionScores', fn() =>
                     $this->sectionScores->mapWithKeys(fn($s) => [
                         $s->section->code => [
+                            'kind' => $s->section->resolvedKind(),
                             'percentage' => $s->percentage,
                             'grade' => $s->grade,
                             'answered_questions' => $s->answered_questions,
