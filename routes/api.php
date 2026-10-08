@@ -47,6 +47,19 @@ Route::prefix('v1')->name('api.v1.')->middleware(MobileApiCors::class)->group(fu
         Route::get('departments', [\App\Http\Controllers\Api\LookupController::class, 'departments'])->name('departments');
     });
 
+    // Self-registration (mobile sign-up screen). Strict throttle on writes.
+    Route::post('auth/register', [\App\Http\Controllers\Api\RegisterController::class, 'register'])
+        ->middleware('throttle:10,1')->name('auth.register');
+    Route::prefix('register-lookups')->name('register-lookups.')->middleware('throttle:60,1')->group(function () {
+        $c = \App\Http\Controllers\Api\RegisterController::class;
+        Route::get('cadres', [$c, 'cadres'])->name('cadres');
+        Route::get('departments', [$c, 'departments'])->name('departments');
+        Route::get('counties', [$c, 'counties'])->name('counties');
+        Route::get('counties/{county}/facilities', [$c, 'facilitiesByCounty'])->name('counties.facilities');
+        Route::get('check-email', [$c, 'checkEmail'])->name('check-email');
+        Route::get('check-phone', [$c, 'checkPhone'])->name('check-phone');
+    });
+
     Route::get('health', fn () => response()->json([
         'status' => 'ok',
         'service' => 'MNCH Assessment API',
