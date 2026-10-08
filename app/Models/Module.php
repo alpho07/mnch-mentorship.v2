@@ -84,16 +84,15 @@ class Module extends Model
 
     public function getTotalObjectivesAttribute(): int
     {
-        return Objective::whereHas('session', function ($query) {
-            $query->where('module_id', $this->id);
-        })->count();
+        // objectives belong to a training (the training_session_id column no
+        // longer exists), so count those of the trainings that use this module.
+        return Objective::whereIn('training_id', $this->trainingSessions()->select('training_id'))->count();
     }
 
     public function getSkillObjectivesCountAttribute(): int
     {
-        return Objective::whereHas('session', function ($query) {
-            $query->where('module_id', $this->id);
-        })->where('type', 'skill')->count();
+        return Objective::whereIn('training_id', $this->trainingSessions()->select('training_id'))
+            ->where('type', 'skill')->count();
     }
 
     public function getFullNameAttribute(): string

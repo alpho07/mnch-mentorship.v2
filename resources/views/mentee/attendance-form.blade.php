@@ -17,14 +17,14 @@
                         </svg>
                     </div>
                     <h2 class="text-2xl font-bold text-gray-900">Mark Attendance</h2>
-                    <p class="mt-2 text-sm text-gray-600">{{ $classModule->class->name }}</p>
+                    <p class="mt-2 text-sm text-gray-600">{{ $module->mentorshipClass?->name }}</p>
                 </div>
 
                 <div class="mb-6 p-4 bg-blue-50 rounded-lg">
                     <h3 class="font-semibold text-gray-900 mb-2">Module Information</h3>
-                    <p class="text-sm text-gray-700"><strong>Module:</strong> {{ $classModule->programModule->name ?? 'Module' }}</p>
-                    @if($classModule->programModule->description ?? false)
-                        <p class="text-sm text-gray-600 mt-1">{{ $classModule->programModule->description }}</p>
+                    <p class="text-sm text-gray-700"><strong>Module:</strong> {{ $module->programModule->name ?? 'Module' }}</p>
+                    @if($module->programModule->description ?? false)
+                        <p class="text-sm text-gray-600 mt-1">{{ $module->programModule->description }}</p>
                     @endif
                 </div>
 

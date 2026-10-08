@@ -20,14 +20,17 @@ class ParticipantController extends Controller
         $this->authorizeClassAccess($class);
 
         $participants = $class->participants()
-            ->with(['user.cadre', 'moduleProgress'])
+            ->with(['user.cadre', 'user.department', 'moduleProgress'])
             ->get()
             ->map(fn(ClassParticipant $p) => [
                 'id'                 => $p->id,
                 'user_id'            => $p->user_id,
                 'name'               => $p->user?->name,
                 'email'              => $p->user?->email,
+                'cadre_id'           => $p->user?->cadre_id,
                 'cadre_name'         => $p->user?->cadre?->name,
+                'department_id'      => $p->user?->department_id,
+                'department_name'    => $p->user?->department?->name,
                 'status'             => $p->status,
                 'enrolled_at'        => $p->enrolled_at?->toIso8601String(),
                 'invitation_sent_at' => $p->invitation_sent_at?->toIso8601String(),

@@ -76,7 +76,7 @@
                     <div class="hidden lg:block flex-1 max-w-xs mx-6">
                         <form action="{{ route('resources.search') }}" method="GET">
                             <div class="relative">
-                                <input type="text" name="q" value="{{ request('q') }}"
+                                <input type="text" name="q" value="{{ is_string(request('q')) ? request('q') : '' }}"
                                        placeholder="Search resources…"
                                        class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-400 focus:border-transparent outline-none transition-all">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
@@ -186,7 +186,7 @@
                     <div class="px-4 py-3 border-b border-gray-100">
                         <form action="{{ route('resources.search') }}" method="GET">
                             <div class="relative">
-                                <input type="text" name="q" value="{{ request('q') }}"
+                                <input type="text" name="q" value="{{ is_string(request('q')) ? request('q') : '' }}"
                                        placeholder="Search resources…"
                                        class="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-400 focus:border-transparent outline-none">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>

@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'api.active' => \App\Http\Middleware\EnsureUserIsActive::class,
             'prevent-stale-cache' => \App\Http\Middleware\PreventStalePageCache::class,
+            'scalar-query' => \App\Http\Middleware\ScalarQueryParams::class,
         ]);
 
         $middleware->web(append: [

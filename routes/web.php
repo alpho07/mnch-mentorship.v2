@@ -437,7 +437,7 @@ Route::get('/', [ResourceController::class, 'home'])->name('home');
 Route::get('/user-manual', fn () => view('frontend.user-manual'))->name('manual');
 
 // ===== RESOURCE CENTER ROUTES =====
-Route::prefix('resources')->name('resources.')->group(function () {
+Route::prefix('resources')->name('resources.')->middleware('scalar-query')->group(function () {
 
     // === MAIN RESOURCE ROUTES ===
     Route::get('/', [ResourceController::class, 'index'])->name('index');
@@ -500,7 +500,7 @@ Route::prefix('resources')->name('resources.')->group(function () {
 });
 
 // ===== CATEGORY ROUTES =====
-Route::prefix('categories')->name('categories.')->group(function () {
+Route::prefix('categories')->name('categories.')->middleware('scalar-query')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('index');
     Route::get('/{category:slug}', [CategoryController::class, 'show'])->name('show');
 });
@@ -559,8 +559,17 @@ Route::get('/sitemap.xml', function () {
         return compact('resources', 'categories');
     });
 
-    return response()->view('sitemap', $data)
-        ->header('Content-Type', 'text/xml');
+    // The cache holds plain arrays (closure/model-safe); the view reads
+    // ->slug and ->updated_at, so rebuild light objects here.
+    $toObjects = fn (array $rows) => array_map(fn (array $r) => (object) [
+        'slug' => $r['slug'] ?? null,
+        'updated_at' => ! empty($r['updated_at']) ? \Illuminate\Support\Carbon::parse($r['updated_at']) : null,
+    ], $rows);
+
+    return response()->view('sitemap', [
+        'resources' => $toObjects($data['resources']),
+        'categories' => $toObjects($data['categories']),
+    ])->header('Content-Type', 'text/xml');
 })->name('sitemap');
 
 Route::get('/feed', function () {
@@ -573,6 +582,20 @@ Route::get('/feed', function () {
             ->get()
             ->toArray();
     });
+
+    // Cached as arrays; the view uses object access, so rebuild objects.
+    $resources = array_map(function (array $r) {
+        $date = fn ($v) => $v ? \Illuminate\Support\Carbon::parse($v) : null;
+
+        return (object) [
+            'title' => $r['title'] ?? '',
+            'slug' => $r['slug'] ?? null,
+            'description' => $r['description'] ?? '',
+            'published_at' => $date($r['published_at'] ?? null),
+            'updated_at' => $date($r['updated_at'] ?? null),
+            'category' => ! empty($r['category']) ? (object) $r['category'] : null,
+        ];
+    }, $resources);
 
     return response()->view('feed.rss', compact('resources'))
         ->header('Content-Type', 'application/rss+xml');

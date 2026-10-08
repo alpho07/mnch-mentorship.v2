@@ -244,12 +244,25 @@ class MenteeNextActionResolver
             ];
         }
 
+        // A mentee with no enrolled class has nothing to link to.
+        $firstParticipant = $participants->first();
+        if (! $firstParticipant) {
+            return [
+                'tier' => 6,
+                'label' => 'My Dashboard',
+                'headline' => 'No active class yet',
+                'subtext' => 'You are not enrolled in a class right now. You will see your next steps here once you are.',
+                'url' => route('filament.admin.pages.mentee-dashboard'),
+                'meta' => [],
+            ];
+        }
+
         return [
             'tier' => 6,
             'label' => 'View Class',
             'headline' => "You're on track",
             'subtext' => 'Nothing needs your attention right now.',
-            'url' => route('mentee.class.progress', ['class' => $participants->first()->mentorship_class_id]),
+            'url' => route('mentee.class.progress', ['class' => $firstParticipant->mentorship_class_id]),
             'meta' => [],
         ];
     }

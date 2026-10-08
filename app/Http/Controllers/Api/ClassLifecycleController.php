@@ -76,7 +76,7 @@ class ClassLifecycleController extends Controller
 
         $user = User::findOrFail((int) $request->user_id);
         $participant = $this->enrollmentService->enrollInClass($user, $class, 'manual');
-        $participant->load('user');
+        $participant->load('user.cadre', 'user.department');
 
         return response()->json([
             'data' => [
@@ -85,6 +85,10 @@ class ClassLifecycleController extends Controller
                 'name' => $participant->user?->full_name ?? $participant->user?->name,
                 'email' => $participant->user?->email,
                 'phone' => $participant->user?->phone,
+                'cadre_id' => $participant->user?->cadre_id,
+                'cadre_name' => $participant->user?->cadre?->name,
+                'department_id' => $participant->user?->department_id,
+                'department_name' => $participant->user?->department?->name,
             ],
         ], 201);
     }
@@ -127,7 +131,7 @@ class ClassLifecycleController extends Controller
             abort_if($already, 409, 'User is already enrolled in this class.');
 
             $participant = $this->enrollmentService->enrollInClass($existingUser, $class, 'manual');
-            $participant->load('user');
+            $participant->load('user.cadre', 'user.department');
 
             return response()->json([
                 'data' => [
@@ -136,6 +140,10 @@ class ClassLifecycleController extends Controller
                     'name' => $participant->user?->full_name ?? $participant->user?->name,
                     'email' => $participant->user?->email,
                     'phone' => $participant->user?->phone,
+                'cadre_id' => $participant->user?->cadre_id,
+                'cadre_name' => $participant->user?->cadre?->name,
+                'department_id' => $participant->user?->department_id,
+                'department_name' => $participant->user?->department?->name,
                     'created' => false,
                 ],
             ], 201);
@@ -182,7 +190,7 @@ class ClassLifecycleController extends Controller
             return $this->enrollmentService->enrollInClass($user, $class, 'manual');
         });
 
-        $participant->load('user');
+        $participant->load('user.cadre', 'user.department');
 
         $invitationSent = false;
         if ($participant->user?->email) {
@@ -204,6 +212,10 @@ class ClassLifecycleController extends Controller
                 'name' => $participant->user?->full_name ?? $participant->user?->name,
                 'email' => $participant->user?->email,
                 'phone' => $participant->user?->phone,
+                'cadre_id' => $participant->user?->cadre_id,
+                'cadre_name' => $participant->user?->cadre?->name,
+                'department_id' => $participant->user?->department_id,
+                'department_name' => $participant->user?->department?->name,
                 'default_password' => '123456',
                 'created' => true,
                 'invitation_sent' => $invitationSent,
@@ -294,7 +306,7 @@ class ClassLifecycleController extends Controller
         $this->authorizeClassAccess($class);
         abort_if($participant->mentorship_class_id !== $class->id, 404);
 
-        $participant->load('user');
+        $participant->load('user.cadre', 'user.department');
 
         $emailSent = false;
         if ($participant->user?->email) {

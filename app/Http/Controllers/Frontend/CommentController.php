@@ -5,16 +5,24 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Resource;
 use App\Models\ResourceComment;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
-class CommentController extends Controller
+class CommentController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    /**
+     * Controller::middleware() no longer exists on the base controller, so
+     * the middleware is declared through HasMiddleware.
+     */
+    public static function middleware(): array
     {
-        $this->middleware('auth')->except('storeGuest');
-        $this->middleware('throttle:10,1')->only(['store', 'storeGuest']); // Rate limiting
+        return [
+            new Middleware('auth', except: ['storeGuest']),
+            new Middleware('throttle:10,1', only: ['store', 'storeGuest']), // Rate limiting
+        ];
     }
 
     /**

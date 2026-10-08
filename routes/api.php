@@ -40,6 +40,13 @@ Route::prefix('v1')->name('api.v1.')->middleware(MobileApiCors::class)->group(fu
         Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('reset-password');
     });
 
+    // Registration lookups — the sign-up screen has no token yet, so these
+    // are read-only (id + name only) and throttled.
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::get('cadres', [\App\Http\Controllers\Api\LookupController::class, 'cadres'])->name('cadres');
+        Route::get('departments', [\App\Http\Controllers\Api\LookupController::class, 'departments'])->name('departments');
+    });
+
     Route::get('health', fn () => response()->json([
         'status' => 'ok',
         'service' => 'MNCH Assessment API',
@@ -142,8 +149,6 @@ Route::prefix('v1')->name('api.v1.')->middleware(MobileApiCors::class)->group(fu
             Route::get('{program}/modules', [\App\Http\Controllers\Api\LookupController::class, 'programModules'])->name('modules');
         });
         Route::get('counties', [\App\Http\Controllers\Api\LookupController::class, 'counties'])->name('counties');
-        Route::get('cadres', [\App\Http\Controllers\Api\LookupController::class, 'cadres'])->name('cadres');
-        Route::get('departments', [\App\Http\Controllers\Api\LookupController::class, 'departments'])->name('departments');
         Route::get('counties/{county}/facilities', [\App\Http\Controllers\Api\LookupController::class, 'facilitiesByCounty'])->name('counties.facilities');
         Route::get('users/by-email', [\App\Http\Controllers\Api\LookupController::class, 'userByEmail'])->name('users.by-email');
         Route::get('users/search', [\App\Http\Controllers\Api\LookupController::class, 'userSearch'])->name('users.search');

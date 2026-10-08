@@ -19,7 +19,6 @@ class MentorshipController extends Controller
 
         $query = Training::query()
             ->where('type', 'facility_mentorship')
-            ->where('status', '!=', 'draft')
             ->with([
                 'mentor:id,name',
                 'facility:id,name,mfl_code',
@@ -33,10 +32,14 @@ class MentorshipController extends Controller
             ->withCount('mentorshipClasses as class_count');
 
         if ($user->hasRole('super_admin')) {
-            // Super admin sees all mentorships including soft-deleted
-            $query->withTrashed();
-        } elseif (! $user->isAboveSite()) {
-            $query->forMentorOrCoMentor($user->id);
+            // Super admin sees every mentorship (including soft-deleted),
+            // but not other people's unsubmitted drafts.
+            $query->where('status', '!=', 'draft')->withTrashed();
+        } else {
+            // Everyone else sees only the mentorships they created — drafts
+            // included, so a mentorship started on the phone shows up
+            // before it is submitted.
+            $query->where('mentor_id', $user->id);
         }
 
         if ($request->filled('since')) {
@@ -161,7 +164,8 @@ class MentorshipController extends Controller
         $class->load([
             'classModules.programModule',
             'classModules.sessions',
-            'participants.user:id,name,email',
+            'participants.user.cadre',
+            'participants.user.department',
         ]);
 
         $modules = $class->classModules->map(fn ($m) => [
@@ -180,6 +184,10 @@ class MentorshipController extends Controller
             'id' => $p->id,
             'name' => $p->user?->name ?? 'Unknown',
             'email' => $p->user?->email,
+            'cadre_id' => $p->user?->cadre_id,
+            'cadre_name' => $p->user?->cadre?->name,
+            'department_id' => $p->user?->department_id,
+            'department_name' => $p->user?->department?->name,
         ]);
 
         return response()->json([

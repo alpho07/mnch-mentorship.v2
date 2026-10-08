@@ -967,10 +967,12 @@ class AnalyticsDashboardController extends Controller
      */
     private function applyFacilityGeoScope($query, $countyId = null, $subcountyId = null, $facilityId = null): void
     {
+        // Qualified with the table name: this runs inside county withCount()
+        // subqueries that join subcounties, where a bare `id` is ambiguous.
         if ($facilityId) {
-            $query->where('id', $facilityId);
+            $query->where('facilities.id', $facilityId);
         } elseif ($subcountyId) {
-            $query->where('subcounty_id', $subcountyId);
+            $query->where('facilities.subcounty_id', $subcountyId);
         } elseif ($countyId) {
             $query->whereHas('subcounty', fn ($s) => $s->where('county_id', $countyId));
         }

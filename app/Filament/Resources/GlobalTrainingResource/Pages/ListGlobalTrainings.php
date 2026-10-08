@@ -178,7 +178,7 @@ class ListGlobalTrainings extends ListRecords
             foreach ($trainings as $training) {
                 $participantsByFacility = $training->participants->groupBy('user.facility.name')->keys();
                 $participantsByCounty = $training->participants
-                    ->map(fn($p) => $p->user->facility?->subcounty?->county?->name)
+                    ->map(fn($p) => $p->user?->facility?->subcounty?->county?->name)
                     ->filter()
                     ->unique();
 

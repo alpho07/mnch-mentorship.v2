@@ -150,12 +150,16 @@ class GlobalTrainingController extends Controller
         $this->authorizeTrainingAccess($request, $training);
 
         $participants = $training->participants()
-            ->with('user')
+            ->with(['user.cadre', 'user.department'])
             ->get()
             ->map(fn($p) => [
                 'id'                => $p->id,
                 'user_id'           => $p->user_id,
                 'name'              => $p->user?->name,
+                'cadre_id'          => $p->user?->cadre_id,
+                'cadre_name'        => $p->user?->cadre?->name,
+                'department_id'     => $p->user?->department_id,
+                'department_name'   => $p->user?->department?->name,
                 'completion_status' => $p->completion_status ?? 'registered',
             ]);
 
