@@ -27,10 +27,14 @@ class RegisterController extends Controller
     /** Cadres offered at sign-up: active ones of assessment type 2 only. */
     private const CADRE_ASSESSMENT_TYPE_ID = 2;
 
+    /** Assessment-only rows that are not real job cadres; hidden from sign-up (still used by assessments). */
+    private const EXCLUDED_CADRE_NAMES = ['No of TOTs'];
+
     public function cadres(): JsonResponse
     {
         $cadres = MainCadre::where('is_active', true)
             ->where('assessment_type_id', self::CADRE_ASSESSMENT_TYPE_ID)
+            ->whereNotIn('name', self::EXCLUDED_CADRE_NAMES)
             ->orderBy('order')
             ->get(['id', 'name']);
 
@@ -87,7 +91,8 @@ class RegisterController extends Controller
             'phone' => ['required', 'string', 'max:50', 'unique:users,phone'],
             'cadre_id' => ['required', 'integer', Rule::exists((new MainCadre)->getTable(), 'id')
                 ->where('is_active', true)
-                ->where('assessment_type_id', self::CADRE_ASSESSMENT_TYPE_ID)],
+                ->where('assessment_type_id', self::CADRE_ASSESSMENT_TYPE_ID)
+                ->whereNotIn('name', self::EXCLUDED_CADRE_NAMES)],
             'department_id' => ['required', 'integer', 'exists:departments,id'],
             'role' => ['required', 'in:mentee,facility_mentor'],
             'county_id' => ['required', 'integer', 'exists:counties,id'],

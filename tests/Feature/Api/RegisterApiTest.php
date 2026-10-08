@@ -133,4 +133,15 @@ class RegisterApiTest extends TestCase
         $this->postJson('/api/v1/auth/register', $this->payload(['cadre_id' => $typeOne->id]))
             ->assertStatus(422)->assertJsonValidationErrors(['cadre_id']);
     }
+
+    public function test_no_of_tots_is_hidden_and_rejected(): void
+    {
+        Role::firstOrCreate(['name' => 'mentee', 'guard_name' => 'web']);
+        $tots = MainCadre::create(['name' => 'No of TOTs', 'is_active' => true, 'order' => 9, 'assessment_type_id' => 2]);
+
+        $this->getJson('/api/v1/register-lookups/cadres')
+            ->assertOk()->assertJsonMissing(['name' => 'No of TOTs']);
+        $this->postJson('/api/v1/auth/register', $this->payload(['cadre_id' => $tots->id]))
+            ->assertStatus(422)->assertJsonValidationErrors(['cadre_id']);
+    }
 }
