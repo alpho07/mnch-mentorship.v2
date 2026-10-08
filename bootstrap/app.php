@@ -38,6 +38,13 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
+        // API clients (the mobile app) always get JSON errors, even if they
+        // forget the Accept header — never one of the HTML error pages in
+        // resources/views/errors, which are for people in a browser.
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request, \Throwable $e) => $request->is('api/*') || $request->expectsJson()
+        );
+
         // Only log genuine server errors here — 4xx responses
         // (403s from authorization checks, 404s from route
         // model binding, 409s from validation, etc.) are
