@@ -16,6 +16,27 @@ class AssessmentTeamController extends Controller {
         return response()->json($this->teamPayload($assessment, $teamService, $request->user()->id));
     }
 
+    /**
+     * GET /api/v1/assessments/team/search?q=
+     * People the creator can add to a team while starting an assessment
+     * (no assessment exists yet; the creator becomes lead).
+     */
+    public function search(Request $request, AssessmentTeamService $teamService): JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($q) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        return response()->json(['data' => $teamService->searchEligibleUsers(null, $q)->map(fn ($user) => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'facility_name' => $user->facility?->name,
+        ])->values()]);
+    }
+
     public function eligible(Request $request, Assessment $assessment, AssessmentTeamService $teamService): JsonResponse {
         abort_unless($assessment->canManageTeam($request->user()->id), 403);
 

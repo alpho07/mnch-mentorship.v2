@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Assessment;
+use App\Models\AssessmentChecklist;
+use App\Models\AssessmentQuestion;
 use App\Models\AssessmentSection;
 use App\Models\AssessmentType;
 use Illuminate\Support\Facades\Cache;
@@ -51,10 +53,13 @@ class AssessmentSchemaService
      */
     public function forTemplate(AssessmentType $type): array
     {
-        $stamp = AssessmentSection::where('assessment_type_id', $type->id)->max('updated_at');
+        $sectionIds = AssessmentSection::where('assessment_type_id', $type->id)->pluck('id');
+        $stamp = AssessmentSection::where('assessment_type_id', $type->id)->max('updated_at')
+            .AssessmentQuestion::whereIn('assessment_section_id', $sectionIds)->max('updated_at')
+            .AssessmentChecklist::where('assessment_type_id', $type->id)->max('updated_at');
 
         return Cache::remember(
-            "api.assessment_schema.{$type->id}.".md5((string) $stamp),
+            "api.assessment_schema.v2.{$type->id}.".md5($stamp),
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             fn () => $this->build($type)
         );
@@ -73,7 +78,7 @@ class AssessmentSchemaService
             ->ordered()
             ->where('assessment_type_id', $type->id)
             ->whereNotIn('code', AssessmentSection::INFORMATIONAL_CODES)
-            ->with(['questions' => fn ($q) => $q->where('is_active', true)->orderBy('order')])
+            ->with(['questions' => fn ($q) => $q->where('is_active', true)->orderBy('order')->with('checklist.items')])
             ->get()
             ->map(fn (AssessmentSection $section) => [
                 'id' => $section->id,
@@ -104,6 +109,16 @@ class AssessmentSchemaService
                     'order' => $q->order,
                     'group' => $q->group,
                     'indent_level' => (int) $q->indent_level,
+                    'checklist' => $q->checklist ? [
+                        'id' => $q->checklist->id,
+                        'title' => $q->checklist->title,
+                        'description' => $q->checklist->description,
+                        'items' => $q->checklist->items->map(fn ($i) => [
+                            'group_label' => $i->group_label,
+                            'label' => $i->label,
+                            'qty' => $i->qty,
+                        ])->values(),
+                    ] : null,
                 ])->values(),
             ])->values()->all();
     }

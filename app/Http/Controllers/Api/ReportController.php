@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\AssessmentExecutiveDashboardController;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendAssessmentReportEmail;
 use App\Models\Assessment;
 use App\Models\AssessmentEmailJob;
 use App\Models\AssessmentSection;
 use App\Services\AssessmentPdfReportService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -113,6 +115,85 @@ class ReportController extends Controller {
                                 'answered' => $s->answered_questions,
                                 'total' => $s->total_questions,
                                     ])->values(),
+        ]);
+    }
+
+    /**
+     * GET /api/v1/assessments/{assessment}/report/executive
+     *
+     * The same executive dashboard the web renders (headline score,
+     * insights, data quality, HR coverage, commodity availability and
+     * indicators) as compact JSON for the mobile executive view.
+     */
+    public function executive(Request $request, Assessment $assessment, AssessmentExecutiveDashboardController $dashboard): JsonResponse
+    {
+        $this->authorize('view', $assessment);
+
+        $d = $dashboard->buildDashboardData($assessment);
+        $assessment->loadMissing('assessmentType');
+
+        return response()->json([
+            'assessment' => [
+                'id' => $assessment->id,
+                'facility_name' => $assessment->facility->name ?? null,
+                'mfl_code' => $assessment->facility->mfl_code ?? null,
+                'county' => $assessment->facility->subcounty->county->name ?? null,
+                'template_name' => $assessment->assessmentType?->name,
+                'round' => $assessment->round_display,
+                'assessment_date' => $assessment->assessment_date instanceof \Carbon\Carbon ? $assessment->assessment_date->toDateString() : $assessment->assessment_date,
+                'status' => $assessment->status,
+                'overall_percentage' => $assessment->overall_percentage,
+                'overall_grade' => $assessment->overall_grade,
+            ],
+            'section_scores' => collect($d['sectionScores'])->values(),
+            'insights' => collect($d['insights'])->values(),
+            'indicator_insights' => collect($d['execIndicatorInsights'])->values(),
+            'indicator_metrics' => collect($d['indicatorMetrics'])->values(),
+            'human_resources' => [
+                'total_staff' => $d['totalStaff'],
+                'total_trained' => $d['totalTrained'],
+                'coverage_pct' => $d['hrCoverage'],
+                'cadres' => collect($d['hrRows'])->values(),
+            ],
+            'commodities' => [
+                'overall_pct' => $d['overallCommodityPct'],
+                'departments' => collect($d['deptScores'])->values(),
+                'categories' => collect($d['categoryScores'])->values(),
+            ],
+            'data_quality' => [
+                'overall_completeness' => $d['overallCompleteness'],
+                'sections' => collect($d['sectionCompleteness'])->values(),
+                'insights' => collect($d['dataQualityInsights'])->values(),
+            ],
+            'previous_round' => $d['previousRoundLabel'] ?? null,
+        ]);
+    }
+
+    /**
+     * GET /api/v1/assessments/{assessment}/report/executive/pdf
+     * Renders the executive dashboard PDF and returns a download link.
+     */
+    public function executivePdf(Request $request, Assessment $assessment, AssessmentExecutiveDashboardController $dashboard): JsonResponse
+    {
+        $this->authorize('view', $assessment);
+
+        if ($assessment->status !== 'completed') {
+            return response()->json(['message' => 'The executive report is only available for completed assessments.'], 422);
+        }
+
+        $data = $dashboard->buildDashboardData($assessment);
+        $data['isPdf'] = true;
+
+        $pdf = Pdf::loadView('pdf.assessment-executive-dashboard', $data)
+            ->setPaper('a4', 'portrait')
+            ->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true, 'defaultFont' => 'DejaVu Sans']);
+
+        $filename = 'executive-assessment-'.$assessment->id.'-'.now()->format('Ymd').'.pdf';
+        Storage::disk('public')->put("reports/{$filename}", $pdf->output());
+
+        return response()->json([
+            'download_url' => Storage::disk('public')->url("reports/{$filename}"),
+            'filename' => $filename,
         ]);
     }
 

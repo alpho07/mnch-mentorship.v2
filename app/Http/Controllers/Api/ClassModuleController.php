@@ -16,6 +16,107 @@ class ClassModuleController extends Controller
     use AuthorizesClassAccess;
 
     /**
+     * GET /api/v1/modules/{module}/resources
+     *
+     * Everything the web "Module Resources" page shows for the module's
+     * programme module: introduction, objectives, videos, case scenarios,
+     * equipment, debrief, pre/post tests (titles only) and the attached
+     * resources, each with a short-lived signed download link.
+     */
+    public function resources(Request $request, ClassModule $module): JsonResponse
+    {
+        $user = $request->user();
+
+        // Enrolled mentees can read their module's resources; everyone else needs
+        // mentor / co-mentor / admin access to the class.
+        $isParticipant = \App\Models\ClassParticipant::where('mentorship_class_id', $module->mentorship_class_id)
+            ->where('user_id', $user->id)->exists();
+
+        if (! $isParticipant) {
+            $this->authorizeClassAccess($module->mentorshipClass);
+        }
+
+        $pm = $module->programModule;
+
+        if (! $pm) {
+            return response()->json(['data' => null]);
+        }
+
+        $pm->load([
+            'contents' => fn ($q) => $q->where('is_active', true)->orderBy('order_sequence'),
+            'quizzes.questions.options',
+            'resources' => fn ($q) => $q->with(['primaryFile', 'category', 'resourceType']),
+        ]);
+
+        $rubric = \App\Models\ModuleRubric::where('program_module_id', $pm->id)
+            ->where('is_active', true)->orderBy('order_sequence')->first();
+
+        $content = fn (string $type) => $pm->contents->where('type', $type)->map(fn ($c) => [
+            'id' => $c->id,
+            'title' => $c->title,
+            'content' => $c->content,
+            'video_url' => $c->video_url,
+            'embed_url' => $c->isVideo() ? $c->youtubeEmbedUrl() : null,
+            'manual_reference_url' => $c->manual_reference_url,
+        ])->values();
+
+        // Mentors see the full test (questions, options, answer key, like the web page);
+        // mentees only get titles and counts — their quiz flow serves the questions.
+        $tests = fn (string $kind) => $pm->quizzes
+            ->filter(fn ($q) => $kind === 'pre' ? $q->isPreTest() : $q->isPostTest())
+            ->map(fn ($q) => [
+                'id' => $q->id,
+                'title' => $q->title,
+                'question_count' => $q->questions->count(),
+                'questions' => $isParticipant ? [] : $q->questions->map(fn ($question) => [
+                    'id' => $question->id,
+                    'question_text' => $question->question_text,
+                    'explanation' => $question->explanation,
+                    'options' => $question->options->map(fn ($o) => [
+                        'option_text' => $o->option_text,
+                        'is_correct' => (bool) $o->is_correct,
+                    ])->values(),
+                ])->values(),
+            ])
+            ->values();
+
+        $resources = $pm->resources->map(function ($r) use ($user) {
+            $file = $r->primaryFile;
+            $canAccess = $r->canUserAccess($user);
+
+            return [
+                'id' => $r->id,
+                'title' => $r->title,
+                'description' => $r->excerpt,
+                'category' => $r->category?->name,
+                'type' => $r->resourceType?->slug ?? 'document',
+                'type_label' => $r->resourceType?->name,
+                'external_url' => filled($r->external_url) ? $r->external_url : null,
+                'can_access' => $canAccess,
+                'file' => $file && $file->exists() && $canAccess ? [
+                    'name' => $file->original_name,
+                    'size' => $file->formatted_file_size,
+                    'mime' => $file->file_type,
+                    'download_url' => \App\Http\Controllers\Api\ResourceFileDownloadController::signedUrl($file, $user),
+                ] : null,
+            ];
+        })->values();
+
+        return response()->json(['data' => [
+            'module' => ['id' => $module->id, 'name' => $pm->name, 'description' => $pm->description],
+            'introduction' => $content('introduction'),
+            'objectives' => array_values($pm->objectives ?? []),
+            'pre_tests' => $tests('pre'),
+            'videos' => $content('video'),
+            'case_scenarios' => $content('case_scenario'),
+            'equipment' => array_values($rubric->equipment_supplies ?? []),
+            'debrief' => array_values($rubric->debrief_questions ?? []),
+            'post_tests' => $tests('post'),
+            'resources' => $resources,
+        ]]);
+    }
+
+    /**
      * GET /api/v1/classes/{class}/modules
      */
     public function index(MentorshipClass $class): JsonResponse

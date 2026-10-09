@@ -47,7 +47,7 @@ class AssessmentExecutiveDashboardController extends Controller
         return $pdf->download($filename);
     }
 
-    private function buildDashboardData(Assessment $assessment): array
+    public function buildDashboardData(Assessment $assessment): array
     {
         $assessment->load([
             'facility.facilityLevel',

@@ -419,12 +419,11 @@ class AssessmentController extends Controller {
             || $assessment->commodityResponses()->exists();
     }
 
-    /** Real sections of the template that are not yet marked done. */
+    /** Visible sections of the template that are not yet marked done. */
     private function incompleteSections(Assessment $assessment): array {
         $progress = $assessment->section_progress ?? [];
 
-        return $assessment->templateSections()->active()->ordered()->get()
-            ->filter(fn (AssessmentSection $s) => $s->resolvedKind() !== 'informational')
+        return $assessment->visibleTemplateSections()
             ->reject(fn (AssessmentSection $s) => ($progress[$s->code] ?? false) === true)
             ->pluck('code')
             ->values()

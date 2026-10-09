@@ -60,6 +60,10 @@ Route::prefix('v1')->name('api.v1.')->middleware(MobileApiCors::class)->group(fu
         Route::get('check-phone', [$c, 'checkPhone'])->name('check-phone');
     });
 
+    // Signed (short-lived, user-bound) resource downloads for the mobile app.
+    Route::get('resource-files/{file}/download', [\App\Http\Controllers\Api\ResourceFileDownloadController::class, 'download'])
+        ->middleware(['signed', 'throttle:downloads'])->name('resource-files.signed-download');
+
     Route::get('health', fn () => response()->json([
         'status' => 'ok',
         'service' => 'MNCH Assessment API',
@@ -111,6 +115,7 @@ Route::prefix('v1')->name('api.v1.')->middleware(MobileApiCors::class)->group(fu
         Route::prefix('assessments')->name('assessments.')->group(function () {
             Route::get('/', [AssessmentController::class, 'index'])->name('index');
             Route::post('/', [AssessmentController::class, 'store'])->name('store');
+            Route::get('team/search', [AssessmentTeamController::class, 'search'])->name('team.search');
             Route::get('{assessment}', [AssessmentController::class, 'show'])->name('show');
             Route::put('{assessment}', [AssessmentController::class, 'update'])->name('update');
             Route::delete('{assessment}', [AssessmentController::class, 'destroy'])->name('destroy');
@@ -150,6 +155,8 @@ Route::prefix('v1')->name('api.v1.')->middleware(MobileApiCors::class)->group(fu
                 Route::get('/', [ReportController::class, 'show'])->name('show');
                 Route::get('pdf', [ReportController::class, 'downloadPdf'])->name('pdf');
                 Route::get('summary', [ReportController::class, 'summary'])->name('summary');
+                Route::get('executive', [ReportController::class, 'executive'])->name('executive');
+                Route::get('executive/pdf', [ReportController::class, 'executivePdf'])->name('executive-pdf');
                 Route::post('email', [ReportController::class, 'emailReport'])->name('email');
                 Route::get('email/{emailJob}', [ReportController::class, 'emailJobStatus'])->name('email-status');
             });
@@ -201,6 +208,7 @@ Route::prefix('v1')->name('api.v1.')->middleware(MobileApiCors::class)->group(fu
             Route::post('start', [\App\Http\Controllers\Api\ClassModuleController::class, 'start'])->name('start');
             Route::post('complete', [\App\Http\Controllers\Api\ClassModuleController::class, 'complete'])->name('complete');
             Route::get('sessions', [\App\Http\Controllers\Api\ClassModuleController::class, 'sessions'])->name('sessions');
+            Route::get('resources', [\App\Http\Controllers\Api\ClassModuleController::class, 'resources'])->name('resources');
             Route::get('sessions/available-templates', [\App\Http\Controllers\Api\ClassSessionController::class, 'availableTemplates'])->name('sessions.templates');
             Route::post('sessions', [\App\Http\Controllers\Api\ClassSessionController::class, 'store'])->name('sessions.store');
             Route::get('attendance', [\App\Http\Controllers\Api\AttendanceApiController::class, 'roster'])->name('attendance.roster');

@@ -415,18 +415,44 @@ class Assessment extends Model
      * `false` for them anyway — scanning the whole array for any `false`
      * would make "all sections complete" permanently unreachable.
      */
+    /**
+     * The template's real (non-informational) active sections that apply to
+     * THIS assessment: sections whose display_conditions resolve to hidden
+     * given the saved answers are left out, same as the web section list.
+     *
+     * @return \Illuminate\Support\Collection<int, AssessmentSection>
+     */
+    public function visibleTemplateSections(): \Illuminate\Support\Collection
+    {
+        $sections = $this->assessmentType
+            ?->sections()
+            ->where('is_active', true)
+            ->orderBy('order')
+            ->get()
+            ->filter(fn (AssessmentSection $s) => $s->resolvedKind() !== 'informational') ?? collect();
+
+        if ($sections->every(fn (AssessmentSection $s) => empty($s->display_conditions))) {
+            return $sections->values();
+        }
+
+        $responsesByCode = AssessmentQuestionResponse::query()
+            ->where('assessment_id', $this->id)
+            ->join('assessment_questions', 'assessment_questions.id', '=', 'assessment_question_responses.assessment_question_id')
+            ->pluck('assessment_question_responses.response_value', 'assessment_questions.question_code')
+            ->all();
+
+        return $sections->filter(fn (AssessmentSection $s) => empty($s->display_conditions)
+            || \App\Services\ConditionalLogicEvaluator::isVisible($s->display_conditions, fn (string $code) => $responsesByCode[$code] ?? null)
+        )->values();
+    }
+
     public function allSectionsComplete(): bool
     {
         $progress = $this->section_progress ?? [];
 
-        $codes = $this->assessmentType
-            ?->sections()
-            ->where('is_active', true)
-            ->get()
-            ->filter(fn (AssessmentSection $s) => $s->resolvedKind() !== 'informational')
-            ->pluck('code');
+        $codes = $this->visibleTemplateSections()->pluck('code');
 
-        if (! $codes || $codes->isEmpty()) {
+        if ($codes->isEmpty()) {
             return false;
         }
 
