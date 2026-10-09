@@ -22,7 +22,8 @@ return [
         'http://localhost:3000', // alternative local dev
         'http://127.0.0.1:5173',
         'https://localhost',
-        'https://mnchkenyamentorship.netlify.app'
+        'https://mnchkenyamentorship.netlify.app',
+        'https://mnchv2.netlify.app'
     ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],

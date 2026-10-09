@@ -33,7 +33,9 @@ class MobileApiCors {
         'ionic://localhost',
         'https://mnchkenyamentorship.org',
         'https://www.mnchkenyamentorship.org',
-        'https://mnchkenyamentorship.netlify.app'
+        'https://mnchkenyamentorship.netlify.app',
+        'https://mnchv2.netlify.app'
+        
     ];
 
     public function handle(Request $request, Closure $next): Response {
