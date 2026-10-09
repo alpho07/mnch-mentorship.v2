@@ -67,7 +67,7 @@ class ListMentorshipTrainings extends ListRecords
     {
         $stats = $this->getQuickStats();
 
-        return "Facility-based mentorships • {$stats['total']} total • {$stats['active']} active • {$stats['mentees']} mentees";
+        return "Facility-based mentorships • {$stats['total']} total ({$stats['draft']} draft, not yet counted in public stats) • {$stats['active']} active • {$stats['mentees']} mentees";
     }
 
     protected function getHeaderWidgets(): array

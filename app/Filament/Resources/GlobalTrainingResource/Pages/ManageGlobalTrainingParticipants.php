@@ -361,6 +361,12 @@ class ManageGlobalTrainingParticipants extends Page implements HasTable
                         return $column->getState();
                     }),
 
+                Tables\Columns\TextColumn::make('user.facility.subcounty.county.name')
+                    ->label('County')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('No county'),
+
                 Tables\Columns\TextColumn::make('user.department.name')
                     ->label('Department')
                     ->badge()
@@ -398,6 +404,11 @@ class ManageGlobalTrainingParticipants extends Page implements HasTable
 
                 Tables\Filters\SelectFilter::make('facility')
                     ->relationship('user.facility', 'name')
+                    ->multiple()
+                    ->preload(),
+
+                Tables\Filters\SelectFilter::make('county')
+                    ->relationship('user.facility.subcounty.county', 'name')
                     ->multiple()
                     ->preload(),
 
