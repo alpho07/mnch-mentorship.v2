@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { T, ROUND_OPTIONS } from "../constants.js";
 import api from "../services/api.service.js";
 
@@ -116,9 +117,25 @@ function TeamPicker({ members, onChange }) {
 // ─────────────────────────────────────────────────────────────────────────────
 export function NewAssessmentSheet({ facilities, templates, schemas, user, onSubmit, onClose }) {
     // ── Template (which assessment to start) ───────────────────────────────────
-    const templateList = templates?.data ?? [];
+    const templateList = useMemo(() => templates?.data ?? [], [templates]);
     const [templateId, setTemplateId] = useState(templates?.default_template_id ?? templateList[0]?.id ?? null);
     const template = templateList.find((t) => t.id === templateId) ?? null;
+
+    // Category (optional) narrows the template list, like the web create form.
+    const categories = useMemo(() => {
+        const seen = new Map();
+        templateList.forEach((t) => { if (t.category?.id) seen.set(t.category.id, t.category); });
+        return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+    }, [templateList]);
+    const [categoryId, setCategoryId] = useState(null);
+    const visibleTemplates = categoryId ? templateList.filter((t) => t.category?.id === categoryId) : templateList;
+
+    function pickCategory(id) {
+        setCategoryId(id);
+        const inScope = id ? templateList.filter((t) => t.category?.id === id) : templateList;
+        // Keep the chosen template when it still fits, otherwise fall back to the first match.
+        if (!inScope.some((t) => t.id === templateId)) setTemplateId(inScope[0]?.id ?? null);
+    }
 
     // The chosen template's sections — needed offline to build the provisional
     // assessment's progress map. Use the shared cache, else fetch it.
@@ -281,8 +298,15 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    return (
+    // Rendered into <body> so the sheet always sits above the bottom navigation,
+    // whatever stacking context the calling screen creates.
+    return createPortal(
         <>
+            <style>{`
+                .mnch-sheet { max-height: 92vh; max-height: 92dvh; }
+                .mnch-sheet-scroll { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+                @media (min-width: 600px) { .mnch-sheet { left: 50% !important; right: auto !important; width: 520px; margin-left: -260px; } }
+            `}</style>
             {/* Backdrop */}
             <div
                 onClick={animDone ? onClose : undefined}
@@ -290,12 +314,13 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
                     position: "fixed",
                     inset: 0,
                     background: "rgba(0,0,0,0.5)",
-                    zIndex: 1000,
+                    zIndex: 2000,
                 }}
             />
 
             {/* Sheet */}
             <div
+                className="mnch-sheet"
                 style={{
                     position: "fixed",
                     bottom: 0,
@@ -303,10 +328,9 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
                     right: 0,
                     background: "#fff",
                     borderRadius: "20px 20px 0 0",
-                    zIndex: 1001,
+                    zIndex: 2001,
                     transform: mounted ? "translateY(0)" : "translateY(100%)",
                     transition: "transform 300ms ease",
-                    maxHeight: "90vh",
                     display: "flex",
                     flexDirection: "column",
                 }}
@@ -350,10 +374,10 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
                 </div>
 
                 {/* Scrollable content */}
-                <div style={{
+                <div className="mnch-sheet-scroll" style={{
                     overflowY: "auto",
-                    maxHeight: "50vh",
-                    padding: "16px 20px 24px",
+                    minHeight: 0,
+                    padding: "16px 20px 16px",
                     flex: 1,
                 }}>
 
@@ -456,6 +480,33 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
 
                     {/* ── Assessment template ──────────────────────────────────── */}
                     <div style={{ marginBottom: 18 }}>
+                        {categories.length > 0 && (
+                            <div style={{ marginBottom: 14 }}>
+                                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.textMid, marginBottom: 6 }}>
+                                    Category <span style={{ fontWeight: 400, color: T.textMuted }}>(optional)</span>
+                                </label>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                    {[{ id: null, name: "All" }, ...categories].map((c) => {
+                                        const active = categoryId === c.id;
+                                        return (
+                                            <button
+                                                key={c.id ?? "all"}
+                                                type="button"
+                                                onClick={() => pickCategory(c.id)}
+                                                style={{
+                                                    padding: "7px 14px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer",
+                                                    border: `1.5px solid ${active ? T.primary : T.border}`,
+                                                    background: active ? T.gradientPrimary : "#fff",
+                                                    color: active ? "#fff" : T.textMid,
+                                                }}
+                                            >
+                                                {c.name}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                         <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.textMid, marginBottom: 6 }}>
                             Assessment
                         </label>
@@ -465,7 +516,7 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
                             </div>
                         ) : (
                             <div style={{ display: "grid", gap: 8 }}>
-                                {templateList.map((t) => {
+                                {visibleTemplates.map((t) => {
                                     const active = t.id === templateId;
                                     return (
                                         <button
@@ -573,6 +624,15 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
 
                     <TeamPicker members={teamMembers} onChange={setTeamMembers} />
 
+                </div>
+
+                {/* Pinned footer — always visible above the phone's gesture bar / nav */}
+                <div className="mnch-sheet-footer" style={{
+                    flexShrink: 0,
+                    padding: "12px 20px calc(20px + env(safe-area-inset-bottom, 0px))",
+                    borderTop: `1px solid ${T.borderLight}`,
+                    background: "#fff",
+                }}>
                     {/* ── Submit button ────────────────────────────────────────── */}
                     <button
                         onClick={handleSubmit}
@@ -585,7 +645,7 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
                             fontWeight: 700,
                             borderRadius: 12,
                             padding: "14px",
-                            marginTop: 20,
+                            marginTop: 0,
                             border: "none",
                             cursor: canSubmit ? "pointer" : "not-allowed",
                             opacity: canSubmit ? 1 : 0.5,
@@ -643,6 +703,7 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
                     )}
                 </div>
             </div>
-        </>
+        </>,
+        document.body
     );
 }
