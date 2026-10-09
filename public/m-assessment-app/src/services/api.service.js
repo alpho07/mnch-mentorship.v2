@@ -134,11 +134,24 @@ async function syncAssessments(since) {
     for (const record of delta) {
         if (record.is_trashed) {
             await offlineStore.deleteAssessment(record.id);
-        } else {
-            const cached = await offlineStore.getAssessment(record.id);
-            if (!cached || (record.updated_at ?? '') >= (cached.updated_at ?? '')) {
-                await offlineStore.saveAssessment(record);
-            }
+            continue;
+        }
+        const cached = await offlineStore.getAssessment(record.id);
+        // Offline-created assessments are owned by the sync queue until they get a real id.
+        if (cached && (record.updated_at ?? '') < (cached.updated_at ?? '')) continue;
+        // The first sync (no `since`) returns full records, not stubs — store as is.
+        if (record.facility_name) {
+            await offlineStore.saveAssessment(record);
+            continue;
+        }
+        try {
+            // The delta only carries id + updated_at — fetch the full record so the cache
+            // keeps facility, template, team, scores etc.
+            const full = await get('/assessments/' + record.id);
+            const a = full?.data ?? full;
+            if (a?.id) await offlineStore.saveAssessment(a);
+        } catch {
+            if (cached) await offlineStore.saveAssessment({...cached, updated_at: record.updated_at});
         }
     }
 
@@ -213,6 +226,8 @@ async function syncUserLookupIndex(since) {
 
     return { count: users.length };
 }
+
+let _warming = false;
 
 // smartSync: orchestrates all incremental sync operations using a shared `since` timestamp.
 async function smartSync() {
@@ -314,6 +329,7 @@ export const _rawApi = {
             post('/assessments', {facility_id, assessment_type, assessment_date, ...extra}),
         reopen: (id) => post('/assessments/' + id + '/reopen'),
         team: (assessmentId) => get('/assessments/' + assessmentId + '/team'),
+        searchTeamCandidates: (q) => get('/assessments/team/search', {q}),
         eligibleTeamMembers: (assessmentId) => get('/assessments/' + assessmentId + '/team/eligible'),
         addTeamMembers: (assessmentId, memberIds) => post('/assessments/' + assessmentId + '/team', {member_ids: memberIds}),
         removeTeamMember: (assessmentId, userId) => del('/assessments/' + assessmentId + '/team/' + userId),
@@ -352,6 +368,8 @@ export const _rawApi = {
         full: (assessmentId) => get('/assessments/' + assessmentId + '/report'),
         summary: (assessmentId) => get('/assessments/' + assessmentId + '/report/summary'),
         downloadPdf: (assessmentId) => get('/assessments/' + assessmentId + '/report/pdf'),
+        executive: (assessmentId) => get('/assessments/' + assessmentId + '/report/executive'),
+        executivePdf: (assessmentId) => get('/assessments/' + assessmentId + '/report/executive/pdf'),
         emailReport: (assessmentId, emails) => post('/assessments/' + assessmentId + '/report/email', { emails }),
         emailJobStatus: (assessmentId, jobId) => get('/assessments/' + assessmentId + '/report/email/' + jobId),
         emailJobs: () => get('/reports/email-jobs'),
@@ -375,6 +393,7 @@ export const _rawApi = {
         complete: (moduleId) => post('/modules/' + moduleId + '/complete'),
         sessions: (moduleId) => get('/modules/' + moduleId + '/sessions'),
         sessionTemplates: (moduleId) => get('/modules/' + moduleId + '/sessions/available-templates'),
+        resources: (moduleId) => get('/modules/' + moduleId + '/resources'),
         addSession: (moduleId, moduleSessionId) => post('/modules/' + moduleId + '/sessions', { module_session_id: moduleSessionId }),
     },
     attendance: {
@@ -703,7 +722,25 @@ const api = {
                 throw e;
             }
         },
-        update: _rawApi.assessments.update,
+        // Header edit (round / date / template). Applied locally straight away and
+        // queued when offline; for an offline-created assessment the queued op is
+        // re-pointed at the real id once its create has synced.
+        update: async (id, data) => {
+            try {
+                const res = await _rawApi.assessments.update(id, data);
+                const a = res?.assessment ?? res?.data;
+                if (a?.id) await offlineStore.saveAssessment(a);
+                return res;
+            } catch (e) {
+                if (!isNetworkError(e)) throw e;
+                const cached = await offlineStore.getAssessment(id);
+                const patched = {...(cached ?? {id}), ...data, updated_at: new Date().toISOString()};
+                if (data.round) patched.round_display = data.round === 'other' ? (data.round_label || 'Other') : data.round;
+                await offlineStore.saveAssessment(patched);
+                await syncQueue.enqueue({type: 'assessments.update', assessmentId: id, data});
+                return {_queued: true, assessment: patched};
+            }
+        },
         delete: async (id) => {
             try {
                 return await _rawApi.assessments.delete(id);
@@ -815,19 +852,135 @@ const api = {
                 throw e;
             }
         },
-        // Reopening needs the server (it checks the lead/admin and unlocks) —
-        // online only, so a network failure is reported rather than queued.
+        // Reopen: applied locally right away and queued when offline; the server
+        // still decides (lead/admin only) when it syncs — a refusal lands in the
+        // conflict list.
         reopen: async (id) => {
-            const data = await _rawApi.assessments.reopen(id);
-            const a = data?.assessment ?? data?.data;
-            if (a?.id) await offlineStore.saveAssessment(a);
-            return data;
+            try {
+                const data = await _rawApi.assessments.reopen(id);
+                const a = data?.assessment ?? data?.data;
+                if (a?.id) await offlineStore.saveAssessment(a);
+                return data;
+            } catch (e) {
+                if (!isNetworkError(e)) throw e;
+                const cached = await offlineStore.getAssessment(id);
+                if (!cached) throw e;
+                const reopened = {...cached, status: 'in_progress', is_locked: false, can_edit: true, can_reopen: false};
+                await offlineStore.saveAssessment(reopened);
+                await syncQueue.enqueue({type: 'assessments.reopen', assessmentId: id});
+                return {_queued: true, assessment: reopened};
+            }
         },
-        removeTeamMember: _rawApi.assessments.removeTeamMember,
-        setTeamRole: _rawApi.assessments.setTeamRole,
-        team: _rawApi.assessments.team,
-        eligibleTeamMembers: _rawApi.assessments.eligibleTeamMembers,
-        addTeamMembers: _rawApi.assessments.addTeamMembers,
+
+        // ── Team ─────────────────────────────────────────────────────────────
+        // Reads are cached; edits apply to the cached team immediately and queue.
+        team: async (assessmentId) => {
+            const key = `team_${assessmentId}`;
+            try {
+                const data = await _rawApi.assessments.team(assessmentId);
+                await offlineStore.setMeta(key, data);
+                return data;
+            } catch (e) {
+                if (!isNetworkError(e)) throw e;
+                const cached = await offlineStore.getMeta(key);
+                if (cached) return cached;
+                const a = await offlineStore.getAssessment(assessmentId);
+                if (!a) throw e;
+                return {
+                    lead_assessor: a.lead_assessor ?? {id: a.assessor_id, name: a.assessor_name, email: a.assessor_contact, role: 'team_lead'},
+                    team_members: a.team_members ?? [],
+                    can_manage_team: !!a.can_edit,
+                    is_locked: !!a.is_locked,
+                    status: a.status,
+                };
+            }
+        },
+        eligibleTeamMembers: async (assessmentId) => {
+            const key = `team_eligible_${assessmentId}`;
+            try {
+                const data = await _rawApi.assessments.eligibleTeamMembers(assessmentId);
+                await offlineStore.setMeta(key, data);
+                return data;
+            } catch (e) {
+                if (!isNetworkError(e)) throw e;
+                return (await offlineStore.getMeta(key)) ?? {data: []};
+            }
+        },
+        // Offline search falls back to the cached user lookup index (by email / name).
+        searchTeamCandidates: async (q) => {
+            try {
+                return await _rawApi.assessments.searchTeamCandidates(q);
+            } catch (e) {
+                if (!isNetworkError(e)) throw e;
+                const map = (await offlineStore.getUserLookupMap()) ?? {};
+                const needle = String(q).toLowerCase();
+                const data = Object.entries(map)
+                    .filter(([email, u]) => u && (email.includes(needle) || (u.name ?? '').toLowerCase().includes(needle)))
+                    .slice(0, 20)
+                    .map(([email, u]) => ({id: u.id, name: u.name, email, facility_name: null}));
+                return {data};
+            }
+        },
+        addTeamMembers: async (assessmentId, memberIds, people = []) => {
+            try {
+                const data = await _rawApi.assessments.addTeamMembers(assessmentId, memberIds);
+                await offlineStore.setMeta(`team_${assessmentId}`, data);
+                return data;
+            } catch (e) {
+                if (!isNetworkError(e)) throw e;
+                const team = await api.assessments.team(assessmentId);
+                const known = new Map((people ?? []).map(p => [p.id, p]));
+                const added = memberIds
+                    .filter(id => !(team.team_members ?? []).some(m => m.id === id))
+                    .map(id => ({id, name: known.get(id)?.name ?? 'Team member', email: known.get(id)?.email ?? '', role: 'member'}));
+                const next = {...team, team_members: [...(team.team_members ?? []), ...added]};
+                await offlineStore.setMeta(`team_${assessmentId}`, next);
+                await syncQueue.enqueue({type: 'assessments.team.add', assessmentId, memberIds});
+                return {_queued: true, ...next};
+            }
+        },
+        removeTeamMember: async (assessmentId, userId) => {
+            try {
+                const data = await _rawApi.assessments.removeTeamMember(assessmentId, userId);
+                await offlineStore.setMeta(`team_${assessmentId}`, data);
+                return data;
+            } catch (e) {
+                if (!isNetworkError(e)) throw e;
+                const team = await api.assessments.team(assessmentId);
+                const next = {...team, team_members: (team.team_members ?? []).filter(m => m.id !== userId)};
+                await offlineStore.setMeta(`team_${assessmentId}`, next);
+                await syncQueue.enqueue({type: 'assessments.team.remove', assessmentId, userId});
+                return {_queued: true, ...next};
+            }
+        },
+        setTeamRole: async (assessmentId, userId, role) => {
+            try {
+                const data = await _rawApi.assessments.setTeamRole(assessmentId, userId, role);
+                await offlineStore.setMeta(`team_${assessmentId}`, data);
+                return data;
+            } catch (e) {
+                if (!isNetworkError(e)) throw e;
+                const team = await api.assessments.team(assessmentId);
+                let next = team;
+                if (role === 'team_lead') {
+                    const promoted = (team.team_members ?? []).find(m => m.id === userId);
+                    if (promoted) {
+                        next = {
+                            ...team,
+                            lead_assessor: {...promoted, role: 'team_lead'},
+                            team_members: [
+                                ...(team.team_members ?? []).filter(m => m.id !== userId),
+                                ...(team.lead_assessor ? [{...team.lead_assessor, role: 'member'}] : []),
+                            ],
+                            can_manage_team: true,
+                        };
+                    }
+                }
+                await offlineStore.setMeta(`team_${assessmentId}`, next);
+                await syncQueue.enqueue({type: 'assessments.team.role', assessmentId, userId, role});
+                return {_queued: true, ...next};
+            }
+        },
     },
 
     // ── Human Resources (cached reads, queued writes) ────────────────────────
@@ -1106,6 +1259,22 @@ const api = {
             }
         },
 
+        // Executive report — cached so a viewed report stays readable offline
+        executive: async (assessmentId) => {
+            const cacheKey = `report_executive_${assessmentId}`;
+            try {
+                const data = await _rawApi.reports.executive(assessmentId);
+                await offlineStore.setMeta(cacheKey, data);
+                return data;
+            } catch (e) {
+                if (isNetworkError(e)) {
+                    const cached = await offlineStore.getMeta(cacheKey);
+                    if (cached) return cached;
+                }
+                throw e;
+            }
+        },
+
         // Email report — queues locally when offline, dispatches job when online
         emailReport: async (assessmentId, emails) => {
             // Always save a local pending job immediately so the UI can show it
@@ -1285,6 +1454,22 @@ const api = {
 
     // ── Modules (write ops queued when offline) ──────────────────────────────
     modules: {
+        // Module learning content + attached resources. Cached so the content stays
+        // readable offline; download links are short-lived, so files need a connection.
+        resources: async (moduleId) => {
+            const cacheKey = `module_resources_${moduleId}`;
+            try {
+                const data = await _rawApi.modules.resources(moduleId);
+                await offlineStore.setMeta(cacheKey, data);
+                return data;
+            } catch (e) {
+                if (isNetworkError(e)) {
+                    const cached = await offlineStore.getMeta(cacheKey);
+                    if (cached) return {...cached, _offline: true};
+                }
+                throw e;
+            }
+        },
         list: async (classId) => {
             try {
                 const data = await _rawApi.modules.list(classId);
@@ -2038,6 +2223,110 @@ const api = {
         console.log("[API] Prefetch complete");
     },
 
+    // One call that makes the whole app usable with no connection: every
+    // assessment (all sections, team, reports), every template schema, the
+    // mentorships (classes, modules, sessions, attendance, resources) and the
+    // lookups the forms need. Safe to call repeatedly; runs at most every
+    // 15 minutes unless forced, and never while offline.
+    warmOfflineCache: async ({force = false} = {}) => {
+        if (!navigator.onLine || _warming) return;
+        // Never overwrite local edits that haven't reached the server yet.
+        if (await offlineStore.getQueueCount() > 0) return;
+        const last = (await offlineStore.getMeta('lastWarm')) ?? 0;
+        if (!force && Date.now() - last < 15 * 60 * 1000) return;
+        _warming = true;
+        window.dispatchEvent(new CustomEvent('offline-cache:progress', {detail: {status: 'running'}}));
+        try {
+            const inBatches = async (items, size, fn) => {
+                for (let i = 0; i < items.length; i += size) {
+                    await Promise.allSettled(items.slice(i, i + size).map(fn));
+                }
+            };
+
+            // Lookups + schemas
+            const [programs] = await Promise.all([
+                api.lookups.programs().catch(() => []),
+                api.lookups.counties().catch(() => {}),
+                api.lookups.cadres().catch(() => {}),
+                api.lookups.departments().catch(() => {}),
+                api.facilities.list().catch(() => {}),
+                api.sections.fullSchema().catch(() => {}),
+                api.scopes.getConfig().catch(() => {}),
+            ]);
+            await inBatches(Array.isArray(programs) ? programs : [], 4, p => api.lookups.programModules(p.id));
+
+            // Assessments: whole list (all pages), then everything each one needs
+            let assessments = [];
+            try {
+                let page = 1, lastPage = 1;
+                do {
+                    const res = await _rawApi.assessments.list({per_page: 100, page});
+                    const arr = Array.isArray(res?.data) ? res.data : [];
+                    assessments = assessments.concat(arr);
+                    lastPage = res?.meta?.last_page ?? 1;
+                    page++;
+                } while (page <= lastPage && page <= 10);
+                if (assessments.length) await offlineStore.saveAssessments(assessments);
+            } catch {
+                assessments = await offlineStore.getAssessments();
+            }
+            assessments = assessments.filter(a => !String(a.id).startsWith('offline_'));
+
+            const templates = await api.templates.list().catch(() => null);
+            const templateIds = [...new Set([
+                ...(templates?.data ?? []).map(t => t.id),
+                ...assessments.map(a => a.assessment_type_id),
+            ].filter(Boolean))];
+            await inBatches(templateIds, 3, id => api.templates.schema(id));
+
+            await inBatches(assessments, 3, async (a) => {
+                const open = a.status !== 'completed' && !a.is_locked;
+                await Promise.allSettled([
+                    api.assessments.team(a.id),
+                    ...(open ? [
+                        api.responses.list(a.id),
+                        api.humanResources.get(a.id),
+                        api.healthProducts.get(a.id),
+                        api.assessments.eligibleTeamMembers(a.id),
+                    ] : [
+                        api.responses.list(a.id),
+                        api.reports.show(a.id),
+                        api.reports.summary(a.id),
+                        api.reports.executive(a.id),
+                        api.humanResources.get(a.id),
+                        api.healthProducts.get(a.id),
+                    ]),
+                ]);
+            });
+
+            // Mentorships / trainings (mentor side)
+            await api.prefetchMentorshipsForOffline().catch(() => {});
+            await Promise.allSettled([api.trainings.list()]);
+
+            // Mentee side: my classes + module resources
+            try {
+                const mine = await api.me.classes();
+                const classes = Array.isArray(mine?.data) ? mine.data : Array.isArray(mine) ? mine : [];
+                await inBatches(classes, 3, async (c) => {
+                    const detail = await api.me.classDetail(c.id);
+                    const d = detail?.data ?? detail;
+                    await Promise.allSettled((d?.modules ?? []).map(async (m) => {
+                        const r = await _rawApi.modules.resources(m.id);
+                        await offlineStore.setMeta(`module_resources_${m.id}`, r);
+                    }));
+                });
+            } catch { /* not a mentee, or offline */ }
+
+            await offlineStore.setMeta('lastWarm', Date.now());
+            window.dispatchEvent(new CustomEvent('offline-cache:progress', {detail: {status: 'done'}}));
+        } catch (e) {
+            console.warn('[API] warmOfflineCache failed:', e);
+            window.dispatchEvent(new CustomEvent('offline-cache:progress', {detail: {status: 'error'}}));
+        } finally {
+            _warming = false;
+        }
+    },
+
     prefetchMentorshipsForOffline: async () => {
         if (!navigator.onLine) return;
 
@@ -2071,6 +2360,7 @@ const api = {
                 _rawApi.participants.list(classId).then(d => {
                     if (d?.data) offlineStore.saveParticipants(classId, d.data);
                 }),
+                _rawApi.classLifecycle.report(classId).then(d => offlineStore.setMeta(`class_report_${classId}`, d)),
                 _rawApi.classLifecycle.enrollmentLink(classId).then(d => {
                     if (d?.data) offlineStore.saveEnrollmentLink(classId, d.data);
                 }),
@@ -2079,6 +2369,7 @@ const api = {
 
         await Promise.allSettled(allModules.map(({ moduleId }) =>
             Promise.allSettled([
+                _rawApi.modules.resources(moduleId).then(d => offlineStore.setMeta(`module_resources_${moduleId}`, d)),
                 _rawApi.modules.sessions(moduleId).then(d => {
                     const arr = Array.isArray(d?.data) ? d.data : [];
                     return offlineStore.saveSessionsByModule(moduleId, arr);
@@ -2101,9 +2392,9 @@ const api = {
 };
 
 // ── Module-level event listeners: trigger smartSync on network recovery ──────
-window.addEventListener('online', () => { smartSync().catch(() => {}); });
+window.addEventListener('online', () => { smartSync().then(() => api.warmOfflineCache()).catch(() => {}); });
 document.addEventListener('resume', () => {
-    if (navigator.onLine) smartSync().catch(() => {});
+    if (navigator.onLine) smartSync().then(() => api.warmOfflineCache()).catch(() => {});
 });
 
 export default api;

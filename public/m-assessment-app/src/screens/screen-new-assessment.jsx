@@ -54,6 +54,65 @@ function extractSectionCodes(schemaSections) {
     return [];
 }
 
+// ── Team picker (add assessors while creating; you become the team lead) ─────
+function TeamPicker({ members, onChange }) {
+    const [query, setQuery] = useState("");
+    const [results, setResults] = useState([]);
+    const [searching, setSearching] = useState(false);
+
+    useEffect(() => {
+        const q = query.trim();
+        if (q.length < 2) return;
+        let active = true;
+        const t = setTimeout(() => {
+            setSearching(true);
+            api.assessments.searchTeamCandidates(q)
+                .then((res) => { if (active) setResults(res?.data ?? []); })
+                .catch(() => { if (active) setResults([]); })
+                .finally(() => { if (active) setSearching(false); });
+        }, 300);
+        return () => { active = false; clearTimeout(t); };
+    }, [query]);
+
+    const shown = query.trim().length < 2 ? [] : results.filter((u) => !members.some((m) => m.id === u.id));
+
+    return (
+        <div style={{ marginBottom: 18 }}>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.textMid, marginBottom: 6 }}>
+                Team members <span style={{ fontWeight: 400, color: T.textMuted }}>(optional — you will be the team lead)</span>
+            </label>
+            {members.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                    {members.map((m) => (
+                        <span key={m.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 20, background: T.primaryGhost, color: T.primaryDark, fontSize: 12, fontWeight: 600 }}>
+                            {m.name}
+                            <button onClick={() => onChange(members.filter((x) => x.id !== m.id))} style={{ border: "none", background: "transparent", cursor: "pointer", color: T.primaryDark, fontSize: 13, padding: 0 }}>✕</button>
+                        </span>
+                    ))}
+                </div>
+            )}
+            <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name or email…"
+                style={{ width: "100%", boxSizing: "border-box", borderRadius: 10, border: `1px solid ${T.border}`, padding: "10px 14px", fontSize: 14, color: T.text, outline: "none", background: "#fff" }}
+            />
+            {searching && <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>Searching…</div>}
+            {shown.length > 0 && (
+                <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, marginTop: 6, maxHeight: 180, overflowY: "auto", background: "#fff" }}>
+                    {shown.map((u) => (
+                        <button key={u.id} onClick={() => { onChange([...members, { id: u.id, name: u.name }]); setQuery(""); setResults([]); }}
+                            style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", border: "none", borderBottom: `1px solid ${T.borderLight}`, background: "transparent", cursor: "pointer" }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{u.name}</div>
+                            <div style={{ fontSize: 11, color: T.textMuted }}>{[u.email, u.facility_name].filter(Boolean).join(" · ")}</div>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 export function NewAssessmentSheet({ facilities, templates, schemas, user, onSubmit, onClose }) {
     // ── Template (which assessment to start) ───────────────────────────────────
@@ -139,6 +198,7 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
     // ── Assessment date ────────────────────────────────────────────────────────
     const today = todayStr();
     const [assessmentDate, setAssessmentDate] = useState(today);
+    const [teamMembers, setTeamMembers] = useState([]);
 
     // ── Submit state ───────────────────────────────────────────────────────────
     const [submitting, setSubmitting]   = useState(false);
@@ -182,6 +242,7 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
                     round,
                     round_label: round === "other" ? roundLabelText.trim() : null,
                     assessment_date: assessmentDate,
+                    member_ids: teamMembers.map((m) => m.id),
                 },
                 {
                     facilityMeta,
@@ -509,6 +570,8 @@ export function NewAssessmentSheet({ facilities, templates, schemas, user, onSub
                             </div>
                         )}
                     </div>
+
+                    <TeamPicker members={teamMembers} onChange={setTeamMembers} />
 
                     {/* ── Submit button ────────────────────────────────────────── */}
                     <button

@@ -132,75 +132,84 @@ export function generateLocalId() {
     return "MT-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
+// A multi_select answer is stored as a JSON-encoded array; decode it so every
+// operator behaves the same as the server's ConditionalLogicEvaluator.
+function normalizeAnswer(v) {
+    if (typeof v === "string" && v.trim().startsWith("[")) {
+        try {
+            const d = JSON.parse(v);
+            if (Array.isArray(d)) return d;
+        } catch { /* not JSON — keep the string */ }
+    }
+    return v;
+}
+
+const isBlank = (v) => v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0);
+
 /**
- * Evaluate a single condition object:
- *   { question_code, value, operator? }
- * operator defaults to "equals" if not provided.
+ * Evaluate one condition { question_code, value, operator? } against the
+ * answers. Mirrors App\Services\ConditionalLogicEvaluator::evaluateCondition.
  */
 function evalCondition(condition, responses) {
     const { question_code, value, operator = "equals" } = condition;
     if (!question_code) return false;
-    const actual = responses[question_code];
-    // If the parent has not been answered yet, hide the dependent question
-    if (actual === undefined || actual === null || actual === "") return false;
+    const actual = normalizeAnswer(responses[question_code]);
     switch (operator) {
         case "equals": return actual === value;
         case "not_equals": return actual !== value;
         case "in": return Array.isArray(value) && value.includes(actual);
         case "not_in": return Array.isArray(value) && !value.includes(actual);
-        case "greater_than": return Number(actual) > Number(value);
-        case "less_than": return Number(actual) < Number(value);
+        case "intersects": return Array.isArray(actual) && Array.isArray(value) && actual.some((a) => value.includes(a));
+        case "greater_than": return !isNaN(Number(actual)) && !isBlank(actual) && Number(actual) > Number(value);
+        case "less_than": return !isNaN(Number(actual)) && !isBlank(actual) && Number(actual) < Number(value);
         default: return false;
     }
 }
 
 /**
- * Determine whether a question should be visible given current responses.
+ * Evaluate a display_conditions tree against the current answers. Shared by
+ * questions and sections. Same shapes and same fail-closed behaviour as the
+ * server (ConditionalLogicEvaluator::isVisible):
  *
- * Handles all four formats stored in the DB:
- *
- *  1. conditional_logic with operator "or"
- *     { operator: "or", conditions: [{ question_code, value, operator? }, ...] }
- *
- *  2. conditional_logic with operator "and"
- *     { operator: "and", conditions: [{ question_code, value, operator? }, ...] }
- *
- *  3. conditional_logic single (legacy root-level)
- *     { question_code: "SL_FUNCTIONAL", value: "Yes", operator?: "equals" }
- *
- *  4. display_conditions (older legacy format, same shape as #3)
- *     { question_code: "SL_FUNCTIONAL", value: "Yes" }
- *
- * Priority: conditional_logic wins over display_conditions when both exist.
+ *  - { operator: "or"|"and", conditions: [{ question_code, value, operator? }, ...] }
+ *  - { question_code, value, operator? }  (single, hidden until the parent is answered)
+ *  - { show_if: { question_code, value } } (legacy)
+ *  - empty / absent → always visible; unrecognised non-empty shape → hidden
  */
-export function isQuestionVisible(question, responses) {
-    const logic = question.conditional_logic || question.display_conditions;
+export function evaluateConditions(logic, responses) {
+    if (!logic || (typeof logic === "object" && Object.keys(logic).length === 0)) return true;
 
-    // No condition at all → always visible
-    if (!logic) return true;
+    if (logic.operator === "or") return (logic.conditions ?? []).some((c) => evalCondition(c, responses));
+    if (logic.operator === "and") return (logic.conditions ?? []).every((c) => evalCondition(c, responses));
 
-    // OR group: show if ANY condition matches
-    if (logic.operator === "or" && Array.isArray(logic.conditions)) {
-        return logic.conditions.some((c) => evalCondition(c, responses));
-    }
-
-    // AND group: show only if ALL conditions match
-    if (logic.operator === "and" && Array.isArray(logic.conditions)) {
-        return logic.conditions.every((c) => evalCondition(c, responses));
-    }
-
-    // Single condition (root-level question_code)
     if (logic.question_code) {
+        if (isBlank(normalizeAnswer(responses[logic.question_code]))) return false;
         return evalCondition(logic, responses);
     }
 
-    // Unknown format → show by default (fail open so nothing disappears unexpectedly)
-    return true;
+    if (logic.show_if) {
+        const { question_code, value } = logic.show_if;
+        if (!question_code) return true;
+        const actual = responses[question_code];
+        if (isBlank(actual)) return false;
+        return actual === value;
+    }
+
+    return false;
+}
+
+export function isQuestionVisible(question, responses) {
+    return evaluateConditions(question.conditional_logic || question.display_conditions, responses);
+}
+
+/** Sections can be conditional too (e.g. a module only for facilities with a given service). */
+export function isSectionVisible(section, responses) {
+    return evaluateConditions(section.display_conditions, responses);
 }
 
 export function getSectionCompletion(questions, responses) {
     const required = questions.filter(
-        (q) => q.is_required && isQuestionVisible(q, responses)
+        (q) => q.is_required && q.question_type !== "heading" && isQuestionVisible(q, responses)
     );
     const answered = required.filter((q) => {
         const v = responses[q.question_code];
@@ -265,3 +274,26 @@ export const MENTEE_META = {
     icon: '📚',
     gradient: ['#0EA5E9', '#0369A1'],
 };
+
+/**
+ * Payload for POST /responses: answers for visible questions, plus an empty
+ * string for any hidden question that still holds an old answer, so a stale
+ * answer can't keep counting once its condition no longer applies.
+ */
+export function buildSectionPayload(section, responses, explanations) {
+    const answers = {};
+    const notes = {};
+    (section.questions ?? []).forEach((q) => {
+        if (q.question_type === "heading") return;
+        const code = q.question_code;
+        const v = responses[code];
+        const has = v !== undefined && v !== null && v !== "";
+        if (!isQuestionVisible(q, responses)) {
+            if (has) answers[code] = "";
+            return;
+        }
+        if (has) answers[code] = v;
+        if (explanations[code]) notes[code] = explanations[code];
+    });
+    return { answers, notes };
+}

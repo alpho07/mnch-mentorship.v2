@@ -1,7 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { T } from "../constants.js";
 import { Avatar } from "../components/shared-components.jsx";
 import api from "../services/api.service.js";
+import offlineStore from "../services/offline-store.js";
+
+// ── Offline data: shows when everything was last saved and lets the user refresh it ──
+function OfflineDataCard() {
+    const [state, setState] = useState("idle"); // idle | running | done | error
+    const [last, setLast] = useState(null);
+
+    useEffect(() => {
+        offlineStore.getMeta("lastWarm").then(t => t && setLast(t)).catch(() => {});
+        const onProgress = (e) => {
+            const status = e.detail?.status;
+            if (status === "done") { setState("done"); offlineStore.getMeta("lastWarm").then(t => t && setLast(t)); }
+            else if (status) setState(status);
+        };
+        window.addEventListener("offline-cache:progress", onProgress);
+        return () => window.removeEventListener("offline-cache:progress", onProgress);
+    }, []);
+
+    const run = async () => {
+        if (!navigator.onLine) { setState("offline"); return; }
+        setState("running");
+        await api.warmOfflineCache({ force: true });
+    };
+
+    const label = {
+        idle: "Save all assessments, mentorships, modules and reports to this device so they work without internet.",
+        running: "Saving data for offline use…",
+        done: "All data saved for offline use.",
+        error: "Could not save everything. Try again on a stronger connection.",
+        offline: "You need to be online to refresh offline data.",
+    }[state];
+
+    return (
+        <div style={{ background: T.card, borderRadius: T.radius, padding: 16, marginBottom: 14, boxShadow: T.shadow }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: T.text, marginBottom: 4 }}>Offline data</div>
+            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 10, lineHeight: 1.45 }}>{label}</div>
+            {last && <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Last saved: {new Date(last).toLocaleString()}</div>}
+            <button onClick={run} disabled={state === "running"} style={{
+                width: "100%", padding: "11px", borderRadius: 12, border: "none", cursor: state === "running" ? "default" : "pointer",
+                background: state === "running" ? T.border : T.gradientPrimary, color: state === "running" ? T.textMuted : "white",
+                fontSize: 13, fontWeight: 800,
+            }}>{state === "running" ? "⏳ Saving…" : "⬇ Download for offline use"}</button>
+        </div>
+    );
+}
 
 export function ProfileScreen({ user, assessments, onUpdateUser, onLogout }) {
     const [changingPw, setChangingPw] = useState(false);
@@ -197,6 +242,8 @@ export function ProfileScreen({ user, assessments, onUpdateUser, onLogout }) {
                         </div>
                     )}
                 </div>
+
+                <OfflineDataCard />
 
                 {/* Sign out */}
                 <button onClick={onLogout} style={{ width: "100%", padding: 15, borderRadius: T.radius, background: "linear-gradient(135deg, #FEE2E2, #FFF1F2)", color: "#EF4444", border: "1px solid #FECACA", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "all 0.2s", animation: "fadeInUp 0.4s ease 0.3s both" }}>

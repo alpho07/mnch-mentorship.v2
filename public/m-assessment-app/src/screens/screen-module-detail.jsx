@@ -1,6 +1,7 @@
 // src/screens/screen-module-detail.jsx
 import { useState, useEffect } from "react";
-import { T } from "../constants.js";
+import { T, MENTOR_ROLES, ADMIN_ROLES } from "../constants.js";
+import { ModuleResources } from "../components/module-resources.jsx";
 import api from "../services/api.service.js";
 
 const TEAL = "#0097A7";
@@ -195,13 +196,16 @@ function AddSessionSheet({ moduleId, onAdd, onClose }) {
 }
 
 export function ModuleDetailScreen({ module: mod, user, onBack, onOpenAttendance, onOpenSession }) {
+    // Mentees only read the module's learning content; mentors/admins manage it.
+    const roles = user?.roles ?? [];
+    const isMenteeOnly = roles.includes("mentee") && !roles.some(r => MENTOR_ROLES.has(r) || ADMIN_ROLES.has(r));
     const [busy, setBusy]               = useState(false);
     const [localStatus, setLocalStatus] = useState(mod.status);
     const [error, setError]             = useState(null);
     const [sessions, setSessions]       = useState([]);
     const [loadingSessions, setLoadingSessions] = useState(true);
 
-    const [activeTab, setActiveTab]     = useState("sessions");
+    const [activeTab, setActiveTab]     = useState(isMenteeOnly ? "resources" : "sessions");
 
     // Attendance tab
     const [roster, setRoster]           = useState(null);
@@ -214,13 +218,13 @@ export function ModuleDetailScreen({ module: mod, user, onBack, onOpenAttendance
     const [removingId, setRemovingId]   = useState(null);
 
     useEffect(() => {
-        if (mod?.id) {
+        if (mod?.id && !isMenteeOnly) {
             api.modules.sessions(mod.id)
                 .then(d => setSessions(d?.data ?? d ?? []))
                 .catch(() => {})
                 .finally(() => setLoadingSessions(false));
         }
-    }, [mod?.id]);
+    }, [mod?.id, isMenteeOnly]);
 
     // Load attendance roster lazily on tab switch
     useEffect(() => {
@@ -344,7 +348,7 @@ export function ModuleDetailScreen({ module: mod, user, onBack, onOpenAttendance
                 </div>
 
                 {/* Action buttons */}
-                {localStatus === "not_started" && (
+                {!isMenteeOnly && localStatus === "not_started" && (
                     <button onClick={handleStart} disabled={busy} style={{
                         width: "100%", background: "#10B981", border: "none", borderRadius: T.radiusSm,
                         color: "#fff", fontWeight: 700, fontSize: 15, padding: "12px 0",
@@ -354,7 +358,7 @@ export function ModuleDetailScreen({ module: mod, user, onBack, onOpenAttendance
                     </button>
                 )}
 
-                {localStatus === "in_progress" && (
+                {!isMenteeOnly && localStatus === "in_progress" && (
                     <button onClick={handleComplete} disabled={busy} style={{
                         width: "100%", background: T.card, border: `1.5px solid ${T.border}`,
                         borderRadius: T.radiusSm, color: T.text,
@@ -376,7 +380,8 @@ export function ModuleDetailScreen({ module: mod, user, onBack, onOpenAttendance
                     {[
                         { key: "sessions", label: `Sessions${sessions.length > 0 ? ` (${sessions.length})` : ""}` },
                         { key: "attendance", label: "Attendance" },
-                    ].map(tab => (
+                        { key: "resources", label: "Resources" },
+                    ].filter(tab => !isMenteeOnly || tab.key === "resources").map(tab => (
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
@@ -438,6 +443,9 @@ export function ModuleDetailScreen({ module: mod, user, onBack, onOpenAttendance
                         ))}
                     </>
                 )}
+
+                {/* ── Resources tab ── */}
+                {activeTab === "resources" && <ModuleResources moduleId={mod.id} />}
 
                 {/* ── Attendance tab ── */}
                 {activeTab === "attendance" && (

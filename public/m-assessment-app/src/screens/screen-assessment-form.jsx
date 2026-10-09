@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { T, calcGrade, isQuestionVisible, getSectionCompletion, sectionKind, GRADE_COLOR, GRADE_BG } from "../constants.js";
+import { T, calcGrade, isQuestionVisible, isSectionVisible, buildSectionPayload, getSectionCompletion, sectionKind, GRADE_COLOR, GRADE_BG } from "../constants.js";
 import { BackButton, ProgressBar } from "../components/shared-components.jsx";
 import { SectionIcon } from "../components/section-icons.jsx";
 import { QuestionCard, MortalityThreeMonthInput } from "../components/question-inputs.jsx";
@@ -294,15 +294,8 @@ function SectionForm({ section, responses, explanations, onAnswer, onExplain, on
         if (!assessmentId || !section) return;
         setAutoSaveStatus("saving");
         try {
-            const sectionResponses = {};
-            const sectionExplanations = {};
-            (section.questions ?? []).forEach(q => {
-                const code = q.question_code;
-                if (responses[code] !== undefined && responses[code] !== null && responses[code] !== "") {
-                    sectionResponses[code] = responses[code];
-                }
-                if (explanations[code]) sectionExplanations[code] = explanations[code];
-            });
+            const { answers: sectionResponses, notes: sectionExplanations } = buildSectionPayload(section, responses, explanations);
+            if (!Object.keys(sectionResponses).length) { setAutoSaveStatus("idle"); return; }
             await api.responses.bulkSave(assessmentId, section.code, sectionResponses, sectionExplanations);
             setAutoSaveStatus("saved");
             setTimeout(() => setAutoSaveStatus("idle"), 3000);
@@ -437,7 +430,7 @@ function SectionForm({ section, responses, explanations, onAnswer, onExplain, on
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
-export function AssessmentFormScreen({ user, sections, editAssessment, onBack, onComplete }) {
+export function AssessmentFormScreen({ user, sections: allSections, editAssessment, onBack, onComplete }) {
     const [view, setView] = useState("dashboard");
     const [activeSection, setActiveSection] = useState(null);
     const [activeSectionIdx, setActiveSectionIdx] = useState(0);
@@ -467,7 +460,7 @@ export function AssessmentFormScreen({ user, sections, editAssessment, onBack, o
         // Seed completed sections — only keys that exist in the sections list
         // (section_progress may contain extra keys like 'facility_assessor' not in schema)
         const progress = editAssessment.section_progress ?? {};
-        const sectionCodes = new Set(sections.map(s => s.code));
+        const sectionCodes = new Set(allSections.map(s => s.code));
         setCompletedSections(new Set(
             Object.entries(progress)
                 .filter(([k, v]) => v === true && sectionCodes.has(k))
@@ -497,6 +490,11 @@ export function AssessmentFormScreen({ user, sections, editAssessment, onBack, o
         return () => clearTimeout(timer);
     }, [responses, explanations, assessmentId]);
 
+    // Sections can be conditional on earlier answers (display_conditions); the
+    // ones that don't apply are left out of the list, progress and the submit gate.
+    const sections = allSections.filter(s => isSectionVisible(s, responses));
+    const doneSections = new Set([...completedSections].filter(code => sections.some(s => s.code === code)));
+
     const handleAnswer = (code, val) => setResponses(p => ({ ...p, [code]: val }));
     const handleExplain = (code, val) => setExplanations(p => ({ ...p, [code]: val }));
 
@@ -506,16 +504,10 @@ export function AssessmentFormScreen({ user, sections, editAssessment, onBack, o
         setSaving(true);
         setSaveError(null);
         try {
-            const sectionResponses = {};
-            const sectionExplanations = {};
-            (activeSection.questions ?? []).forEach(q => {
-                const code = q.question_code;
-                if (responses[code] !== undefined && responses[code] !== null && responses[code] !== "") {
-                    sectionResponses[code] = responses[code];
-                }
-                if (explanations[code]) sectionExplanations[code] = explanations[code];
-            });
-            await api.responses.bulkSave(assessmentId, activeSection.code, sectionResponses, sectionExplanations);
+            const { answers: sectionResponses, notes: sectionExplanations } = buildSectionPayload(activeSection, responses, explanations);
+            if (Object.keys(sectionResponses).length) {
+                await api.responses.bulkSave(assessmentId, activeSection.code, sectionResponses, sectionExplanations);
+            }
             await api.assessments.updateSectionProgress(assessmentId, activeSection.code, true);
             setCompletedSections(p => new Set([...p, activeSection.code]));
             setView("dashboard");
@@ -586,11 +578,11 @@ export function AssessmentFormScreen({ user, sections, editAssessment, onBack, o
     }
 
     // ── Dashboard view ─────────────────────────────────────────────────────────
-    const allDone = completedSections.size === sections.length && sections.length > 0;
+    const allDone = doneSections.size === sections.length && sections.length > 0;
 
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
-            <ProgressHeader sections={sections} completedSections={completedSections} responses={responses} onBack={onBack} specialProgress={specialProgress} />
+            <ProgressHeader sections={sections} completedSections={doneSections} responses={responses} onBack={onBack} specialProgress={specialProgress} />
 
             {loadingResp && (
                 <div style={{ padding: "10px 16px", background: "#EFF6FF", borderBottom: "1px solid #BFDBFE", fontSize: 12, color: "#1D4ED8", display: "flex", alignItems: "center", gap: 8 }}>
@@ -610,7 +602,7 @@ export function AssessmentFormScreen({ user, sections, editAssessment, onBack, o
                 <RecommendationsPanel sections={sections} responses={responses} />
 
                 {sections.map((s, i) => (
-                    <SectionCard key={s.id ?? s.code} section={s} completedSections={completedSections} responses={responses} onOpen={openSection} index={i} specialProgress={specialProgress} />
+                    <SectionCard key={s.id ?? s.code} section={s} completedSections={doneSections} responses={responses} onOpen={openSection} index={i} specialProgress={specialProgress} />
                 ))}
 
                 {allDone && (

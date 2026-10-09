@@ -55,7 +55,7 @@ export function ScopeShell({ user, onLogout, onUserUpdate }) {
     const [syncToast, setSyncToast]     = useState(null);
 
     useEffect(() => {
-        api.smartSync().catch(() => {});
+        api.smartSync().catch(() => {}).then(() => api.warmOfflineCache()).catch(() => {});
 
         function handleSyncComplete(e) {
             const { assessments, mentorships, trainings, users } = e.detail ?? {};

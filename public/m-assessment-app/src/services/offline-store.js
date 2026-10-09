@@ -10,7 +10,7 @@
  */
 
 const DB_NAME = "mnch_offline";
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 
 const STORES = {
     schema: "schema", // full section schema (keyed by "full")
@@ -35,6 +35,8 @@ const STORES = {
     conflicts: "conflicts",                   // keyed by conflict id (auto-generated)
     // v7 — scope config (role-driven navigation)
     scopeConfig: "scopeConfig",               // keyed by "config"
+    // v8 — downloaded resource files (Blob + name/mime), keyed by resource file key
+    files: "files",
 };
 
 // ── Open / upgrade database ─────────────────────────────────────────────────
@@ -348,6 +350,13 @@ const offlineStore = {
             await dbPut(STORES.syncQueue, patched.id, patched);
         }
     },
+
+    // ── Downloaded resource files (saved for offline use) ────────────────────
+    // value: { blob, name, mime, size, savedAt }
+    saveFile: (key, value) => dbPut(STORES.files, key, value),
+    getFile: (key) => dbGet(STORES.files, key),
+    deleteFile: (key) => dbDelete(STORES.files, key),
+    getFileKeys: () => dbGetAllKeys(STORES.files),
 
     // ── Full wipe (logout) ───────────────────────────────────────────────────
     clearAll: async () => {

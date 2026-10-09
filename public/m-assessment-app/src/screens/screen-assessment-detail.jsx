@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { T, GRADE_COLOR, GRADE_BG, calcGrade, sectionKind, isSpecialSection, roundLabel, overallPercent } from "../constants.js";
+import { T, GRADE_COLOR, GRADE_BG, calcGrade, sectionKind, isSpecialSection, isSectionVisible, roundLabel, overallPercent } from "../constants.js";
 import { BackButton, GradeBadge, StatusChip, ProgressBar } from "../components/shared-components.jsx";
 import { SectionIcon } from "../components/section-icons.jsx";
 import api from "../services/api.service.js";
@@ -661,7 +661,7 @@ function TeamTab({ assessment, onTeamUpdated }) {
         if (!selected.length) return;
         setSaving(true); setError(null);
         try {
-            const updated = await api.assessments.addTeamMembers(assessment.id, selected);
+            const updated = await api.assessments.addTeamMembers(assessment.id, selected, eligible.filter(m => selected.includes(m.id)));
             setTeam(updated);
             setSelected([]);
             setEligible(prev => prev.filter(member => !selected.includes(member.id)));
@@ -728,9 +728,24 @@ function TeamTab({ assessment, onTeamUpdated }) {
     </div>;
 }
 
-export function AssessmentDetailScreen({ assessment, sections, onBack, onContinue, onViewReport, onDelete, onTeamUpdated, onAssessmentChanged }) {
+export function AssessmentDetailScreen({ assessment, sections: allSections, onBack, onContinue, onViewReport, onDelete, onTeamUpdated, onAssessmentChanged }) {
     const [tab, setTab] = useState("overview");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    // Conditional sections (display_conditions) only apply when the answers say so.
+    const [answers, setAnswers] = useState(null);
+    const hasConditionalSections = (allSections ?? []).some(s => s.display_conditions);
+    useEffect(() => {
+        if (!hasConditionalSections) return;
+        let active = true;
+        api.responses.list(assessment.id)
+            .then(d => { if (active) setAnswers(d?.responses ?? d ?? {}); })
+            .catch(() => { });
+        return () => { active = false; };
+    }, [assessment.id, hasConditionalSections]);
+    const sections = hasConditionalSections && answers
+        ? allSections.filter(s => isSectionVisible(s, answers))
+        : (allSections ?? []);
 
     const tabs = assessment.status === "completed"
         ? ["overview", "responses", "team", "report"]

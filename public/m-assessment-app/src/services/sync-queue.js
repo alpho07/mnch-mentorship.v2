@@ -108,6 +108,11 @@ const OP_LABELS = {
     'mentorships.endClass':          'Class completion',
     'mentorships.regenerateToken':   'Link regeneration',
     'assessments.delete':            'Assessment deletion',
+    'assessments.update':            'Assessment edit',
+    'assessments.reopen':            'Assessment reopen',
+    'assessments.team.add':          'Team members added',
+    'assessments.team.remove':       'Team member removed',
+    'assessments.team.role':         'Team lead change',
     'profile.update':                'Profile update',
     'mentorships.create':            'New mentorship',
     'mentorships.update':            'Mentorship edit',
@@ -249,6 +254,27 @@ async function executeOp(rawApi, op) {
                 throw e;
             }
         }
+
+        case "assessments.update":
+            return rawApi.assessments.update(op.assessmentId, op.data);
+
+        case "assessments.reopen":
+            return rawApi.assessments.reopen(op.assessmentId);
+
+        case "assessments.team.add":
+            return rawApi.assessments.addTeamMembers(op.assessmentId, op.memberIds);
+
+        case "assessments.team.remove": {
+            try {
+                return await rawApi.assessments.removeTeamMember(op.assessmentId, op.userId);
+            } catch (e) {
+                if (e.status === 404) return null; // already gone
+                throw e;
+            }
+        }
+
+        case "assessments.team.role":
+            return rawApi.assessments.setTeamRole(op.assessmentId, op.userId, op.role);
 
         case "profile.update":
             return rawApi.profile.update(op.data);

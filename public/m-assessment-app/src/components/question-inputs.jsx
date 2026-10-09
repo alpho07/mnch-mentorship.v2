@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { T } from "../constants.js";
 
 // ─── Yes / No / Partial ───────────────────────────────────────────────────────
@@ -132,11 +133,98 @@ export function NumberInput({ value, onChange }) {
     );
 }
 
+// ─── Multi-select ─────────────────────────────────────────────────────────────
+// Stored as a JSON-encoded array string, the same way the web form saves it.
+function parseMulti(value) {
+    if (Array.isArray(value)) return value;
+    if (typeof value === "string" && value.trim().startsWith("[")) {
+        try { const d = JSON.parse(value); if (Array.isArray(d)) return d; } catch { /* fall through */ }
+    }
+    return [];
+}
+
+export function MultiSelectInput({ question, value, onChange }) {
+    const picked = parseMulti(value);
+    const opts = (question.options ?? []).map((o) => (typeof o === "object" ? { value: o.value ?? o.label, label: o.label ?? o.value } : { value: o, label: o }));
+    const toggle = (v) => {
+        const next = picked.includes(v) ? picked.filter((x) => x !== v) : [...picked, v];
+        onChange(next.length ? JSON.stringify(next) : "");
+    };
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+            {opts.map((o) => {
+                const active = picked.includes(o.value);
+                return (
+                    <button key={o.value} onClick={() => toggle(o.value)} style={{
+                        padding: "10px 13px", borderRadius: 11,
+                        border: `2px solid ${active ? T.primary : T.border}`,
+                        background: active ? T.primaryGhost : T.borderLight,
+                        color: active ? T.primaryDark : T.textMid,
+                        fontWeight: active ? 700 : 400, fontSize: 13,
+                        cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10,
+                    }}>
+                        <div style={{
+                            width: 16, height: 16, borderRadius: 4, flexShrink: 0,
+                            border: `2px solid ${active ? T.primary : T.border}`,
+                            background: active ? T.primary : "white", color: "white",
+                            fontSize: 11, lineHeight: "12px", textAlign: "center",
+                        }}>{active ? "✓" : ""}</div>
+                        {o.label}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
+// ─── Checklist (reference table attached to a question) ──────────────────────
+export function ChecklistButton({ checklist }) {
+    const [open, setOpen] = useState(false);
+    if (!checklist?.items?.length) return null;
+
+    const groups = checklist.items.reduce((acc, item) => {
+        const g = item.group_label || "";
+        (acc[g] = acc[g] || []).push(item);
+        return acc;
+    }, {});
+
+    return (
+        <>
+            <button onClick={() => setOpen(true)} style={{
+                marginTop: 8, padding: "6px 12px", borderRadius: 9, border: `1.5px solid ${T.border}`,
+                background: T.borderLight, color: T.primaryDark, fontSize: 12, fontWeight: 700, cursor: "pointer",
+            }}>📋 View checklist</button>
+            {open && (
+                <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "flex-end" }}>
+                    <div onClick={(e) => e.stopPropagation()} style={{ background: T.card, width: "100%", maxHeight: "80%", overflowY: "auto", borderRadius: "20px 20px 0 0", padding: "18px 16px calc(24px + env(safe-area-inset-bottom, 0px))" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                            <div style={{ fontSize: 16, fontWeight: 800, color: T.text }}>{checklist.title}</div>
+                            <button onClick={() => setOpen(false)} style={{ border: "none", background: "transparent", fontSize: 20, cursor: "pointer", color: T.textMuted }}>✕</button>
+                        </div>
+                        {checklist.description && <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 10 }}>{checklist.description}</div>}
+                        {Object.entries(groups).map(([group, items]) => (
+                            <div key={group} style={{ marginBottom: 10 }}>
+                                {group && <div style={{ fontSize: 11, fontWeight: 800, color: T.textMuted, textTransform: "uppercase", margin: "8px 0 4px" }}>{group}</div>}
+                                {items.map((it, i) => (
+                                    <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 10, padding: "7px 0", borderBottom: `1px solid ${T.borderLight}`, fontSize: 13, color: T.text }}>
+                                        <span>{it.label}</span>
+                                        {it.qty != null && <span style={{ fontWeight: 800, color: T.textMid }}>× {it.qty}</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
 // ─── Text / Date ──────────────────────────────────────────────────────────────
 export function TextInput({ question, value, onChange }) {
     return (
         <input
-            type={question.question_type === "date" ? "date" : "text"}
+            type={{ date: "date", datetime: "datetime-local", email: "email", phone: "tel" }[question.question_type] ?? "text"}
             value={value || ""}
             onChange={(e) => onChange(e.target.value)}
             placeholder={question.placeholder || "Type your answer…"}
@@ -272,6 +360,16 @@ export function QuestionCard({ question, value, explanation, onAnswer, onExplain
         (Array.isArray(question.requires_explanation_on) && question.requires_explanation_on.includes(value)) ||
         (explainOnNo && (value === "No" || value === "Partial"));
 
+    // Headings are display-only section dividers — no input, no answer.
+    if (question.question_type === "heading") {
+        return (
+            <div style={{ margin: "14px 4px 8px", paddingLeft: (question.indent_level || 0) * 14 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: T.textMid }}>{question.question_text}</div>
+                {question.help_text && <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>{question.help_text}</div>}
+            </div>
+        );
+    }
+
     const renderInput = () => {
         // forceMortality is a prop-based override; question_type check covers schema-cached type
         if (forceMortality || question.question_type === "mortality_three_month") {
@@ -288,6 +386,8 @@ export function QuestionCard({ question, value, explanation, onAnswer, onExplain
                 return <SelectInput question={question} value={value} onChange={onAnswer} />;
             case "number":
                 return <NumberInput value={value} onChange={onAnswer} />;
+            case "multi_select":
+                return <MultiSelectInput question={question} value={value} onChange={onAnswer} />;
             default:
                 return <TextInput question={question} value={value} onChange={onAnswer} />;
         }
@@ -299,6 +399,8 @@ export function QuestionCard({ question, value, explanation, onAnswer, onExplain
             borderRadius: T.radius,
             padding: "14px 15px",
             marginBottom: 10,
+            // Sub-questions (indent_level >= 1) hang under their parent item.
+            marginLeft: Math.min(question.indent_level || 0, 3) * 14,
             border: `2px solid ${hasValue ? "#6EE7B7" : T.borderLight}`,
             boxShadow: hasValue ? "0 3px 14px rgba(16,185,129,0.09)" : T.shadow,
             transition: "border-color 0.2s, box-shadow 0.2s",
@@ -358,6 +460,8 @@ export function QuestionCard({ question, value, explanation, onAnswer, onExplain
                     >🩺</button>
                 )}
             </div>
+
+            <ChecklistButton checklist={question.checklist} />
 
             {renderInput()}
 

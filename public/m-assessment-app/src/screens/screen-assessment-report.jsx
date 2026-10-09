@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { T, GRADE_COLOR, GRADE_BG, GRADE_TEXT, calcGrade, sectionKind, overallPercent } from "../constants.js";
 import { BackButton, GradeBadge, ProgressBar } from "../components/shared-components.jsx";
+import { ExecutiveReport } from "../components/executive-report.jsx";
 import api from "../services/api.service.js";
 
 const SECTION_ICONS = {
@@ -502,6 +503,7 @@ export function AssessmentReportScreen({ assessment, onBack }) {
     const [downloading, setDownloading] = useState(false);
     const [shareMsg, setShareMsg] = useState(null);
     const [showEmailModal, setShowEmailModal] = useState(false);
+    const [view, setView] = useState("results"); // "results" | "executive"
 
     useEffect(() => {
         api.reports.show(assessment.id)
@@ -629,6 +631,24 @@ export function AssessmentReportScreen({ assessment, onBack }) {
             {/* ── Body ────────────────────────────────────────────────────── */}
             <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 100px", background: T.bg }}>
 
+                {assessment.status === "completed" && (
+                    <div style={{ display: "flex", gap: 6, marginBottom: 14, background: T.borderLight, padding: 4, borderRadius: 12 }}>
+                        {[["results", "Results"], ["executive", "Executive Report"]].map(([key, label]) => (
+                            <button key={key} onClick={() => setView(key)} style={{
+                                flex: 1, padding: "8px 10px", borderRadius: 9, border: "none", cursor: "pointer",
+                                fontSize: 12, fontWeight: 800,
+                                background: view === key ? T.card : "transparent",
+                                color: view === key ? T.text : T.textMuted,
+                                boxShadow: view === key ? T.shadow : "none",
+                            }}>{label}</button>
+                        ))}
+                    </div>
+                )}
+
+                {view === "executive" && assessment.status === "completed" && <ExecutiveReport assessment={assessment} />}
+
+                {(view === "results" || assessment.status !== "completed") && <>
+
                 {loading && (
                     <div style={{ textAlign: "center", padding: "40px 16px", color: T.textMuted }}>
                         <div style={{ width: 44, height: 44, borderRadius: 14, margin: "0 auto 12px", background: T.gradientPrimary, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 6px 20px ${T.primaryGlow}` }}>
@@ -694,6 +714,7 @@ export function AssessmentReportScreen({ assessment, onBack }) {
                         <RecommendationsCard sectionReports={sectionReports} />
                     </div>
                 )}
+                </>}
             </div>
         </div>
     );
