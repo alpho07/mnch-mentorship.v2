@@ -70,8 +70,7 @@ class User extends Authenticatable implements FilamentUser
     public const PROGRAM_SCOPE_OPTIONS = [
         'both' => 'Both (All Programs)',
         'emonc' => 'EmONC Only',
-        'newborn' => 'Newborn Care Only',
-        'infant_child' => 'Infant & Child Care Only',
+        'newborn_child' => 'Newborn, Infant & Child Only',
     ];
 
     protected $hidden = [
@@ -144,8 +143,8 @@ class User extends Authenticatable implements FilamentUser
 
         $query = match ($scope) {
             'emonc' => $query->where('name', 'like', '%EmONC%'),
-            'newborn' => $query->where('name', 'Newborn Care'),
-            'infant_child' => $query->where('name', 'Infant and Child Care'),
+            // 'newborn' / 'infant_child' are legacy values, now one combined scope.
+            'newborn_child', 'newborn', 'infant_child' => $query->whereIn('name', ['Newborn Care', 'Infant and Child Care']),
             default => $query->whereRaw('1 = 0'),
         };
 

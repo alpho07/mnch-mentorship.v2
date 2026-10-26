@@ -63,17 +63,17 @@ class UserAllowedProgramIdsTest extends TestCase
         $this->assertSame([$emonc->id], $user->allowedProgramIds());
     }
 
-    public function test_returns_only_the_newborn_program_id_when_scoped_to_newborn(): void
+    public function test_returns_newborn_and_child_program_ids_when_scoped_to_newborn_child(): void
     {
         Setting::setBool(Setting::PROGRAM_SCOPING_ENABLED, true);
 
         Program::factory()->create(['name' => 'Maternal Health (EmONC)']);
         $newborn = Program::factory()->create(['name' => 'Newborn Care']);
-        Program::factory()->create(['name' => 'Infant and Child Care']);
+        $child = Program::factory()->create(['name' => 'Infant and Child Care']);
 
-        $user = $this->makeMentor('newborn');
+        $user = $this->makeMentor('newborn_child');
 
-        $this->assertSame([$newborn->id], $user->allowedProgramIds());
+        $this->assertEqualsCanonicalizing([$newborn->id, $child->id], $user->allowedProgramIds());
     }
 
     public function test_super_admin_is_never_scoped_even_when_also_holding_a_mentor_tier_role(): void

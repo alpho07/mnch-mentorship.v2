@@ -382,11 +382,10 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('program_scope')
                     ->label('Program Scope')
                     ->badge()
-                    ->formatStateUsing(fn (?string $state): string => User::PROGRAM_SCOPE_OPTIONS[$state ?? 'both'] ?? 'Both (All Programs)')
+                    ->formatStateUsing(fn (?string $state): string => User::PROGRAM_SCOPE_OPTIONS[in_array($state, ['newborn', 'infant_child'], true) ? 'newborn_child' : ($state ?? 'both')] ?? 'Both (All Programs)')
                     ->color(fn (?string $state): string => match ($state) {
                         'emonc' => 'danger',
-                        'newborn' => 'purple',
-                        'infant_child' => 'success',
+                        'newborn_child', 'newborn', 'infant_child' => 'success',
                         default => 'gray',
                     })
                     ->toggleable(),
