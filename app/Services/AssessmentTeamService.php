@@ -93,7 +93,7 @@ class AssessmentTeamService {
      */
     public function promoteToTeamLead(Assessment $assessment, int $userId, int $actorId): void {
         $actor = User::findOrFail($actorId);
-        $isSuperior = $actor->hasRole(['super_admin', 'admin', 'division']);
+        $isSuperior = $actor->hasRole(['super_admin', 'admin', 'division', 'newborn_child_admin', 'emonc_admin']);
 
         if (!$isSuperior) {
             // Must be the current team lead to transfer the role
@@ -133,7 +133,7 @@ class AssessmentTeamService {
     public function demoteToMember(Assessment $assessment, int $userId, int $actorId): void {
         $actor = User::findOrFail($actorId);
 
-        if (!$actor->hasRole(['super_admin', 'admin', 'division'])) {
+        if (!$actor->hasRole(['super_admin', 'admin', 'division', 'newborn_child_admin', 'emonc_admin'])) {
             throw new \Exception('Only administrators can demote a team lead without assigning a replacement. Use "Transfer Lead" instead.');
         }
 

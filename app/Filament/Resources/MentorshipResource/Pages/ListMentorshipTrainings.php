@@ -141,11 +141,11 @@ class ListMentorshipTrainings extends ListRecords
         $query = Training::where('type', 'facility_mentorship');
 
         $user = auth()->user();
-        if (! $user->hasRole(['super_admin', 'admin', 'division'])) {
+        if (! $user->hasRole(['super_admin', 'admin', 'division', 'newborn_child_admin', 'emonc_admin'])) {
             $query->forMentorOrCoMentor($user->id);
         }
 
-        return $query;
+        return \App\Support\ProgramArea::scopeByColumn($query, $user);
     }
 
     protected function getQuickStats(): array
@@ -179,9 +179,11 @@ class ListMentorshipTrainings extends ListRecords
                 // count shown elsewhere on this page.
                 $query->where('type', 'facility_mentorship')->where('is_pilot', false);
 
-                if (! $user->hasRole(['super_admin', 'admin', 'division'])) {
+                if (! $user->hasRole(['super_admin', 'admin', 'division', 'newborn_child_admin', 'emonc_admin'])) {
                     $query->where('mentor_id', $user->id);
                 }
+
+                \App\Support\ProgramArea::scopeByColumn($query, $user);
             });
     }
 

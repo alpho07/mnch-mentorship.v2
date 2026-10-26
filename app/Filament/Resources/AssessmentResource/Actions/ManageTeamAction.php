@@ -23,7 +23,7 @@ class ManageTeamAction {
         $service = app(AssessmentTeamService::class);
         $actorId = auth()->id();
         $actor = auth()->user();
-        $isSuperior = $actor->hasRole(['super_admin', 'admin', 'division']);
+        $isSuperior = $actor->hasRole(['super_admin', 'admin', 'division', 'newborn_child_admin', 'emonc_admin']);
         $canManage = $assessment->canManageTeam($actorId);
 
         return Action::make('manage_team')

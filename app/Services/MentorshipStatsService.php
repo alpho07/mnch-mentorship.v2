@@ -24,11 +24,11 @@ class MentorshipStatsService
         $query = Training::where('type', 'facility_mentorship')
             ->where('is_pilot', false);
 
-        if (! $user->hasRole(['super_admin', 'admin', 'division'])) {
+        if (! $user->hasRole(['super_admin', 'admin', 'division', 'newborn_child_admin', 'emonc_admin'])) {
             $query->forMentorOrCoMentor($user->id);
         }
 
-        return $query;
+        return \App\Support\ProgramArea::scopeByColumn($query, $user);
     }
 
     public function menteesQuery(User $user, ?int $programId = null): Builder
@@ -41,9 +41,11 @@ class MentorshipStatsService
                     $query->where('program_id', $programId);
                 }
 
-                if (! $user->hasRole(['super_admin', 'admin', 'division'])) {
+                if (! $user->hasRole(['super_admin', 'admin', 'division', 'newborn_child_admin', 'emonc_admin'])) {
                     $query->forMentorOrCoMentor($user->id);
                 }
+
+                \App\Support\ProgramArea::scopeByColumn($query, $user);
             });
     }
 
@@ -59,7 +61,9 @@ class MentorshipStatsService
 
     public function programStats(User $user): array
     {
-        return Program::whereHas('trainings', fn (Builder $q) => $q
+        return Program::query()
+            ->when(\App\Support\ProgramArea::forUser($user), fn ($q, $area) => $q->where('program_area', $area))
+            ->whereHas('trainings', fn (Builder $q) => $q
             ->where('type', 'facility_mentorship')
             ->where('is_pilot', false))
             ->orderBy('name')
