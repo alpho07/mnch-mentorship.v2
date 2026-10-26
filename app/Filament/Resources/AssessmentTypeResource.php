@@ -226,6 +226,6 @@ class AssessmentTypeResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::active()->count();
+        return (string) static::getEloquentQuery()->active()->count();
     }
 }

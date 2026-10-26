@@ -690,9 +690,7 @@ class GlobalTrainingResource extends Resource {
     }
 
     public static function getNavigationBadge(): ?string {
-        $count = static::getModel()::where('type', 'global_training')
-                // ->ongoing()
-                ->count();
+        $count = static::getEloquentQuery()->whereNull("trainings.deleted_at")->count();
 
         return $count > 0 ? (string) $count : null;
     }

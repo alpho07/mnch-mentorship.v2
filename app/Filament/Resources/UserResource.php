@@ -47,7 +47,7 @@ class UserResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string) User::count();
+        return (string) static::getEloquentQuery()->count();
     }
 
     public static function getNavigationBadgeColor(): string

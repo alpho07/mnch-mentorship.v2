@@ -289,7 +289,7 @@ class AssessmentSectionResource extends Resource {
     }
 
     public static function getNavigationBadge(): ?string {
-        $count = AssessmentSection::where('is_active', true)->count();
+        $count = static::getEloquentQuery()->where('is_active', true)->count();
         return $count > 0 ? (string) $count : null;
     }
 

@@ -474,7 +474,7 @@ class AssessmentQuestionResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $inactive = AssessmentQuestion::where('is_active', false)->count();
+        $inactive = static::getEloquentQuery()->where('is_active', false)->count();
 
         return $inactive > 0 ? (string) $inactive.' inactive' : null;
     }
