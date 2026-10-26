@@ -234,7 +234,6 @@ class DatabaseMetrics implements MetricsSource
             ->leftJoin('facilities as fa', function ($j) {
                 $j->on('fa.subcounty_id', '=', 'sc.id')->whereNull('fa.deleted_at');
             })
-            ->whereNull('co.deleted_at')
             ->groupBy('co.name')->selectRaw('co.name, COUNT(fa.id) as total')->pluck('total', 'co.name')
             ->map(fn ($t) => ['programmes' => 0, 'people' => 0, 'facilities_reached' => 0, 'facilities_total' => (int) $t])->all();
 
