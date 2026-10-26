@@ -12,6 +12,7 @@ class AssessmentType extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'program_area',
         'name',
         'code',
         'category_id',

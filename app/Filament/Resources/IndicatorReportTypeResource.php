@@ -31,6 +31,16 @@ class IndicatorReportTypeResource extends Resource {
     // Form
     // ──────────────────────────────────────────────────────────────────────────
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        $query = \App\Support\ProgramArea::scopeByColumn($query, $user, 'program_area', true);
+
+        return $query;
+    }
+
     public static function form(Form $form): Form {
         return $form->schema([
                     Forms\Components\Group::make()->schema([

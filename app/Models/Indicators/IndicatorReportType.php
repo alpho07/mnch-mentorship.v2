@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class IndicatorReportType extends Model { 
 
     protected $fillable = [
+        'program_area',
         'code',
         'name',
         'description',

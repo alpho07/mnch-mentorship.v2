@@ -109,7 +109,11 @@ class MentorshipTrainingResource extends Resource
 
     private static function applyRoleScope(Builder $query, User $user): void
     {
-        if ($user->hasRole(['super_admin', 'admin', 'division', 'national_mentor_lead'])) {
+        if ($user->hasRole(['super_admin', 'admin', 'division', 'national_mentor_lead', 'newborn_child_admin', 'emonc_admin'])) {
+            if (($programIds = $user->allowedProgramIds()) !== null) {
+                $query->whereIn('program_id', $programIds);
+            }
+
             return;
         }
 

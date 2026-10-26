@@ -42,7 +42,7 @@ class RagAccess
             return false;
         }
 
-        if (method_exists($user, 'hasRole') && $user->hasRole(['super_admin', 'admin'])) {
+        if (method_exists($user, 'hasRole') && $user->hasRole('super_admin')) {
             return true;
         }
 

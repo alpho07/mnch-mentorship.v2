@@ -12,6 +12,7 @@ class Program extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'program_area',
         'name',
         'description',
         'is_active',

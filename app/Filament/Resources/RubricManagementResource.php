@@ -18,7 +18,7 @@ class RubricManagementResource extends Resource
 
     protected static ?string $navigationLabel = 'Rubric Definitions';
 
-    protected static ?string $navigationGroup = 'Curriculum';
+    protected static ?string $navigationGroup = 'Rubric Management';
 
     protected static ?int $navigationSort = 5;
 
@@ -29,6 +29,16 @@ class RubricManagementResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return auth()->check() && auth()->user()->can('view_any_rubric::management');
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        $query = \App\Support\ProgramArea::scopeByRelationProgram($query, $user, 'programModule');
+
+        return $query;
     }
 
     public static function form(Form $form): Form

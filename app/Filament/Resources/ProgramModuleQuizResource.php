@@ -30,6 +30,16 @@ class ProgramModuleQuizResource extends Resource
         return auth()->check() && auth()->user()->can('view_any_program::module::quiz');
     }
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        $query = \App\Support\ProgramArea::scopeByRelationProgram($query, $user, 'programModule');
+
+        return $query;
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([

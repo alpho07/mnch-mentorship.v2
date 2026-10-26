@@ -33,6 +33,18 @@ class IndicatorResource extends Resource {
     // Form
     // ──────────────────────────────────────────────────────────────────────────
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($area = \App\Support\ProgramArea::forUser($user)) {
+            $query->whereHas('group.reportType', fn ($q) => $q->where(fn ($w) => $w->where('program_area', $area)->orWhereNull('program_area')));
+        }
+
+        return $query;
+    }
+
     public static function form(Form $form): Form {
         return $form->schema([
                     Forms\Components\Group::make()->schema([

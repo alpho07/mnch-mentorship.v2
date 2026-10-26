@@ -411,8 +411,8 @@ class TrainingExportResource extends Resource {
     {
         $query = Training::query();
 
-        if ($user->hasRole(['super_admin', 'admin', 'division', 'national_mentor', 'national_mentor_lead'])) {
-            return $query;
+        if ($user->hasRole(['super_admin', 'admin', 'division', 'national_mentor', 'national_mentor_lead', 'newborn_child_admin', 'emonc_admin'])) {
+            return \App\Support\ProgramArea::scopeByColumn($query, $user);
         }
 
         if ($user->hasRole('county_mentor_lead')) {

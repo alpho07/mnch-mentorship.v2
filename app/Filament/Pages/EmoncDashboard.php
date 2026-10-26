@@ -11,7 +11,7 @@ class EmoncDashboard extends Page
 
     protected static ?string $slug = 'emonc-dashboard';
 
-    protected static ?string $navigationGroup = 'Rubric Assessments';
+    protected static ?string $navigationGroup = 'Rubric Management';
 
     protected static ?string $navigationIcon = 'heroicon-o-heart';
 

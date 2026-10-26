@@ -58,12 +58,16 @@ class AssessmentResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        if ($user && ! $user->hasRole(['super_admin', 'admin', 'division'])) {
+        if ($user && ! $user->hasRole(['super_admin', 'admin', 'division', 'newborn_child_admin', 'emonc_admin'])) {
             $query->where(function (Builder $query) use ($user) {
                 $query->where('assessor_id', $user->id)
                     ->orWhere('created_by', $user->id)
                     ->orWhereHas('teamMembers', fn (Builder $team) => $team->where('users.id', $user->id));
             });
+        }
+
+        if ($area = \App\Support\ProgramArea::forUser($user)) {
+            $query->whereHas('assessmentType', fn ($q) => $q->where(fn ($w) => $w->where('program_area', $area)->orWhereNull('program_area')));
         }
 
         return $query;

@@ -68,7 +68,7 @@ class GlobalTrainingResource extends Resource {
 
     // Filter to only show global trainings
     public static function getEloquentQuery(): Builder {
-        return parent::getEloquentQuery()
+        return \App\Support\ProgramArea::scopeByColumn(parent::getEloquentQuery(), auth()->user())
                         ->where('type', 'global_training')
                         ->withoutGlobalScopes([
                             SoftDeletingScope::class,

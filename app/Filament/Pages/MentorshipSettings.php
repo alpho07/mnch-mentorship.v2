@@ -48,12 +48,12 @@ class MentorshipSettings extends Page implements HasActions, HasForms, Tables\Co
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check() && auth()->user()->can('update_program');
+        return auth()->check() && auth()->user()->can('page_MentorshipSettings');
     }
 
     public static function canAccess(): bool
     {
-        return auth()->check() && auth()->user()->can('update_program');
+        return auth()->check() && auth()->user()->can('page_MentorshipSettings');
     }
 
     public function mount(): void

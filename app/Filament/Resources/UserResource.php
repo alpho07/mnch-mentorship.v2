@@ -36,6 +36,11 @@ class UserResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return \App\Support\ProgramArea::scopeUsers(parent::getEloquentQuery(), auth()->user());
+    }
+
     public static function shouldRegisterNavigation(): bool
     {
         return auth()->check() && auth()->user()->can('view_any_user');}
@@ -119,6 +124,8 @@ class UserResource extends Resource
                         ->label('System Roles')
                         ->options(fn () => Role::query()
                             ->where('guard_name', 'web')
+                            // Area admins cannot hand out super_admin/admin or the other area's admin role.
+                            ->when(\App\Support\ProgramArea::forUser(auth()->user()), fn ($q) => $q->whereNotIn('name', array_merge(['super_admin', 'admin'], array_keys(\App\Support\ProgramArea::roleMap()))))
                             ->orderBy('name')
                             ->pluck('name', 'name')
                             ->toArray())
@@ -127,6 +134,19 @@ class UserResource extends Resource
                         ->searchable()
                         ->optionsLimit(50)
                         ->hidden(fn (Get $get) => $get('status') === 'trainee'),
+                    Forms\Components\Select::make('program_area')
+                        ->label('Program Area Admin')
+                        ->options(fn () => \App\Support\ProgramArea::forUser(auth()->user())
+                            ? array_intersect_key(\App\Support\ProgramArea::options(), [\App\Support\ProgramArea::forUser(auth()->user()) => true])
+                            : \App\Support\ProgramArea::options())
+                        ->default(fn () => \App\Support\ProgramArea::forUser(auth()->user()))
+                        ->native(false)
+                        ->required(fn (Get $get) => $get('status') !== 'trainee'
+                            && \App\Support\ProgramArea::requiresArea(\Spatie\Permission\Models\Role::whereIn('id', (array) $get('roles'))->orWhereIn('name', (array) $get('roles'))->pluck('name')->all())
+                            && ! empty($get('roles')))
+                        ->helperText('Required for any role other than mentor / mentee: Newborn & Child or EmONC. Mentors and mentees are universal and can leave this blank.')
+                        ->hidden(fn (Get $get) => $get('status') === 'trainee')
+                        ->columnSpanFull(),
                     Forms\Components\Select::make('program_scope')
                         ->label('Program Scope')
                         ->options(User::PROGRAM_SCOPE_OPTIONS)

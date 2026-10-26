@@ -22,7 +22,7 @@ class RubricAssessmentResource extends Resource
 
     protected static ?string $navigationLabel = 'Practical Assessments';
 
-    protected static ?string $navigationGroup = 'Rubric Assessments';
+    protected static ?string $navigationGroup = 'Rubric Management';
 
     protected static ?int $navigationSort = 6;
 
@@ -168,6 +168,11 @@ class RubricAssessmentResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['rubric.programModule', 'mentee', 'mentor']);
+        $query = parent::getEloquentQuery()->with(['rubric.programModule', 'mentee', 'mentor']);
+        if ($area = \App\Support\ProgramArea::forUser(auth()->user())) {
+            $query->whereHas('rubric.programModule', fn ($q) => $q->whereIn('program_id', \App\Support\ProgramArea::programIds($area)));
+        }
+
+        return $query;
     }
 }

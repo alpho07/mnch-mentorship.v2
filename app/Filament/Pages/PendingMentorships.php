@@ -135,7 +135,7 @@ class PendingMentorships extends Page implements HasTable
 
         return $table
             ->query(
-                Training::query()
+                \App\Support\ProgramArea::scopeByColumn(Training::query(), auth()->user())
                     ->whereIn('id', $stalledById->keys())
                     ->with(['mentor', 'county'])
             )

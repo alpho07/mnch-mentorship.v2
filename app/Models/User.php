@@ -48,6 +48,7 @@ class User extends Authenticatable implements FilamentUser
         'email_verified_at',
         'county_id', // Add if missing
         'program_scope',
+        'program_area',
         'report_section_preferences',
     ];
 
@@ -117,6 +118,12 @@ class User extends Authenticatable implements FilamentUser
     {
         if ($this->hasRole('super_admin')) {
             return null;
+        }
+
+        // Program-area admins are always confined to their area's programs,
+        // regardless of the Program Scoping setting.
+        if ($area = \App\Support\ProgramArea::forUser($this)) {
+            return \App\Support\ProgramArea::programIds($area);
         }
 
         if (! \App\Models\Setting::getBool(\App\Models\Setting::PROGRAM_SCOPING_ENABLED, false)) {
@@ -345,7 +352,7 @@ class User extends Authenticatable implements FilamentUser
     // Authorization Helper Methods
     public function isAboveSite(): bool
     {
-        return $this->hasRole(['super_admin', 'admin', 'division', 'national', 'division_lead', 'national_mentor_lead']);
+        return $this->hasRole(['super_admin', 'admin', 'division', 'national', 'division_lead', 'national_mentor_lead', 'newborn_child_admin', 'emonc_admin']);
     }
 
     public function canCreateMentorships(): bool

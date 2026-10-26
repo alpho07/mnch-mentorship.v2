@@ -17,6 +17,7 @@ class Training extends Model
         SoftDeletes;
 
     protected $fillable = [
+        'program_area',
         'title',
         'description',
         'type', // 'global_training' or 'facility_mentorship'
@@ -161,6 +162,15 @@ class Training extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (Training $training) {
+            if ($training->program_area) {
+                return;
+            }
+            $training->program_area = ($training->program_id
+                ? Program::whereKey($training->program_id)->value('program_area')
+                : null) ?? \App\Support\ProgramArea::forUser(auth()->user());
+        });
+
         static::saving(function (Training $training) {
             // Only guard transitions on records that already exist — plenty
             // of test fixtures (and potentially other tooling) shortcut
