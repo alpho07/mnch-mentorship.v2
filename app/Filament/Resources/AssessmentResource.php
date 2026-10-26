@@ -67,7 +67,7 @@ class AssessmentResource extends Resource
         }
 
         if ($area = \App\Support\ProgramArea::forUser($user)) {
-            $query->whereHas('assessmentType', fn ($q) => $q->where(fn ($w) => $w->where('program_area', $area)->orWhereNull('program_area')));
+            $query->whereHas('assessmentType', fn ($q) => $q->where('program_area', $area));
         }
 
         return $query;

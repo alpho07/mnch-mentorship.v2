@@ -48,6 +48,13 @@ class AssessmentTypeResource extends Resource
                                     ->placeholder('e.g., Skillslab Status Assessment (2025 Aug)')
                                     ->helperText('This is what shows in the picker when starting a new assessment — include the period in the title if it matters, e.g. "(2025 Aug)".')
                                     ->columnSpan(2),
+                                Forms\Components\Select::make('program_area')
+                                    ->label('Program Area')
+                                    ->options(\App\Support\ProgramArea::options())
+                                    ->default(fn () => \App\Support\ProgramArea::forUser(auth()->user()))
+                                    ->native(false)
+                                    ->required()
+                                    ->helperText('Which program this template belongs to. Assessments from it only show to that program area\'s admins.'),
                                 Forms\Components\TextInput::make('code')
                                     ->label('Code')
                                     ->required()
