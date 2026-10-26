@@ -28,6 +28,7 @@ class FacilityAssessment2026Seeder extends Seeder
             [
                 'name' => 'Standard Facility Readiness Assessment (2026)',
                 'version' => '2026',
+                'program_area' => 'newborn_child',
                 'category_id' => $category?->id,
                 'is_active' => true,
                 'template_parameters' => ['quality_of_care_timeline' => 'Neonates 7–28 days'],

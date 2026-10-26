@@ -20,7 +20,7 @@ class RagAccessTest extends TestCase
         $this->assertFalse(RagChat::shouldRegisterNavigation());
     }
 
-    public function test_enabled_rag_requires_permissions_or_admin_role(): void
+    public function test_enabled_rag_requires_permissions_and_excludes_plain_admin(): void
     {
         config()->set('rag.enabled', true);
 
@@ -30,12 +30,13 @@ class RagAccessTest extends TestCase
         $this->assertFalse(RagDocumentResource::shouldRegisterNavigation());
         $this->assertFalse(RagChat::shouldRegisterNavigation());
 
+        // Knowledge base is excluded from the admin role (super_admin only).
         $user->setRelation('roles', collect([
             new Role(['name' => 'admin', 'guard_name' => 'web']),
         ]));
 
-        $this->assertTrue(RagDocumentResource::shouldRegisterNavigation());
-        $this->assertTrue(RagChat::shouldRegisterNavigation());
+        $this->assertFalse(RagDocumentResource::shouldRegisterNavigation());
+        $this->assertFalse(RagChat::shouldRegisterNavigation());
     }
 
     public function test_enabled_rag_allows_super_admin_role(): void

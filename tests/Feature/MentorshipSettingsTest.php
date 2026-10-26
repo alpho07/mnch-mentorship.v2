@@ -20,14 +20,14 @@ class MentorshipSettingsTest extends TestCase
     private function actingAsAdmin(): User
     {
         $user = User::factory()->create(['name' => 'Test Admin']);
-        Permission::firstOrCreate(['name' => 'update_program', 'guard_name' => 'web']);
-        $user->givePermissionTo('update_program');
+        Permission::firstOrCreate(['name' => 'page_MentorshipSettings', 'guard_name' => 'web']);
+        $user->givePermissionTo('page_MentorshipSettings');
         $this->actingAs($user);
 
         return $user;
     }
 
-    public function test_page_is_hidden_from_users_without_the_update_program_permission(): void
+    public function test_page_is_hidden_from_users_without_the_page_permission(): void
     {
         $user = User::factory()->create(['name' => 'No Access']);
         $this->actingAs($user);

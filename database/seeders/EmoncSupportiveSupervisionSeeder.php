@@ -69,6 +69,7 @@ class EmoncSupportiveSupervisionSeeder extends Seeder
                 'name' => 'EmONC Post-Training Supportive Supervision Survey',
                 'description' => 'Assesses how facilities apply EmONC training in practice: facility readiness, commodities, emergency kits, referral systems, infection prevention, and gaps/success stories. Ported from CHAI\'s REDCap instrument.',
                 'version' => '1.0',
+                'program_area' => 'emonc',
                 'is_active' => true,
                 'category_id' => $category->id,
             ]
