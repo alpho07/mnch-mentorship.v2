@@ -94,6 +94,18 @@ class PendingMentorships extends Page implements HasTable
      */
     private static function scopedStalled(User $user): Collection
     {
+        $rows = static::roleScopedStalled($user);
+
+        // Program-area admins only see their own area's mentorships (badge + table).
+        if ($area = \App\Support\ProgramArea::forUser($user)) {
+            $rows = $rows->filter(fn (array $row) => $row['training']->program_area === $area);
+        }
+
+        return $rows;
+    }
+
+    private static function roleScopedStalled(User $user): Collection
+    {
         $service = app(MentorshipStallReminderService::class);
 
         if ($user->isAboveSite()) {
