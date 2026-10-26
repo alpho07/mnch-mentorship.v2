@@ -31,6 +31,14 @@ class ExecutiveBrief extends Page
 
     protected static ?string $slug = 'executive-brief';
 
+    /** The brief covers newborn & child mentorship only, so EmONC admins don't get it. */
+    public static function canAccess(): bool
+    {
+        $area = \App\Support\ProgramArea::forUser(auth()->user());
+
+        return $area === null || $area === \App\Support\ProgramArea::NEWBORN_CHILD;
+    }
+
     /**
      * Built per render rather than held in a public property: the brief
      * contains Collections and Carbon instances, which Livewire would
