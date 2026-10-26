@@ -23,8 +23,11 @@ class ModuleResource extends Resource {
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 2;
 
-    public static function shouldRegisterNavigation(): bool {
-        return auth()->check() && auth()->user()->can('view_any_module');}
+    // Deactivated: Program Modules is the active curriculum menu.
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
