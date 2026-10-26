@@ -25,7 +25,10 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->bind(\App\Services\Analytics\MetricsSource::class, \App\Services\Analytics\DatabaseMetrics::class);
+    }
 
     /**
      * Bootstrap any application services.

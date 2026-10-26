@@ -183,7 +183,12 @@ Route::prefix('analytics/dashboard')->name('analytics.dashboard.')->group(functi
             ]);
         }
 
-        return app(AnalyticsDashboardController::class)->index($request);
+        // ?legacy=1 keeps the previous dashboard reachable during the roll-out.
+        if ($request->boolean('legacy')) {
+            return app(AnalyticsDashboardController::class)->index($request);
+        }
+
+        return app(\App\Http\Controllers\Analytics\DashboardController::class)->show($request);
     })->name('index');
 
     // The same brief as a PDF, for circulation.

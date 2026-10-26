@@ -1,0 +1,1 @@
+<div class="sec"><span class="n disp">{{ str_pad((string) $n, 2, '0', STR_PAD_LEFT) }}</span><h2 id="{{ $id }}" class="disp">{{ $title }}</h2>@isset($after)<span class="muted" style="font-size:13.5px">{{ $after }}</span>@endisset @isset($chip){!! $chip !!}@endisset</div>

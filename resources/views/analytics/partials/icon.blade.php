@@ -1,0 +1,1 @@
+<svg width="{{ $size ?? 20 }}" height="{{ $size ?? 20 }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ $sw ?? 1.9 }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" @isset($style) style="{{ $style }}" @endisset><path d="{{ \App\Services\Analytics\Icons::path($name) }}"/></svg>
