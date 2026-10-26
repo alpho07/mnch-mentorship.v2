@@ -50,6 +50,9 @@ class MenteeDashboard extends Page
         } else {
             // For senior roles: count all active mentees system-wide
             $count = \App\Models\ClassParticipant::whereIn('status', ['enrolled', 'active'])
+                ->when(\App\Support\ProgramArea::forUser($user), fn ($q, $area) => $q->whereHas(
+                    'mentorshipClass.training', fn ($t) => $t->where('program_area', $area)
+                ))
                 ->distinct('user_id')
                 ->count('user_id');
         }
@@ -121,6 +124,13 @@ class MenteeDashboard extends Page
             ->whereIn('status', ['enrolled', 'active', 'completed'])
             ->orderByDesc('enrolled_at')
             ->get();
+
+        // Program-area admins only see enrollments in their own program area.
+        if ($area = \App\Support\ProgramArea::forUser($user)) {
+            $participants = $participants
+                ->filter(fn ($p) => $p->mentorshipClass?->training?->program_area === $area)
+                ->values();
+        }
 
         if ($participants->isEmpty()) {
             $this->globalStats = $this->emptyGlobalStats();
