@@ -72,6 +72,7 @@ class CreateAssessment extends CreateRecord
                                 titleAttribute: 'name',
                                 modifyQueryUsing: fn (Forms\Get $get, $query) => $query
                                     ->where('is_active', true)
+                                    ->when(\App\Support\ProgramArea::forUser(auth()->user()), fn ($q, $area) => $q->where('program_area', $area))
                                     ->when($get('category_filter'), fn ($q, $categoryId) => $q->where('category_id', $categoryId))
                                     ->orderBy('name'),
                             )

@@ -33,6 +33,18 @@ class AssessmentSectionResource extends Resource {
     // FORM
     // ─────────────────────────────────────────────────────────────────────────
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($area = \App\Support\ProgramArea::forUser($user)) {
+            $query->whereHas('assessmentType', fn ($q) => $q->where('program_area', $area));
+        }
+
+        return $query;
+    }
+
     public static function form(Form $form): Form {
         return $form->schema([
                             Forms\Components\Section::make('Section Identity')

@@ -11,6 +11,16 @@ class AssessmentType extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        // Area admins can only create/keep templates in their own program area.
+        static::saving(function (AssessmentType $type) {
+            if ($area = \App\Support\ProgramArea::forUser(auth()->user())) {
+                $type->program_area = $area;
+            }
+        });
+    }
+
     protected $fillable = [
         'program_area',
         'name',
