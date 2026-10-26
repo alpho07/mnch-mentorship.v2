@@ -30,7 +30,7 @@ $common = array_merge(
 
 $resourceManagement = ['resource', 'resource::category', 'resource::comment', 'resource::type', 'tag'];
 $training = ['global::training', 'mentorship::training', 'training', 'training::export'];
-$curriculum = ['program', 'program::module', 'module', 'topic', 'activity', 'methodology'];
+$curriculum = ['program', 'program::module', 'module', 'topic', 'methodology'];
 
 return [
 
@@ -85,6 +85,7 @@ return [
                 $training,
                 ['program::module::quiz'],                    // Quiz management (EmONC only for now)
                 $curriculum,
+                ['activity'],                                 // Activities are EmONC only
                 ['rubric::management', 'rubric::assessment'], // Rubric Management
                 $resourceManagement,
                 ['user'],
