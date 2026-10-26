@@ -20,8 +20,14 @@ class MethodologyResource extends Resource {
     public static function shouldRegisterNavigation(): bool {
         return auth()->check() && auth()->user()->can('view_any_methodology');}
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return \App\Support\ProgramArea::scopeByColumn(parent::getEloquentQuery(), auth()->user());
+    }
+
     public static function form(Form $form): Form {
         return $form->schema([
+                            Forms\Components\Select::make('program_area')->label('Program Area')->options(\App\Support\ProgramArea::options())->default(fn () => \App\Support\ProgramArea::forUser(auth()->user()))->native(false)->required()->visible(fn () => \App\Support\ProgramArea::forUser(auth()->user()) === null),
                             Forms\Components\TextInput::make('name')
                             ->label('Methodology Name')
                             ->required()

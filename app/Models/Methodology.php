@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Methodology extends Model
 {
+    use \App\Models\Concerns\HasProgramArea;
+
     use HasFactory;
 
     protected $fillable = ['name', 'description'];

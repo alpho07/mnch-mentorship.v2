@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Topic extends Model
 {
+    use \App\Models\Concerns\HasProgramArea;
+
     use HasFactory;
 
     protected $fillable = [

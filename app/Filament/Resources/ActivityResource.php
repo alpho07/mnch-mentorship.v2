@@ -26,12 +26,18 @@ class ActivityResource extends Resource
     {
         return auth()->check() && auth()->user()->can('view_any_activity');}
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return \App\Support\ProgramArea::scopeByColumn(parent::getEloquentQuery(), auth()->user());
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
             Forms\Components\Section::make('Activity Details')
                 ->schema([
-                    Forms\Components\TextInput::make('name')
+                    Forms\Components\Select::make('program_area')->label('Program Area')->options(\App\Support\ProgramArea::options())->default(fn () => \App\Support\ProgramArea::forUser(auth()->user()))->native(false)->required()->visible(fn () => \App\Support\ProgramArea::forUser(auth()->user()) === null),
+                            Forms\Components\TextInput::make('name')
                         ->required()
                         ->maxLength(255)
                         ->unique(ignoreRecord: true),
@@ -98,7 +104,7 @@ class ActivityResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        return (string) static::getEloquentQuery()->count();
     }
 
     public static function getGloballySearchableAttributes(): array

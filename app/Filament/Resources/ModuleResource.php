@@ -26,6 +26,11 @@ class ModuleResource extends Resource {
     public static function shouldRegisterNavigation(): bool {
         return auth()->check() && auth()->user()->can('view_any_module');}
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return \App\Support\ProgramArea::scopeByColumn(parent::getEloquentQuery(), auth()->user());
+    }
+
     public static function form(Form $form): Form {
         return $form->schema([
                             Forms\Components\Section::make('Module Details')
@@ -36,7 +41,8 @@ class ModuleResource extends Resource {
                                 ->required()
                                 ->searchable()
                                 ->preload(),
-                                Forms\Components\TextInput::make('name')
+                                Forms\Components\Select::make('program_area')->label('Program Area')->options(\App\Support\ProgramArea::options())->default(fn () => \App\Support\ProgramArea::forUser(auth()->user()))->native(false)->required()->visible(fn () => \App\Support\ProgramArea::forUser(auth()->user()) === null),
+                            Forms\Components\TextInput::make('name')
                                 ->label('Module Name')
                                 ->required()
                                 ->maxLength(255)
@@ -177,7 +183,7 @@ class ModuleResource extends Resource {
     }
 
     public static function getNavigationBadge(): ?string {
-        return static::getModel()::count();
+        return (string) static::getEloquentQuery()->count();
     }
 
     public static function getGloballySearchableAttributes(): array {

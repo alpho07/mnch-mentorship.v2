@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Module extends Model
 {
+    use \App\Models\Concerns\HasProgramArea;
+
     use HasFactory, SoftDeletes;
 
     protected $fillable = [

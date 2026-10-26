@@ -23,6 +23,11 @@ class TopicResource extends Resource
         return false;
     }
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return \App\Support\ProgramArea::scopeByColumn(parent::getEloquentQuery(), auth()->user());
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -31,7 +36,8 @@ class TopicResource extends Resource
                 ->options(Module::all()->pluck('name', 'id'))
                 ->searchable()
                 ->required(),
-            Forms\Components\TextInput::make('name')
+            Forms\Components\Select::make('program_area')->label('Program Area')->options(\App\Support\ProgramArea::options())->default(fn () => \App\Support\ProgramArea::forUser(auth()->user()))->native(false)->required()->visible(fn () => \App\Support\ProgramArea::forUser(auth()->user()) === null),
+                            Forms\Components\TextInput::make('name')
                 ->label('Topic Name')
                 ->required()
                 ->maxLength(255),
