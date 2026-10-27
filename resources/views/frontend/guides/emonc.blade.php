@@ -31,8 +31,8 @@
     <p class="lead">EmONC is certified in two steps, so three roles are involved.</p>
     <div class="duo" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
       <div class="who mentee"><h4>🧑‍🎓 Mentee</h4><ul><li>Joins the class</li><li>Confirms attendance each module</li><li>Does activities and tests</li><li>Uploads skills videos</li></ul></div>
-      <div class="who mentor"><h4>🧑‍🏫 Mentor</h4><ul><li>Sets up the class and modules</li><li>Teaches each session</li><li>Reviews tests and videos</li><li>Recommends for certificate</li></ul></div>
-      <div class="who head"><h4>🏛 Head DRMH</h4><ul><li>Reviews the full record</li><li>Gives the final approval</li><li>Triggers the certificate</li></ul></div>
+      <div class="who mentor"><h4>🧑‍🏫 Mentor</h4><ul><li>Sets up the class and modules</li><li>Teaches each session</li><li>Reviews tests and videos</li><li>Approves for certification</li></ul></div>
+      <div class="who head"><h4>🏛 Head DRMH</h4><ul><li>Reviews the full record</li><li>Gives the final approval (Head DRMH Certify)</li><li>Triggers the certificate</li></ul></div>
     </div>
     <div class="note info"><span class="ic">📖</span><div><b>Setting up the class?</b>Creating the mentorship, inviting mentees and attendance links work the same as every programme — see the <a href="{{ route('guides.mentorship') }}">Mentorship SOP</a>. This guide covers what is special about EmONC.</div></div>
   </section>
@@ -64,7 +64,7 @@
       <li><b>Review each mentee</b><span>Open their row. You will see pre-test (for information), post-test (must pass), activities and notes.</span></li>
       <li><b>Watch &amp; grade videos</b><span>Play the skills video in your browser, choose <span class="pill g">Pass</span> or <span class="pill a">Fail</span>, and add feedback. The mentee is notified automatically.</span></li>
       <li><b>Mark module complete</b><span>Do this when the mentee has met every requirement.</span></li>
-      <li><b>Recommend for certificate</b><span>After all 13 modules, press the button on the mentee’s class card. The Head DRMH is notified.</span></li>
+      <li><b>Mentor Approve</b><span>After all 13 modules (and any video reviews passed), open the class’s Mentees page and press <em>Mentor Approve</em> on the mentee’s row. The Head DRMH is notified.</span></li>
     </ol>
   </section>
 
@@ -101,7 +101,7 @@
     <h2>Getting the EmONC certificate</h2>
     <ol class="steps">
       <li><b>All 13 modules complete</b><span>Including activities, post-tests and passed videos.</span></li>
-      <li><b>Mentor recommends</b><span>The mentor signs off your record.</span></li>
+      <li><b>Mentor approves</b><span>The mentor signs off your record.</span></li>
       <li><b>Head DRMH approves</b><span>The Head DRMH reviews your completion record and makes the final decision.</span></li>
       <li><b>Download your certificate</b><span>Find it on your Mentee Dashboard. It carries <b>3 CPD points</b> and a verification link.</span></li>
     </ol>
@@ -114,7 +114,7 @@
     <details><summary>My attendance says “Phone number not found”.</summary><p>The number on your account differs from the one you typed. Sign in instead, or ask your mentor to correct your phone number.</p></details>
     <details><summary>I missed a module’s attendance window.</summary><p>Once a module is completed the link closes. Tell your mentor, who can record your attendance manually.</p></details>
     <details><summary>My video was marked Fail.</summary><p>Read your mentor’s notes, practise the highlighted steps, and upload a fresh video.</p></details>
-    <details><summary>I finished everything but have no certificate.</summary><p>Your mentor must recommend you and the Head DRMH must approve. Ask your mentor where your record is in that process.</p></details>
+    <details><summary>I finished everything but have no certificate.</summary><p>Your mentor must approve you and the Head DRMH must approve. Ask your mentor where your record is in that process.</p></details>
   </section>
 </div>
 @endsection

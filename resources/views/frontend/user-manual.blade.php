@@ -689,17 +689,44 @@ tr:hover td{background:#fafafa}
 
     <p>A <em>Mentorship</em> (also called a <em>Training</em> of type <code>facility_mentorship</code>) is the top-level container for a program at a facility. It groups one or more cohort <em>Classes</em>.</p>
 
+    <h3 class="sub-title">Ways to create one</h3>
+    <p>Go to <em>Training Management → Mentorship Trainings</em>. The buttons at the top of the page are:</p>
+    <table>
+      <thead><tr><th>Button</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><strong>New Mentorship</strong></td><td>One short form: run type, location, program, dates and number of mentees. Classes, modules and mentees are added afterwards.</td></tr>
+        <tr><td><strong>New Mentorship Guided Setup</strong></td><td>A 7-step wizard: Run Type → Location → Program &amp; Schedule → First Class → Modules → Enroll Mentees → Send Invitations. Progress is saved so you can resume.</td></tr>
+        <tr><td><strong>Quick Setup</strong></td><td>The same information as the guided setup, on one page in sections.</td></tr>
+        <tr><td><strong>Chat Setup</strong></td><td>Answer questions in a conversation; the assistant fills in the setup as you reply.</td></tr>
+        <tr><td><strong>MNCHGPT</strong></td><td>AI setup assistant with a checklist of what is still missing. Shown only when switched on.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout callout-info">
+      <strong>Missing a button?</strong>
+      Administrators can turn each creation method on or off under <em>Mentorship Settings</em>. A missing button means it has been switched off.
+    </div>
+
+    <h3 class="sub-title">What you fill in</h3>
     <div class="steps">
-      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Go to Mentorship Trainings</strong><p>In the admin sidebar, navigate to <em>Training Management → Mentorship Trainings</em>.</p></div></div>
-      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Click Create</strong><p>Fill in: Training name, Program (Newborn / Infant / EmONC), Facility, Start and End dates, description.</p></div></div>
-      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Add co-mentors (optional)</strong><p>You can invite co-mentors by email. They receive an acceptance link and gain access to the mentorship once they accept.</p></div></div>
-      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Save and create classes</strong><p>After saving, you can add cohort classes from the mentorship detail page.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Run Type</strong><p><em>Live Mentorship</em> counts in dashboards, KPI badges and reports. <em>Pilot Run</em> is excluded from every count — use it for testing.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Location</strong><p>Choose the County first, then the Facility.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Program &amp; Schedule</strong><p>Tap a program card (Newborn / Infant &amp; Child / EmONC), then set the start and end dates and the <em>Number of Mentees</em> (2 to 10). For EmONC the mentorship has no start/end dates of its own — the dates are set on each class.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Save and create classes</strong><p>You do not type a name: the title is generated from the program, facility and month, and the mentorship gets an ID such as <code>MT-AB12CD</code>. After saving you land on the Classes page to add cohort classes.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Add co-mentors (optional, after saving)</strong><p>Open the mentorship, choose <em>Co-Mentors</em> then <em>Invite Co-Mentor</em> and enter their email. They receive an acceptance link and gain access once they accept. Co-mentors are not asked for during creation.</p></div></div>
     </div>
 
     <div class="callout callout-info">
       <strong>Program selection matters</strong>
       The program you select determines which modules are available in the classes. You cannot change the program after saving.
     </div>
+    <div class="callout callout-info">
+      <strong>Preparation checklist</strong>
+      The create page reminds you to: (1) identify the facility's gaps and decide what the mentorship should address, (2) review the mentorship manuals before choosing modules and sessions, and (3) confirm every mentee has a name, email, phone, cadre and department.
+    </div>
+
+    <h3 class="sub-title">Draft until it really starts</h3>
+    <p>A new live mentorship is in <strong>Draft</strong>. It can only become <strong>Active</strong> once at least one class has been <em>started</em> and has at least one mentee enrolled. Pilot runs are exempt.</p>
+    <p>Mentorships that never get going (no class, nobody enrolled, or mentees but no modules) are listed on <em>Training Management → Pending Mentorships</em>, where mentors can continue them. Administrators see them under <em>System Administration → Stalled Mentorships</em>. The assigned mentor is emailed a reminder after 7 days without activity; administrators can change the threshold in <em>Mentorship Settings</em>.</p>
   </div>
 
   <!-- ══════════════════════════════════
@@ -792,11 +819,8 @@ tr:hover td{background:#fafafa}
     <p>Play the video directly in the browser. After watching, select <strong>Pass</strong> or <strong>Fail</strong> and optionally add feedback notes. The mentee is notified of your decision automatically.</p>
 
     <h3 class="sub-title">Approving for Certification</h3>
-    <p>Once all modules are complete and post-tests passed, a <em>Recommend for Certificate</em> button appears on the mentee's class card. Click this to:</p>
-    <ul>
-      <li>Mark the mentee as ready for certification</li>
-      <li>Notify the Head DRMH (for EmONC) or issue the certificate directly (Newborn/Infant programs)</li>
-    </ul>
+    <p><strong>Newborn and Infant &amp; Child:</strong> mentees are certified as soon as the class is completed — there is no extra approval step.</p>
+    <p><strong>EmONC:</strong> once a mentee has completed all modules (and passed any video reviews), open the class's <em>Mentees</em> page and press <em>Mentor Approve</em> on their row. This marks them ready for certification and notifies the Head DRMH, who gives the final approval with <em>Head DRMH Certify</em>. Certificates are then available from the <em>Certificate</em> button (or all at once as a ZIP).</p>
   </div>
 
   <!-- ══════════════════════════════════
@@ -863,7 +887,7 @@ tr:hover td{background:#fafafa}
     <h3 class="sub-title">EmONC Certification Flow</h3>
     <div class="steps">
       <div class="step"><div class="step-num"></div><div class="step-body"><strong>Complete all 13 modules</strong><p>Including all activities, post-tests, and passed video submissions.</p></div></div>
-      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Mentor review &amp; sign-off</strong><p>Your mentor reviews all submissions and recommends you for certification.</p></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-body"><strong>Mentor review &amp; sign-off</strong><p>Your mentor reviews all submissions and approves you for certification.</p></div></div>
       <div class="step"><div class="step-num"></div><div class="step-body"><strong>Head DRMH approval</strong><p>A Head DRMH officer reviews your completion record and makes the final certification decision.</p></div></div>
       <div class="step"><div class="step-num"></div><div class="step-body"><strong>Certificate issued</strong><p>Once approved, download your EmONC certificate from your Mentee Dashboard. It carries 3 CPD points.</p></div></div>
     </div>
@@ -953,7 +977,7 @@ tr:hover td{background:#fafafa}
     <p>The Head Deputy Resource Manager for Health (Head DRMH) is the final approval authority for EmONC mentee certificates. This role is assigned at county or subcounty level.</p>
 
     <h3 class="sub-title">When You Are Notified</h3>
-    <p>You receive a notification (email + in-app) when a mentor recommends a mentee for EmONC certification. The notification includes:</p>
+    <p>You receive a notification (email + in-app) when a mentor approves a mentee for EmONC certification. The notification includes:</p>
     <ul>
       <li>Mentee name and facility</li>
       <li>Class name and module completion summary</li>

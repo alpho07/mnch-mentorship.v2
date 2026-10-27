@@ -41,16 +41,36 @@
   <section id="create">
     <div class="eyebrow">Step 1</div>
     <h2>Create the mentorship</h2>
-    <p class="lead">The platform walks you through a guided set-up — you just answer one question at a time. Your progress is saved, so you can leave and come back.</p>
-    <span class="path">Training Management <i>›</i> Mentorship Trainings <i>›</i> Create</span>
+    <p class="lead">There is more than one way to start a mentorship. They all create the same thing, so pick the one you are most comfortable with. In the guided set-up your progress is saved, so you can leave and come back.</p>
+    <span class="path">Training Management <i>›</i> Mentorship Trainings <i>›</i> the button at the top of the page</span>
+
+    <h3 style="margin:22px 0 8px">Pick your starting button</h3>
+    <table>
+      <tr><th>Button</th><th>How it works</th></tr>
+      <tr><td><b>New Mentorship</b></td><td>One short form: run type, location, programme, dates and number of mentees. You add classes, modules and mentees afterwards.</td></tr>
+      <tr><td><b>New Mentorship Guided Setup</b></td><td>A step-by-step wizard that also creates the first class, adds modules, enrolls mentees and sends invitations. Recommended for first-timers.</td></tr>
+      <tr><td><b>Quick Setup</b></td><td>The same questions as the guided set-up, but all on one page in sections, for people who know what they want.</td></tr>
+      <tr><td><b>Chat Setup</b></td><td>Answer questions in a chat. The assistant fills in the set-up for you as you reply.</td></tr>
+      <tr><td><b>MNCHGPT</b></td><td>An AI set-up assistant with a checklist of what is still missing. It only appears when your administrator has switched it on.</td></tr>
+    </table>
+    <div class="note info"><span class="ic">🔘</span><div><b>Can’t see one of the buttons?</b>Administrators can switch each button on or off in <em>Mentorship Settings</em>. If a button is missing, it has been switched off — use another one, or ask your administrator.</div></div>
+
+    <h3 style="margin:22px 0 8px">What you will be asked</h3>
     <ol class="steps">
-      <li><b>Run Type</b><span>Choose <em>Live Mentorship</em> (counts in reports) or <em>Pilot Run</em> (for practice — never counted in reports).</span></li>
+      <li><b>Run Type</b><span>Choose <em>Live Mentorship</em> (counts in dashboards and reports) or <em>Pilot Run</em> (for practice — never counted in reports).</span></li>
       <li><b>Location</b><span>Pick the <em>County</em> first, then the <em>Facility</em> will appear. Choose where the mentorship will take place.</span></li>
       <li><b>Program &amp; Schedule</b><span>Tap a programme card (Newborn, Infant &amp; Child, or EmONC). Set the start and end dates and how many mentees (between 2 and 10).</span></li>
       <li><b>First Class</b><span>Give the first cohort a name (e.g. “March 2026 Cohort”), its dates, and an optional description.</span></li>
     </ol>
     <div class="note warn"><span class="ic">⚠️</span><div><b>Choose the programme carefully</b>The programme decides which modules are available, and it cannot be changed after saving.</div></div>
-    <div class="note tip"><span class="ic">💡</span><div><b>Co-mentors</b>Working with a colleague? Invite them by email. They get an acceptance link and see the mentorship once they accept.</div></div>
+    <div class="note info"><span class="ic">📅</span><div><b>EmONC has no mentorship dates</b>For EmONC the start and end date boxes are hidden on the mentorship itself. The dates come from the <em>classes</em> you create, so set them carefully there.</div></div>
+    <div class="note info"><span class="ic">🏷️</span><div><b>You don’t type a name</b>The system names the mentorship for you from the programme, the facility and the month, and gives it an ID such as <code>MT-AB12CD</code>. You name the <em>classes</em>.</div></div>
+    <div class="note tip"><span class="ic">📋</span><div><b>Before you start: the preparation checklist</b>The create page reminds you to (1) identify the facility’s gaps and decide what the mentorship should address, (2) review the mentorship manuals before choosing modules and sessions, and (3) make sure every mentee has a name, email, phone, cadre and department. Links to the manuals are on the page.</div></div>
+    <div class="note tip"><span class="ic">💡</span><div><b>Co-mentors come after you save</b>Working with a colleague? Open the mentorship and choose <em>Co-Mentors</em> then <em>Invite Co-Mentor</em>. Enter their email; they get an acceptance link and see the mentorship once they accept. The mentorship page shows “⑤ Co-Mentors” so you can see who is invited and who has accepted.</div></div>
+
+    <h3 style="margin:22px 0 8px">A mentorship starts as Draft</h3>
+    <p>A new <em>live</em> mentorship stays in <b>Draft</b> until it has genuinely started: at least one class has been <b>started</b> and has at least one <b>mentee enrolled</b>. Until then it cannot be made Active. Pilot runs are exempt, so you can practise freely.</p>
+    <p>Mentorships that never get going — no class, nobody enrolled, or mentees but no modules — appear on <em>Training Management › Pending Mentorships</em> with a button to continue, and the assigned mentor gets an email reminder after 7 days without activity (administrators can change this in <em>Mentorship Settings</em>). Administrators also see these on <em>System Administration › Stalled Mentorships</em>.</p>
   </section>
 
   <!-- 2 -->
@@ -144,7 +164,7 @@
       <li><b>Review each mentee</b><span>Check activities, post-test score and any notes from the module’s review page.</span></li>
       <li><b>Mark the module complete</b><span>Confirming attendance only shows “present”. <em>You</em> move a mentee to completed once they meet the requirements.</span></li>
       <li><b>Set the class to Completed</b><span>When all modules are done, module points are awarded to mentees.</span></li>
-      <li><b>Recommend for certificate</b><span>This button appears once everything is complete. For EmONC, see the <a href="{{ route('guides.emonc') }}">EmONC guide</a> for the extra approval step.</span></li>
+      <li><b>Certificate</b><span><b>Newborn and Infant &amp; Child:</b> mentees are certified as soon as the class is completed — there is no extra approval. <b>EmONC:</b> on the class’s Mentees page press <em>Mentor Approve</em> for each completed mentee (it appears once all modules are done and any video reviews are passed); the Head DRMH then gives final approval with <em>Head DRMH Certify</em>. See the <a href="{{ route('guides.emonc') }}">EmONC guide</a>. Download certificates from the <em>Certificate</em> button, or all at once as a ZIP.</span></li>
     </ol>
   </section>
 
@@ -154,6 +174,10 @@
     <details><summary>A mentee didn’t get the invitation email.</summary><p>Ask them to check spam, then resend from the Mentees page using “Only those not yet invited”. Also confirm the email address was typed correctly.</p></details>
     <details><summary>A mentee has no email address.</summary><p>Enrol them directly from the Mentees page; they can confirm attendance with their phone number.</p></details>
     <details><summary>Can I add more modules after the class has started?</summary><p>Yes. Open the class and use Add Modules; new mentees and existing ones both receive them.</p></details>
+    <details><summary>My mentorship is stuck in Draft and I can’t activate it.</summary><p>A live mentorship only becomes Active once at least one class has been <b>started</b> and has a <b>mentee enrolled</b>. Create a class, add modules, enrol at least one mentee, then start the class. Pilot runs are not held to this rule. Anything still stuck is listed under <em>Pending Mentorships</em>.</p></details>
+    <details><summary>I can’t see Quick Setup, Chat Setup or MNCHGPT.</summary><p>Each of the creation buttons can be switched on or off by an administrator in <em>Mentorship Settings</em>. A missing button means it is switched off — use one of the others.</p></details>
+    <details><summary>Where do I add a co-mentor?</summary><p>After saving the mentorship, open it and use <em>Co-Mentors</em> then <em>Invite Co-Mentor</em>. Co-mentors are not asked for while you create the mentorship.</p></details>
+    <details><summary>What are “Pending” and “Stalled” mentorships?</summary><p>Mentorships that never got going: no class, a class with nobody enrolled, or mentees but no modules. <em>Pending Mentorships</em> (Training Management) is your list with a Continue button; administrators see everything under <em>Stalled Mentorships</em>. The assigned mentor is emailed a reminder after 7 days of no activity.</p></details>
     <details><summary>Does a pilot run show in reports?</summary><p>No. Pilot runs are excluded from every count and chart, so they are safe for practice.</p></details>
     <details><summary>The attendance QR was shared in the wrong group.</summary><p>Regenerate the link straight away. The old QR code and link stop working immediately.</p></details>
   </section>
