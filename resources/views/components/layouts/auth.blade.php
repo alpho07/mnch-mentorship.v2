@@ -52,7 +52,7 @@
             .hero-bg {
                 position: absolute;
                 inset: 0;
-                background-image: url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1600&q=85&auto=format&fit=crop');
+                background-image: url('{{ asset('images/mnch-mentorship-login-hero.webp') }}');
                 background-size: cover;
                 background-position: center;
                 transform: scale(1.04);

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Auth;
 
+use App\Services\PlatformStatsService;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -112,5 +113,13 @@ class CustomResetPassword extends SimplePage {
 
     public function hasLogo(): bool {
         return false;
+    }
+
+    /** Live figures shown in the shared auth hero (same as the sign-in page). */
+    protected function getViewData(): array
+    {
+        return [
+            'platformStats' => app(PlatformStatsService::class)->summary(),
+        ];
     }
 }

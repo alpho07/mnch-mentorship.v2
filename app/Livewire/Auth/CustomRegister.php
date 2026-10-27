@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Auth;
 
+use App\Services\PlatformStatsService;
 use App\Mail\AccountVerificationMail;
 use App\Models\County;
 use App\Models\Department;
@@ -81,7 +82,8 @@ class CustomRegister extends SimplePage implements HasForms
                             ->required()
                             ->maxLength(255),
                     ])
-                    ->columns(1),
+                    ->columns(['default' => 1, 'md' => 3])
+                    ->compact(),
 
                 Section::make('Contact Details')
                     ->schema([
@@ -98,7 +100,8 @@ class CustomRegister extends SimplePage implements HasForms
                             ->unique('users', 'phone')
                             ->maxLength(20),
                     ])
-                    ->columns(1),
+                    ->columns(['default' => 1, 'md' => 2])
+                    ->compact(),
 
                 Section::make('Professional Information')
                     ->schema([
@@ -121,7 +124,8 @@ class CustomRegister extends SimplePage implements HasForms
                             ->default('mentee')
                             ->required(),
                     ])
-                    ->columns(1),
+                    ->columns(['default' => 1, 'md' => 3])
+                    ->compact(),
 
                 Section::make('Geographic Scope')
                     ->description('Select your county, then choose your facility.')
@@ -151,7 +155,8 @@ class CustomRegister extends SimplePage implements HasForms
                             ->disabled(fn (Get $get) => ! filled($get('county_id')))
                             ->helperText(fn (Get $get) => ! filled($get('county_id')) ? 'Select a county first' : null),
                     ])
-                    ->columns(1),
+                    ->columns(['default' => 1, 'md' => 2])
+                    ->compact(),
 
                 Section::make('Security Check')
                     ->schema([
@@ -176,7 +181,8 @@ class CustomRegister extends SimplePage implements HasForms
                                 },
                             ]),
                     ])
-                    ->columns(1),
+                    ->columns(['default' => 1, 'md' => 2])
+                    ->compact(),
             ])
             ->statePath('data');
     }
@@ -243,5 +249,12 @@ class CustomRegister extends SimplePage implements HasForms
 
     public function getTitle(): string { return ''; }
     public function hasLogo(): bool    { return false; }
-}
 
+    /** Live figures shown in the shared auth hero (same as the sign-in page). */
+    protected function getViewData(): array
+    {
+        return [
+            'platformStats' => app(PlatformStatsService::class)->summary(),
+        ];
+    }
+}

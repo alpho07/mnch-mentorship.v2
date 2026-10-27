@@ -2,22 +2,8 @@
     <div class="auth-shell">
 
         {{-- LEFT --}}
-        <div class="auth-hero">
-            <div class="hero-bg"></div>
-            <div class="hero-gradient"></div>
-            <div class="hero-content">
-                <div class="hero-badge"><span class="hero-dot"></span> Ministry of Health · Kenya</div>
-                <h2 class="hero-title"><em>MNCH</em> Mentorship<br>Platform</h2>
-                <p class="hero-desc">Transforming maternal, newborn and child health outcomes through structured, evidence-based mentorship across Kenya's health facilities.</p>
-                <div class="hero-stats">
-                    <div><div class="stat-val">47</div><div class="stat-lbl">Counties</div></div>
-                    <div><div class="stat-val">2,400+</div><div class="stat-lbl">Health workers</div></div>
-                    <div><div class="stat-val">580+</div><div class="stat-lbl">Facilities</div></div>
-                </div>
-            </div>
-        </div>
+        @include('livewire.auth.partials.hero', ['overline' => 'Account recovery', 'title' => 'Choose a new<br>password', 'desc' => "Pick a strong password to keep your account and your learners' data safe."])
 
-    {{-- RIGHT --}}
         <div class="auth-right">
             <div class="auth-box">
 
@@ -234,78 +220,6 @@
                 </script>
                 @endpush
 
-                <style>
-        /* ── Password strength bar ─────────────────────────────── */
-        .pw-strength {
-            margin-top: 0.6rem;
-            margin-bottom: 0.1rem;
-        }
-        .pw-bars {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 0.25rem;
-        }
-        .pw-bar {
-            flex: 1;
-            height: 4px;
-            border-radius: 100px;
-            background: #e2e8f0;
-            opacity: 0.4;
-            transition: background 0.3s ease, opacity 0.3s ease;
-        }
-        .pw-strength-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.03em;
-            transition: color 0.3s;
-        }
-
-        /* ── Password hints ─────────────────────────────────────── */
-        .pw-hints {
-            margin-top: 0.55rem;
-            margin-bottom: 0.1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.28rem;
-        }
-        .pw-hint {
-            display: flex;
-            align-items: center;
-            gap: 0.38rem;
-            font-size: 0.72rem;
-            font-weight: 500;
-            color: #94a3b8;
-            transition: color 0.2s;
-        }
-        .pw-hint svg {
-            width: 11px;
-            height: 11px;
-            stroke: #cbd5e1;
-            fill: none;
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            flex-shrink: 0;
-            transition: stroke 0.2s;
-        }
-        /* met = rule passed */
-        .pw-hint.met {
-            color: #10b981;
-        }
-        .pw-hint.met svg {
-            stroke: #10b981;
-        }
-
-        /* ── Button states ──────────────────────────────────────── */
-        .btn-idle   {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-        .btn-loading {
-            display: none;
-            align-items: center;
-            gap: 0.4rem;
-        }
-                </style>
+                @include('livewire.auth.partials.styles')
+    @include('livewire.auth.partials.extras')
 </div>
