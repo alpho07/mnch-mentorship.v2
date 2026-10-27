@@ -949,9 +949,10 @@ class ResourceController extends Controller
                     $q->public();
                 }
             }])
-            ->having('resources_count', '>', 0)
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->where('resources_count', '>', 0)
+            ->values();
 
         $resourceTypes = ResourceType::active()
             ->withCount(['resources' => function($q) use ($user) {
@@ -962,9 +963,10 @@ class ResourceController extends Controller
                     $q->public();
                 }
             }])
-            ->having('resources_count', '>', 0)
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->where('resources_count', '>', 0)
+            ->values();
 
         $popularTags = Tag::withCount(['resources' => function($q) use ($user) {
                 $q->published();
@@ -974,10 +976,11 @@ class ResourceController extends Controller
                     $q->public();
                 }
             }])
-            ->having('resources_count', '>', 0)
             ->orderByDesc('resources_count')
             ->limit(20)
-            ->get();
+            ->get()
+            ->where('resources_count', '>', 0)
+            ->values();
 
         return compact('categories', 'resourceTypes', 'popularTags');
     }
@@ -1009,9 +1012,10 @@ class ResourceController extends Controller
                     $q->public();
                 }
             }])
-            ->having('resources_count', '>', 0)
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->where('resources_count', '>', 0)
+            ->values();
 
         // Add all tags for advanced filtering
         $filterData['tags'] = Tag::withCount(['resources' => function($q) use ($user) {
@@ -1022,9 +1026,10 @@ class ResourceController extends Controller
                     $q->public();
                 }
             }])
-            ->having('resources_count', '>', 0)
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->where('resources_count', '>', 0)
+            ->values();
 
         return $filterData;
     }

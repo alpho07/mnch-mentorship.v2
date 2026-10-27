@@ -123,7 +123,10 @@ class DatabaseMetrics implements MetricsSource
         $q = DB::table('trainings as t')
             ->whereIn('t.id', $this->globalIds($this->area($f)))
             ->join('training_participants as tp', function ($j) {
-                $j->on('tp.training_id', '=', 't.id')->whereNull('tp.deleted_at');
+                $j->on('tp.training_id', '=', 't.id');
+                if ($this->hasColumn('training_participants', 'deleted_at')) {
+                    $j->whereNull('tp.deleted_at');
+                }
             })
             ->join('users as u', 'u.id', '=', 'tp.user_id')
             ->leftJoin('facilities as fa', 'fa.id', '=', 'u.facility_id');
@@ -154,11 +157,29 @@ class DatabaseMetrics implements MetricsSource
         return $out;
     }
 
+    /** Column check, memoised; production carries columns the migrations that build the test schema do not. */
+    private function hasColumn(string $table, string $column): bool
+    {
+        return $this->idCache["col:$table.$column"] ??= \Illuminate\Support\Facades\Schema::hasColumn($table, $column);
+    }
+
+    /** Year of a date column, on MySQL and on the SQLite the tests run on. */
+    private function yr(string $col): string
+    {
+        return DB::connection()->getDriverName() === 'sqlite' ? "CAST(strftime('%Y', $col) AS INTEGER)" : "YEAR($col)";
+    }
+
+    /** 'YYYY-MM' of a date column, on MySQL and on the SQLite the tests run on. */
+    private function ym(string $col): string
+    {
+        return DB::connection()->getDriverName() === 'sqlite' ? "strftime('%Y-%m', $col)" : "DATE_FORMAT($col, '%Y-%m')";
+    }
+
     private function byMonth(Builder $q, string $dateCol, string $countExpr = 'COUNT(*)'): array
     {
         $months = $this->emptyMonths();
         $rows = $q->where($dateCol, '>=', array_key_first($months).'-01')
-            ->selectRaw("DATE_FORMAT($dateCol, '%Y-%m') as ym, $countExpr as n")
+            ->selectRaw($this->ym($dateCol)." as ym, $countExpr as n")
             ->groupBy('ym')->pluck('n', 'ym');
         foreach ($rows as $ym => $n) {
             if (isset($months[$ym])) {
@@ -186,17 +207,17 @@ class DatabaseMetrics implements MetricsSource
             $programmes = Training::whereIn('id', $this->globalIds($area))
                 ->whereIn('id', fn ($q) => $q->select('training_id')->from('training_participants')->whereNull('deleted_at'))
                 ->orderBy('title')->pluck('title', 'id')->all();
-            $years = Training::whereIn('id', array_keys($programmes))->whereNotNull('start_date')->selectRaw('DISTINCT YEAR(start_date) y')->orderByDesc('y')->pluck('y')->map(fn ($y) => (int) $y)->all();
+            $years = Training::whereIn('id', array_keys($programmes))->whereNotNull('start_date')->selectRaw('DISTINCT '.$this->yr('start_date').' y')->orderByDesc('y')->pluck('y')->map(fn ($y) => (int) $y)->all();
         } elseif ($f->mode === 'assessment') {
             $programmes = [];
-            $years = DB::table('assessments')->whereNull('deleted_at')->whereNotNull('assessment_date')->selectRaw('DISTINCT YEAR(assessment_date) y')->orderByDesc('y')->pluck('y')->map(fn ($y) => (int) $y)->all();
+            $years = DB::table('assessments')->whereNull('deleted_at')->whereNotNull('assessment_date')->selectRaw('DISTINCT '.$this->yr('assessment_date').' y')->orderByDesc('y')->pluck('y')->map(fn ($y) => (int) $y)->all();
         } else {
             $programmes = DB::table('programs')->whereNull('deleted_at')
                 ->when($f->mode === 'mentorship', fn ($q) => $q->where('program_area', 'newborn_child'))
                 ->when($f->mode === 'emonc', fn ($q) => $q->where('program_area', 'emonc'))
                 ->when($area && $f->mode === 'mentor', fn ($q) => $q->where('program_area', $area))
                 ->orderBy('name')->pluck('name', 'name')->all();
-            $years = Training::whereIn('id', $this->liveIds($area))->whereNotNull('start_date')->selectRaw('DISTINCT YEAR(start_date) y')->orderByDesc('y')->pluck('y')->map(fn ($y) => (int) $y)->all();
+            $years = Training::whereIn('id', $this->liveIds($area))->whereNotNull('start_date')->selectRaw('DISTINCT '.$this->yr('start_date').' y')->orderByDesc('y')->pluck('y')->map(fn ($y) => (int) $y)->all();
         }
         $subcounties = $f->county
             ? DB::table('subcounties as sc')->join('counties as co', 'co.id', '=', 'sc.county_id')->where('co.name', $f->county)->orderBy('sc.name')->pluck('sc.name')->all()
@@ -619,7 +640,7 @@ class DatabaseMetrics implements MetricsSource
         $months = array_map(fn () => ['baseline' => 0, 'midline' => 0, 'endline' => 0], $this->emptyMonths());
         $rows = $this->assessments($f)->where('a.status', 'completed')
             ->where('a.assessment_date', '>=', array_key_first($months).'-01')
-            ->selectRaw("DATE_FORMAT(a.assessment_date, '%Y-%m') as ym, a.assessment_type as type, COUNT(*) as n")->groupBy('ym', 'type')->get();
+            ->selectRaw($this->ym('a.assessment_date')." as ym, a.assessment_type as type, COUNT(*) as n")->groupBy('ym', 'type')->get();
         foreach ($rows as $r) {
             if (isset($months[$r->ym][$r->type])) {
                 $months[$r->ym][$r->type] = (int) $r->n;
@@ -687,7 +708,7 @@ class DatabaseMetrics implements MetricsSource
     {
         return $this->trainees(DashboardFilters::fromArray(array_diff_key($f->toQuery(), ['programme' => 1])))
             ->groupBy('t.id', 't.title', 't.start_date', 't.status')
-            ->selectRaw('t.id, t.title as name, COUNT(tp.id) as participants, COUNT(DISTINCT u.facility_id) as facilities, YEAR(t.start_date) as year, t.status')
+            ->selectRaw('t.id, t.title as name, COUNT(tp.id) as participants, COUNT(DISTINCT u.facility_id) as facilities, '.$this->yr('t.start_date').' as year, t.status')
             ->orderByDesc('participants')->get()
             ->map(fn ($r) => ['id' => (string) $r->id, 'name' => (string) $r->name, 'participants' => (int) $r->participants, 'facilities' => (int) $r->facilities, 'year' => (int) $r->year, 'status' => (string) $r->status])->all();
     }
