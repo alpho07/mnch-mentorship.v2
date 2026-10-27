@@ -27,6 +27,7 @@ class GuideContentTest extends TestCase
         $this->assertStringContainsString('between 2 and 10', $sop);
         $this->assertStringContainsString('Co-mentors come after you save', $sop);
         $this->assertStringContainsString('EmONC has no mentorship dates', $sop);
+        $this->assertStringContainsString('no start and end dates of their own', $this->get('/guides/emonc')->getContent());
         $this->assertStringNotContainsString('Training name', $this->get('/user-manual')->getContent(), 'the create form has no name field');
     }
 

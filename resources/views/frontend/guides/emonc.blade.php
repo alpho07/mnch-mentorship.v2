@@ -57,7 +57,7 @@
     <div class="eyebrow">For mentors</div>
     <h2>Your path through an EmONC class</h2>
     <ol class="steps">
-      <li><b>Create the mentorship</b><span>Choose the <em>EmONC</em> programme card in the guided set-up. Add the class and tick the modules or PPH tracks you will teach.</span></li>
+      <li><b>Create the mentorship</b><span>Choose the <em>EmONC</em> programme card in the guided set-up (Quick Setup, Chat Setup and New Mentorship work too — see the <a href="{{ route('guides.mentorship') }}">Mentorship SOP guide</a>). EmONC mentorships have no start and end dates of their own: you set the dates on each <b>class</b>. Add the class and tick the modules or PPH tracks you will teach.</span></li>
       <li><b>Invite mentees</b><span>Send invitations in the final set-up step. Track who is Pending and who is Enrolled.</span></li>
       <li><b>Start a module</b><span>Open the module and share the attendance QR/link in the room.</span></li>
       <li><b>Teach the session</b><span>Mentees complete the activities and the post-test on their phones during or after the session.</span></li>
