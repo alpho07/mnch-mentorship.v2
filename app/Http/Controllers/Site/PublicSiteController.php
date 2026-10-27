@@ -37,7 +37,7 @@ class PublicSiteController extends Controller
             'img' => rtrim(asset('images/site'), '/'),
             'year' => now()->year,
             'dashboardUrl' => url('/analytics/dashboard'),
-            'loginUrl' => url('/login'),
+            'loginUrl' => url('admin/login'),
             'quickLinks' => [
                 ['label' => 'All Resources', 'href' => route('resources.index')],
                 ['label' => 'Categories', 'href' => route('categories.index')],
