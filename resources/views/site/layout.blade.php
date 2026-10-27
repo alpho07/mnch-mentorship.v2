@@ -7,6 +7,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title') · MNCH Kenya</title>
 <meta name="description" content="@yield('description', 'Kenya\'s training and mentorship hub for maternal, newborn and child health.')">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -105,7 +106,20 @@ a{color:#00695C}a:hover{color:#004D40}
 <input id="hdr-q" name="q" type="search" placeholder="Search resources" style="width:220px;height:44px;border:1px solid var(--line-2);border-radius:12px;background:#F6FAFA;padding:0 12px 0 36px;font:inherit;font-size:14px;color:var(--ink)">
 </form>
 @endif
+@auth
+<div x-data="{ open: false }" @keydown.escape.window="open = false" @click.outside="open = false" style="position:relative">
+<button type="button" class="btn btn-ghost" @click="open = !open" :aria-expanded="open" aria-haspopup="true" style="gap:10px;padding:0 10px 0 6px"><span style="width:32px;height:32px;border-radius:99px;background:var(--teal-btn);color:#FFF;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">{{ mb_strtoupper(mb_substr(auth()->user()->first_name ?? auth()->user()->name ?? 'U', 0, 1)) }}</span><span class="hide-md">{{ auth()->user()->first_name ?? 'Account' }}</span>@include('site.partials.icon', ['name' => 'chevron-down', 'size' => 14])</button>
+<div x-show="open" x-cloak x-transition.opacity style="position:absolute;right:0;top:52px;z-index:60;min-width:230px;padding:8px;background:#FFF;border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 40px -20px rgba(15,42,46,.45)">
+<div style="padding:8px 12px 10px;border-bottom:1px solid var(--line);margin-bottom:6px"><b style="display:block;font-size:14px">{{ auth()->user()->full_name ?? auth()->user()->name }}</b><span class="muted" style="font-size:12.5px;word-break:break-all">{{ auth()->user()->email }}</span></div>
+<a class="navlink" style="display:flex;width:100%" href="{{ url('/admin') }}">Admin panel</a>
+<a class="navlink" style="display:flex;width:100%" href="{{ route('resources.bookmarks') }}">Bookmarks</a>
+<a class="navlink" style="display:flex;width:100%" href="{{ route('resources.downloads') }}">Downloads</a>
+<form method="POST" action="{{ url('admin/logout') }}" style="margin:6px 0 0;border-top:1px solid var(--line);padding-top:6px">@csrf<button type="submit" class="navlink" style="display:flex;width:100%;border:0;background:none;font:inherit;font-weight:600;color:#B23149;cursor:pointer">Sign out</button></form>
+</div>
+</div>
+@else
 <a class="btn btn-ghost" href="{{ $loginUrl }}">@include('site.partials.icon', ['name' => 'login', 'size' => 16])Sign in</a>
+@endauth
 </div>
 </div>
 </header>

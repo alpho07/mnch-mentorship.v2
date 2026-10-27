@@ -8,6 +8,7 @@ use App\Models\Training;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * SiteDataSource on the real schema.
@@ -126,19 +127,25 @@ class DatabaseSiteData implements SiteDataSource
         return Resource::published()->public()
             ->with(['resourceType:id,slug', 'category:id,name'])
             ->get()
-            ->map(fn (Resource $r) => [
-                'slug' => $r->slug,
-                'title' => $r->title,
-                'format' => self::FORMAT_MAP[$r->resourceType?->slug] ?? 'PDF',
-                'subcategory' => (string) $r->category?->name,
-                'views' => (int) $r->view_count,
-                'downloads' => (int) $r->download_count,
-                'created_at' => Carbon::parse($r->published_at ?? $r->created_at)->toDateString(),
-                'advanced' => $r->difficulty_level === 'advanced',
-                'featured' => (bool) $r->is_featured,
-                'thumbnail' => $r->featured_image ? asset('storage/'.ltrim($r->featured_image, '/')) : null,
-                'excerpt' => $r->excerpt ? mb_strimwidth(strip_tags($r->excerpt), 0, 180, '…') : null,
-            ])->all();
+            ->map(fn (Resource $r) => self::row($r))->all();
+    }
+
+    /** One resource in the shape SiteDataSource::resources() returns (also used for listing pages). */
+    public static function row(Resource $r): array
+    {
+        return [
+            'slug' => $r->slug,
+            'title' => $r->title,
+            'format' => self::FORMAT_MAP[$r->resourceType?->slug] ?? 'PDF',
+            'subcategory' => (string) $r->category?->name,
+            'views' => (int) $r->view_count,
+            'downloads' => (int) $r->download_count,
+            'created_at' => Carbon::parse($r->published_at ?? $r->created_at)->toDateString(),
+            'advanced' => $r->difficulty_level === 'advanced',
+            'featured' => (bool) $r->is_featured,
+            'thumbnail' => $r->featured_image ? Storage::disk('thumbnails')->url($r->featured_image) : null,
+            'excerpt' => $r->excerpt ? mb_strimwidth(strip_tags($r->excerpt), 0, 180, '…') : null,
+        ];
     }
 
     public function categories(): array

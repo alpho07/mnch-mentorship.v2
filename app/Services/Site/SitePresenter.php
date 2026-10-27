@@ -124,6 +124,14 @@ final class SitePresenter
         ];
     }
 
+    /** Card view-models for resource rows (see DatabaseSiteData::row) on listing pages outside the three main ones. */
+    public function cards(array $rows, \DateTimeInterface $today): array
+    {
+        $idx = $this->topicIndex($this->data->categories());
+
+        return array_values(array_map(fn ($r, $i) => $this->resourceCard($r, $idx, $today, $i), $rows, array_keys($rows)));
+    }
+
     /* ───────────────────────── Home ───────────────────────── */
 
     public function home(\DateTimeInterface $today): array

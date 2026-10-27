@@ -111,7 +111,7 @@ class ResourceInteractionsTest extends TestCase
         $this->actingAs($user)->postJson(route('resources.bookmark', $r->slug))->assertOk();
 
         $page = $this->actingAs($user)->get(route('resources.bookmarks'))->assertOk()->assertSee('Saved item');
-        $page->assertSee('href="'.route('resources.bookmarks').'"', false);
+        $page->assertSee(route('resources.bookmarks'), false);
         foreach (['latest', 'popular', 'title', 'views', 'likes'] as $sort) {
             $this->actingAs($user)->get(route('resources.bookmarks', ['sort' => $sort]))->assertOk();
         }
@@ -146,5 +146,42 @@ class ResourceInteractionsTest extends TestCase
             'author_name' => 'Jane Doe', 'author_email' => 'jane@example.org', 'content' => 'Hello there', 'g-recaptcha-response' => 'good',
         ])->assertSessionHas('success');
         $this->assertDatabaseCount('resource_comments', 1);
+    }
+
+    public function test_resource_and_listing_pages_use_the_new_site_layout(): void
+    {
+        $r = $this->resource(['title' => 'Use of incubators', 'slug' => 'use-of-incubators']);
+        $tag = \App\Models\Tag::create(['name' => 'warmth', 'slug' => 'warmth']);
+        $r->tags()->attach($tag->id);
+        $paths = [
+            route('resources.show', 'use-of-incubators'), route('resources.category', 'cat'), route('categories.show', 'cat'),
+            route('resources.tag', 'warmth'), route('resources.type', 'pdf'), route('resources.browse'),
+            route('resources.search', ['q' => 'incubators']),
+        ];
+
+        foreach ($paths as $path) {
+            $html = $this->get($path)->assertOk()->getContent();
+            $this->assertStringContainsString('class="skip"', $html, "$path is not on the new layout");
+            $this->assertStringNotContainsString('max-w-7xl', $html, "$path still renders the old Tailwind markup");
+        }
+        $this->get(route('resources.show', 'use-of-incubators'))->assertSee('Use of incubators')->assertSee('Details');
+    }
+
+    public function test_signed_in_users_get_an_account_menu_on_the_new_header(): void
+    {
+        $this->resource();
+
+        $this->actingAs(User::factory()->create())->get(route('resources.show', 'sample'))
+            ->assertOk()->assertSee(route('resources.bookmarks'), false)->assertSee('Sign out')->assertSee('Admin panel');
+    }
+
+    public function test_reply_and_edit_controls_render_for_the_comment_owner(): void
+    {
+        $r = $this->resource();
+        $user = User::factory()->create();
+        $r->comments()->create(['user_id' => $user->id, 'content' => 'My comment', 'is_approved' => true, 'ip_address' => '127.0.0.1']);
+
+        $this->actingAs($user)->get(route('resources.show', $r->slug))->assertOk()
+            ->assertSee('My comment')->assertSee('toggleReplyForm(', false)->assertSee('editComment(', false);
     }
 }

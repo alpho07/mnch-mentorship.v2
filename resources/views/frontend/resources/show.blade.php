@@ -1,485 +1,227 @@
-@extends('layouts.app')
+@extends('site.layout')
 
 @section('title', $resource->title)
-@section('meta_description', $resource->meta_description ?: Str::limit(strip_tags($resource->excerpt), 160))
+@section('description', $resource->meta_description ?: Str::limit(strip_tags((string) $resource->excerpt), 160))
+@section('body-bg', '#F6F9F9')
 
-@section('breadcrumbs')
-    <li>
-        <div class="flex items-center">
-            <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
-            <a href="{{ route('resources.index') }}" class="text-gray-500 hover:text-gray-700">Resources</a>
-        </div>
-    </li>
-    @if($resource->category)
-    <li>
-        <div class="flex items-center">
-            <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
-            <a href="{{ route('resources.category', $resource->category->slug) }}" class="text-gray-500 hover:text-gray-700">
-                {{ $resource->category->name }}
-            </a>
-        </div>
-    </li>
-    @endif
-    <li>
-        <div class="flex items-center">
-            <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
-            <span class="text-gray-500">{{ Str::limit($resource->title, 50) }}</span>
-        </div>
-    </li>
-@endsection
+@push('styles')
+.rs-card{background:#FFF;border:1px solid #E1E9EA;border-radius:20px;padding:28px}
+.rs-h{margin:0 0 14px;font-size:20px;font-weight:700}
+.prose{font-size:16.5px;line-height:1.75;color:#1F3A3F;overflow-wrap:anywhere}
+.prose h1,.prose h2,.prose h3,.prose h4{font-family:var(--font-display);color:#0F2A2E;line-height:1.25;margin:1.6em 0 .5em}
+.prose h2{font-size:24px}.prose h3{font-size:20px}
+.prose p{margin:0 0 1em}.prose ul,.prose ol{padding-left:1.4em;margin:0 0 1em}.prose li{margin:.3em 0}
+.prose a{color:#00695C;text-decoration:underline}
+.prose img{max-width:100%;height:auto;border-radius:14px}
+.prose blockquote{margin:1.2em 0;padding:14px 18px;border-left:4px solid #0097A7;background:#F2F8F7;border-radius:0 12px 12px 0}
+.prose table{border-collapse:collapse;width:100%;display:block;overflow-x:auto}.prose th,.prose td{border:1px solid #E1E9EA;padding:8px 12px;text-align:left}
+.prose pre{background:#0F2A2E;color:#E4F2F3;padding:16px;border-radius:12px;overflow-x:auto}
+.prose code{background:#EEF5F5;padding:2px 6px;border-radius:6px;font-size:.9em}.prose pre code{background:none;padding:0}
+.abtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:12px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.1);color:#FFF;font:inherit;font-weight:700;font-size:14px;cursor:pointer;text-decoration:none;transition:background .2s,transform .15s}
+.abtn:hover{background:rgba(255,255,255,.2);color:#FFF}.abtn:active{transform:scale(.97)}
+.abtn.on{background:#FFF;color:#00363B;border-color:#FFF}
+.ta{width:100%;border:1px solid #D3DFE0;border-radius:12px;padding:12px 14px;font:inherit;font-size:15px;color:#0F2A2E;background:#FFF;min-height:110px;resize:vertical}
+.ta:focus,.fi:focus{outline:2px solid #0097A7;outline-offset:1px;border-color:#0097A7}
+.fi{width:100%;height:44px;border:1px solid #D3DFE0;border-radius:12px;padding:0 14px;font:inherit;font-size:15px;color:#0F2A2E;background:#FFF}
+.lbl{display:block;margin-bottom:6px;font-size:13.5px;font-weight:700;color:#2E4A4E}
+.err{margin:6px 0 0;font-size:13px;color:#B23149}
+.drow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EDF3F4;font-size:14.5px}
+.drow:last-child{border-bottom:0}
+.rel{display:block;padding:12px 0;border-bottom:1px solid #EDF3F4;text-decoration:none;color:#0F2A2E}.rel:last-child{border-bottom:0}.rel:hover b{color:#00695C}
+.cm{display:flex;gap:14px}
+.cm-av{width:40px;height:40px;border-radius:99px;background:#0097A7;color:#FFF;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}
+.cm-body{flex:1;min-width:0}
+.cm-bubble{background:#F6F9F9;border:1px solid #E6EEEF;border-radius:16px;padding:14px 16px}
+.cm-act{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 4px;border:0;background:none;color:#556B6E;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:none}
+.cm-act:hover{color:#00363B}
+.tagc{display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:99px;background:#EEF5F5;color:#2E4A4E;font-size:13px;font-weight:600;text-decoration:none}.tagc:hover{background:#DDF1F3;color:#00363B}
+@endpush
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="resourcePage">
-    <div class="flex flex-col lg:flex-row gap-8">
-        <!-- Main Content -->
-        <main class="lg:w-2/3">
-            <!-- Resource Header -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
-                <!-- Featured Image / Placeholder -->
-                <div class="h-48 md:h-64 overflow-hidden">
-                    @if($resource->featured_image)
-                        <img src="{{ Storage::disk('thumbnails')->url($resource->featured_image) }}"
-                             alt="{{ $resource->title }}"
-                             class="w-full h-full object-cover">
-                    @else
-                        <x-resource-placeholder :resource="$resource" icon-size="text-6xl" />
-                    @endif
-                </div>
+@php
+    $author = $resource->author;
+    $authorName = $author?->full_name ?? 'MNCH team';
+    $initials = collect(preg_split('/\s+/', trim($authorName)))->filter()->take(2)->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->implode('');
+    $cat = $resource->category;
+    $rootComments = $resource->comments->where('parent_id', null);
+    $canDownload = $resource->is_downloadable && ($resource->file_path || $resource->hasPrimaryFile());
 
-                <div class="p-6 md:p-8">
-                    <!-- Meta Info -->
-                    <div class="flex flex-wrap items-center gap-3 mb-4">
-                        @if($resource->category)
-                            <a href="{{ route('resources.category', $resource->category->slug) }}"
-                               class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800 hover:bg-primary-200 transition-colors">
-                                <i class="fas fa-folder mr-2"></i>
-                                {{ $resource->category->name }}
-                            </a>
-                        @endif
+    $previewFile = $resource->primaryFile;
+    $fileType = $previewFile?->file_type ?? '';
+    $isPdf = $fileType === 'application/pdf';
+    $isImage = str_starts_with($fileType, 'image/');
+    $isVideo = str_starts_with($fileType, 'video/');
+    $isAudio = str_starts_with($fileType, 'audio/');
+    $isOffice = in_array($fileType, [
+        'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ]);
+    $hasPreview = $previewFile && $previewFile->exists();
+    $previewUrl = $hasPreview ? route('resources.preview', $resource->slug) : null;
+    $officeViewerUrl = ($hasPreview && $isOffice)
+        ? 'https://view.officeapps.live.com/op/embed.aspx?src='.urlencode(\App\Http\Controllers\Admin\ResourceFileController::signedTempUrl($previewFile))
+        : null;
+    $cover = $resource->featured_image ? Storage::disk('thumbnails')->url($resource->featured_image) : null;
+@endphp
 
-                        @if($resource->resourceType)
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                                <i class="{{ $resource->resourceType->icon ?? 'fas fa-file' }} mr-2"></i>
-                                {{ $resource->resourceType->name }}
-                            </span>
-                        @endif
-
-                        @if($resource->difficulty_level)
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                                @if($resource->difficulty_level === 'beginner') bg-green-100 text-green-800
-                                @elseif($resource->difficulty_level === 'intermediate') bg-yellow-100 text-yellow-800
-                                @else bg-red-100 text-red-800 @endif">
-                                {{ ucfirst($resource->difficulty_level) }}
-                            </span>
-                        @endif
-
-                        @if($resource->is_featured)
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                                <i class="fas fa-star mr-2"></i>
-                                Featured
-                            </span>
-                        @endif
-                    </div>
-
-                    <!-- Title -->
-                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                        {{ $resource->title }}
-                    </h1>
-
-                    <!-- Excerpt -->
-                    @if($resource->excerpt)
-                        <p class="text-xl text-gray-600 mb-6">
-                            {{ $resource->excerpt }}
-                        </p>
-                    @endif
-
-                    <!-- Author & Meta -->
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-t border-b border-gray-200">
-                        <div class="flex items-center mb-4 sm:mb-0">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($resource->author->full_name) }}&size=48&background=3b82f6&color=ffffff"
-                                 alt="{{ $resource->author->full_name }}"
-                                 class="w-12 h-12 rounded-full mr-4">
-                            <div>
-                                <p class="font-medium text-gray-900">{{ $resource->author->full_name }}</p>
-                                <p class="text-sm text-gray-500">
-                                    Published {{ $resource->published_at?->format('M j, Y') }}
-                                    @if($resource->read_time > 0)
-                                        • {{ $resource->read_time }} min read
-                                    @endif
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex items-center space-x-3">
-                            @auth
-                                <!-- Like Button -->
-                                <button @click="toggleLike()"
-                                        :class="liked ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'"
-                                        class="flex items-center px-4 py-2 rounded-lg hover:bg-red-50 transition-colors">
-                                    <i :class="liked ? 'fas fa-heart' : 'far fa-heart'" class="mr-2"></i>
-                                    <span x-text="likeCount"></span>
-                                </button>
-
-                                <!-- Bookmark Button -->
-                                <button @click="toggleBookmark()"
-                                        :class="bookmarked ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-600'"
-                                        class="flex items-center px-4 py-2 rounded-lg hover:bg-yellow-50 transition-colors">
-                                    <i :class="bookmarked ? 'fas fa-bookmark' : 'far fa-bookmark'" class="mr-2"></i>
-                                    Save
-                                </button>
-                            @else
-                                <a href="{{ url('admin/login') }}"
-                                   class="flex items-center px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-                                    <i class="far fa-heart mr-2"></i>
-                                    {{ $resource->like_count }}
-                                </a>
-                            @endauth
-
-                            @if($resource->is_downloadable && ($resource->file_path || $resource->hasPrimaryFile()))
-                                <a href="{{ route('resources.download', $resource->slug) }}"
-                                   class="flex items-center px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium">
-                                    <i class="fas fa-download mr-2"></i>
-                                    Download
-                                </a>
-                            @endif
-
-                            <!-- Share Button -->
-                            <button @click="shareResource()"
-                                    class="flex items-center px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-                                <i class="fas fa-share mr-2"></i>
-                                Share
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Tags -->
-                    @if($resource->tags->count() > 0)
-                        <div class="mt-6">
-                            <h3 class="text-sm font-medium text-gray-900 mb-2">Tags:</h3>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($resource->tags as $tag)
-                                    <a href="{{ route('resources.tag', $tag->slug) }}"
-                                       class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700 hover:bg-primary-100 hover:text-primary-700 transition-colors">
-                                        #{{ $tag->name }}
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Resource Content -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8 mb-8">
-                <div class="prose prose-lg max-w-none">
-                    {!! $resource->content !!}
-                </div>
-
-                <!-- Learning Outcomes -->
-                @if($resource->learning_outcomes && count($resource->learning_outcomes) > 0)
-                    <div class="mt-8 p-6 bg-green-50 rounded-lg border border-green-200">
-                        <h3 class="text-lg font-semibold text-green-900 mb-4 flex items-center">
-                            <i class="fas fa-graduation-cap mr-2"></i>
-                            What You'll Learn
-                        </h3>
-                        <ul class="space-y-2">
-                            @foreach($resource->learning_outcomes as $outcome)
-                                <li class="flex items-start">
-                                    <i class="fas fa-check text-green-600 mt-1 mr-3 flex-shrink-0"></i>
-                                    <span class="text-green-800">{{ $outcome }}</span>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-                <!-- Prerequisites -->
-                @if($resource->prerequisites && count($resource->prerequisites) > 0)
-                    <div class="mt-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
-                        <h3 class="text-lg font-semibold text-blue-900 mb-4 flex items-center">
-                            <i class="fas fa-list-check mr-2"></i>
-                            Prerequisites
-                        </h3>
-                        <ul class="space-y-2">
-                            @foreach($resource->prerequisites as $prerequisite)
-                                <li class="flex items-start">
-                                    <i class="fas fa-arrow-right text-blue-600 mt-1 mr-3 flex-shrink-0"></i>
-                                    <span class="text-blue-800">{{ $prerequisite }}</span>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-                <!-- External URL -->
-                @if($resource->external_url)
-                    <div class="mt-6 p-6 bg-purple-50 rounded-lg border border-purple-200">
-                        <h3 class="text-lg font-semibold text-purple-900 mb-2 flex items-center">
-                            <i class="fas fa-external-link-alt mr-2"></i>
-                            External Resource
-                        </h3>
-                        <p class="text-purple-800 mb-4">This resource is available on an external platform.</p>
-                        <a href="{{ $resource->external_url }}"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                            <i class="fas fa-external-link-alt mr-2"></i>
-                            Visit External Resource
-                        </a>
-                    </div>
-                @endif
-            </div>
-
-            <!-- Inline File Preview -->
-            @php
-                use App\Http\Controllers\Admin\ResourceFileController;
-                $previewFile = $resource->primaryFile;
-                $fileType    = $previewFile?->file_type ?? '';
-                $isPdf    = $fileType === 'application/pdf';
-                $isImage  = str_starts_with($fileType, 'image/');
-                $isVideo  = str_starts_with($fileType, 'video/');
-                $isAudio  = str_starts_with($fileType, 'audio/');
-                $isOffice = in_array($fileType, [
-                    'application/vnd.ms-powerpoint',
-                    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                    'application/msword',
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                    'application/vnd.ms-excel',
-                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                ]);
-                $hasPreview = $previewFile && $previewFile->exists();
-                $previewUrl = $hasPreview ? route('resources.preview', $resource->slug) : null;
-                $officeViewerUrl = ($hasPreview && $isOffice)
-                    ? 'https://view.officeapps.live.com/op/embed.aspx?src=' . urlencode(ResourceFileController::signedTempUrl($previewFile))
-                    : null;
-            @endphp
-
-            @if($hasPreview && ($isPdf || $isImage || $isVideo || $isAudio || $isOffice))
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
-                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-file text-primary-600"></i>
-                        File Preview
-                    </h2>
-                    <a href="{{ route('resources.download', $resource->slug) }}"
-                       class="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:text-primary-700">
-                        <i class="fas fa-download"></i> Download
-                    </a>
-                </div>
-
-                <div class="p-4">
-                    @if($isPdf)
-                        <iframe src="{{ $previewUrl }}"
-                                class="w-full rounded border border-gray-100"
-                                style="height: 70vh;"
-                                title="{{ $resource->title }}">
-                        </iframe>
-
-                    @elseif($isImage)
-                        <div class="flex items-center justify-center bg-gray-50 rounded p-4">
-                            <img src="{{ $previewUrl }}"
-                                 alt="{{ $resource->title }}"
-                                 class="max-w-full max-h-[65vh] object-contain rounded shadow-sm">
-                        </div>
-
-                    @elseif($isVideo)
-                        <div class="bg-black rounded overflow-hidden">
-                            <video controls class="w-full" style="max-height: 60vh;">
-                                <source src="{{ $previewUrl }}" type="{{ $fileType }}">
-                            </video>
-                        </div>
-
-                    @elseif($isAudio)
-                        <div class="flex items-center justify-center py-8 bg-gray-50 rounded">
-                            <audio controls class="w-full max-w-xl">
-                                <source src="{{ $previewUrl }}" type="{{ $fileType }}">
-                            </audio>
-                        </div>
-
-                    @elseif($isOffice && $officeViewerUrl)
-                        <div class="rounded overflow-hidden" style="height: 70vh;">
-                            <iframe src="{{ $officeViewerUrl }}"
-                                    class="w-full h-full"
-                                    frameborder="0"
-                                    allowfullscreen
-                                    title="{{ $resource->title }}">
-                            </iframe>
-                        </div>
-                        <p class="text-xs text-gray-400 text-center mt-2">
-                            Powered by Microsoft Office Online &mdash; requires internet access
-                        </p>
-                    @endif
-                </div>
-            </div>
-            @endif
-
-            <!-- Comments Section -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
-                <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                    <i class="fas fa-comments mr-3"></i>
-                    Comments ({{ $resource->comments->where('parent_id', null)->count() }})
-                </h3>
-
-                @auth
-                    <!-- Comment Form -->
-                    <form action="{{ route('resources.comment.store', $resource->slug) }}" method="POST" class="mb-8">
-                        @csrf
-                        <div class="mb-4">
-                            <label for="content" class="block text-sm font-medium text-gray-700 mb-2">
-                                Add a comment
-                            </label>
-                            <textarea name="content"
-                                      id="content"
-                                      rows="4"
-                                      class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                      placeholder="Share your thoughts about this resource..."
-                                      required></textarea>
-                        </div>
-                        <button type="submit"
-                                class="inline-flex items-center px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium">
-                            <i class="fas fa-comment mr-2"></i>
-                            Post Comment
-                        </button>
-                    </form>
-                @else
-                    <form action="{{ route('resources.comment.guest', $resource->slug) }}" method="POST" class="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        @csrf
-                        <p class="text-gray-600 mb-4">Comment as a guest (reviewed before it appears), or <a href="{{ url('admin/login') }}" class="text-primary-600 underline">sign in</a>.</p>
-                        <div class="grid sm:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label for="author_name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                <input type="text" name="author_name" id="author_name" value="{{ old('author_name') }}" required maxlength="255" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                                @error('author_name')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                            </div>
-                            <div>
-                                <label for="author_email" class="block text-sm font-medium text-gray-700 mb-1">Email (not shown)</label>
-                                <input type="email" name="author_email" id="author_email" value="{{ old('author_email') }}" required maxlength="255" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                                @error('author_email')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                            </div>
-                        </div>
-                        <label for="guest_content" class="block text-sm font-medium text-gray-700 mb-1">Comment</label>
-                        <textarea name="content" id="guest_content" rows="4" required minlength="3" maxlength="1000" class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-1">{{ old('content') }}</textarea>
-                        @error('content')<p class="text-sm text-red-600 mb-2">{{ $message }}</p>@enderror
-                        <div style="position:absolute;left:-9999px" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
-                        @if (config('services.recaptcha.site_key'))
-                            <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-                            <div class="g-recaptcha my-3" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
-                        @endif
-                        @error('g-recaptcha-response')<p class="text-sm text-red-600 mb-2">{{ $message }}</p>@enderror
-                        <button type="submit" class="inline-flex items-center px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium">
-                            <i class="fas fa-comment mr-2"></i> Submit comment
-                        </button>
-                    </form>
-                @endauth
-
-                <!-- Comments List -->
-                @if($resource->comments->where('parent_id', null)->count() > 0)
-                    <div class="space-y-6">
-                        @foreach($resource->comments->where('parent_id', null) as $comment)
-                            @include('frontend.resources.comment', ['comment' => $comment, 'resource' => $resource])
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-8 text-gray-500">
-                        <i class="fas fa-comment text-4xl mb-4 text-gray-300"></i>
-                        <p>No comments yet. Be the first to share your thoughts!</p>
-                    </div>
-                @endif
-            </div>
-        </main>
-
-        <!-- Sidebar -->
-        <aside class="lg:w-1/3">
-            <!-- Resource Stats -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 sticky top-24">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Resource Details</h3>
-
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-600 flex items-center">
-                            <i class="fas fa-eye mr-2"></i> Views
-                        </span>
-                        <span class="font-medium">{{ number_format($resource->view_count) }}</span>
-                    </div>
-
-                    @if($resource->is_downloadable)
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-600 flex items-center">
-                            <i class="fas fa-download mr-2"></i> Downloads
-                        </span>
-                        <span class="font-medium">{{ number_format($resource->download_count) }}</span>
-                    </div>
-                    @endif
-
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-600 flex items-center">
-                            <i class="fas fa-heart mr-2"></i> Likes
-                        </span>
-                        <span class="font-medium">{{ number_format($resource->like_count) }}</span>
-                    </div>
-
-                    @if($resource->file_size)
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-600 flex items-center">
-                            <i class="fas fa-file mr-2"></i> File Size
-                        </span>
-                        <span class="font-medium">{{ $resource->formatted_file_size }}</span>
-                    </div>
-                    @endif
-
-                    @if($resource->duration)
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-600 flex items-center">
-                            <i class="fas fa-clock mr-2"></i> Duration
-                        </span>
-                        <span class="font-medium">{{ $resource->duration }}</span>
-                    </div>
-                    @endif
-                </div>
-
-                @if($resource->is_downloadable && ($resource->file_path || $resource->hasPrimaryFile()))
-                <div class="mt-6 pt-6 border-t border-gray-200">
-                    <a href="{{ route('resources.download', $resource->slug) }}"
-                       class="w-full inline-flex items-center justify-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium">
-                        <i class="fas fa-download mr-2"></i>
-                        Download Resource
-                    </a>
-                </div>
-                @endif
-            </div>
-
-            <!-- Related Resources -->
-            @if($relatedResources->count() > 0)
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Related Resources</h3>
-                <div class="space-y-4">
-                    @foreach($relatedResources as $related)
-                        <div class="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
-                            <h4 class="font-medium text-gray-900 mb-2 line-clamp-2">
-                                <a href="{{ route('resources.show', $related->slug) }}" class="hover:text-primary-600 transition-colors">
-                                    {{ $related->title }}
-                                </a>
-                            </h4>
-                            <div class="flex items-center justify-between text-sm text-gray-500">
-                                <span>{{ $related->resourceType->name ?? 'Resource' }}</span>
-                                <span>{{ $related->view_count }} views</span>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-
-                <div class="mt-4 pt-4 border-t border-gray-200">
-                    <a href="{{ route('resources.category', $resource->category->slug) }}"
-                       class="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                        View more in {{ $resource->category->name }} →
-                    </a>
-                </div>
-            </div>
-            @endif
-        </aside>
-    </div>
+<div x-data="resourcePage">
+<section style="position:relative;overflow:hidden;background:var(--deep);color:#FFF">
+<div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(rgba(127,220,230,.15) 1px,transparent 1.3px);background-size:22px 22px"></div>
+<div aria-hidden="true" style="position:absolute;right:-120px;top:-160px;width:520px;height:520px;border-radius:50%;border:2px solid rgba(127,220,230,.14)"></div>
+<div class="wrap" style="position:relative;padding-top:28px;padding-bottom:40px">
+<nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:8px;font-size:13px;color:#BFE9EE;flex-wrap:wrap"><a href="{{ route('home') }}" style="color:#BFE9EE;text-decoration:none">Home</a>@include('site.partials.icon', ['name' => 'chevron-right', 'size' => 14])<a href="{{ route('resources.index') }}" style="color:#BFE9EE;text-decoration:none">Resources</a>@if ($cat)@include('site.partials.icon', ['name' => 'chevron-right', 'size' => 14])<a href="{{ route('resources.category', $cat->slug) }}" style="color:#BFE9EE;text-decoration:none">{{ $cat->name }}</a>@endif</nav>
+<div class="rise" style="margin-top:24px;max-width:860px">
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+@if ($cat)<a class="chip" href="{{ route('resources.category', $cat->slug) }}" style="background:rgba(255,255,255,.14);color:#FFF;text-decoration:none">{{ $cat->name }}</a>@endif
+@if ($resource->resourceType)<span class="chip" style="background:rgba(255,255,255,.14);color:#FFF">{{ $resource->resourceType->name }}</span>@endif
+@if ($resource->difficulty_level)<span class="chip" style="background:#FDF3E3;color:#8A5000">{{ ucfirst($resource->difficulty_level) }}</span>@endif
+@if ($resource->is_featured)<span class="chip" style="background:#FFE9A8;color:#6B4A00">Featured</span>@endif
 </div>
+<h1 class="disp" style="margin:14px 0 0;font-size:clamp(30px,4.2vw,48px);font-weight:800;line-height:1.08">{{ $resource->title }}</h1>
+@if ($resource->excerpt)<p style="margin:14px 0 0;font-size:18px;color:#D4EEF1;max-width:720px">{{ $resource->excerpt }}</p>@endif
+<div style="display:flex;align-items:center;gap:12px;margin-top:22px;flex-wrap:wrap">
+<span class="cm-av" style="width:44px;height:44px">{{ $initials ?: 'M' }}</span>
+<span style="line-height:1.3"><b style="display:block">{{ $authorName }}</b><span style="font-size:13.5px;color:#BFE9EE">Published {{ $resource->published_at?->format('j M Y') }}@if ($resource->read_time > 0) · {{ $resource->read_time }} min read @endif</span></span>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px">
+@auth
+<button type="button" class="abtn" :class="liked && 'on'" @click="toggleLike()" :aria-pressed="liked">@include('site.partials.icon', ['name' => 'heart', 'size' => 18])<span x-text="likeCount" class="num"></span><span class="sr">Likes</span></button>
+<button type="button" class="abtn" :class="bookmarked && 'on'" @click="toggleBookmark()" :aria-pressed="bookmarked">@include('site.partials.icon', ['name' => 'bookmark', 'size' => 18])<span x-text="bookmarked ? 'Saved' : 'Save'"></span></button>
+@else
+<a class="abtn" href="{{ $loginUrl }}">@include('site.partials.icon', ['name' => 'heart', 'size' => 18])<span class="num">{{ $resource->like_count }}</span><span class="sr">Likes. Sign in to like</span></a>
+@endauth
+@if ($canDownload)<a class="btn btn-pri btn-lg" href="{{ route('resources.download', $resource->slug) }}">@include('site.partials.icon', ['name' => 'download', 'size' => 18])Download</a>@endif
+<button type="button" class="abtn" @click="shareResource()">@include('site.partials.icon', ['name' => 'share', 'size' => 18])Share</button>
+</div>
+</div>
+</div>
+</section>
+
+<div class="wrap" style="padding-top:32px;padding-bottom:72px">
+<div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+<main style="flex:999 1 620px;min-width:0;display:flex;flex-direction:column;gap:22px">
+
+@if ($cover)
+<img src="{{ $cover }}" alt="" style="width:100%;max-height:420px;object-fit:cover;border-radius:20px;border:1px solid #E1E9EA">
+@endif
+
+@if (trim(strip_tags((string) $resource->content)) !== '' || $resource->learning_outcomes || $resource->prerequisites || $resource->external_url)
+<article class="rs-card">
+@if (trim(strip_tags((string) $resource->content)) !== '')<div class="prose">{!! $resource->content !!}</div>@endif
+
+@if ($resource->learning_outcomes && count($resource->learning_outcomes) > 0)
+<div style="margin-top:24px;padding:20px;background:#E7F5EF;border-radius:16px">
+<h2 class="disp" style="margin:0 0 10px;font-size:18px;font-weight:700;color:#0E6A4C">What you'll learn</h2>
+<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px">@foreach ($resource->learning_outcomes as $o)<li style="display:flex;gap:10px;color:#0E4D38">@include('site.partials.icon', ['name' => 'check', 'size' => 18, 'stroke' => '#12805C', 'style' => 'flex:none;margin-top:2px'])<span>{{ $o }}</span></li>@endforeach</ul>
+</div>
+@endif
+
+@if ($resource->prerequisites && count($resource->prerequisites) > 0)
+<div style="margin-top:16px;padding:20px;background:#EAF1FA;border-radius:16px">
+<h2 class="disp" style="margin:0 0 10px;font-size:18px;font-weight:700;color:#174F82">Before you start</h2>
+<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px">@foreach ($resource->prerequisites as $p)<li style="display:flex;gap:10px;color:#173F66">@include('site.partials.icon', ['name' => 'chevron-right', 'size' => 18, 'stroke' => '#1D6FB8', 'style' => 'flex:none;margin-top:2px'])<span>{{ $p }}</span></li>@endforeach</ul>
+</div>
+@endif
+
+@if ($resource->external_url)
+<div style="margin-top:16px;padding:20px;background:#F0EDFB;border-radius:16px">
+<h2 class="disp" style="margin:0 0 6px;font-size:18px;font-weight:700;color:#4B35A0">Available online</h2>
+<p style="margin:0 0 14px;color:#3A2A82">This resource is hosted on an external site.</p>
+<a class="btn btn-pri" href="{{ $resource->external_url }}" target="_blank" rel="noopener noreferrer">Open resource @include('site.partials.icon', ['name' => 'chevron-right', 'size' => 16])</a>
+</div>
+@endif
+</article>
+@endif
+
+@if ($hasPreview && ($isPdf || $isImage || $isVideo || $isAudio || $isOffice))
+<section class="rs-card" style="padding:0;overflow:hidden" aria-label="File preview">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid #EDF3F4"><h2 class="disp" style="margin:0;font-size:18px;font-weight:700">Preview</h2>@if ($canDownload)<a href="{{ route('resources.download', $resource->slug) }}" style="font-weight:700;font-size:14px">Download</a>@endif</div>
+<div style="padding:14px">
+@if ($isPdf)<iframe src="{{ $previewUrl }}" title="{{ $resource->title }}" style="width:100%;height:72vh;border:1px solid #E1E9EA;border-radius:12px"></iframe>
+@elseif ($isImage)<div style="display:flex;justify-content:center;background:#F6F9F9;border-radius:12px;padding:14px"><img src="{{ $previewUrl }}" alt="{{ $resource->title }}" style="max-height:65vh;object-fit:contain;border-radius:8px"></div>
+@elseif ($isVideo)<video controls style="width:100%;max-height:62vh;border-radius:12px;background:#000"><source src="{{ $previewUrl }}" type="{{ $fileType }}"></video>
+@elseif ($isAudio)<audio controls style="width:100%"><source src="{{ $previewUrl }}" type="{{ $fileType }}"></audio>
+@elseif ($isOffice && $officeViewerUrl)<iframe src="{{ $officeViewerUrl }}" title="{{ $resource->title }}" allowfullscreen style="width:100%;height:72vh;border:0;border-radius:12px"></iframe><p class="muted" style="font-size:12px;text-align:center;margin:8px 0 0">Powered by Microsoft Office Online, needs internet access.</p>
+@endif
+</div>
+</section>
+@endif
+
+<section class="rs-card" id="comments" aria-label="Comments">
+<h2 class="disp rs-h num">Comments ({{ $rootComments->count() }})</h2>
+@if (session('success'))<div role="status" style="margin-bottom:16px;padding:12px 16px;border-radius:12px;background:#E7F5EF;color:#0E4D38;font-weight:600">{{ session('success') }}</div>@endif
+@auth
+<form action="{{ route('resources.comment.store', $resource->slug) }}" method="POST" style="margin-bottom:26px">
+@csrf
+<label class="lbl" for="content">Add a comment</label>
+<textarea class="ta" id="content" name="content" required minlength="3" maxlength="1000" placeholder="Share your thoughts about this resource">{{ old('content') }}</textarea>
+@error('content')<p class="err">{{ $message }}</p>@enderror
+<button class="btn btn-pri" type="submit" style="margin-top:12px">Post comment</button>
+</form>
+@else
+<form action="{{ route('resources.comment.guest', $resource->slug) }}" method="POST" style="margin-bottom:26px;padding:20px;background:#F6F9F9;border:1px solid #E6EEEF;border-radius:16px">
+@csrf
+<p style="margin:0 0 16px;color:#3D5558">Comment as a guest (reviewed before it appears), or <a href="{{ $loginUrl }}">sign in</a>.</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:14px;margin-bottom:14px">
+<div><label class="lbl" for="author_name">Name</label><input class="fi" id="author_name" type="text" name="author_name" value="{{ old('author_name') }}" required maxlength="255">@error('author_name')<p class="err">{{ $message }}</p>@enderror</div>
+<div><label class="lbl" for="author_email">Email (not shown)</label><input class="fi" id="author_email" type="email" name="author_email" value="{{ old('author_email') }}" required maxlength="255">@error('author_email')<p class="err">{{ $message }}</p>@enderror</div>
+</div>
+<label class="lbl" for="guest_content">Comment</label>
+<textarea class="ta" id="guest_content" name="content" required minlength="3" maxlength="1000">{{ old('content') }}</textarea>
+@error('content')<p class="err">{{ $message }}</p>@enderror
+<div style="position:absolute;left:-9999px" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
+@if (config('services.recaptcha.site_key'))
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}" style="margin-top:12px"></div>
+@endif
+@error('g-recaptcha-response')<p class="err">{{ $message }}</p>@enderror
+<button class="btn btn-pri" type="submit" style="margin-top:14px">Submit comment</button>
+</form>
+@endauth
+
+@if ($rootComments->count() > 0)
+<div style="display:flex;flex-direction:column;gap:22px">
+@foreach ($rootComments as $comment)@include('frontend.resources.comment', ['comment' => $comment, 'resource' => $resource, 'depth' => 0])@endforeach
+</div>
+@else
+<div style="text-align:center;padding:28px 0" class="muted">No comments yet. Be the first to share your thoughts.</div>
+@endif
+</section>
+</main>
+
+<aside style="flex:1 1 300px;min-width:min(300px,100%);display:flex;flex-direction:column;gap:22px;position:sticky;top:96px">
+<section class="rs-card" style="padding:22px" aria-label="Details">
+<h2 class="disp rs-h" style="font-size:18px">Details</h2>
+<div class="drow"><span class="muted">Views</span><b class="num">{{ number_format($resource->view_count) }}</b></div>
+@if ($resource->is_downloadable)<div class="drow"><span class="muted">Downloads</span><b class="num">{{ number_format($resource->download_count) }}</b></div>@endif
+<div class="drow"><span class="muted">Likes</span><b class="num" x-text="likeCount">{{ number_format($resource->like_count) }}</b></div>
+@if ($resource->file_size)<div class="drow"><span class="muted">File size</span><b>{{ $resource->formatted_file_size }}</b></div>@endif
+@if ($resource->duration)<div class="drow"><span class="muted">Duration</span><b>{{ $resource->duration }}</b></div>@endif
+@if ($canDownload)<a class="btn btn-pri btn-lg" href="{{ route('resources.download', $resource->slug) }}" style="width:100%;margin-top:16px">@include('site.partials.icon', ['name' => 'download', 'size' => 18])Download resource</a>@endif
+</section>
+
+@if ($resource->tags->count() > 0)
+<section class="rs-card" style="padding:22px" aria-label="Tags">
+<h2 class="disp rs-h" style="font-size:18px">Tags</h2>
+<div style="display:flex;gap:8px;flex-wrap:wrap">@foreach ($resource->tags as $tag)<a class="tagc" href="{{ route('resources.tag', $tag->slug) }}">#{{ $tag->name }}</a>@endforeach</div>
+</section>
+@endif
+
+@if ($relatedResources->count() > 0)
+<section class="rs-card" style="padding:22px" aria-label="Related resources">
+<h2 class="disp rs-h" style="font-size:18px">Related resources</h2>
+@foreach ($relatedResources as $related)
+<a class="rel" href="{{ route('resources.show', $related->slug) }}"><b style="display:block;line-height:1.3">{{ $related->title }}</b><span class="muted num" style="font-size:13px">{{ $related->resourceType->name ?? 'Resource' }} · {{ number_format($related->view_count) }} views</span></a>
+@endforeach
+@if ($cat)<a href="{{ route('resources.category', $cat->slug) }}" style="display:inline-block;margin-top:12px;font-weight:700;font-size:14px">More in {{ $cat->name }} →</a>@endif
+</section>
+@endif
+</aside>
+</div>
+</div>
+</div>
+@endsection
 
 @push('scripts')
 <script>
@@ -487,120 +229,71 @@
         Alpine.data('resourcePage', () => ({
             liked: {{ in_array('like', $userInteractions) ? 'true' : 'false' }},
             bookmarked: {{ in_array('bookmark', $userInteractions) ? 'true' : 'false' }},
-            likeCount: {{ $resource->like_count }},
+            likeCount: {{ (int) $resource->like_count }},
+            reply: null,
+            edit: null,
+
+            async post(url) {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            },
 
             async toggleLike() {
                 try {
-                    const response = await fetch(`{{ route('resources.like', $resource->slug) }}`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        }
-                    });
-
-                    const data = await response.json();
+                    const data = await this.post(@json(route('resources.like', $resource->slug)));
                     this.liked = data.liked;
                     this.likeCount = data.like_count;
-
-                    this.showToast(this.liked ? 'Resource liked!' : 'Like removed!', 'success');
+                    this.showToast(this.liked ? 'Resource liked' : 'Like removed', 'success');
                 } catch (error) {
-                    console.error('Error:', error);
-                    this.showToast('An error occurred', 'error');
+                    this.showToast('Something went wrong. Please try again.', 'error');
                 }
             },
 
             async toggleBookmark() {
                 try {
-                    const response = await fetch(`{{ route('resources.bookmark', $resource->slug) }}`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        }
-                    });
-
-                    const data = await response.json();
+                    const data = await this.post(@json(route('resources.bookmark', $resource->slug)));
                     this.bookmarked = data.bookmarked;
-
-                    this.showToast(data.message, 'success');
+                    this.showToast(data.message || (this.bookmarked ? 'Saved to your bookmarks' : 'Removed from bookmarks'), 'success');
                 } catch (error) {
-                    console.error('Error:', error);
-                    this.showToast('An error occurred', 'error');
+                    this.showToast('Something went wrong. Please try again.', 'error');
                 }
             },
 
+            toggleReplyForm(id) { this.edit = null; this.reply = this.reply === id ? null : id; },
+            editComment(id) { this.reply = null; this.edit = id; },
+            cancelEdit() { this.edit = null; },
+
             shareResource() {
+                const data = { title: @json($resource->title), text: @json((string) $resource->excerpt), url: window.location.href };
                 if (navigator.share) {
-                    navigator.share({
-                        title: @json($resource->title),
-                        text: @json((string) $resource->excerpt),
-                        url: window.location.href
-                    });
+                    navigator.share(data).catch(() => {});
+                } else if (navigator.clipboard) {
+                    navigator.clipboard.writeText(data.url).then(
+                        () => this.showToast('Link copied to clipboard', 'success'),
+                        () => window.prompt('Copy this link', data.url)
+                    );
                 } else {
-                    // Fallback: copy to clipboard
-                    const done = () => this.showToast('Link copied to clipboard!', 'success');
-                    if (navigator.clipboard) {
-                        navigator.clipboard.writeText(window.location.href).then(done, () => window.prompt('Copy this link', window.location.href));
-                    } else {
-                        window.prompt('Copy this link', window.location.href);
-                    }
+                    window.prompt('Copy this link', data.url);
                 }
             },
 
             showToast(message, type = 'info') {
                 const toast = document.createElement('div');
-                toast.className = `fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 ${
-                    type === 'success' ? 'bg-green-500' :
-                    type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-                }`;
+                toast.setAttribute('role', 'status');
+                toast.style.cssText = 'position:fixed;top:88px;right:16px;z-index:60;padding:12px 18px;border-radius:12px;color:#fff;font-weight:600;box-shadow:0 14px 30px -14px rgba(0,0,0,.5);background:' + (type === 'success' ? '#12805C' : type === 'error' ? '#B23149' : '#1D6FB8');
                 toast.textContent = message;
                 document.body.appendChild(toast);
-
-                setTimeout(() => {
-                    toast.remove();
-                }, 3000);
+                setTimeout(() => toast.remove(), 3000);
             }
-        }))
-    })
+        }));
+    });
 </script>
 @endpush
-
-@push('styles')
-<style>
-    .prose {
-        max-width: none;
-    }
-
-    .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
-        @apply text-gray-900 font-semibold;
-    }
-
-    .prose p {
-        @apply text-gray-700 leading-relaxed;
-    }
-
-    .prose a {
-        @apply text-primary-600 hover:text-primary-700 underline;
-    }
-
-    .prose img {
-        @apply rounded-lg shadow-sm;
-    }
-
-    .prose blockquote {
-        @apply border-l-4 border-primary-500 bg-primary-50 p-4 rounded-r-lg;
-    }
-
-    .prose code {
-        @apply bg-gray-100 px-2 py-1 rounded text-sm;
-    }
-
-    .prose pre {
-        @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto;
-    }
-</style>
-@endpush
-@endsection

@@ -59,28 +59,28 @@ class SearchController extends Controller
         
         $suggestedCategories = ResourceCategory::active()
             ->where('name', 'like', "%{$searchTerm}%")
+            ->whereHas('resources', fn ($q) => $q->published()->accessibleTo($user))
             ->withCount(['resources' => function($q) use ($user) {
                 $q->published()->accessibleTo($user);
             }])
-            ->having('resources_count', '>', 0)
-            ->limit(5)
+                        ->limit(5)
             ->get();
 
         $suggestedTags = Tag::where('name', 'like', "%{$searchTerm}%")
+            ->whereHas('resources', fn ($q) => $q->published()->accessibleTo($user))
             ->withCount(['resources' => function($q) use ($user) {
                 $q->published()->accessibleTo($user);
             }])
-            ->having('resources_count', '>', 0)
-            ->limit(10)
+                        ->limit(10)
             ->get();
 
         // Get filter options for search refinement
         $resourceTypes = ResourceType::active()
+            ->whereHas('resources', fn ($q) => $q->published()->accessibleTo($user))
             ->withCount(['resources' => function($q) use ($user) {
                 $q->published()->accessibleTo($user);
             }])
-            ->having('resources_count', '>', 0)
-            ->orderBy('name')
+                        ->orderBy('name')
             ->get();
 
         return view('frontend.search.index', compact(
