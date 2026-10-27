@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#00363B">
+<link rel="manifest" href="{{ asset('site.webmanifest') }}">
+<link rel="apple-touch-icon" href="{{ asset('app-icons/site-icon-192.png') }}">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 <title>MNCH Platform — User Manual</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><style>
 :root{
@@ -176,7 +180,7 @@ tr:hover td{background:#fafafa}
 <link rel="stylesheet" href="{{ asset('css/motion.css') }}?v={{ filemtime(public_path('css/motion.css')) }}">
 <script defer src="{{ asset('js/motion.js') }}?v={{ filemtime(public_path('js/motion.js')) }}"></script>
 </head>
-<body>
+<body x-data="{ menu: false }">
 <div id="progress-bar"></div>
 
 <!-- TOP HEADER -->
@@ -1371,5 +1375,6 @@ document.querySelectorAll('.section').forEach(s=>{
   io.observe(s);
 });
 </script>
+@include('site.partials.mobile-chrome')
 </body>
 </html>

@@ -42,7 +42,7 @@ class MobileAppShellTest extends TestCase
 
     public function test_public_and_dashboard_pages_carry_the_app_shell(): void
     {
-        foreach (['/', '/resources', '/categories', '/analytics/dashboard'] as $path) {
+        foreach (['/', '/resources', '/categories', '/analytics/dashboard', '/user-manual', '/guides/mentorship-sop', '/guides/emonc'] as $path) {
             $html = $this->get($path)->assertOk()->getContent();
             $this->assertStringContainsString('site.webmanifest', $html, "$path has no manifest link");
             $this->assertStringContainsString('theme-color', $html);
@@ -51,6 +51,11 @@ class MobileAppShellTest extends TestCase
             $this->assertStringContainsString('class="drawer"', $html, "$path has no menu drawer");
             $this->assertStringContainsString('sw-site.js', $html);
         }
+    }
+
+    public function test_the_tab_bar_never_prints(): void
+    {
+        $this->get('/guides/emonc')->assertSee('@media print{.mbar,.tabbar,.drawer{display:none!important}', false);
     }
 
     public function test_the_tab_bar_marks_the_current_section(): void

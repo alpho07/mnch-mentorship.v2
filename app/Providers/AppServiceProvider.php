@@ -37,7 +37,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Any page that extends the public layout gets its header/footer data without its controller passing it.
-        \Illuminate\Support\Facades\View::composer(['site.layout', 'analytics.layout', 'frontend.resources.*', 'frontend.categories.*', 'frontend.search.*'], function ($view) {
+        \Illuminate\Support\Facades\View::composer(['site.layout', 'analytics.layout', 'frontend.resources.*', 'frontend.categories.*', 'frontend.search.*', 'frontend.user-manual', 'frontend.guides.*'], function ($view) {
             $name = (string) request()->route()?->getName();
             $page = $view->name() === 'analytics.layout' ? 'dashboards' : (str_starts_with($name, 'categories.') ? 'categories' : (str_starts_with($name, 'resources.') ? 'resources' : 'other'));
             $view->with(array_diff_key(\App\Services\Site\SiteChrome::data($page), $view->getData()));

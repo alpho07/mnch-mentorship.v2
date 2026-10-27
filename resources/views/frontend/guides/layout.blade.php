@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#00363B">
+<link rel="manifest" href="{{ asset('site.webmanifest') }}">
+<link rel="apple-touch-icon" href="{{ asset('app-icons/site-icon-192.png') }}">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 <title>@yield('title') — MNCH Mentorship Guide</title>
 <meta name="description" content="@yield('description')">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><style>
@@ -116,7 +120,7 @@ footer .legal{border-top:1px solid rgba(255,255,255,.1);padding:16px 0 26px;font
 <link rel="stylesheet" href="{{ asset('css/motion.css') }}?v={{ filemtime(public_path('css/motion.css')) }}">
 <script defer src="{{ asset('js/motion.js') }}?v={{ filemtime(public_path('js/motion.js')) }}"></script>
 </head>
-<body class="@yield('theme')">
+<body class="@yield('theme')" x-data="{ menu: false }">
 <nav class="bar"><div class="wrap">
   <a class="brand" href="{{ url('/') }}">MNCH Mentorship<small>Ministry of Health · Kenya</small></a>
   <a class="hide-s" href="{{ route('guides.mentorship') }}">Mentorship SOP</a>
@@ -149,5 +153,6 @@ footer .legal{border-top:1px solid rgba(255,255,255,.1);padding:16px 0 26px;font
     <div class="legal">&copy; {{ date('Y') }} Ministry of Health, Kenya · MNCH Programme. For help, contact your county mentor lead.</div>
   </div>
 </footer>
+@include('site.partials.mobile-chrome')
 </body>
 </html>

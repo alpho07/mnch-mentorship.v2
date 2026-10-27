@@ -9,7 +9,7 @@
 .mbtn{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:14px;border:0;background:transparent;color:var(--ink,#0F2A2E);cursor:pointer;text-decoration:none}
 .mbtn:active{background:#E3F5F7}
 .tabbar{display:none}
-.drawer{position:fixed;inset:0;z-index:80;visibility:hidden;pointer-events:none;transition:visibility 0s linear .28s}
+.drawer{position:fixed;inset:0;z-index:2000;visibility:hidden;pointer-events:none;transition:visibility 0s linear .28s}
 .drawer.open{visibility:visible;pointer-events:auto;transition-delay:0s}
 .drawer-bd{position:absolute;inset:0;background:rgba(6,34,42,.55);opacity:0;transition:opacity .28s ease;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 .drawer.open .drawer-bd{opacity:1}
@@ -22,6 +22,10 @@
 .dsub{display:block;padding:14px 16px 6px;font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#556B6E}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .btn-lg{min-height:48px;padding:0 22px;font-size:15px}
+.disp{font-weight:800;letter-spacing:-.01em}
+.muted{color:#556B6E}
+.drawer .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}
+.drawer .btn-pri{background:#00838F;color:#fff}
 .install-only{display:none}
 .can-install .install-only{display:block}
 .ios-hint{display:none;margin:8px 16px 0;padding:12px 14px;border-radius:12px;background:#F2F8F7;color:#3D5558;font-size:13.5px;line-height:1.5}
@@ -36,7 +40,7 @@
   .hdr .app-ic{display:block!important;width:38px;height:38px;border-radius:11px}
   body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
   .mbar{display:flex}
-  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:grid;grid-template-columns:repeat(5,1fr);padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);-webkit-backdrop-filter:saturate(1.4) blur(10px);backdrop-filter:saturate(1.4) blur(10px);border-top:1px solid #E1E9EA;box-shadow:0 -10px 30px -22px rgba(15,42,46,.5)}
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:1000;display:grid;grid-template-columns:repeat(5,1fr);padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);-webkit-backdrop-filter:saturate(1.4) blur(10px);backdrop-filter:saturate(1.4) blur(10px);border-top:1px solid #E1E9EA;box-shadow:0 -10px 30px -22px rgba(15,42,46,.5)}
   .tab-i{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;border:0;background:transparent;border-radius:12px;color:#556B6E;font:inherit;font-size:11px;font-weight:700;text-decoration:none;cursor:pointer}
   .tab-i svg{width:23px;height:23px}
   .tab-i.on{color:#00363B}
@@ -45,6 +49,7 @@
   .tab-i:active{background:#E3F5F7}
 }
 @media (min-width:861px){.mbar,.tabbar,.drawer{display:none!important}}
+@media print{.mbar,.tabbar,.drawer{display:none!important}body{padding-bottom:0!important}}
 .is-standalone header{padding-top:env(safe-area-inset-top)}
 @media (display-mode: standalone){.is-standalone-only{display:block}}
 </style>
