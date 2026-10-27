@@ -161,6 +161,17 @@ tr:hover td{background:#fafafa}
   .content{padding:24px 16px 60px}
   .topbar-search input{width:140px}
 }
+@media(max-width:768px){
+  .content table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .content pre,.content img{max-width:100%}
+}
+@media(max-width:640px){
+  .topbar{gap:8px;padding:0 10px}
+  .topbar-divider,.topbar-title{display:none}
+  .topbar-search{flex:1;min-width:0}
+  .topbar-search input,.topbar-search input:focus{width:100%;font-size:16px;min-height:38px}
+  .topbar-logo{flex:none}
+}
 </style>
 <link rel="stylesheet" href="{{ asset('css/motion.css') }}?v={{ filemtime(public_path('css/motion.css')) }}">
 <script defer src="{{ asset('js/motion.js') }}?v={{ filemtime(public_path('js/motion.js')) }}"></script>

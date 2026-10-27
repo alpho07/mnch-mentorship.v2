@@ -6,7 +6,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#00363B">
+<link rel="manifest" href="{{ asset('site.webmanifest') }}">
+<link rel="apple-touch-icon" href="{{ asset('app-icons/site-icon-192.png') }}">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MNCH Kenya">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title') · MNCH Kenya</title>
 <meta name="description" content="@yield('description', 'Kenya\'s training and mentorship hub for maternal, newborn and child health.')">
@@ -83,25 +89,26 @@ a{color:#00695C}a:hover{color:#004D40}
 @stack('styles')
 </style>
 </head>
-<body>
+<body x-data="{ menu: false }">
 <a class="skip" href="#main">Skip to content</a>
 
 @if (request('signed_out') === 'inactive')
 <div role="status" x-data="{ show: true }" x-show="show" style="background:#FEF3C7;color:#6B4A00;border-bottom:1px solid #F3D98B"><div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px;font-size:14.5px"><span><b>You were signed out</b> after {{ (int) round(config('session.idle_timeout') / 60) }} minutes of inactivity. <a href="{{ $loginUrl }}?signed_out=inactive" style="color:#6B4A00;font-weight:700">Sign in again</a> to continue.</span><button type="button" @click="show = false" aria-label="Dismiss" style="border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:#6B4A00;min-width:44px;min-height:44px">&times;</button></div></div>
 @endif
 <header style="position:sticky;top:0;z-index:40;background:rgba(255,255,255,.96);-webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid #E6EEEF">
-<div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:76px;flex-wrap:wrap">
+<div class="wrap hdr" style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:76px;flex-wrap:wrap">
 <a href="{{ route('home') }}" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink)">
-<img src="{{ $img }}/moh-logo.png" alt="Ministry of Health, Republic of Kenya" width="88" height="34" style="height:34px;width:auto">
-<span style="width:1px;height:30px;background:#DCE6E7"></span>
-<span style="display:flex;flex-direction:column;line-height:1.05"><span class="disp" style="font-size:19px;font-weight:800">MNCH Kenya</span><span class="muted" style="font-size:12px;font-weight:600">Training &amp; mentorship hub</span></span>
+<img class="moh" src="{{ $img }}/moh-logo.png" alt="Ministry of Health, Republic of Kenya" width="88" height="34" style="height:34px;width:auto">
+<img class="app-ic" src="{{ asset('app-icons/site-icon-192.png') }}" alt="" width="36" height="36">
+<span class="hide-md" style="width:1px;height:30px;background:#DCE6E7"></span>
+<span style="display:flex;flex-direction:column;line-height:1.05"><span class="disp" style="font-size:19px;font-weight:800">MNCH Kenya</span><span class="muted hide-md" style="font-size:12px;font-weight:600">Training &amp; mentorship hub</span></span>
 </a>
-<nav aria-label="Primary" style="display:flex;align-items:center;gap:2px;flex-wrap:wrap">
+<nav aria-label="Primary" class="hide-md" style="display:flex;align-items:center;gap:2px;flex-wrap:wrap">
 @foreach ([['home', 'Home', route('home')], ['resources', 'Resources', route('resources.index')], ['categories', 'Categories', route('categories.index')], ['dashboards', 'Dashboards', $dashboardUrl]] as [$key, $label, $href])
 <a @class(['navlink', 'on' => $page === $key]) href="{{ $href }}" @if ($page === $key) aria-current="page" @endif>{{ $label }}</a>
 @endforeach
 </nav>
-<div style="display:flex;align-items:center;gap:10px">
+<div class="hide-md" style="display:flex;align-items:center;gap:10px">
 @if ($page === 'home')
 <form class="hide-md" role="search" action="{{ route('resources.index') }}" method="get" style="position:relative;display:block;margin:0">
 <label for="hdr-q" class="sr">Search resources</label>
@@ -123,6 +130,10 @@ a{color:#00695C}a:hover{color:#004D40}
 @else
 <a class="btn btn-ghost" href="{{ $loginUrl }}">@include('site.partials.icon', ['name' => 'login', 'size' => 16])Sign in</a>
 @endauth
+</div>
+<div class="mbar">
+<a class="mbtn" href="{{ route('resources.index') }}" aria-label="Search resources">@include('site.partials.icon', ['name' => 'search', 'size' => 22])</a>
+<button type="button" class="mbtn" @click="menu = true" aria-label="Open menu" :aria-expanded="menu">@include('site.partials.icon', ['name' => 'menu', 'size' => 24])</button>
 </div>
 </div>
 </header>
@@ -150,6 +161,7 @@ a{color:#00695C}a:hover{color:#004D40}
 <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:48px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1);color:#8FB3B6;font-size:13px"><span>© {{ $year }} {{ config('app.name') }}. All rights reserved.</span><span>Strengthening healthcare in Kenya</span></div>
 </div>
 </footer>
+@include('site.partials.mobile-chrome')
 @include('partials.idle-timeout')
 @stack('scripts')
 </body>

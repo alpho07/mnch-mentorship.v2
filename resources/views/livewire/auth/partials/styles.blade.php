@@ -225,4 +225,34 @@
     /* ── Signed-out-for-inactivity notice ────────────────────────────── */
     .auth-notice{display:flex;align-items:flex-start;gap:.65rem;margin:0 0 1.2rem;padding:.8rem .95rem;border:1px solid #f3d98b;border-radius:12px;background:#fef3c7;color:#6b4a00;font-size:.8rem;line-height:1.5}
     .auth-notice svg{flex:0 0 18px;width:18px;height:18px;margin-top:1px;stroke:#b45309;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    /* ── Phones: short photo banner + form card, app-like ───────────── */
+    @media(max-width:780px){
+        .auth-shell{display:block}
+        .auth-hero{display:block;position:relative;overflow:hidden;min-height:0;width:100%!important;max-width:none!important;flex:none!important}
+        .hero-bg{position:absolute;inset:0;width:100%;height:100%;background-position:center 22%;background-size:cover}
+        .hero-gradient{position:absolute;inset:0;width:100%;height:100%;background:linear-gradient(180deg,rgba(4,22,59,.55) 0%,rgba(4,22,59,.20) 38%,rgba(4,22,59,.88) 100%)}
+        .hero-content{min-height:0!important;padding:calc(.9rem + env(safe-area-inset-top)) 1.1rem 3.4rem!important}
+        .hero-badge{margin-bottom:.7rem;padding:.3rem}
+        .hero-badge-logo-wrap{height:38px;padding:0 .75rem}
+        .hero-badge-logo{height:24px}
+        .hero-message{margin:2.6rem 0 0;padding:0;max-width:none}
+        .hero-overline{font-size:.64rem;margin-bottom:.35rem}
+        .hero-title{font-size:1.55rem;line-height:1.1}
+        .hero-desc,.hero-programmes,.hero-tips,.hero-supported,.impact-heading{display:none!important}
+        .impact-wrap{margin-top:.9rem}
+        .impact-grid{grid-template-columns:repeat(4,1fr);gap:6px}
+        .impact-card{display:block;min-height:0;padding:.5rem .25rem;text-align:center;border-radius:11px}
+        .impact-icon{display:none}
+        .impact-card strong{font-size:1.02rem}
+        .impact-card div span{font-size:.47rem;white-space:normal;margin-top:.25rem}
+        .auth-right{overflow:visible!important;display:block;min-height:0;padding:0 .9rem calc(1.5rem + env(safe-area-inset-bottom));background:#f4f7fb}
+        .auth-box{position:relative;z-index:6;width:100%!important;max-width:none!important;margin:-2.2rem 0 0!important;padding:1.4rem 1.15rem 1.15rem;border-radius:22px;box-shadow:0 20px 40px -24px rgba(8,30,70,.5)}
+        .moh-logo-wrap{display:none}
+        .secure-strip{margin:1.1rem -1.15rem -1.15rem;border-radius:0 0 21px 21px}
+        .mobile-matters{display:block;text-align:center;margin-top:1rem}
+        /* inputs: 16px stops iOS zooming on focus, 48px+ tap targets */
+        .auth-box .fi-input{font-size:16px!important}
+        .auth-btn{min-height:52px}
+        html,body{overflow:auto!important}
+    }
 </style>

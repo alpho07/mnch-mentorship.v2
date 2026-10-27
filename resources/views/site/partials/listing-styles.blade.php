@@ -1,4 +1,6 @@
 @push('styles')
+.fbtn{display:none}
+@media (max-width:860px){.fbtn{display:inline-flex}.hscroll{flex-wrap:nowrap!important;overflow-x:auto;margin-inline:-16px;padding:2px 16px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.hscroll::-webkit-scrollbar{display:none}.hscroll .tpill{flex:none}}
 .tpill{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:600;background:#FFF;border:1px solid #D7E4E5;color:#2E4A4E;text-decoration:none;transition:background .2s,border-color .2s,color .2s}
 .tpill:hover{border-color:#0097A7;color:#00363B}
 .tpill.on{background:#00363B;border-color:#00363B;color:#FFF}

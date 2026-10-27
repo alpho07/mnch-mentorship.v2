@@ -3,6 +3,8 @@
 @section('body-bg', '#F6F9F9')
 
 @push('styles')
+.fbtn{display:none}
+@media (max-width:860px){.fbtn{display:inline-flex}.hscroll{flex-wrap:nowrap!important;overflow-x:auto;margin-inline:-16px;padding:2px 16px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.hscroll::-webkit-scrollbar{display:none}.hscroll .tpill{flex:none}}
 .tpill{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:600;background:#FFF;border:1px solid #D7E4E5;color:#2E4A4E;text-decoration:none;transition:background .2s,border-color .2s,color .2s}
 .tpill:hover{border-color:#0097A7;color:#00363B}
 .tpill.on{background:#00363B;border-color:#00363B;color:#FFF}
@@ -48,14 +50,15 @@
 </section>
 
 <div class="wrap" style="padding-top:28px;padding-bottom:64px">
-<nav aria-label="Topic" style="display:flex;gap:8px;flex-wrap:wrap">
+<nav aria-label="Topic" class="hscroll" style="display:flex;gap:8px;flex-wrap:wrap">
 @foreach ($pills as $t)
 <a @class(['tpill', 'on' => $t['on']]) href="{{ $t['href'] }}" @if ($t['on']) aria-current="true" @endif><span style="width:9px;height:9px;border-radius:50%;background:{{ $t['c'] }}"></span>{{ $t['name'] }}<span class="num" style="font-size:12px;opacity:.75">{{ $t['n'] }}</span></a>
 @endforeach
 </nav>
 
-<div style="display:flex;flex-wrap:wrap;gap:28px;margin-top:26px;align-items:flex-start">
-<aside aria-label="Filters" style="flex:1 1 240px;max-width:280px;min-width:0;display:flex;flex-direction:column;gap:18px">
+<div x-data="{ fo: window.innerWidth > 860 }" style="display:flex;flex-wrap:wrap;gap:28px;margin-top:26px;align-items:flex-start">
+<button type="button" class="btn btn-ghost fbtn" @click="fo = !fo" :aria-expanded="fo" style="width:100%">@include('site.partials.icon', ['name' => 'layers', 'size' => 18])<span x-text="fo ? 'Hide filters' : 'Filters'"></span></button>
+<aside aria-label="Filters" x-show="fo" style="flex:1 1 240px;max-width:280px;min-width:0;display:flex;flex-direction:column;gap:18px">
 <nav class="panel" aria-label="Format">
 <div class="eyebrow" style="color:var(--ink-3);font-size:11.5px;margin:0 0 8px 10px">Format</div>
 @foreach ($formats as $fm)

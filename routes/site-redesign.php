@@ -21,3 +21,6 @@ Route::middleware('scalar-query')->group(function () {
     Route::get('/resources', [PublicSiteController::class, 'resources'])->name('resources.index');
     Route::get('/categories', [PublicSiteController::class, 'categories'])->name('categories.index');
 });
+
+// Shown by the public service worker (public/sw-site.js) when the device is offline.
+Route::view('/offline', 'site.offline')->name('offline');

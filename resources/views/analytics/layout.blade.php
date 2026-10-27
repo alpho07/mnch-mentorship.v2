@@ -3,7 +3,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#00363B">
+<link rel="manifest" href="{{ asset('site.webmanifest') }}">
+<link rel="apple-touch-icon" href="{{ asset('app-icons/site-icon-192.png') }}">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>{{ $pageTitle }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -116,25 +119,30 @@ a{color:var(--teal-link)}a:hover{color:#004D40}
 .pt .tip{opacity:0;transition:opacity .15s,transform .15s;transform:translate(-50%,-6px)}
 .pt:hover .tip{opacity:1;transform:translate(-50%,-12px)}
 @media (max-width:760px){.hero-map,.hide-sm{display:none}.xrow{grid-template-columns:1fr}}
+@media (max-width:860px){nav[aria-label=Dashboards]{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto;max-width:100%;border-radius:18px!important;scrollbar-width:none;-webkit-overflow-scrolling:touch}nav[aria-label=Dashboards]::-webkit-scrollbar{display:none}nav[aria-label=Dashboards] .tab{flex:none;white-space:nowrap}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 @stack('head')
 </head>
-<body>
+<body x-data="{ menu: false }">
 <div class="pg">
 
 <header style="position:sticky;top:0;z-index:40;background:rgba(255,255,255,.96);-webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--line)">
-<div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px;flex-wrap:wrap">
+<div class="wrap hdr" style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px;flex-wrap:wrap">
 <a href="{{ $homeUrl ?? '/' }}" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink)">
 <span style="width:38px;height:38px;border-radius:11px;background:var(--teal-btn);display:flex;align-items:center;justify-content:center;color:#FFFFFF">@include('analytics.partials.icon', ['name' => 'heart-pulse', 'size' => 20, 'sw' => 2])</span>
 <span style="display:flex;flex-direction:column;line-height:1.1"><span class="disp" style="font-size:18px;font-weight:700">MNCH Kenya</span><span class="muted" style="font-size:12px;font-weight:500">Mentorship Analytics</span></span>
 </a>
-<nav aria-label="Primary" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+<nav aria-label="Primary" class="hide-md" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
 <a class="navlink" href="{{ $homeUrl ?? '/' }}">@include('analytics.partials.icon', ['name' => 'home', 'size' => 17, 'sw' => 1.8])Home</a>
 <a class="navlink" href="{{ $resourcesUrl ?? '/resources' }}">@include('analytics.partials.icon', ['name' => 'book', 'size' => 17, 'sw' => 1.8])Resources</a>
 <a class="navlink" href="{{ $categoriesUrl ?? '/categories' }}">@include('analytics.partials.icon', ['name' => 'grid', 'size' => 17, 'sw' => 1.8])Categories</a>
 <a class="btn btn-pri" href="{{ $adminUrl ?? '/admin' }}" style="margin-left:8px">@include('analytics.partials.icon', ['name' => 'shield', 'size' => 16, 'sw' => 2])Admin</a>
 </nav>
+<div class="mbar">
+<a class="mbtn" href="{{ $resourcesUrl ?? '/resources' }}" aria-label="Search resources">@include('analytics.partials.icon', ['name' => 'search', 'size' => 22, 'sw' => 2])</a>
+<button type="button" class="mbtn" @click="menu = true" aria-label="Open menu" :aria-expanded="menu">@include('analytics.partials.icon', ['name' => 'menu', 'size' => 24, 'sw' => 2])</button>
+</div>
 </div>
 </header>
 
@@ -168,6 +176,7 @@ a{color:var(--teal-link)}a:hover{color:#004D40}
 <div class="wrap muted" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:20px;padding-bottom:20px;font-size:12.5px"><span>MNCH Kenya Mentorship Platform · Analytics</span><span>Data as of {{ $asOf }}</span></div>
 </footer>
 </div>
+@include('site.partials.mobile-chrome')
 @include('partials.idle-timeout')
 </body>
 </html>

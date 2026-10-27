@@ -1,0 +1,24 @@
+{
+    "name": "MNCH Mentorship Platform",
+    "short_name": "MNCH Kenya",
+    "description": "Kenya's training and mentorship hub for maternal, newborn and child health: guidelines, manuals, slides and live coverage.",
+    "id": "/",
+    "start_url": "/?source=pwa",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#FFFFFF",
+    "theme_color": "#00363B",
+    "lang": "en",
+    "categories": ["health", "education", "medical"],
+    "icons": [
+        { "src": "/app-icons/site-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/app-icons/site-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/app-icons/site-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ],
+    "shortcuts": [
+        { "name": "Resources", "short_name": "Resources", "url": "/resources?source=pwa", "icons": [{ "src": "/app-icons/site-icon-192.png", "sizes": "192x192" }] },
+        { "name": "Categories", "short_name": "Categories", "url": "/categories?source=pwa", "icons": [{ "src": "/app-icons/site-icon-192.png", "sizes": "192x192" }] },
+        { "name": "Dashboards", "short_name": "Dashboards", "url": "/analytics/dashboard?source=pwa", "icons": [{ "src": "/app-icons/site-icon-192.png", "sizes": "192x192" }] }
+    ]
+}

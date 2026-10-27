@@ -32,13 +32,14 @@
 
 <div class="wrap" style="padding-top:28px;padding-bottom:72px">
 @if (count($chips))
-<nav aria-label="Related" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px">
+<nav aria-label="Related" class="hscroll" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px">
 @foreach ($chips as $c)<a @class(['tpill', 'on' => !empty($c['on'])]) href="{{ $c['href'] }}">{{ $c['label'] }}@isset($c['count'])<span class="num" style="opacity:.7;font-size:12.5px">{{ $c['count'] }}</span>@endisset</a>@endforeach
 </nav>
 @endif
-<div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+<div x-data="{ fo: window.innerWidth > 860 }" style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
 @if ($hasAside)
-<aside style="flex:0 1 260px;min-width:min(260px,100%);display:flex;flex-direction:column;gap:16px">
+<button type="button" class="btn btn-ghost fbtn" @click="fo = !fo" :aria-expanded="fo" style="width:100%">@include('site.partials.icon', ['name' => 'layers', 'size' => 18])<span x-text="fo ? 'Hide filters' : 'Filters'"></span></button>
+<aside x-show="fo" style="flex:0 1 260px;min-width:min(260px,100%);display:flex;flex-direction:column;gap:16px">
 @foreach ($panels as $pn)
 <nav class="panel" aria-label="{{ $pn['title'] }}">
 <div class="eyebrow" style="color:var(--ink-3);font-size:11.5px;margin:0 0 8px 10px">{{ $pn['title'] }}</div>
