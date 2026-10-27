@@ -4,11 +4,11 @@
    Content:  Teal #0097A7 · Amber #F59E0B · Emerald #10B981 · Violet #8B5CF6
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@600;700;800&family=Wix+Madefor+Text:wght@400;500;600;700&display=swap');
 
 /* ── Global typography ── */
 .fi-layout, .fi-layout * {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    font-family: 'Wix Madefor Text', system-ui, -apple-system, 'Segoe UI', sans-serif !important;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -919,4 +919,144 @@ textarea.fi-input:focus,
 
 .fi-wi-chart:hover {
     box-shadow: var(--mnch-shadow-md) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   REDESIGN LAYER (2026-10) — same palette, refined menus, cards, tables.
+   Everything above is the original theme; this block only refines it.
+   To revert: delete from this comment to the end of the file.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Headings use the display face */
+.fi-header-heading, .fi-page-header-heading, .fi-section-header-heading, .fi-modal-heading,
+.fi-wi-stats-overview-stat-value, .fi-sidebar-header h1 {
+    font-family: 'Wix Madefor Display', 'Wix Madefor Text', system-ui, sans-serif !important;
+    letter-spacing: -0.02em !important;
+}
+.fi-wi-stats-overview-stat-value { font-variant-numeric: tabular-nums !important; }
+.fi-ta-cell, .fi-ta-text { font-variant-numeric: tabular-nums; }
+
+/* ── Sidebar ── */
+.fi-sidebar-header { min-height: 72px !important; padding-inline: 20px !important; }
+.fi-sidebar-nav { padding: 12px 12px 20px !important; }
+.fi-sidebar-group-label {
+    font-size: 11px !important;
+    letter-spacing: 0.1em !important;
+    color: rgba(186, 210, 255, 0.78) !important;
+    padding: 14px 12px 6px !important;
+}
+.fi-sidebar-group-button { border-radius: 8px !important; min-height: 36px !important; }
+.fi-sidebar-item-button {
+    min-height: 40px !important;
+    gap: 12px !important;
+    margin: 2px 0 !important;
+    padding: 0 12px !important;
+    border-radius: 10px !important;
+}
+.fi-sidebar-item-label { font-size: 14px !important; }
+.fi-sidebar-item-icon { width: 19px !important; height: 19px !important; }
+/* Active: soft tint + amber marker on the left edge (replaces the heavy black block) */
+.fi-sidebar-item-active > .fi-sidebar-item-button {
+    background: rgba(255, 255, 255, 0.13) !important;
+    border-top: 0 !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+}
+.fi-sidebar-item-active > .fi-sidebar-item-button::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 9px;
+    bottom: 9px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: #F59E0B;
+}
+.fi-sidebar-item-active > .fi-sidebar-item-button .fi-sidebar-item-icon { color: #FCD34D !important; }
+.fi-sidebar-item-badge, .fi-sidebar-item .fi-badge {
+    background: #F59E0B !important;
+    color: #2A1B00 !important;
+    font-weight: 700 !important;
+}
+.fi-sidebar-nav::-webkit-scrollbar { width: 6px; }
+.fi-sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: 6px; }
+
+/* ── Top bar ── */
+.fi-topbar { min-height: 72px !important; }
+.fi-topbar > nav, .fi-topbar nav {
+    background: rgba(255, 255, 255, 0.92) !important;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    min-height: 72px !important;
+}
+.fi-global-search-field .fi-input-wrp { border-radius: 12px !important; background: #F4FCFD !important; }
+
+/* ── Page header ── */
+.fi-header-heading, .fi-page-header-heading { font-size: 28px !important; font-weight: 800 !important; }
+
+/* ── Cards / sections ── */
+.fi-section, .fi-wi-stats-overview-stat, .fi-wi-chart, .fi-ta-ctn {
+    border-radius: 16px !important;
+    border: 1px solid #DCF2F4 !important;
+    box-shadow: 0 1px 2px rgba(0, 77, 64, 0.04), 0 8px 24px -16px rgba(0, 77, 64, 0.18) !important;
+}
+.fi-section-header {
+    border-radius: 16px 16px 0 0 !important;
+    padding: 16px 22px !important;
+}
+.fi-section-header-heading { font-size: 16px !important; }
+.fi-section-content-ctn { padding: 22px !important; }
+.fi-wi-stats-overview-stat, .fi-wi-chart { transition: box-shadow .2s ease, transform .2s ease !important; }
+.fi-wi-stats-overview-stat:hover, .fi-wi-chart:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px -16px rgba(0, 77, 64, 0.35) !important;
+}
+.fi-wi-stats-overview-stat-value { font-size: 32px !important; font-weight: 800 !important; }
+.fi-wi-stats-overview-stat-label { font-size: 14px !important; }
+
+/* ── Tables ── */
+.fi-ta-header-cell, .fi-ta-actions-header-cell, .fi-ta-ctn thead th {
+    padding: 13px 16px !important;
+    font-size: 11.5px !important;
+    letter-spacing: 0.07em !important;
+}
+.fi-ta-cell { padding: 12px 16px !important; font-size: 14px !important; color: #052020 !important; }
+.fi-ta-actions-cell { padding: 8px 16px !important; }
+.fi-ta-row { transition: background .15s ease; }
+.fi-ta-header-ctn, .fi-ta-header-toolbar { padding: 14px 20px !important; }
+.fi-ta-ctn .fi-pagination { padding: 14px 20px !important; background: #FAFEFE; border-top: 1px solid #EAF7F8; }
+.fi-pagination-item-active .fi-pagination-item-btn, .fi-pagination-item.fi-active .fi-pagination-item-btn {
+    background: #1565C0 !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+}
+.fi-ta-empty-state-icon-bg { background: #E0F7FA !important; }
+
+/* ── Badges: pill with room to breathe ── */
+.fi-badge { padding: 3px 11px !important; font-size: 12px !important; font-weight: 600 !important; }
+
+/* ── Buttons ── */
+.fi-btn { min-height: 40px; border-radius: 12px !important; font-weight: 600 !important; }
+.fi-btn.fi-color-primary:not(.fi-outlined), .fi-btn.fi-btn-color-primary:not(.fi-outlined) {
+    box-shadow: 0 6px 14px -8px rgba(21, 101, 192, 0.7);
+}
+.fi-icon-btn { border-radius: 10px !important; }
+
+/* ── Inputs ── */
+.fi-input-wrp { border-radius: 12px !important; transition: box-shadow .15s ease, border-color .15s ease; }
+.fi-input-wrp:focus-within { box-shadow: 0 0 0 4px rgba(21, 101, 192, 0.14) !important; }
+.fi-fo-field-wrp-label, .fi-fo-field-wrp label span { font-weight: 600 !important; }
+.fi-toggle-on { background-color: #0097A7 !important; }
+
+/* ── Dropdowns, modals, notifications ── */
+.fi-dropdown-panel { border-radius: 14px !important; box-shadow: 0 18px 40px -18px rgba(0, 40, 60, 0.35) !important; }
+.fi-modal-window { border-radius: 18px !important; }
+.fi-no-notification { border-radius: 14px !important; }
+
+/* ── Tabs ── */
+.fi-tabs { border-radius: 14px !important; }
+.fi-tabs-item.fi-active { background: #E8F0FE !important; color: #0D47A1 !important; }
+
+@media (prefers-reduced-motion: reduce) {
+    .fi-wi-stats-overview-stat, .fi-wi-chart, .fi-btn, .fi-ta-row { transition: none !important; transform: none !important; }
 }
