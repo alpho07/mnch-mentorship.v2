@@ -165,7 +165,7 @@
             @if($comment->replies && $comment->replies->count() > 0)
                 <div class="mt-4 space-y-4">
                     @foreach($comment->replies as $reply)
-                        @include('components.comment', ['comment' => $reply, 'resource' => $resource, 'depth' => $depth + 1])
+                        @include('frontend.resources.comment', ['comment' => $reply, 'resource' => $resource, 'depth' => $depth + 1])
                     @endforeach
                 </div>
             @endif

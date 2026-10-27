@@ -357,7 +357,7 @@
                 @if($resource->comments->where('parent_id', null)->count() > 0)
                     <div class="space-y-6">
                         @foreach($resource->comments->where('parent_id', null) as $comment)
-                            @include('components.comment', ['comment' => $comment, 'resource' => $resource])
+                            @include('frontend.resources.comment', ['comment' => $comment, 'resource' => $resource])
                         @endforeach
                     </div>
                 @else
