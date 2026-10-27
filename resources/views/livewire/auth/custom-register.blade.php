@@ -92,7 +92,7 @@
         .fi-simple-page,.fi-simple-main,.fi-simple-layout,.fi-simple{max-width:none!important;width:100%!important;padding:0!important;margin:0!important;background:transparent!important;min-height:100vh!important}
         *,*::before,*::after{box-sizing:border-box}
 
-        .auth-shell{display:flex;height:100vh;width:100vw;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+        .auth-shell{display:flex;height:100vh;width:100vw;font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;-webkit-font-smoothing:antialiased}
 
         /* Hero */
         .auth-hero{flex:0 0 40%;position:relative;overflow:hidden;display:flex;align-items:center}

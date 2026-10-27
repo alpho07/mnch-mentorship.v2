@@ -5,7 +5,7 @@ $firstName = $user->first_name ?? (explode(' ', $user->name)[0] ?? 'Mentee');
 $certifiedCount = collect($programs)->where('is_certified', true)->count();
 @endphp
 
-<div style="font-family:'Inter',system-ui,sans-serif;">
+<div style="font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;">
 
 {{-- ═══ HERO ════════════════════════════════════════════════════════════════ --}}
 <div class="rv-animate" style="animation-delay:0s;border-radius:20px;overflow:hidden;margin-bottom:20px;background:linear-gradient(135deg,#1e3a5f 0%,#1d4ed8 50%,#4f46e5 100%);position:relative;box-shadow:0 8px 32px rgba(29,78,216,.35);">

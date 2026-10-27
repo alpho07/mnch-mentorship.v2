@@ -46,6 +46,8 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Blue,
             ])
+            // Plain system sans-serif: no web font is downloaded (LocalFontProvider without a url emits nothing).
+            ->font('system-ui', provider: \Filament\FontProviders\LocalFontProvider::class)
             ->darkMode(true)
             ->defaultThemeMode(ThemeMode::Light)
             ->maxContentWidth(MaxWidth::Full)

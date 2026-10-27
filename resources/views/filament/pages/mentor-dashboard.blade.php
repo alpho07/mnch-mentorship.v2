@@ -21,7 +21,7 @@ if (empty($insightCards))
     $insightCards[] = ['color'=>'#10b981','bg'=>'#f0fdf4','text'=>'All key indicators look healthy. Excellent mentorship work — keep it up!','icon'=>'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z','ic'=>'#10b981'];
 @endphp
 
-<div style="font-family:'Inter',system-ui,sans-serif;">
+<div style="font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;">
 
 {{-- ═══ HERO BANNER ════════════════════════════════════════════════════════ --}}
 <div class="rv-animate" style="animation-delay:0s;border-radius:20px;overflow:hidden;margin-bottom:20px;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 40%,#1d4ed8 75%,#2563eb 100%);position:relative;box-shadow:0 8px 32px rgba(15,23,42,.40);">

@@ -29,7 +29,7 @@ $initials = strtoupper(substr($mentee?->first_name ?? 'M', 0, 1) . substr($mente
         confirm() { this.open = false; $wire[this.action](); }
     }"
     x-cloak
-    style="font-family:'Inter',system-ui,sans-serif;"
+    style="font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;"
 >
 
 {{-- ── Modal overlay ──────────────────────────────────────────────────────── --}}

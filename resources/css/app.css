@@ -14,9 +14,8 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Wix Madefor Text', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-display: 'Wix Madefor Display', 'Wix Madefor Text', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
+    --font-display: system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
 
     /* MoH Kenya clinical blue — sampled from the official EmONC manual cover
        (sky blue to navy gradient). */

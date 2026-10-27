@@ -200,7 +200,7 @@
         .auth-box      {animation:fade-up 0.70s cubic-bezier(.16,1,.3,1) 0.12s both}
 
         /* ── Shell ───────────────────────────────────────────────────────── */
-        .auth-shell{display:flex;min-height:100vh;width:100vw;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;color:var(--ink)}
+        .auth-shell{display:flex;min-height:100vh;width:100vw;font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;color:var(--ink)}
 
         /* ── Hero (left) ─────────────────────────────────────────────────── */
         .auth-hero{flex:0 0 calc(58% + 100px);position:relative;overflow:hidden;overflow-y:auto;color:#fff;scrollbar-width:none}

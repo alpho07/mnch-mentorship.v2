@@ -18,9 +18,9 @@
   <g transform="translate(36,86)" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M5 3v4M3 5h4M6 37v4m-2-2h4m5-36l2.286 6.857L21 16l-5.714 2.143L13 25l-2.286-6.857L5 16l5.714-2.143L13 3z"/>
   </g>
-  <text x="108" y="95" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="600" opacity="0.9">CERTIFIED</text>
-  <text x="108" y="125" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-size="20" font-weight="800">{{ $name }}</text>
-  <text x="108" y="150" fill="#e0f2fe" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" font-weight="500">{{ $program }}</text>
-  <text x="108" y="172" fill="#bae6fd" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" font-weight="500">Completed {{ $completed }}</text>
-  <text x="380" y="200" text-anchor="end" fill="rgba(255,255,255,0.6)" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" font-weight="600">MNCH MENTORSHIP</text>
+  <text x="108" y="95" fill="#ffffff" font-family="system-ui, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif" font-size="14" font-weight="600" opacity="0.9">CERTIFIED</text>
+  <text x="108" y="125" fill="#ffffff" font-family="system-ui, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="800">{{ $name }}</text>
+  <text x="108" y="150" fill="#e0f2fe" font-family="system-ui, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="500">{{ $program }}</text>
+  <text x="108" y="172" fill="#bae6fd" font-family="system-ui, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif" font-size="12" font-weight="500">Completed {{ $completed }}</text>
+  <text x="380" y="200" text-anchor="end" fill="rgba(255,255,255,0.6)" font-family="system-ui, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif" font-size="10" font-weight="600">MNCH MENTORSHIP</text>
 </svg>

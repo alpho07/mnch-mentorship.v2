@@ -4,11 +4,9 @@
    Content:  Teal #0097A7 · Amber #F59E0B · Emerald #10B981 · Violet #8B5CF6
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-@import url('https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@600;700;800&family=Wix+Madefor+Text:wght@400;500;600;700&display=swap');
-
 /* ── Global typography ── */
 .fi-layout, .fi-layout * {
-    font-family: 'Wix Madefor Text', system-ui, -apple-system, 'Segoe UI', sans-serif !important;
+    font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif !important;
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -931,7 +929,7 @@ textarea.fi-input:focus,
 /* Headings use the display face */
 .fi-header-heading, .fi-page-header-heading, .fi-section-header-heading, .fi-modal-heading,
 .fi-wi-stats-overview-stat-value, .fi-sidebar-header h1 {
-    font-family: 'Wix Madefor Display', 'Wix Madefor Text', system-ui, sans-serif !important;
+    font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif !important;
     letter-spacing: -0.02em !important;
 }
 .fi-wi-stats-overview-stat-value { font-variant-numeric: tabular-nums !important; }

@@ -5,8 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Class Report — {{ $class->name }}</title>
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
             *, *::before, *::after {
                 box-sizing: border-box;
                 margin: 0;
@@ -32,7 +30,7 @@
             }
 
             body {
-                font-family: 'Inter', 'DejaVu Sans', sans-serif;
+                font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
                 background: #f8fafc;
                 color: var(--gray-900);
                 font-size: 13px;

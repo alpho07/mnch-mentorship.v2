@@ -6,9 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ config('app.name', 'MNCH') }}</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-        <style>
+<style>
             /* ═══════════════════════════════════════════════════════
                RESET
             ═══════════════════════════════════════════════════════ */
@@ -22,7 +20,7 @@
                 height: 100%;
                 width: 100%;
                 overflow: hidden;
-                font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+                font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
                 -webkit-font-smoothing: antialiased;
                 background: #f8fafc;
                 color: #0f172a;

@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>@yield('title') — MNCH Mentorship Guide</title>
 <meta name="description" content="@yield('description')">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@500;600;700;800&family=Wix+Madefor+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><style>
 :root{
   --navy:#0C1445;--cyan:#0891B2;--cyan-l:#CFFAFE;--teal:#0F766E;--teal-l:#CCFBF1;
   --rose:#BE123C;--rose-l:#FFE4E6;--amber:#B45309;--amber-l:#FEF3C7;--green:#15803D;--green-l:#DCFCE7;
@@ -15,7 +14,7 @@
 .theme-emonc{--accent:var(--rose);--accent-l:var(--rose-l)}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:'Wix Madefor Text','Segoe UI',system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--bg);line-height:1.65;font-size:17px}
+body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;color:var(--ink);background:var(--bg);line-height:1.65;font-size:17px}
 a{color:var(--accent)}
 .wrap{max-width:900px;margin:0 auto;padding:0 20px}
 

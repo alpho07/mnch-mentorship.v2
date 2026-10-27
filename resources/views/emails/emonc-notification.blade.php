@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $heading }}</title>
     <style>
-        body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 0; }
+        body { font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 0; }
         .wrapper { max-width: 560px; margin: 32px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
         .header { background: linear-gradient(135deg, #1d4ed8, #4f46e5); padding: 28px 32px; color: #fff; }
         .header h1 { margin: 0; font-size: 20px; font-weight: 700; }

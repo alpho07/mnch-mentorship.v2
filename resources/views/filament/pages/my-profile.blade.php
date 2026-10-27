@@ -14,7 +14,7 @@ $statusColor  = $statusColors[$user->status] ?? '#6b7280';
 @endphp
 
 <style>
-.mp-wrap{max-width:860px;margin:0 auto;font-family:'Inter',system-ui,sans-serif;}
+.mp-wrap{max-width:860px;margin:0 auto;font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;}
 .mp-hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 45%,#2563eb 100%);border-radius:20px;padding:32px;display:flex;align-items:center;gap:28px;margin-bottom:24px;box-shadow:0 8px 32px rgba(15,23,42,.35);}
 .mp-avatar{width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff;border:3px solid rgba(255,255,255,.35);flex-shrink:0;}
 .mp-hero-name{font-size:22px;font-weight:700;color:#fff;margin-bottom:4px;}

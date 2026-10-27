@@ -2,7 +2,7 @@
     <style>
         /* ── Reset & Base ─────────────────────────────────────────────────────── */
         .md-container {
-            font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+            font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
         }
 
         /* ── Profile Card ─────────────────────────────────────────────────────── */

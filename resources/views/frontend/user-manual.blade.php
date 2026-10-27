@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MNCH Platform — User Manual</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@500;600;700;800&family=Wix+Madefor+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><style>
 :root{
   --cyan:#0891B2;--cyan-light:#CFFAFE;--cyan-dark:#0C4A6E;
   --green:#15803D;--green-light:#DCFCE7;--green-dark:#14532D;
@@ -15,7 +14,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:'Wix Madefor Text','Segoe UI',system-ui,sans-serif;color:#1e293b;background:#f8fafc;line-height:1.6}
+body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;color:#1e293b;background:#f8fafc;line-height:1.6}
 
 /* ── PROGRESS BAR ── */
 #progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#0891B2,#0F766E,#15803D);z-index:9999;width:0;transition:width .2s}

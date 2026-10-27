@@ -7,7 +7,6 @@
 <title>{{ $pageTitle }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@500;600;700;800&family=Wix+Madefor+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 <style>
 :root{--ink:#0F2A2E;--ink-2:#2E4A4E;--ink-3:#3D5558;--muted:#556B6E;--line:#E1E9EA;--line-2:#EEF3F3;--ground:#F2F6F6;--track:#EDF3F4;--teal:#0097A7;--teal-btn:#00838F;--teal-deep:#00363B;--teal-ink:#00505A;--teal-link:#00695C}
@@ -16,8 +15,8 @@ body{margin:0;background:var(--ground)}
 [x-cloak]{display:none!important}
 a{color:var(--teal-link)}a:hover{color:#004D40}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.pg{font-family:'Wix Madefor Text',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--ground);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;min-height:100vh}
-.disp{font-family:'Wix Madefor Display','Wix Madefor Text',system-ui,sans-serif;letter-spacing:-0.02em}
+.pg{font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;color:var(--ink);background:var(--ground);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;min-height:100vh}
+.disp{font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;letter-spacing:-0.02em}
 .num{font-variant-numeric:tabular-nums}
 .wrap{max-width:1320px;margin:0 auto;padding:0 24px;box-sizing:border-box}
 .card{background:#FFFFFF;border:1px solid var(--line);border-radius:18px;box-shadow:0 1px 2px rgba(15,42,46,.04),0 12px 32px -18px rgba(15,42,46,.18)}

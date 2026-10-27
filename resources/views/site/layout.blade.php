@@ -12,7 +12,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@500;600;700;800&family=Wix+Madefor+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
 @unless (!empty($alpineLoaded))
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 @endunless
@@ -21,8 +20,8 @@
   --teal:#0097A7;--teal-btn:#00838F;--teal-btn-h:#006B75;--deep:#00363B;--navy:#0B2E4F;--green:#2E9E4F;
   --ink:#0F2A2E;--ink-2:#2E4A4E;--ink-3:#3D5558;--muted:#556B6E;--line:#E1E9EA;--line-2:#D3DFE0;
   --bg:#FFFFFF;--bg-soft:#F6F9F9;--bg-mint:#F2F8F7;--footer:#06222A;
-  --font-display:'Wix Madefor Display','Wix Madefor Text',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --font-text:'Wix Madefor Text',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-display:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
+  --font-text:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}

@@ -36,11 +36,11 @@ class PublicSiteTest extends TestCase
         ], resource_path('data/kenya-counties.json'));
     }
 
-    public function test_home_renders_headline_figures_and_the_new_fonts(): void
+    public function test_home_renders_headline_figures_with_plain_sans_serif_fonts(): void
     {
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('Wix+Madefor+Display', false)
+            ->assertDontSee('fonts.googleapis.com/css2', false)->assertSee('sans-serif', false)
             ->assertSeeInOrder(['94', 'mentorships · 20 counties', '302', 'mentees reached'])
             ->assertSeeInOrder(['Learning pipeline', '5', 'Counties covered', '20', 'Facilities reached', '28', 'County coverage', '43%']);
     }

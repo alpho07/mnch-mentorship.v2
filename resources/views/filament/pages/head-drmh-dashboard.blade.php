@@ -26,7 +26,7 @@ $hour      = (int) now()->format('H');
 $greeting  = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
 @endphp
 
-<div style="font-family:'Inter',system-ui,sans-serif;">
+<div style="font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;">
 
 {{-- ═══ HERO ════════════════════════════════════════════════════════════════ --}}
 <div class="rv-animate" style="animation-delay:0s;border-radius:20px;overflow:hidden;margin-bottom:20px;background:linear-gradient(135deg,#0c1445 0%,#1a237e 40%,#283593 70%,#303f9f 100%);position:relative;box-shadow:0 8px 32px rgba(12,20,69,.40);">
