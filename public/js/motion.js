@@ -12,6 +12,8 @@
     var REVEAL = [
         'main section', 'main .card', '.wrap > section', '.wrap > .card',
         '[data-reveal]',
+        // user manual and guides
+        '.main .section', '.program-card', '.callout', '.note', '.step', 'article > section', 'body > section', '.cols > div',
         '.fi-section', '.fi-wi-chart', '.fi-wi-table'
     ].join(',');
 

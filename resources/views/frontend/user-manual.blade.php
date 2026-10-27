@@ -56,7 +56,7 @@ body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Ari
 .content{max-width:860px;margin:0 auto;padding:40px 40px 80px}
 
 /* ── SECTIONS ── */
-.section{margin-bottom:56px;animation:fadeUp .4s ease both}
+.section{margin-bottom:56px}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .section-anchor{scroll-margin-top:calc(var(--header-h) + 20px)}
 
@@ -162,6 +162,8 @@ tr:hover td{background:#fafafa}
   .topbar-search input{width:140px}
 }
 </style>
+<link rel="stylesheet" href="{{ asset('css/motion.css') }}?v={{ filemtime(public_path('css/motion.css')) }}">
+<script defer src="{{ asset('js/motion.js') }}?v={{ filemtime(public_path('js/motion.js')) }}"></script>
 </head>
 <body>
 <div id="progress-bar"></div>

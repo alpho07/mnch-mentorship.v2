@@ -54,6 +54,13 @@ body { animation: mo-page .45s ease both; }
 .fi-badge { transition: transform .15s ease; }
 .fi-badge:hover { transform: scale(1.06); }
 
+/* Printing / saving as PDF must show everything, never half-revealed content */
+@media print {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .mo-pre { opacity: 1 !important; transform: none !important; }
+    body { animation: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
     .mo-pre { opacity: 1 !important; transform: none !important; }

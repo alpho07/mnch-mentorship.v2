@@ -113,6 +113,8 @@ footer .legal{border-top:1px solid rgba(255,255,255,.1);padding:16px 0 26px;font
 
 @media print{.bar,.journey,footer .cols{display:none}.hero{padding:30px 0;color:#000;background:none}.hero p,.chip{color:#000}section{break-inside:avoid}}
 </style>
+<link rel="stylesheet" href="{{ asset('css/motion.css') }}?v={{ filemtime(public_path('css/motion.css')) }}">
+<script defer src="{{ asset('js/motion.js') }}?v={{ filemtime(public_path('js/motion.js')) }}"></script>
 </head>
 <body class="@yield('theme')">
 <nav class="bar"><div class="wrap">
