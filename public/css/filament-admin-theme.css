@@ -1074,3 +1074,32 @@ textarea.fi-input:focus,
 .fi-sidebar-item-button:hover { background: rgba(255, 255, 255, 0.14) !important; }
 .fi-sidebar-item-active > .fi-sidebar-item-button { background: rgba(255, 255, 255, 0.2) !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14) !important; }
 .fi-sidebar-group + .fi-sidebar-group::before { background: rgba(255, 255, 255, 0.14) !important; }
+
+/* ── Brand subtitle + version under the product title ── */
+.mnch-brand-sub {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: -4px 4px 6px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+.mnch-brand-tagline {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(214, 228, 255, 0.92);
+    line-height: 1.3;
+}
+.mnch-brand-version {
+    flex: none;
+    padding: 2px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(252, 211, 77, 0.55);
+    background: rgba(245, 158, 11, 0.16);
+    color: #FCD34D;
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}

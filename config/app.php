@@ -16,6 +16,12 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
+    | Shown under the product title in the admin sidebar and on the user manual.
+    */
+    'version' => env('APP_VERSION', '2.0'),
+    'tagline' => env('APP_TAGLINE', 'Ministry of Health · Kenya'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------

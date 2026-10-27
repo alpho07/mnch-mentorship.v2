@@ -90,6 +90,10 @@ class AdminPanelProvider extends PanelProvider
                     : new HtmlString(''),
             )
             ->renderHook(
+                PanelsRenderHook::SIDEBAR_NAV_START,
+                fn () => view('filament.components.sidebar-brand-sub'),
+            )
+            ->renderHook(
                 PanelsRenderHook::USER_MENU_PROFILE_BEFORE,
                 fn () => view('filament.components.user-menu-header'),
             )
