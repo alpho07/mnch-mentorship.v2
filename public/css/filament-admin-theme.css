@@ -1103,3 +1103,10 @@ textarea.fi-input:focus,
     font-weight: 700;
     font-variant-numeric: tabular-nums;
 }
+
+/* ── Installed admin app (standalone, translucent status bar): keep bars clear of the notch / home indicator.
+      env() is 0 in a normal browser tab, so this changes nothing there. ── */
+.fi-topbar { padding-top: env(safe-area-inset-top, 0px); }
+.fi-sidebar-header { padding-top: env(safe-area-inset-top, 0px); }
+.fi-sidebar-nav { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; }
+.fi-main { padding-bottom: env(safe-area-inset-bottom, 0px); }
