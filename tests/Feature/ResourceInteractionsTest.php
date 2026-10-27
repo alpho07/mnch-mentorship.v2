@@ -133,7 +133,7 @@ class ResourceInteractionsTest extends TestCase
     public function test_with_recaptcha_keys_the_form_shows_the_widget_and_failed_checks_are_rejected(): void
     {
         config(['services.recaptcha.site_key' => 'site-key', 'services.recaptcha.secret' => 'secret']);
-        \Illuminate\Support\Facades\Http::fake(['www.google.com/*' => \Illuminate\Support\Facades\Http::response(['success' => false])]);
+        \Illuminate\Support\Facades\Http::fake(fn ($req) => \Illuminate\Support\Facades\Http::response(['success' => $req['response'] === 'good']));
         $r = $this->resource();
 
         $this->get(route('resources.show', $r->slug))->assertSee('g-recaptcha', false)->assertSee('site-key', false);
@@ -142,7 +142,6 @@ class ResourceInteractionsTest extends TestCase
         ])->assertSessionHasErrors('g-recaptcha-response');
         $this->assertDatabaseCount('resource_comments', 0);
 
-        \Illuminate\Support\Facades\Http::fake(['www.google.com/*' => \Illuminate\Support\Facades\Http::response(['success' => true])]);
         $this->post(route('resources.comment.guest', $r->slug), [
             'author_name' => 'Jane Doe', 'author_email' => 'jane@example.org', 'content' => 'Hello there', 'g-recaptcha-response' => 'good',
         ])->assertSessionHas('success');
