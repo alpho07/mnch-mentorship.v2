@@ -4,6 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>{{ $pageTitle }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -167,5 +168,6 @@ a{color:var(--teal-link)}a:hover{color:#004D40}
 <div class="wrap muted" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:20px;padding-bottom:20px;font-size:12.5px"><span>MNCH Kenya Mentorship Platform · Analytics</span><span>Data as of {{ $asOf }}</span></div>
 </footer>
 </div>
+@include('partials.idle-timeout')
 </body>
 </html>

@@ -671,5 +671,9 @@ Route::middleware(['web'])->prefix('analytics')->name('analytics.')->group(funct
 
 // include 'api.php';
 
+// Inactivity timer: keep the session alive / sign out after the idle limit
+Route::middleware('auth')->post('/session/keep-alive', [\App\Http\Controllers\SessionActivityController::class, 'keepAlive'])->name('session.keep-alive');
+Route::post('/session/expire', [\App\Http\Controllers\SessionActivityController::class, 'expire'])->name('session.expire');
+
 // Public site redesign (home, /resources, /categories)
 require __DIR__.'/site-redesign.php';

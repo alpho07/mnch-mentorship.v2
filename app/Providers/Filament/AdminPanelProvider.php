@@ -85,6 +85,10 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
+                fn (): HtmlString => new HtmlString(Blade::render('@include(\'partials.idle-timeout\')')),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
                 fn (): HtmlString => auth()->user()?->isAboveSite()
                     ? new HtmlString(Blade::render('@livewire(\'online-users-badge\')'))
                     : new HtmlString(''),

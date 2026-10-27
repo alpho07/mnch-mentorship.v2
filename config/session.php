@@ -37,6 +37,14 @@ return [
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
     /*
+    | Inactivity timer (public/js/idle-timeout.js): signed-in users are warned, then signed out after this many
+    | seconds without typing, clicking, scrolling or touching, in any open tab. The warning shows for the last
+    | `idle_warning` seconds. The server-side lifetime above is the backstop for closed browsers.
+    */
+    'idle_timeout' => (int) env('SESSION_IDLE_TIMEOUT', 900),
+    'idle_warning' => (int) env('SESSION_IDLE_WARNING', 60),
+
+    /*
     |--------------------------------------------------------------------------
     | Session Encryption
     |--------------------------------------------------------------------------
