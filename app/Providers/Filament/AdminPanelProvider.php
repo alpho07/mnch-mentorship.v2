@@ -63,6 +63,9 @@ class AdminPanelProvider extends PanelProvider
                     '<link rel="stylesheet" href="'.asset('css/filament-admin-theme.css').'?v='.filemtime(public_path('css/filament-admin-theme.css')).'">'
                     .'<link rel="stylesheet" href="'.asset('css/motion.css').'?v='.filemtime(public_path('css/motion.css')).'">'
                     .'<script defer src="'.asset('js/motion.js').'?v='.filemtime(public_path('js/motion.js')).'"></script>'
+                    // Filament remembers the sidebar as open and, with a collapsible sidebar, shows it over the page on
+                    // phones. Keep it closed on small screens at every page load; desktop keeps the remembered state.
+                    .'<script>try{if(window.matchMedia("(max-width: 1023px)").matches){localStorage.setItem("isOpen","false");}}catch(e){}</script>'
                     .'<link rel="manifest" href="'.asset('manifest.webmanifest').'">'
                     .'<meta name="theme-color" content="#1C3A8A">'
                     .'<link rel="apple-touch-icon" href="'.asset('app-icons/admin-icon-192.png').'">'

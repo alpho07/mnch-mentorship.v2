@@ -1110,3 +1110,13 @@ textarea.fi-input:focus,
 .fi-sidebar-header { padding-top: env(safe-area-inset-top, 0px); }
 .fi-sidebar-nav { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important; }
 .fi-main { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* ── Phones / small tablets ── */
+@media (max-width: 1023px) {
+    /* closed sidebar must not cast a shadow onto the page edge */
+    .fi-sidebar:not(.fi-sidebar-open) { box-shadow: none !important; border-right: 0 !important; }
+    /* "Install App" in the top bar: icon only */
+    .mnch-install-label { display: none; }
+    /* floating "N online" badge: bottom-right, out of the way of content and forms */
+    #online-users-badge { left: auto !important; right: 12px !important; bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; }
+}

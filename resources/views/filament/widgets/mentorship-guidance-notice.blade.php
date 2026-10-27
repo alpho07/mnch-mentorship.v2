@@ -72,8 +72,8 @@
     {{-- ── Existing guidance notice (content unchanged) ───────── --}}
     <x-filament::section>
         <div class="space-y-4">
-            <div class="flex items-start justify-between gap-4">
-                <div class="flex items-start gap-3">
+            <div class="flex items-start justify-between gap-4" style="flex-wrap:wrap">
+                <div class="flex items-start gap-3" style="flex:1 1 18rem;min-width:0">
                     <x-filament::icon icon="heroicon-o-light-bulb" class="mt-1 h-6 w-6 text-primary-600" />
                     <div class="space-y-1">
                         <h3 class="text-base font-semibold text-gray-950 dark:text-white">

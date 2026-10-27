@@ -41,6 +41,7 @@
 >
     <button
         type="button"
+        aria-label="Install app"
         x-on:click="install()"
         x-bind:title="isIos ? 'Tap the Share icon, then \'Add to Home Screen\'' : 'Install this app'"
         style="
@@ -52,6 +53,6 @@
         onmouseout="this.style.background='transparent'"
     >
         <span aria-hidden="true">📲</span>
-        <span x-text="isIos ? 'Add to Home Screen' : 'Install App'"></span>
+        <span class="mnch-install-label" x-text="isIos ? 'Add to Home Screen' : 'Install App'"></span>
     </button>
 </div>
