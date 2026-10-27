@@ -41,6 +41,16 @@
             .exec-brief-stage { padding: 12px 0; }
         }
 
+        /* Phones: shrink the sheet to the screen width with zoom (unlike transform it also shrinks the layout
+           box, so there is no blank space under it and nothing is cut off on the right). */
+        @media (max-width: 700px) {
+            .exec-brief-sheet { transform: none; zoom: 0.76; }
+        }
+        @media (max-width: 600px) { .exec-brief-sheet { zoom: 0.65; } }
+        @media (max-width: 500px) { .exec-brief-sheet { zoom: 0.54; } }
+        @media (max-width: 430px) { .exec-brief-sheet { zoom: 0.46; } }
+        @media (max-width: 380px) { .exec-brief-sheet { zoom: 0.40; } }
+
         @media print {
             .exec-brief-stage { background: none; padding: 0; overflow: visible; }
             .exec-brief-sheet { box-shadow: none; width: auto; padding: 0; }
