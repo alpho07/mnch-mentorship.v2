@@ -1,0 +1,60 @@
+/* Shared motion layer for the public site, analytics dashboards and admin.
+   Pairs with /js/motion.js. Everything is switched off for prefers-reduced-motion. */
+
+/* Page enter */
+@keyframes mo-page { from { opacity: 0; } to { opacity: 1; } }
+body { animation: mo-page .45s ease both; }
+
+/* Scroll reveal: motion.js adds .mo-pre to below-the-fold elements, then .mo-in when they enter the viewport */
+.mo-pre { opacity: 0; transform: translateY(22px); }
+.mo-pre.mo-in {
+    opacity: 1;
+    transform: none;
+    transition: opacity .65s cubic-bezier(.2, .75, .25, 1), transform .65s cubic-bezier(.2, .75, .25, 1);
+    transition-delay: var(--mo-delay, 0ms);
+}
+
+/* Card hover lift (public site + analytics cards) */
+.card, .mo-lift { transition: transform .22s ease, box-shadow .22s ease; }
+.card:hover, .mo-lift:hover { transform: translateY(-3px); box-shadow: 0 16px 34px -18px rgba(0, 54, 59, .35); }
+
+/* Buttons: press feedback and gentle lift */
+.btn, .tab, .navlink, .chip { transition: transform .15s ease, background-color .2s ease, color .2s ease, box-shadow .2s ease; }
+.btn:active, .chip:active { transform: scale(.97); }
+
+/* Links: animated underline on footer and text links */
+.flink { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size .25s ease, color .2s ease; }
+.flink:hover { background-size: 100% 1px; }
+
+/* Number count-up: keep digits from jittering */
+[data-mo-count] { font-variant-numeric: tabular-nums; }
+
+/* Hero map / illustration drift */
+@keyframes mo-drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.hero-map { animation: mo-drift 7s ease-in-out infinite; }
+
+/* Live dots */
+@keyframes mo-ping { 0% { box-shadow: 0 0 0 0 rgba(18, 128, 92, .5); } 100% { box-shadow: 0 0 0 10px rgba(18, 128, 92, 0); } }
+.mo-live { animation: mo-ping 1.8s ease-out infinite; }
+
+/* ── Filament admin dashboards ── */
+@keyframes mo-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.fi-wi-stats-overview-stat, .fi-wi-chart, .fi-section, .fi-ta-ctn, .fi-wi-table {
+    animation: mo-rise .55s cubic-bezier(.2, .75, .25, 1) both;
+}
+.fi-wi-stats-overview-stat:nth-child(1) { animation-delay: .00s; }
+.fi-wi-stats-overview-stat:nth-child(2) { animation-delay: .06s; }
+.fi-wi-stats-overview-stat:nth-child(3) { animation-delay: .12s; }
+.fi-wi-stats-overview-stat:nth-child(4) { animation-delay: .18s; }
+.fi-wi-stats-overview-stat:nth-child(n+5) { animation-delay: .24s; }
+.fi-wi-chart { animation-delay: .1s; }
+.fi-sidebar-item-button { transition: background-color .18s ease, padding-left .18s ease; }
+.fi-sidebar-item-button:hover { padding-left: 14px !important; }
+.fi-modal-window { animation: mo-rise .3s cubic-bezier(.2, .75, .25, 1) both; }
+.fi-badge { transition: transform .15s ease; }
+.fi-badge:hover { transform: scale(1.06); }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .mo-pre { opacity: 1 !important; transform: none !important; }
+}

@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="{{ asset('css/motion.css') }}?v={{ filemtime(public_path('css/motion.css')) }}">
+<script defer src="{{ asset('js/motion.js') }}?v={{ filemtime(public_path('js/motion.js')) }}"></script>
 <style>
 :root{--ink:#0F2A2E;--ink-2:#2E4A4E;--ink-3:#3D5558;--muted:#556B6E;--line:#E1E9EA;--line-2:#EEF3F3;--ground:#F2F6F6;--track:#EDF3F4;--teal:#0097A7;--teal-btn:#00838F;--teal-deep:#00363B;--teal-ink:#00505A;--teal-link:#00695C}
 html{scroll-padding-top:84px}

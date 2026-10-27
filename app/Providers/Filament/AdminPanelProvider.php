@@ -61,6 +61,8 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::HEAD_END,
                 fn (): HtmlString => new HtmlString(
                     '<link rel="stylesheet" href="'.asset('css/filament-admin-theme.css').'?v='.filemtime(public_path('css/filament-admin-theme.css')).'">'
+                    .'<link rel="stylesheet" href="'.asset('css/motion.css').'?v='.filemtime(public_path('css/motion.css')).'">'
+                    .'<script defer src="'.asset('js/motion.js').'?v='.filemtime(public_path('js/motion.js')).'"></script>'
                     .'<link rel="manifest" href="'.asset('manifest.webmanifest').'">'
                     .'<meta name="theme-color" content="#1C3A8A">'
                     .'<link rel="apple-touch-icon" href="'.asset('app-icons/admin-icon-192.png').'">'
