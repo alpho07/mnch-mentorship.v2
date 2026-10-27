@@ -1259,6 +1259,7 @@ tr:hover td{background:#fafafa}
   <div style="margin-top:60px;padding-top:24px;border-top:1px solid #e2e8f0;text-align:center;color:#94a3b8;font-size:.78rem">
     <p>MNCH Kenya — User Manual &nbsp;·&nbsp; Platform Version {{ config('app.version', '1.0') }}</p>
     <p>For support, contact your county mentor lead or system administrator.</p>
+    <p style="margin-top:8px"><a href="{{ route('guides.mentorship') }}" style="color:#0891B2;text-decoration:none">Mentorship SOP Guide</a> &nbsp;·&nbsp; <a href="{{ route('guides.emonc') }}" style="color:#0891B2;text-decoration:none">EmONC Mentor &amp; Mentee Guide</a></p>
     <p style="margin-top:8px"><a href="{{ url('/') }}" style="color:#0891B2;text-decoration:none">← Return to Homepage</a></p>
   </div>
 

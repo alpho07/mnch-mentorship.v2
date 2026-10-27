@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(\App\Services\Site\SiteDataSource::class, \App\Services\Site\DatabaseSiteData::class);
         $this->app->bind(\App\Services\Analytics\MetricsSource::class, \App\Services\Analytics\DatabaseMetrics::class);
     }
 

@@ -438,14 +438,15 @@ Route::get('/{training}/participants/template', function ($trainingId) {
     ]);
 })->name('participants.template');
 
-Route::get('/', [ResourceController::class, 'home'])->name('home');
+// '/', '/resources' and '/categories' are served by routes/site-redesign.php (names: home, resources.index, categories.index)
 Route::get('/user-manual', fn () => view('frontend.user-manual'))->name('manual');
+Route::get('/guides/mentorship-sop', fn () => view('frontend.guides.mentorship-sop'))->name('guides.mentorship');
+Route::get('/guides/emonc', fn () => view('frontend.guides.emonc'))->name('guides.emonc');
 
 // ===== RESOURCE CENTER ROUTES =====
 Route::prefix('resources')->name('resources.')->middleware('scalar-query')->group(function () {
 
     // === MAIN RESOURCE ROUTES ===
-    Route::get('/', [ResourceController::class, 'index'])->name('index');
     Route::get('/search', [SearchController::class, 'index'])
         ->name('search')
         ->middleware('throttle:search');
@@ -506,7 +507,6 @@ Route::prefix('resources')->name('resources.')->middleware('scalar-query')->grou
 
 // ===== CATEGORY ROUTES =====
 Route::prefix('categories')->name('categories.')->middleware('scalar-query')->group(function () {
-    Route::get('/', [CategoryController::class, 'index'])->name('index');
     Route::get('/{category:slug}', [CategoryController::class, 'show'])->name('show');
 });
 
@@ -670,3 +670,6 @@ Route::middleware(['web'])->prefix('analytics')->name('analytics.')->group(funct
 });
 
 // include 'api.php';
+
+// Public site redesign (home, /resources, /categories)
+require __DIR__.'/site-redesign.php';
