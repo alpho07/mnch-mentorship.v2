@@ -10,11 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class InteractionController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware('throttle:30,1'); // Rate limiting for interactions
-    }
+    // auth + throttle:interactions are applied on the routes (routes/web.php); Controller::middleware() no longer exists.
 
     /**
      * Like a resource

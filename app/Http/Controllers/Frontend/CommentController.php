@@ -8,6 +8,7 @@ use App\Models\ResourceComment;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
@@ -69,8 +70,19 @@ class CommentController extends Controller implements HasMiddleware
             'author_email' => 'required|email|max:255',
             'content' => 'required|string|min:3|max:1000',
             'parent_id' => 'nullable|exists:resource_comments,id',
-            'g-recaptcha-response' => 'required|recaptcha', // Proper reCAPTCHA validation
+            'website' => 'prohibited', // honeypot: real visitors never see or fill this field
         ]);
+
+        // reCAPTCHA is verified when keys are configured (services.recaptcha.secret); the honeypot and the
+        // guest-comments throttle protect the form otherwise.
+        if ($secret = config('services.recaptcha.secret')) {
+            $ok = Http::asForm()->timeout(5)->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret' => $secret, 'response' => (string) $request->input('g-recaptcha-response'), 'remoteip' => $request->ip(),
+            ])->json('success');
+            if (! $ok) {
+                return back()->withInput()->withErrors(['g-recaptcha-response' => 'Please confirm you are not a robot.']);
+            }
+        }
 
         // Check if resource allows public comments
         if ($resource->visibility !== 'public' || $resource->status !== 'published') {

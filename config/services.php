@@ -43,4 +43,10 @@ return [
     'anthropic' => [
         'api_key' => env('ANTHROPIC_API_KEY'),
     ],
+
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
+        'secret' => env('RECAPTCHA_SECRET_KEY'),
+    ],
+
 ];

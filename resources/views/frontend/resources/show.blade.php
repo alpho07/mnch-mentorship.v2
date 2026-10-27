@@ -343,14 +343,34 @@
                         </button>
                     </form>
                 @else
-                    <div class="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <p class="text-gray-600 mb-3">Please log in to leave a comment.</p>
-                        <a href="{{ url('admin/login') }}"
-                           class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-                            <i class="fas fa-sign-in-alt mr-2"></i>
-                            Login to Comment
-                        </a>
-                    </div>
+                    <form action="{{ route('resources.comment.guest', $resource->slug) }}" method="POST" class="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        @csrf
+                        <p class="text-gray-600 mb-4">Comment as a guest (reviewed before it appears), or <a href="{{ url('admin/login') }}" class="text-primary-600 underline">sign in</a>.</p>
+                        <div class="grid sm:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="author_name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                <input type="text" name="author_name" id="author_name" value="{{ old('author_name') }}" required maxlength="255" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                @error('author_name')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            </div>
+                            <div>
+                                <label for="author_email" class="block text-sm font-medium text-gray-700 mb-1">Email (not shown)</label>
+                                <input type="email" name="author_email" id="author_email" value="{{ old('author_email') }}" required maxlength="255" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                @error('author_email')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                            </div>
+                        </div>
+                        <label for="guest_content" class="block text-sm font-medium text-gray-700 mb-1">Comment</label>
+                        <textarea name="content" id="guest_content" rows="4" required minlength="3" maxlength="1000" class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-1">{{ old('content') }}</textarea>
+                        @error('content')<p class="text-sm text-red-600 mb-2">{{ $message }}</p>@enderror
+                        <div style="position:absolute;left:-9999px" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></div>
+                        @if (config('services.recaptcha.site_key'))
+                            <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+                            <div class="g-recaptcha my-3" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                        @endif
+                        @error('g-recaptcha-response')<p class="text-sm text-red-600 mb-2">{{ $message }}</p>@enderror
+                        <button type="submit" class="inline-flex items-center px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium">
+                            <i class="fas fa-comment mr-2"></i> Submit comment
+                        </button>
+                    </form>
                 @endauth
 
                 <!-- Comments List -->
@@ -515,15 +535,18 @@
             shareResource() {
                 if (navigator.share) {
                     navigator.share({
-                        title: '{{ $resource->title }}',
-                        text: '{{ $resource->excerpt }}',
+                        title: @json($resource->title),
+                        text: @json((string) $resource->excerpt),
                         url: window.location.href
                     });
                 } else {
                     // Fallback: copy to clipboard
-                    navigator.clipboard.writeText(window.location.href).then(() => {
-                        this.showToast('Link copied to clipboard!', 'success');
-                    });
+                    const done = () => this.showToast('Link copied to clipboard!', 'success');
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(window.location.href).then(done, () => window.prompt('Copy this link', window.location.href));
+                    } else {
+                        window.prompt('Copy this link', window.location.href);
+                    }
                 }
             },
 
