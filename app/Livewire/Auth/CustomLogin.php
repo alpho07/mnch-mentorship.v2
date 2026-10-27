@@ -21,8 +21,13 @@ class CustomLogin extends SimplePage
 
     public ?array $data = [];
 
+    /** Shown above the form after the inactivity timer signed the user out (carried by ?signed_out=inactive). */
+    public bool $signedOutInactive = false;
+
     public function mount(): void
     {
+        $this->signedOutInactive = request()->query('signed_out') === 'inactive';
+
         if (Filament::auth()->check()) {
             redirect()->intended(Filament::getUrl());
         }

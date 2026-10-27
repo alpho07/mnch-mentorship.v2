@@ -51,4 +51,11 @@ class IdleTimeoutTest extends TestCase
         $this->get('/?signed_out=inactive')->assertOk()->assertSee('You were signed out')->assertSee('15 minutes of inactivity');
         $this->get('/')->assertOk()->assertDontSee('You were signed out');
     }
+
+    public function test_the_login_page_shows_the_same_notice_and_the_front_page_links_to_it(): void
+    {
+        $this->get('/admin/login?signed_out=inactive')->assertOk()->assertSee('You were signed out')->assertSee('15 minutes of inactivity');
+        $this->get('/admin/login')->assertOk()->assertDontSee('You were signed out');
+        $this->get('/?signed_out=inactive')->assertSee('/admin/login?signed_out=inactive', false);
+    }
 }

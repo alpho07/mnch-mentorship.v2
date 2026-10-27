@@ -70,6 +70,13 @@
                     <img src="{{ asset('moh_logo.png') }}" alt="Ministry of Health — Republic of Kenya" class="moh-logo-img">
                 </div>
 
+                @if ($signedOutInactive)
+                    <div class="auth-notice" role="status">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                        <span><b>You were signed out</b> after {{ (int) round(config('session.idle_timeout') / 60) }} minutes of inactivity. Please sign in again to continue.</span>
+                    </div>
+                @endif
+
                 <div class="auth-intro">
                     <p class="login-kicker">MNCH Mentorship Platform</p>
                     <h2 class="auth-h1">Welcome back</h2>

@@ -222,4 +222,7 @@
         .secure-strip{margin:1.2rem -1.4rem -1.25rem;border-radius:0 0 17px 17px}
         .mobile-matters{display:block;width:100%;margin-top:1rem;padding:0 .5rem;color:#617086;font-size:.72rem;text-align:center}
     }
+    /* ── Signed-out-for-inactivity notice ────────────────────────────── */
+    .auth-notice{display:flex;align-items:flex-start;gap:.65rem;margin:0 0 1.2rem;padding:.8rem .95rem;border:1px solid #f3d98b;border-radius:12px;background:#fef3c7;color:#6b4a00;font-size:.8rem;line-height:1.5}
+    .auth-notice svg{flex:0 0 18px;width:18px;height:18px;margin-top:1px;stroke:#b45309;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 </style>
