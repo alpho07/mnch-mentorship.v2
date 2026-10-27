@@ -11,6 +11,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 <style>
 :root{--ink:#0F2A2E;--ink-2:#2E4A4E;--ink-3:#3D5558;--muted:#556B6E;--line:#E1E9EA;--line-2:#EEF3F3;--ground:#F2F6F6;--track:#EDF3F4;--teal:#0097A7;--teal-btn:#00838F;--teal-deep:#00363B;--teal-ink:#00505A;--teal-link:#00695C}
+html{scroll-padding-top:84px}
 body{margin:0;background:var(--ground)}
 [x-cloak]{display:none!important}
 a{color:var(--teal-link)}a:hover{color:#004D40}
@@ -120,7 +121,7 @@ a{color:var(--teal-link)}a:hover{color:#004D40}
 <body>
 <div class="pg">
 
-<header style="background:#FFFFFF;border-bottom:1px solid var(--line)">
+<header style="position:sticky;top:0;z-index:40;background:rgba(255,255,255,.96);-webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--line)">
 <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px;flex-wrap:wrap">
 <a href="{{ $homeUrl ?? '/' }}" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink)">
 <span style="width:38px;height:38px;border-radius:11px;background:var(--teal-btn);display:flex;align-items:center;justify-content:center;color:#FFFFFF">@include('analytics.partials.icon', ['name' => 'heart-pulse', 'size' => 20, 'sw' => 2])</span>

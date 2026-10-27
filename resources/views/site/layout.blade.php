@@ -26,6 +26,7 @@
 }
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
+html{scroll-padding-top:84px}
 body{margin:0;background:@yield('body-bg', '#FFFFFF');font-family:var(--font-text);color:var(--ink);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5}
 img{max-width:100%}
 a{color:#00695C}a:hover{color:#004D40}
@@ -83,7 +84,7 @@ a{color:#00695C}a:hover{color:#004D40}
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
-<header style="position:relative;z-index:5;background:rgba(255,255,255,.96);border-bottom:1px solid #E6EEEF">
+<header style="position:sticky;top:0;z-index:40;background:rgba(255,255,255,.96);-webkit-backdrop-filter:saturate(1.4) blur(8px);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid #E6EEEF">
 <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:76px;flex-wrap:wrap">
 <a href="{{ route('home') }}" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink)">
 <img src="{{ $img }}/moh-logo.png" alt="Ministry of Health, Republic of Kenya" width="88" height="34" style="height:34px;width:auto">
