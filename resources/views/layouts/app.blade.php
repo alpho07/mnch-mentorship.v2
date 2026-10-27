@@ -111,8 +111,11 @@
                                     <a href="{{ url('/admin') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
                                         <i class="fas fa-cog w-4 text-gray-400"></i>Admin Panel
                                     </a>
-                                    <a href="#" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                                    <a href="{{ route('resources.bookmarks') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
                                         <i class="fas fa-bookmark w-4 text-gray-400"></i>Bookmarks
+                                    </a>
+                                    <a href="{{ route('resources.downloads') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                                        <i class="fas fa-download w-4 text-gray-400"></i>Downloads
                                     </a>
                                     <div class="border-t border-gray-100 my-1"></div>
                                     <form method="POST" action="{{ url('admin/logout') }}">

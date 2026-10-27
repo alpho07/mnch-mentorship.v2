@@ -101,4 +101,51 @@ class ResourceInteractionsTest extends TestCase
         $this->post(route('resources.comment.guest', $r->slug), ['author_name' => 'x1', 'author_email' => 'nope', 'content' => 'a'])
             ->assertSessionHasErrors(['author_name', 'author_email', 'content']);
     }
+
+    public function test_bookmarks_page_lists_saved_resources_and_the_menu_links_to_it(): void
+    {
+        $r = $this->resource(['title' => 'Saved item']);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get(route('resources.bookmarks'))->assertOk()->assertSee('You have not saved any resources yet');
+        $this->actingAs($user)->postJson(route('resources.bookmark', $r->slug))->assertOk();
+
+        $page = $this->actingAs($user)->get(route('resources.bookmarks'))->assertOk()->assertSee('Saved item');
+        $page->assertSee('href="'.route('resources.bookmarks').'"', false);
+        foreach (['latest', 'popular', 'title', 'views', 'likes'] as $sort) {
+            $this->actingAs($user)->get(route('resources.bookmarks', ['sort' => $sort]))->assertOk();
+        }
+    }
+
+    public function test_bookmarks_and_downloads_send_guests_to_sign_in(): void
+    {
+        $this->get(route('resources.bookmarks'))->assertRedirect();
+        $this->get(route('resources.downloads'))->assertRedirect();
+    }
+
+    public function test_downloads_page_renders_for_a_signed_in_user(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get(route('resources.downloads'))->assertOk()->assertSee('You have not downloaded any resources yet');
+    }
+
+    public function test_with_recaptcha_keys_the_form_shows_the_widget_and_failed_checks_are_rejected(): void
+    {
+        config(['services.recaptcha.site_key' => 'site-key', 'services.recaptcha.secret' => 'secret']);
+        \Illuminate\Support\Facades\Http::fake(['www.google.com/*' => \Illuminate\Support\Facades\Http::response(['success' => false])]);
+        $r = $this->resource();
+
+        $this->get(route('resources.show', $r->slug))->assertSee('g-recaptcha', false)->assertSee('site-key', false);
+        $this->post(route('resources.comment.guest', $r->slug), [
+            'author_name' => 'Jane Doe', 'author_email' => 'jane@example.org', 'content' => 'Hello there', 'g-recaptcha-response' => 'bad',
+        ])->assertSessionHasErrors('g-recaptcha-response');
+        $this->assertDatabaseCount('resource_comments', 0);
+
+        \Illuminate\Support\Facades\Http::fake(['www.google.com/*' => \Illuminate\Support\Facades\Http::response(['success' => true])]);
+        $this->post(route('resources.comment.guest', $r->slug), [
+            'author_name' => 'Jane Doe', 'author_email' => 'jane@example.org', 'content' => 'Hello there', 'g-recaptcha-response' => 'good',
+        ])->assertSessionHas('success');
+        $this->assertDatabaseCount('resource_comments', 1);
+    }
 }

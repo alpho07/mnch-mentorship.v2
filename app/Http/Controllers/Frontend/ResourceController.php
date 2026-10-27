@@ -777,7 +777,7 @@ class ResourceController extends Controller
     /**
      * Get user's bookmarked resources
      */
-    public function bookmarks(Request $request): View
+    public function bookmarks(Request $request): View|\Illuminate\Http\RedirectResponse
     {
         $user = auth()->user();
         
@@ -802,7 +802,7 @@ class ResourceController extends Controller
     /**
      * Get user's download history
      */
-    public function downloads(Request $request): View
+    public function downloads(Request $request): View|\Illuminate\Http\RedirectResponse
     {
         $user = auth()->user();
         
