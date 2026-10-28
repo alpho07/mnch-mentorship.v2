@@ -60,7 +60,11 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): HtmlString => new HtmlString(
-                    '<link rel="stylesheet" href="'.asset('css/filament-admin-theme.css').'?v='.filemtime(public_path('css/filament-admin-theme.css')).'">'
+                    // The proxy in front of Apache serves plain http too and passes no scheme header, so the app
+                    // cannot redirect server-side. Send http visitors to https before any filter form is used —
+                    // otherwise the browser warns "sent over an insecure connection" on every filter.
+                    '<script>if(location.protocol==="http:"&&!/^(localhost|127\.|192\.168\.|10\.)/.test(location.hostname)){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>'
+                    .'<link rel="stylesheet" href="'.asset('css/filament-admin-theme.css').'?v='.filemtime(public_path('css/filament-admin-theme.css')).'">'
                     .'<link rel="stylesheet" href="'.asset('css/motion.css').'?v='.filemtime(public_path('css/motion.css')).'">'
                     .'<script defer src="'.asset('js/motion.js').'?v='.filemtime(public_path('js/motion.js')).'"></script>'
                     // Filament remembers the sidebar as open and, with a collapsible sidebar, shows it over the page on
